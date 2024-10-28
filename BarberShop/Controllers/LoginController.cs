@@ -108,8 +108,7 @@ namespace BarberShopMVC.Controllers
 
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
 
-            cliente.CodigoValidacao = null;
-            cliente.CodigoValidacaoExpiracao = null;
+            // Removendo a nulificação do CódigoValidacao e CodigoValidacaoExpiracao para manter registros
             await _clienteRepository.UpdateAsync(cliente);
 
             return Json(new { success = true, redirectUrl = Url.Action("MenuPrincipal", "Cliente") });
