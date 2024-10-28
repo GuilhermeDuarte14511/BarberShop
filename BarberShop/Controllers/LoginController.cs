@@ -31,101 +31,90 @@ namespace BarberShopMVC.Controllers
         [HttpPost]
         public async Task<IActionResult> Login(string phoneInput, string emailInput)
         {
-            try
+            string userInput = !string.IsNullOrEmpty(phoneInput) ? phoneInput : emailInput;
+
+            if (string.IsNullOrEmpty(userInput))
             {
-                string userInput = !string.IsNullOrEmpty(phoneInput) ? phoneInput : emailInput;
-
-                if (string.IsNullOrEmpty(userInput))
-                {
-                    return Json(new { success = false, message = "Por favor, insira um telefone ou email válido." });
-                }
-
-                var cliente = await _clienteRepository.GetByEmailOrPhoneAsync(userInput);
-
-                if (cliente != null)
-                {
-                    // Gerar código de verificação (6 dígitos numéricos)
-                    string codigoVerificacao = GerarCodigoVerificacao();
-
-                    // Atualizar apenas os campos de verificação e expiração
-                    cliente.CodigoValidacao = codigoVerificacao;
-                    cliente.CodigoValidacaoExpiracao = DateTime.UtcNow.AddMinutes(5); // Código válido por 5 minutos
-
-                    await _clienteRepository.UpdateCodigoVerificacaoAsync(cliente.ClienteId, codigoVerificacao, cliente.CodigoValidacaoExpiracao);
-
-                    // Enviar código por email usando o novo método
-                    await _emailService.EnviarEmailCodigoVerificacaoAsync(
-                        destinatarioEmail: cliente.Email,
-                        destinatarioNome: cliente.Nome,
-                        codigoVerificacao: codigoVerificacao
-                    );
-
-                    // Retornar sucesso e clienteId
-                    return Json(new { success = true, clienteId = cliente.ClienteId });
-                }
-                else
-                {
-                    return Json(new { success = false, message = "Cliente não encontrado. Revise a informação e tente novamente." });
-                }
+                return Json(new { success = false, message = "Por favor, insira um telefone ou email válido." });
             }
-            catch (Exception ex)
+
+            var cliente = await _clienteRepository.GetByEmailOrPhoneAsync(userInput);
+
+            if (cliente != null)
             {
-                Console.WriteLine($"Erro ao fazer login: {ex.Message}");
-                return Json(new { success = false, message = "Ocorreu um erro ao tentar fazer login. Por favor, tente novamente mais tarde." });
+                string codigoVerificacao = GerarCodigoVerificacao();
+                cliente.CodigoValidacao = codigoVerificacao;
+                cliente.CodigoValidacaoExpiracao = DateTime.UtcNow.AddMinutes(5);
+
+                await _clienteRepository.UpdateCodigoVerificacaoAsync(cliente.ClienteId, codigoVerificacao, cliente.CodigoValidacaoExpiracao);
+                await _emailService.EnviarEmailCodigoVerificacaoAsync(cliente.Email, cliente.Nome, codigoVerificacao);
+
+                return Json(new { success = true, clienteId = cliente.ClienteId });
+            }
+            else
+            {
+                return Json(new { success = false, message = "Cliente não encontrado. Revise a informação e tente novamente." });
             }
         }
 
-        // Método para verificar o código
+        [HttpPost]
+        public async Task<IActionResult> Cadastro(string nameInput, string registerEmailInput, string registerPhoneInput)
+        {
+            if (string.IsNullOrEmpty(registerEmailInput) || string.IsNullOrEmpty(registerPhoneInput) || string.IsNullOrEmpty(nameInput))
+            {
+                return Json(new { success = false, message = "Todos os campos são obrigatórios." });
+            }
+
+            var clienteExistente = await _clienteRepository.GetByEmailOrPhoneAsync(registerEmailInput);
+            if (clienteExistente != null)
+            {
+                return Json(new { success = false, message = "Este email já está cadastrado." });
+            }
+
+            var cliente = new Cliente
+            {
+                Nome = nameInput,
+                Email = registerEmailInput,
+                Telefone = registerPhoneInput,
+                CodigoValidacao = GerarCodigoVerificacao(),
+                CodigoValidacaoExpiracao = DateTime.UtcNow.AddMinutes(5)
+            };
+
+            await _clienteRepository.AddAsync(cliente);
+            await _emailService.EnviarEmailCodigoVerificacaoAsync(cliente.Email, cliente.Nome, cliente.CodigoValidacao);
+
+            return Json(new { success = true, clienteId = cliente.ClienteId });
+        }
+
         [HttpPost]
         public async Task<IActionResult> VerificarCodigo(int clienteId, string codigo)
         {
             var cliente = await _clienteRepository.GetByIdAsync(clienteId);
 
-            if (cliente == null)
+            if (cliente == null || cliente.CodigoValidacaoExpiracao < DateTime.UtcNow || codigo != cliente.CodigoValidacao)
             {
-                return Json(new { success = false, message = "Cliente não encontrado." });
+                return Json(new { success = false, message = "Código inválido ou expirado." });
             }
 
-            // Verificar se o código expirou
-            if (cliente.CodigoValidacaoExpiracao < DateTime.UtcNow)
+            var claims = new List<Claim>
             {
-                return Json(new { success = false, message = "O código expirou. Por favor, solicite um novo código." });
-            }
+                new Claim(ClaimTypes.NameIdentifier, cliente.ClienteId.ToString()),
+                new Claim(ClaimTypes.Name, cliente.Nome),
+                new Claim(ClaimTypes.Email, cliente.Email ?? cliente.Telefone)
+            };
 
-            // Verificar se o código está correto
-            if (codigo == cliente.CodigoValidacao)
-            {
-                // Autenticar o usuário
-                var claims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.NameIdentifier, cliente.ClienteId.ToString()),
-                    new Claim(ClaimTypes.Name, cliente.Nome),
-                    new Claim(ClaimTypes.Email, cliente.Email ?? cliente.Telefone)
-                };
+            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var authProperties = new AuthenticationProperties { IsPersistent = true };
 
-                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                var authProperties = new AuthenticationProperties
-                {
-                    IsPersistent = true
-                };
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
 
-                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
+            cliente.CodigoValidacao = null;
+            cliente.CodigoValidacaoExpiracao = null;
+            await _clienteRepository.UpdateAsync(cliente);
 
-                // Limpar o código de verificação
-                cliente.CodigoValidacao = null;
-                cliente.CodigoValidacaoExpiracao = null;
-                await _clienteRepository.UpdateAsync(cliente);
-
-                // Retornar sucesso com a URL de redirecionamento
-                return Json(new { success = true, redirectUrl = Url.Action("MenuPrincipal", "Cliente") });
-            }
-            else
-            {
-                return Json(new { success = false, message = "Código inválido. Por favor, tente novamente." });
-            }
+            return Json(new { success = true, redirectUrl = Url.Action("MenuPrincipal", "Cliente") });
         }
 
-        // Método para reenviar o código
         [HttpGet]
         public async Task<IActionResult> ReenviarCodigo(int clienteId)
         {
@@ -136,40 +125,26 @@ namespace BarberShopMVC.Controllers
                 return Json(new { success = false, message = "Cliente não encontrado." });
             }
 
-            // Gerar novo código de verificação
             string codigoVerificacao = GerarCodigoVerificacao();
-
-            // Atualizar código e expiração
             cliente.CodigoValidacao = codigoVerificacao;
             cliente.CodigoValidacaoExpiracao = DateTime.UtcNow.AddMinutes(5);
             await _clienteRepository.UpdateAsync(cliente);
-
-            // Enviar código por email usando o novo método
-            await _emailService.EnviarEmailCodigoVerificacaoAsync(
-                destinatarioEmail: cliente.Email,
-                destinatarioNome: cliente.Nome,
-                codigoVerificacao: codigoVerificacao
-            );
+            await _emailService.EnviarEmailCodigoVerificacaoAsync(cliente.Email, cliente.Nome, codigoVerificacao);
 
             return Json(new { success = true });
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken] // Garantir que a requisição seja válida
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Login", "Login");
         }
 
-
-
-        // Método auxiliar para gerar o código de verificação
         private string GerarCodigoVerificacao()
         {
             Random random = new Random();
-            int code = random.Next(100000, 999999); // Gera um número entre 100000 e 999999
-            return code.ToString();
+            return random.Next(100000, 999999).ToString();
         }
     }
 }

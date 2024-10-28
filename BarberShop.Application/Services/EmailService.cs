@@ -27,7 +27,7 @@ namespace BarberShop.Application.Services
             try
             {
                 var client = new SendGridClient(_sendGridApiKey);
-                var from = new EmailAddress("guilhermeduarte14511@gmail.com", "Barbearia Neris");
+                var from = new EmailAddress("guilhermeduarte14511@gmail.com", "Barbearia CG DREAMS");
                 var to = new EmailAddress(destinatarioEmail, destinatarioNome);
 
                 // Estilizando o HTML do e-mail com as cores do projeto
@@ -143,7 +143,7 @@ namespace BarberShop.Application.Services
             try
             {
                 var client = new SendGridClient(_sendGridApiKey);
-                var from = new EmailAddress("projetobarberia14511@outlook.com", "Barbearia Neris");
+                var from = new EmailAddress("projetobarberia14511@outlook.com", "Barbearia CG DREAMS");
                 var to = new EmailAddress(destinatarioEmail, destinatarioNome);
                 var assunto = "Seu Código de Verificação";
                 var conteudo = $"Olá, {destinatarioNome}!\n\nSeu código de verificação é: {codigoVerificacao}\n\nEste código expira em 5 minutos.";

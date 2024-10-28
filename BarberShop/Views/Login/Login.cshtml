@@ -28,12 +28,47 @@
                         <p class="mt-2">Carregando...</p>
                     </div>
                 </form>
+
+                <div class="text-center mt-4">
+                    <p class="text-light">Ainda não é membro? <a href="#" class="text-danger" data-bs-toggle="modal" data-bs-target="#registerModal">Se cadastre agora!</a></p>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal de Verificação de Código com Contador -->
+<!-- Modal de Cadastro -->
+<div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-light">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger" id="registerModalLabel">Cadastro</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <form id="registerForm">
+                    <div class="form-group mb-4">
+                        <input type="text" id="nameInput" name="nameInput" class="form-control text-center" placeholder="Nome" required />
+                    </div>
+                    <div class="form-group mb-4">
+                        <input type="text" id="registerEmailInput" name="registerEmailInput" class="form-control text-center" placeholder="E-mail" required />
+                        <div id="registerEmailAutocomplete" class="autocomplete-box position-absolute"></div>
+                    </div>
+
+                    <div class="form-group mb-4">
+                        <input type="text" id="registerPhoneInput" name="registerPhoneInput" class="form-control text-center" placeholder="Telefone" required />
+                    </div>
+                    <div id="registerErrorMessage" class="text-danger mt-2" style="display:none;">Erro ao registrar.</div>
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-danger btn-block">Cadastrar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Verificação de Código (para cadastro e login) -->
 <div class="modal fade" id="verificationModal" tabindex="-1" aria-labelledby="verificationModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bg-dark text-light">
@@ -43,12 +78,15 @@
             </div>
             <div class="modal-body">
                 <p>Um código foi enviado para o seu email. Por favor, insira-o abaixo:</p>
-                <p>O código expira em <span id="countdownTimer">30 segundos</span>.</p>
+                <p>O código expira em <span id="countdownTimer">30 segundos</span>.</p>                
                 <form id="verificationForm">
-                    <input type="hidden" id="clienteId" name="clienteId" value="" />
+                    <!-- Campo oculto para armazenar o clienteId -->
+                    <input type="hidden" id="clienteIdField" name="clienteId" value="">
+
                     <div class="form-group mb-4">
                         <input type="text" id="codigo" name="codigo" class="form-control text-center" placeholder="Código de Verificação" required />
                     </div>
+                    <div id="codeErrorMessage" class="text-danger mt-2" style="display:none;">Código inválido.</div>
                     <div class="text-center mt-4">
                         <button type="submit" class="btn btn-danger btn-block">Verificar</button>
                     </div>
@@ -56,7 +94,6 @@
                 <div class="text-center mt-3">
                     <p id="resendCodeLink" style="display: none;">Não recebeu o código? <a href="#" id="resendCode">Reenviar</a></p>
                 </div>
-                <div id="codeErrorMessage" class="alert alert-danger mt-3" style="display:none;"></div>
             </div>
         </div>
     </div>
@@ -66,14 +103,12 @@
 <div class="toast-container position-fixed bottom-0 end-0 p-3">
     <div id="loginErrorToast" class="toast align-items-center text-white bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true" style="display: none;">
         <div class="d-flex">
-            <div class="toast-body">
-            </div>
+            <div class="toast-body"></div>
             <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fechar"></button>
         </div>
     </div>
 </div>
 
-<!-- Toast de Erro -->
 @if (TempData["LoginError"] != null)
 {
     <div class="toast-container position-fixed bottom-0 end-0 p-3">

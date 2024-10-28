@@ -3,21 +3,20 @@
     var countdownInterval;
     var countdownTime = 30; // Tempo em segundos
 
+    function isValidEmail(email) {
+        var regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return regex.test(email);
+    }
+
+    function isValidPhone(phone) {
+        var regex = /^\(\d{2}\)\s\d{5}-\d{4}$/;
+        return regex.test(phone);
+    }
+
+    var emailDomains = ["gmail.com", "yahoo.com.br", "outlook.com", "hotmail.com"];
+
     // Lógica do login
     if ($('#loginPage').length > 0) {
-        function isValidEmail(email) {
-            var regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return regex.test(email);
-        }
-
-        function isValidPhone(phone) {
-            var regex = /^\(\d{2}\)\s\d{5}-\d{4}$/;
-            return regex.test(phone);
-        }
-
-        var emailDomains = ["gmail.com", "yahoo.com.br", "outlook.com", "hotmail.com"];
-
-        // Quando o usuário digitar no campo de telefone
         $('#phoneInput').on('input', function () {
             if ($(this).val().length > 0) {
                 $('#emailInputContainer').slideUp();
@@ -26,17 +25,12 @@
             }
 
             var inputValue = $(this).val().replace(/\D/g, '');
-            if (inputValue.length <= 11) {
-                if (inputValue.length === 11) {
-                    var phoneNumber = inputValue.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-                    $(this).val(phoneNumber);
-                } else {
-                    $(this).val(inputValue);
-                }
+            if (inputValue.length === 11) {
+                var phoneNumber = inputValue.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+                $(this).val(phoneNumber);
             }
         });
 
-        // Autocomplete para email
         $('#emailInput').on('input', function () {
             if ($(this).val().length > 0) {
                 $('#phoneInputContainer').slideUp();
@@ -57,8 +51,7 @@
         });
 
         $(document).on('click', '.autocomplete-suggestion', function () {
-            var selectedEmail = $(this).text();
-            $('#emailInput').val(selectedEmail);
+            $('#emailInput').val($(this).text());
             $('#emailAutocomplete').fadeOut();
         });
 
@@ -87,10 +80,20 @@
                 success: function (data) {
                     $('#loadingSpinner').fadeOut();
                     if (data.success) {
-                        $('#clienteId').val(data.clienteId);
+                        console.log("Cliente ID obtido após login:", data.clienteId);
+
+                        $('#clienteIdField').remove();
+
+                        $('<input>').attr({
+                            type: 'hidden',
+                            id: 'clienteIdField',
+                            name: 'clienteId',
+                            value: data.clienteId
+                        }).appendTo('#verificationForm');
+
                         $('button[type="submit"]').prop('disabled', false);
                         $('#verificationModal').modal('show');
-                        startCountdown(); // Iniciar o contador de tempo
+                        startCountdown();
                     } else {
                         $('button[type="submit"]').prop('disabled', false);
                         $('#errorMessage').text(data.message).fadeIn();
@@ -103,82 +106,161 @@
                 }
             });
         });
-
-        // Submissão do formulário de verificação de código via AJAX
-        $('#verificationForm').on('submit', function (e) {
-            e.preventDefault();
-
-            var formData = $(this).serialize();
-
-            $.ajax({
-                type: 'POST',
-                url: '/Login/VerificarCodigo',
-                data: formData,
-                success: function (data) {
-                    if (data.success) {
-                        clearInterval(countdownInterval); // Parar o contador
-                        window.location.href = data.redirectUrl;
-                    } else {
-                        $('#codeErrorMessage').text(data.message).fadeIn();
-                    }
-                },
-                error: function () {
-                    $('#codeErrorMessage').text('Ocorreu um erro. Por favor, tente novamente.').fadeIn();
-                }
-            });
-        });
-
-        // Reenvio do código de verificação via AJAX
-        $('#resendCode').on('click', function (e) {
-            e.preventDefault();
-
-            var clienteId = $('#clienteId').val();
-
-            $.ajax({
-                type: 'GET',
-                url: '/Login/ReenviarCodigo',
-                data: { clienteId: clienteId },
-                success: function (data) {
-                    if (data.success) {
-                        $('#codeErrorMessage').text('Um novo código foi enviado para o seu email.').fadeIn();
-                        resetCountdown(); // Reiniciar o contador
-                    } else {
-                        $('#codeErrorMessage').text(data.message).fadeIn();
-                    }
-                },
-                error: function () {
-                    $('#codeErrorMessage').text('Ocorreu um erro ao reenviar o código. Por favor, tente novamente.').fadeIn();
-                }
-            });
-        });
-
-        // Funções do contador
-        function startCountdown() {
-            var timeLeft = countdownTime;
-            $('#countdownTimer').text(timeLeft + ' segundos');
-            $('#resendCodeLink').hide();
-            $('#codeErrorMessage').hide();
-
-            countdownInterval = setInterval(function () {
-                timeLeft--;
-                $('#countdownTimer').text(timeLeft + ' segundos');
-
-                if (timeLeft <= 0) {
-                    clearInterval(countdownInterval);
-                    $('#countdownTimer').text('O tempo expirou.');
-                    $('#resendCodeLink').show();
-                    // Não desativamos o botão ou o campo de entrada aqui
-                }
-            }, 1000);
-        }
-
-        function resetCountdown() {
-            clearInterval(countdownInterval);
-            startCountdown();
-        }
     }
 
-    // Exibir o toast de erro de login, se houver
+    // Funções exclusivas para o modal de cadastro
+    $('#registerPhoneInput').on('input', function () {
+        var inputValue = $(this).val().replace(/\D/g, '');
+        if (inputValue.length === 11) {
+            var phoneNumber = inputValue.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+            $(this).val(phoneNumber);
+        }
+    });
+
+    $('#registerEmailInput').on('input', function () {
+        var inputValue = $(this).val();
+        if (inputValue.includes('@') && inputValue.indexOf('@') === inputValue.length - 1) {
+            var dropdownHtml = '';
+            emailDomains.forEach(function (domain) {
+                dropdownHtml += '<div class="autocomplete-suggestion">' + inputValue + domain + '</div>';
+            });
+            $('#registerEmailAutocomplete').html(dropdownHtml).fadeIn();
+        } else {
+            $('#registerEmailAutocomplete').fadeOut();
+        }
+    });
+
+    $(document).on('click', '.autocomplete-suggestion', function () {
+        $('#registerEmailInput').val($(this).text());
+        $('#registerEmailAutocomplete').fadeOut();
+    });
+
+    // Submissão do formulário de cadastro via AJAX com validação
+    $('#registerForm').on('submit', function (e) {
+        e.preventDefault();
+
+        var name = $('#nameInput').val().trim();
+        var email = $('#registerEmailInput').val().trim();
+        var phone = $('#registerPhoneInput').val().trim();
+
+        if (name === "" || !isValidEmail(email) || !isValidPhone(phone)) {
+            $('#registerErrorMessage').text("Por favor, preencha todos os campos corretamente.").fadeIn();
+            return;
+        }
+
+        $('#loadingSpinner').fadeIn();
+        $('#registerErrorMessage').fadeOut();
+
+        var formData = $(this).serialize();
+
+        $.ajax({
+            type: 'POST',
+            url: '/Login/Cadastro',
+            data: formData,
+            success: function (data) {
+                $('#loadingSpinner').fadeOut();
+                if (data.success) {
+                    console.log("Cliente ID obtido após cadastro:", data.clienteId);
+
+                    $('#clienteIdField').remove();
+
+                    $('<input>').attr({
+                        type: 'hidden',
+                        id: 'clienteIdField',
+                        name: 'clienteId',
+                        value: data.clienteId
+                    }).appendTo('#verificationForm');
+
+                    $('#registerModal').modal('hide');
+                    $('#verificationModal').modal('show');
+                    startCountdown();
+                } else {
+                    $('#registerErrorMessage').text(data.message).fadeIn();
+                }
+            },
+            error: function () {
+                $('#loadingSpinner').fadeOut();
+                $('#registerErrorMessage').text('Erro ao registrar. Por favor, tente novamente.').fadeIn();
+            }
+        });
+    });
+
+    // Submissão do formulário de verificação de código via AJAX
+    $('#verificationForm').on('submit', function (e) {
+        e.preventDefault();
+
+        var clienteId = $('#clienteIdField').val();
+        console.log("Cliente ID sendo enviado para verificação:", clienteId);
+
+        var formData = $(this).serialize();
+
+        $.ajax({
+            type: 'POST',
+            url: '/Login/VerificarCodigo',
+            data: formData,
+            success: function (data) {
+                if (data.success) {
+                    clearInterval(countdownInterval); // Parar o contador
+                    window.location.href = data.redirectUrl;
+                } else {
+                    $('#codeErrorMessage').text(data.message).fadeIn();
+                }
+            },
+            error: function () {
+                $('#codeErrorMessage').text('Ocorreu um erro. Por favor, tente novamente.').fadeIn();
+            }
+        });
+    });
+
+    // Reenvio do código de verificação via AJAX
+    $('#resendCode').on('click', function (e) {
+        e.preventDefault();
+
+        var clienteId = $('#clienteIdField').val();
+        console.log("Cliente ID para reenvio de código:", clienteId);
+
+        $.ajax({
+            type: 'GET',
+            url: '/Login/ReenviarCodigo',
+            data: { clienteId: clienteId },
+            success: function (data) {
+                if (data.success) {
+                    $('#codeErrorMessage').text('Um novo código foi enviado para o seu email.').fadeIn();
+                    resetCountdown(); // Reiniciar o contador
+                } else {
+                    $('#codeErrorMessage').text(data.message).fadeIn();
+                }
+            },
+            error: function () {
+                $('#codeErrorMessage').text('Erro ao reenviar o código. Por favor, tente novamente.').fadeIn();
+            }
+        });
+    });
+
+    // Funções do contador
+    function startCountdown() {
+        var timeLeft = countdownTime;
+        $('#countdownTimer').text(timeLeft + ' segundos');
+        $('#resendCodeLink').hide();
+        $('#codeErrorMessage').hide();
+
+        countdownInterval = setInterval(function () {
+            timeLeft--;
+            $('#countdownTimer').text(timeLeft + ' segundos');
+
+            if (timeLeft <= 0) {
+                clearInterval(countdownInterval);
+                $('#countdownTimer').text('O tempo expirou.');
+                $('#resendCodeLink').show();
+            }
+        }, 1000);
+    }
+
+    function resetCountdown() {
+        clearInterval(countdownInterval);
+        startCountdown();
+    }
+
     if ($('#loginErrorToast').length > 0) {
         var toastEl = new bootstrap.Toast(document.getElementById('loginErrorToast'));
         toastEl.show();
@@ -186,19 +268,15 @@
 
     // Lógica do menuPrincipal
     if ($('#menuPrincipal').length > 0) {
-        $('#historicoButton').on('click', function (e) {
+        $('#historicoButton').on('click', function () {
             $('#loadingSpinner').fadeIn();
             $(this).prop('disabled', true);
-
-            // Redirecionar para o histórico no AgendamentoController
             window.location.href = '/Agendamento/Historico';
         });
 
-        $('#servicoButton').on('click', function (e) {
+        $('#servicoButton').on('click', function () {
             $('#loadingSpinner').fadeIn();
             $(this).prop('disabled', true);
-
-            // Redirecionar para SolicitarServico no ClienteController
             window.location.href = '/Cliente/SolicitarServico';
         });
     }
@@ -257,14 +335,11 @@
 
             $('#loadingSpinner').fadeIn();
 
-            // Armazenar os serviços selecionados no localStorage
             localStorage.setItem('servicosSelecionados', JSON.stringify(servicosSelecionados));
 
-            // Redirecionar para a escolha do barbeiro com duracaoTotal e servicoIds
             window.location.href = `/Barbeiro/EscolherBarbeiro?duracaoTotal=${duracaoTotal}&servicoIds=${servicoIds.join(',')}`;
         };
 
-        // Carregar serviços selecionados do localStorage
         var servicosArmazenados = JSON.parse(localStorage.getItem('servicosSelecionados')) || [];
         servicosArmazenados.forEach(function (servico) {
             servicosSelecionados.push(servico);
@@ -325,7 +400,6 @@
             });
         }
 
-        // Confirmar o horário e redirecionar para a tela de resumo do agendamento
         $('#confirmarHorarioBtn').on('click', function () {
             var horarioSelecionado = $('#horariosDisponiveis').val();
 
@@ -334,18 +408,14 @@
             } else {
                 $('#loadingSpinner').fadeIn();
 
-                // Limpar os serviços selecionados do localStorage
                 localStorage.removeItem('servicosSelecionados');
 
-                // Redirecionar para a página de resumo com os parâmetros necessários
                 var dataHora = new Date(horarioSelecionado);
                 window.location.href = `/Agendamento/ResumoAgendamento?barbeiroId=${selectedBarbeiroId}&dataHora=${encodeURIComponent(dataHora.toISOString())}&servicoIds=${selectedServicoIds}`;
             }
         });
 
-        // Botão de Voltar
         $('#voltarBtn').on('click', function () {
-            // Não é necessário passar parâmetros; os serviços estão no localStorage
             window.location.href = '/Cliente/SolicitarServico';
         });
     }
@@ -369,7 +439,6 @@
                 },
                 success: function () {
                     $('#loadingSpinner').fadeOut();
-                    // Exibe o modal de sucesso
                     $('#successModal').modal('show');
                 },
                 error: function () {
@@ -379,7 +448,6 @@
             });
         });
 
-        // Redirecionar para o menu principal ao clicar em "OK"
         $('#redirectMenuBtn').on('click', function () {
             window.location.href = '/Cliente/MenuPrincipal';
         });

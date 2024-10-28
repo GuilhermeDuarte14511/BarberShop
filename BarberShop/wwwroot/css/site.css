@@ -84,7 +84,7 @@ body {
 }
 
 /* Autocomplete para o e-mail */
-#emailAutocomplete {
+.autocomplete-box {
     border: 1px solid #2c3e50;
     background-color: #34495e;
     max-width: 100%;
@@ -109,6 +109,7 @@ body {
         background-color: #2c3e50;
         color: #ffffff;
     }
+
 
 /* Animação suave para esconder os inputs */
 .hidden {
