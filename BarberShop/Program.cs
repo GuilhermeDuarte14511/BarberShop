@@ -41,6 +41,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     {
         options.LoginPath = "/Login/Login";   // Define o caminho da página de login
         options.LogoutPath = "/Login/Logout"; // Define o caminho da página de logout
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(60); // Tempo de expiração da sessão (opcional)
+        options.SlidingExpiration = true; // Expiração deslizante (opcional)
     });
 
 // Adicionar serviços MVC
@@ -60,7 +62,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-// Middleware de autenticação
+// Middleware de autenticação e autorização
 app.UseAuthentication();
 app.UseAuthorization();
 

@@ -63,7 +63,7 @@ public class RabbitMQService : IRabbitMQService
                     }
 
                     // Envia e-mails para o cliente e barbeiro
-                    await emailService.EnviarEmailAsync(
+                    await emailService.EnviarEmailAgendamentoAsync(
                         emailMessage.EmailCliente,
                         emailMessage.NomeCliente,
                         "Confirmação de Agendamento",
@@ -74,7 +74,7 @@ public class RabbitMQService : IRabbitMQService
                         emailMessage.ValorTotal,
                         emailMessage.GoogleCalendarLink);
 
-                    await emailService.EnviarEmailAsync(
+                    await emailService.EnviarEmailAgendamentoAsync(
                         emailMessage.EmailBarbeiro,
                         emailMessage.NomeBarbeiro,
                         "Novo Agendamento",

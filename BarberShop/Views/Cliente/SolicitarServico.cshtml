@@ -10,7 +10,7 @@
         <div class="row">
             <!-- Lista de Serviços Disponíveis (lado esquerdo) -->
             <div class="col-md-6">
-                <h4>Serviços Disponíveis</h4>
+                <h4 class="text-danger">Serviços Disponíveis</h4>
                 <ul class="list-group">
                     @foreach (var servico in Model)
                     {
@@ -30,14 +30,14 @@
 
             <!-- Serviços Selecionados (lado direito) -->
             <div class="col-md-6">
-                <h4>Serviços Selecionados</h4>
+                <h4 class="text-danger">Serviços Selecionados</h4>
                 <ul class="list-group" id="servicosSelecionados">
                     <!-- Serviços Selecionados irão aparecer aqui dinamicamente -->
                 </ul>
 
                 <!-- Valor Total -->
                 <div class="mt-4">
-                    <h5>Total: R$ <span id="valorTotal">0,00</span></h5>
+                    <h5 class="text-warning">Total: R$ <span id="valorTotal">0,00</span></h5>
                 </div>
 
                 <!-- Botão para Confirmar Seleção -->

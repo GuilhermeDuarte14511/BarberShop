@@ -2,6 +2,7 @@
 using BarberShop.Domain.Interfaces;
 using BarberShop.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -17,12 +18,12 @@ namespace BarberShop.Infrastructure.Repositories
             _context = context;
         }
 
-        // Corrigir o AddAsync para adicionar Cliente
+        // Método para adicionar um novo cliente
         public async Task<Cliente> AddAsync(Cliente entity)
         {
             await _context.Clientes.AddAsync(entity);
             await _context.SaveChangesAsync();
-            return entity;  // Retorna o cliente adicionado
+            return entity;
         }
 
         public async Task DeleteAsync(int id)
@@ -54,6 +55,22 @@ namespace BarberShop.Infrastructure.Repositories
         {
             _context.Clientes.Update(entity);
             await _context.SaveChangesAsync();
+        }
+
+        // Novo método para atualizar apenas o código de verificação e a data de expiração
+        public async Task UpdateCodigoVerificacaoAsync(int clienteId, string codigoVerificacao, DateTime? expiracao)
+        {
+            var cliente = await _context.Clientes.FindAsync(clienteId);
+            if (cliente != null)
+            {
+                cliente.CodigoValidacao = codigoVerificacao;
+                cliente.CodigoValidacaoExpiracao = expiracao;
+
+                _context.Entry(cliente).Property(c => c.CodigoValidacao).IsModified = true;
+                _context.Entry(cliente).Property(c => c.CodigoValidacaoExpiracao).IsModified = true;
+
+                await _context.SaveChangesAsync();
+            }
         }
     }
 }

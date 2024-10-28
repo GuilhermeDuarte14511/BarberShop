@@ -12,5 +12,11 @@ namespace BarberShop.Domain.Entities
         public string Nome { get; set; }
         public string Email { get; set; }
         public string Telefone { get; set; }
+
+        // Novos campos para autenticação por código
+        public string? CodigoValidacao { get; set; } 
+        public DateTime? CodigoValidacaoExpiracao { get; set; }
     }
+
+
 }

@@ -78,46 +78,59 @@ namespace BarberShop.Infrastructure.Repositories
         }
 
         // Implementação do método GetAvailableSlotsAsync
-        public async Task<IEnumerable<DateTime>> GetAvailableSlotsAsync(int barbeiroId, DateTime date, int duracaoTotal)
+        public async Task<IEnumerable<DateTime>> GetAvailableSlotsAsync(int barbeiroId, DateTime dataVisualizacao, int duracaoTotal)
         {
-            List<DateTime> horariosDisponiveis = new List<DateTime>();
+            var horariosDisponiveis = new List<DateTime>();
 
-            // Encontrar a primeira segunda-feira da semana da data fornecida
-            DateTime startOfWeek = date.Date.AddDays(-(int)date.DayOfWeek + (int)DayOfWeek.Monday);
+            // Data de início é a data de visualização sem o componente de tempo
+            DateTime dataInicio = dataVisualizacao.Date;
 
-            // Iterar de segunda a sexta
-            for (int i = 0; i < 5; i++)
+            // Encontrar a data do próximo domingo a partir da data de início
+            int diasAteDomingo = ((int)DayOfWeek.Sunday - (int)dataInicio.DayOfWeek + 7) % 7;
+            DateTime dataFim = dataInicio.AddDays(diasAteDomingo);
+
+            // Iterar de dataInicio até dataFim, um dia de cada vez
+            for (DateTime dataAtual = dataInicio; dataAtual <= dataFim; dataAtual = dataAtual.AddDays(1))
             {
-                DateTime diaAtual = startOfWeek.AddDays(i);
+                // Pular as segundas-feiras (sem expediente)
+                if (dataAtual.DayOfWeek == DayOfWeek.Monday)
+                    continue;
 
-                // Obtém todos os agendamentos para o barbeiro na data específica
-                var agendamentos = await _context.Agendamentos
-                    .Where(a => a.BarbeiroId == barbeiroId && a.DataHora.Date == diaAtual.Date)
+                // Obter todos os agendamentos do barbeiro para o dia atual
+                var agendamentosDoDia = await _context.Agendamentos
+                    .Where(a => a.BarbeiroId == barbeiroId && a.DataHora.Date == dataAtual.Date)
                     .ToListAsync();
 
-                DateTime horarioInicial = diaAtual.Date.AddHours(9);  // Horário de início do expediente (09:00)
-                DateTime horarioFimDia = diaAtual.Date.AddHours(18);   // Horário de fim do expediente (18:00)
+                // Definir horário de abertura e fechamento do expediente (09:00 às 18:00)
+                DateTime horarioAbertura = dataAtual.AddHours(9);
+                DateTime horarioFechamento = dataAtual.AddHours(18);
 
-                while (horarioInicial.AddMinutes(duracaoTotal) <= horarioFimDia)
+                // Iniciar o horário atual como o horário de abertura
+                DateTime horarioAtual = horarioAbertura;
+
+                // Iterar pelos horários disponíveis no dia atual
+                while (horarioAtual.AddMinutes(duracaoTotal) <= horarioFechamento)
                 {
-                    // Verifica se o horário está ocupado por outro agendamento
-                    bool horarioOcupado = agendamentos.Any(a =>
-                        (horarioInicial >= a.DataHora && horarioInicial < a.DataHora.AddMinutes(a.DuracaoTotal)) ||
-                        (horarioInicial.AddMinutes(duracaoTotal) > a.DataHora && horarioInicial.AddMinutes(duracaoTotal) <= a.DataHora.AddMinutes(a.DuracaoTotal)));
+                    // Verificar se o horário atual conflita com algum agendamento existente
+                    bool existeConflito = agendamentosDoDia.Any(agendamento =>
+                        horarioAtual < agendamento.DataHora.AddMinutes(agendamento.DuracaoTotal) &&
+                        horarioAtual.AddMinutes(duracaoTotal) > agendamento.DataHora
+                    );
 
-                    // Se o horário não estiver ocupado, adiciona à lista de horários disponíveis
-                    if (!horarioOcupado)
+                    // Se não houver conflito, adicionar o horário à lista de horários disponíveis
+                    if (!existeConflito)
                     {
-                        horariosDisponiveis.Add(horarioInicial);
+                        horariosDisponiveis.Add(horarioAtual);
                     }
 
-                    // Avança para o próximo horário possível
-                    horarioInicial = horarioInicial.AddMinutes(duracaoTotal);
+                    // Avançar para o próximo intervalo de tempo
+                    horarioAtual = horarioAtual.AddMinutes(duracaoTotal);
                 }
             }
 
             return horariosDisponiveis;
         }
+
 
 
         // Implementação do método ObterAgendamentosPorBarbeiroIdAsync

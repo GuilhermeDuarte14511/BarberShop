@@ -6,8 +6,8 @@
 
 <!-- Div com ID para identificação -->
 <div id="escolherBarbeiroPage" class="container mt-5"
-     data-servico-ids="@ViewData["ServicoIds"]">
-    <!-- Adicionado data-servico-ids -->
+     data-servico-ids="@ViewData["ServicoIds"]"
+     data-duracao-total="@ViewData["DuracaoTotal"]">
     <h2 class="text-danger text-center">Escolha o Barbeiro</h2>
     <div class="row">
         @foreach (var barbeiro in Model)
@@ -17,16 +17,18 @@
                     <div class="card-body text-center">
                         <h5 class="card-title text-warning">@barbeiro.Nome</h5>
                         <button class="btn btn-danger barbeiro-btn"
-                                data-barbeiro-id="@barbeiro.BarbeiroId"
-                                data-duracao-total="@ViewData["DuracaoTotal"]"
-                                data-servico-ids="@ViewData["ServicoIds"]">
-                            <!-- Incluído data-servico-ids -->
+                                data-barbeiro-id="@barbeiro.BarbeiroId">
                             Escolher Horário
                         </button>
                     </div>
                 </div>
             </div>
         }
+    </div>
+
+    <!-- Botão de Voltar -->
+    <div class="mt-4">
+        <button class="btn btn-secondary" onclick="history.back()">Voltar</button>
     </div>
 </div>
 

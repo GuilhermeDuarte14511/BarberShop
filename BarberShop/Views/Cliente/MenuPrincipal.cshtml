@@ -1,7 +1,7 @@
 ﻿@{
     ViewData["Title"] = "Menu Principal";
 }
-<div id="menuPrincipal"></div>
+
 <div class="container mt-5" id="menuPrincipalPage">
     <div class="row justify-content-center">
         <div class="col-md-6">
@@ -11,13 +11,19 @@
 
                 <!-- Botão para Ver Histórico de Agendamentos -->
                 <div class="form-group mb-4">
-                    <a href="@Url.Action("Historico", "Cliente")" class="btn btn-danger btn-block" id="historicoButton">Ver Histórico de Agendamentos</a>
+                    <a href="@Url.Action("Historico", "Agendamento")" class="btn btn-danger btn-block" id="historicoButton">Ver Histórico de Agendamentos</a>
                 </div>
 
                 <!-- Botão para Solicitar Novo Serviço -->
                 <div class="form-group mb-4">
                     <a href="@Url.Action("SolicitarServico", "Cliente")" class="btn btn-danger btn-block" id="servicoButton">Solicitar Novo Serviço</a>
                 </div>
+
+                <!-- Botão de Logout -->
+                <form id="logoutForm" action="@Url.Action("Logout", "Login")" method="post">
+                    @Html.AntiForgeryToken() <!-- Token antifalsificação -->
+                    <button type="submit" class="btn btn-secondary btn-block">Logout</button>
+                </form>
 
                 <!-- Spinner de carregamento (inicialmente oculto) -->
                 <div id="loadingSpinner" class="text-center mt-3" style="display:none;">

@@ -4,9 +4,6 @@ using BarberShop.Application.Services;
 using BarberShop.Domain.Entities;
 using BarberShop.Domain.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace BarberShopMVC.Controllers
@@ -15,23 +12,14 @@ namespace BarberShopMVC.Controllers
     {
         private readonly IClienteService _clienteService;
         private readonly IServicoRepository _servicoRepository;
-        private readonly IAgendamentoService _agendamentoService; // Serviço de agendamento
-        private readonly IBarbeiroService _barbeiroService; // Serviço de barbeiros
-        // private readonly IRabbitMQService _rabbitMQService; // RabbitMQ para envio de emails (Comentado)
 
         public ClienteController(
             IClienteService clienteService,
-            IServicoRepository servicoRepository,
-            IAgendamentoService agendamentoService,
-            IBarbeiroService barbeiroService
-        // IRabbitMQService rabbitMQService // Adicionado RabbitMQService (Comentado)
+            IServicoRepository servicoRepository
         )
         {
             _clienteService = clienteService;
             _servicoRepository = servicoRepository;
-            _agendamentoService = agendamentoService;
-            _barbeiroService = barbeiroService;
-            // _rabbitMQService = rabbitMQService; (Comentado)
         }
 
         public IActionResult MenuPrincipal()
@@ -39,121 +27,10 @@ namespace BarberShopMVC.Controllers
             return View();
         }
 
-        public async Task<IActionResult> Historico()
-        {
-            var clienteId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
-            var agendamentos = await _clienteService.ObterHistoricoAgendamentosAsync(clienteId);
-            return View("HistoricoAgendamentos", agendamentos);
-        }
-
         public async Task<IActionResult> SolicitarServico()
         {
             var servicos = await _servicoRepository.GetAllAsync();
             return View("SolicitarServico", servicos);
-        }
-
-        public async Task<IActionResult> EscolherBarbeiro(int duracaoTotal, string servicoIds)
-        {
-            if (duracaoTotal <= 0)
-            {
-                return BadRequest("A duração dos serviços é inválida.");
-            }
-
-            var barbeiros = await _barbeiroService.ObterTodosBarbeirosAsync();
-            ViewData["DuracaoTotal"] = duracaoTotal;
-            ViewData["ServicoIds"] = servicoIds; // Passar os IDs dos serviços para a View
-            return View("EscolherBarbeiro", barbeiros);
-        }
-
-        public async Task<IActionResult> ObterHorariosDisponiveis(int barbeiroId, int duracaoTotal)
-        {
-            if (duracaoTotal <= 0)
-            {
-                return BadRequest("A duração dos serviços é inválida.");
-            }
-
-            var horariosDisponiveis = await _agendamentoService.ObterHorariosDisponiveisAsync(barbeiroId, DateTime.Now, duracaoTotal);
-            return Json(horariosDisponiveis);
-        }
-
-        // Método que exibe o resumo do agendamento
-        public async Task<IActionResult> ResumoAgendamento(int barbeiroId, DateTime dataHora, string servicoIds)
-        {
-            var barbeiro = await _barbeiroService.ObterBarbeiroPorIdAsync(barbeiroId);
-            if (barbeiro == null) return NotFound("Barbeiro não encontrado.");
-
-            // Converter a string de servicoIds para List<int>
-            List<int> servicoIdList = servicoIds.Split(',').Select(int.Parse).ToList();
-
-            var servicos = await _servicoRepository.ObterServicosPorIdsAsync(servicoIdList);
-            var precoTotal = servicos.Sum(s => s.Preco);
-
-            var resumoAgendamentoDTO = new ResumoAgendamentoDTO
-            {
-                NomeBarbeiro = barbeiro.Nome,
-                BarbeiroId = barbeiro.BarbeiroId,
-                DataHora = dataHora,
-                ServicosSelecionados = servicos.Select(s => new ServicoDTO
-                {
-                    ServicoId = s.ServicoId, // Adiciona o ServicoId ao DTO
-                    Nome = s.Nome,
-                    Preco = (decimal)s.Preco // Conversão explícita de float para decimal
-                }).ToList(),
-                PrecoTotal = (decimal)precoTotal // Conversão explícita de float para decimal
-            };
-
-            return View("ResumoAgendamento", resumoAgendamentoDTO);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> ConfirmarAgendamento(int barbeiroId, DateTime dataHora, string servicoIds)
-        {
-            try
-            {
-                var clienteId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
-
-                // Verifica se há serviços selecionados
-                if (string.IsNullOrEmpty(servicoIds))
-                {
-                    TempData["MensagemErro"] = "Nenhum serviço selecionado.";
-                    return RedirectToAction("MenuPrincipal");
-                }
-
-                List<int> servicoIdList = servicoIds.Split(',').Select(int.Parse).ToList();
-
-                // Cria o agendamento e retorna o ID do agendamento recém-criado, passando o clienteId
-                var agendamentoId = await _agendamentoService.CriarAgendamentoAsync(barbeiroId, dataHora, clienteId, servicoIdList);
-
-                // Código relacionado ao RabbitMQ comentado
-                /*
-                var agendamentoMessage = new
-                {
-                    ClienteId = clienteId,
-                    BarbeiroId = barbeiroId,
-                    DataHora = dataHora,
-                    ServicoIds = servicoIdList,
-                    AgendamentoId = agendamentoId
-                };
-
-                // Serializa a mensagem para envio
-                var mensagemJson = Newtonsoft.Json.JsonConvert.SerializeObject(agendamentoMessage);
-
-                // Enviar mensagem para a fila do RabbitMQ
-                _rabbitMQService.EnviarParaFila(mensagemJson);
-                */
-
-                // Exibir uma mensagem de confirmação e redirecionar para o menu principal
-                TempData["MensagemSucesso"] = "Agendamento confirmado com sucesso!";
-            }
-            catch (Exception ex)
-            {
-                // Caso ocorra algum erro, exibe uma mensagem apropriada e loga o erro (se necessário)
-                TempData["MensagemErro"] = "Ocorreu um erro ao confirmar o agendamento. Tente novamente.";
-                // Logar o erro se necessário
-                // _logger.LogError(ex, "Erro ao confirmar agendamento");
-            }
-
-            return RedirectToAction("MenuPrincipal");
         }
 
         // Exibe todos os clientes
@@ -179,7 +56,7 @@ namespace BarberShopMVC.Controllers
 
         // Cria um novo cliente
         [HttpPost]
-        public async Task<IActionResult> Create(ClienteDTO clienteDto) // Mudança para usar DTO
+        public async Task<IActionResult> Create(ClienteDTO clienteDto)
         {
             if (ModelState.IsValid)
             {
@@ -204,6 +81,7 @@ namespace BarberShopMVC.Controllers
 
             var clienteDto = new ClienteDTO
             {
+                ClienteId = cliente.ClienteId,
                 Nome = cliente.Nome,
                 Email = cliente.Email,
                 Telefone = cliente.Telefone,
@@ -214,7 +92,7 @@ namespace BarberShopMVC.Controllers
 
         // Atualiza um cliente existente
         [HttpPost]
-        public async Task<IActionResult> Edit(int id, ClienteDTO clienteDto) // Mudança para usar DTO
+        public async Task<IActionResult> Edit(int id, ClienteDTO clienteDto)
         {
             if (id != clienteDto.ClienteId) return BadRequest();
 

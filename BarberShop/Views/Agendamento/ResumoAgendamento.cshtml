@@ -15,9 +15,9 @@
         <div class="card-body">
             <h4 class="card-title text-warning">Detalhes do Agendamento</h4>
             <p><strong>Barbeiro:</strong> @Model.NomeBarbeiro</p>
-            <p><strong>Data e Hora:</strong> @Model.DataHora</p>
+            <p><strong>Data e Hora:</strong> @Model.DataHora.ToString("dd/MM/yyyy HH:mm")</p>
 
-            <h5>Serviços Selecionados:</h5>
+            <h5 class="text-danger">Serviços Selecionados:</h5>
             <ul class="list-group bg-dark">
                 @foreach (var servico in Model.ServicosSelecionados)
                 {
@@ -33,6 +33,11 @@
 
             <button id="confirmarAgendamentoBtn" class="btn btn-danger btn-block">Confirmar Agendamento</button>
         </div>
+    </div>
+
+    <!-- Botão de Voltar -->
+    <div class="mt-4">
+        <button class="btn btn-secondary" onclick="history.back()">Voltar</button>
     </div>
 
     <!-- Spinner de carregamento -->

@@ -6,9 +6,9 @@
     <div class="row justify-content-center">
         <div class="col-md-6">
             <div class="card bg-dark text-light p-4" id="loginCard">
-                <h3 class="text-center text-danger mb-4" id="loginTitle">Bem-vindo à Barbearia Neris</h3>
+                <h3 class="text-center text-danger mb-4" id="loginTitle">Bem-vindo à Barbearia CG DREAMS</h3>
                 <p class="text-center" id="loginInstruction">Por favor, insira seu telefone ou e-mail:</p>
-                <form id="loginForm" action="/Login/Login" method="post">
+                <form id="loginForm">
                     <div class="form-group mb-4" id="phoneInputContainer">
                         <input type="text" id="phoneInput" name="phoneInput" class="form-control text-center" placeholder="Telefone" />
                     </div>
@@ -33,16 +33,57 @@
     </div>
 </div>
 
-@if (TempData["LoginError"] != null)
-{
-        <div class="toast-container position-fixed bottom-0 end-0 p-3">
-            <div id="loginErrorToast" class="toast align-items-center text-white bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
-                <div class="d-flex">
-                    <div class="toast-body">
-                    @TempData["LoginError"]
+<!-- Modal de Verificação de Código com Contador -->
+<div class="modal fade" id="verificationModal" tabindex="-1" aria-labelledby="verificationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-light">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger" id="verificationModalLabel">Verificação de Código</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <p>Um código foi enviado para o seu email. Por favor, insira-o abaixo:</p>
+                <p>O código expira em <span id="countdownTimer">30 segundos</span>.</p>
+                <form id="verificationForm">
+                    <input type="hidden" id="clienteId" name="clienteId" value="" />
+                    <div class="form-group mb-4">
+                        <input type="text" id="codigo" name="codigo" class="form-control text-center" placeholder="Código de Verificação" required />
                     </div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-danger btn-block">Verificar</button>
+                    </div>
+                </form>
+                <div class="text-center mt-3">
+                    <p id="resendCodeLink" style="display: none;">Não recebeu o código? <a href="#" id="resendCode">Reenviar</a></p>
                 </div>
+                <div id="codeErrorMessage" class="alert alert-danger mt-3" style="display:none;"></div>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- Toast de Erro -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="loginErrorToast" class="toast align-items-center text-white bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true" style="display: none;">
+        <div class="d-flex">
+            <div class="toast-body">
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fechar"></button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast de Erro -->
+@if (TempData["LoginError"] != null)
+{
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="loginErrorToast" class="toast align-items-center text-white bg-danger border-0 show" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    @TempData["LoginError"]
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fechar"></button>
+            </div>
+        </div>
+    </div>
 }

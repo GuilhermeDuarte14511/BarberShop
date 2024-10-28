@@ -1,4 +1,8 @@
 ﻿$(document).ready(function () {
+    // Variáveis globais
+    var countdownInterval;
+    var countdownTime = 30; // Tempo em segundos
+
     // Lógica do login
     if ($('#loginPage').length > 0) {
         function isValidEmail(email) {
@@ -58,19 +62,120 @@
             $('#emailAutocomplete').fadeOut();
         });
 
+        // Submissão do formulário de login via AJAX
         $('#loginForm').on('submit', function (e) {
+            e.preventDefault();
+
             var phoneValue = $('#phoneInput').val().trim();
             var emailValue = $('#emailInput').val().trim();
 
-            if ((!isValidEmail(emailValue) && emailValue.length > 0) || (!isValidPhone(phoneValue) && phoneValue.length > 0)) {
-                e.preventDefault();
+            if ((!isValidEmail(emailValue) && emailValue.length > 0) && (!isValidPhone(phoneValue) && phoneValue.length > 0)) {
                 $('#errorMessage').fadeIn();
+                return;
             } else {
                 $('#errorMessage').fadeOut();
                 $('#loadingSpinner').fadeIn();
                 $('button[type="submit"]').prop('disabled', true);
             }
+
+            var formData = $(this).serialize();
+
+            $.ajax({
+                type: 'POST',
+                url: '/Login/Login',
+                data: formData,
+                success: function (data) {
+                    $('#loadingSpinner').fadeOut();
+                    if (data.success) {
+                        $('#clienteId').val(data.clienteId);
+                        $('button[type="submit"]').prop('disabled', false);
+                        $('#verificationModal').modal('show');
+                        startCountdown(); // Iniciar o contador de tempo
+                    } else {
+                        $('button[type="submit"]').prop('disabled', false);
+                        $('#errorMessage').text(data.message).fadeIn();
+                    }
+                },
+                error: function () {
+                    $('#loadingSpinner').fadeOut();
+                    $('button[type="submit"]').prop('disabled', false);
+                    $('#errorMessage').text('Ocorreu um erro. Por favor, tente novamente.').fadeIn();
+                }
+            });
         });
+
+        // Submissão do formulário de verificação de código via AJAX
+        $('#verificationForm').on('submit', function (e) {
+            e.preventDefault();
+
+            var formData = $(this).serialize();
+
+            $.ajax({
+                type: 'POST',
+                url: '/Login/VerificarCodigo',
+                data: formData,
+                success: function (data) {
+                    if (data.success) {
+                        clearInterval(countdownInterval); // Parar o contador
+                        window.location.href = data.redirectUrl;
+                    } else {
+                        $('#codeErrorMessage').text(data.message).fadeIn();
+                    }
+                },
+                error: function () {
+                    $('#codeErrorMessage').text('Ocorreu um erro. Por favor, tente novamente.').fadeIn();
+                }
+            });
+        });
+
+        // Reenvio do código de verificação via AJAX
+        $('#resendCode').on('click', function (e) {
+            e.preventDefault();
+
+            var clienteId = $('#clienteId').val();
+
+            $.ajax({
+                type: 'GET',
+                url: '/Login/ReenviarCodigo',
+                data: { clienteId: clienteId },
+                success: function (data) {
+                    if (data.success) {
+                        $('#codeErrorMessage').text('Um novo código foi enviado para o seu email.').fadeIn();
+                        resetCountdown(); // Reiniciar o contador
+                    } else {
+                        $('#codeErrorMessage').text(data.message).fadeIn();
+                    }
+                },
+                error: function () {
+                    $('#codeErrorMessage').text('Ocorreu um erro ao reenviar o código. Por favor, tente novamente.').fadeIn();
+                }
+            });
+        });
+
+        // Funções do contador
+        function startCountdown() {
+            var timeLeft = countdownTime;
+            $('#countdownTimer').text(timeLeft + ' segundos');
+            $('#resendCodeLink').hide();
+            $('#codeErrorMessage').hide();
+
+            countdownInterval = setInterval(function () {
+                timeLeft--;
+                $('#countdownTimer').text(timeLeft + ' segundos');
+
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    $('#countdownTimer').text('O tempo expirou.');
+                    $('#resendCodeLink').show();
+                    // Não desativamos o botão ou o campo de entrada aqui
+                }
+            }, 1000);
+        }
+
+        function resetCountdown() {
+            clearInterval(countdownInterval);
+            startCountdown();
+        }
     }
 
     // Exibir o toast de erro de login, se houver
@@ -81,9 +186,20 @@
 
     // Lógica do menuPrincipal
     if ($('#menuPrincipal').length > 0) {
-        $('#historicoButton, #servicoButton').on('click', function (e) {
+        $('#historicoButton').on('click', function (e) {
             $('#loadingSpinner').fadeIn();
             $(this).prop('disabled', true);
+
+            // Redirecionar para o histórico no AgendamentoController
+            window.location.href = '/Agendamento/Historico';
+        });
+
+        $('#servicoButton').on('click', function (e) {
+            $('#loadingSpinner').fadeIn();
+            $(this).prop('disabled', true);
+
+            // Redirecionar para SolicitarServico no ClienteController
+            window.location.href = '/Cliente/SolicitarServico';
         });
     }
 
@@ -99,7 +215,7 @@
             if (index === -1) {
                 servicosSelecionados.push({ id, nome, preco, duracao });
                 valorTotal += parseFloat(preco);
-                duracaoTotal += parseInt(duracao); // Atualiza duração total
+                duracaoTotal += parseInt(duracao);
                 $(element).prop('disabled', true);
             }
 
@@ -108,7 +224,7 @@
 
         window.removerServico = function (index, id) {
             valorTotal -= parseFloat(servicosSelecionados[index].preco);
-            duracaoTotal -= parseInt(servicosSelecionados[index].duracao); // Remove duração
+            duracaoTotal -= parseInt(servicosSelecionados[index].duracao);
             servicosSelecionados.splice(index, 1);
 
             $('#servico-' + id).prop('disabled', false);
@@ -137,39 +253,51 @@
                 return;
             }
 
-            var servicoIds = servicosSelecionados.map(s => s.id); // Coletar os IDs dos serviços selecionados
+            var servicoIds = servicosSelecionados.map(s => s.id);
 
             $('#loadingSpinner').fadeIn();
-            setTimeout(function () {
-                $('#loadingSpinner').fadeOut();
-                // Redirecionar para a escolha do barbeiro com duracaoTotal e servicoIds
-                window.location.href = `/Cliente/EscolherBarbeiro?duracaoTotal=${duracaoTotal}&servicoIds=${servicoIds.join(',')}`;
-            }, 2000);
+
+            // Armazenar os serviços selecionados no localStorage
+            localStorage.setItem('servicosSelecionados', JSON.stringify(servicosSelecionados));
+
+            // Redirecionar para a escolha do barbeiro com duracaoTotal e servicoIds
+            window.location.href = `/Barbeiro/EscolherBarbeiro?duracaoTotal=${duracaoTotal}&servicoIds=${servicoIds.join(',')}`;
         };
+
+        // Carregar serviços selecionados do localStorage
+        var servicosArmazenados = JSON.parse(localStorage.getItem('servicosSelecionados')) || [];
+        servicosArmazenados.forEach(function (servico) {
+            servicosSelecionados.push(servico);
+            valorTotal += parseFloat(servico.preco);
+            duracaoTotal += parseInt(servico.duracao);
+            $('#servico-' + servico.id).prop('disabled', true);
+        });
 
         atualizarListaServicosSelecionados();
     }
 
     // Lógica para a página de Escolher Barbeiro
     if ($('#escolherBarbeiroPage').length > 0) {
-        $('.barbeiro-btn').on('click', function () {
-            var barbeiroId = $(this).data('barbeiro-id');
-            var duracaoTotal = $(this).data('duracao-total');
-            var servicoIds = $(this).data('servico-ids'); // Capturar os IDs dos serviços selecionados
+        var selectedBarbeiroId = null;
+        var selectedDuracaoTotal = $('#escolherBarbeiroPage').data('duracao-total');
+        var selectedServicoIds = $('#escolherBarbeiroPage').data('servico-ids');
 
-            if (!duracaoTotal || duracaoTotal <= 0) {
+        $('.barbeiro-btn').on('click', function () {
+            selectedBarbeiroId = $(this).data('barbeiro-id');
+
+            if (!selectedDuracaoTotal || selectedDuracaoTotal <= 0) {
                 alert("Nenhum serviço selecionado ou duração inválida.");
                 return;
             }
 
             $('#calendarioModal').modal('show');
-            carregarHorariosDropdown(barbeiroId, duracaoTotal);
+            carregarHorariosDropdown(selectedBarbeiroId, selectedDuracaoTotal);
         });
 
         function carregarHorariosDropdown(barbeiroId, duracaoTotal) {
             $('#loadingSpinner').fadeIn();
             $.ajax({
-                url: '/Cliente/ObterHorariosDisponiveis',
+                url: '/Agendamento/ObterHorariosDisponiveis',
                 data: {
                     barbeiroId: barbeiroId,
                     duracaoTotal: duracaoTotal
@@ -200,20 +328,25 @@
         // Confirmar o horário e redirecionar para a tela de resumo do agendamento
         $('#confirmarHorarioBtn').on('click', function () {
             var horarioSelecionado = $('#horariosDisponiveis').val();
-            var barbeiroId = $('.barbeiro-btn').data('barbeiro-id');
-            var servicoIds = $('#escolherBarbeiroPage').data('servico-ids'); // Recuperando os IDs dos serviços
 
             if (!horarioSelecionado) {
                 alert('Por favor, selecione um horário.');
             } else {
                 $('#loadingSpinner').fadeIn();
-                setTimeout(function () {
-                    $('#loadingSpinner').fadeOut();
-                    var dataHora = new Date(horarioSelecionado);
-                    // Redirecionar para a página de resumo com os parâmetros necessários
-                    window.location.href = `/Cliente/ResumoAgendamento?barbeiroId=${barbeiroId}&dataHora=${encodeURIComponent(dataHora.toISOString())}&servicoIds=${servicoIds}`;
-                }, 2000);
+
+                // Limpar os serviços selecionados do localStorage
+                localStorage.removeItem('servicosSelecionados');
+
+                // Redirecionar para a página de resumo com os parâmetros necessários
+                var dataHora = new Date(horarioSelecionado);
+                window.location.href = `/Agendamento/ResumoAgendamento?barbeiroId=${selectedBarbeiroId}&dataHora=${encodeURIComponent(dataHora.toISOString())}&servicoIds=${selectedServicoIds}`;
             }
+        });
+
+        // Botão de Voltar
+        $('#voltarBtn').on('click', function () {
+            // Não é necessário passar parâmetros; os serviços estão no localStorage
+            window.location.href = '/Cliente/SolicitarServico';
         });
     }
 
@@ -224,36 +357,26 @@
             var servicoIdsString = $('#resumoAgendamentoPage').data('servico-ids');
             var dataHora = $('#resumoAgendamentoPage').data('data-hora');
 
-            // Converter a string '1,2,3' para um array [1, 2, 3]
-            var servicoIds = servicoIdsString.split(',').map(function (id) {
-                return parseInt(id, 10); // Convertendo cada ID para número
-            });
-
-            // Exibe o spinner de carregamento
             $('#loadingSpinner').fadeIn();
 
-            // Simula a chamada ao servidor ou processo de confirmação
-            setTimeout(function () {
-                $('#loadingSpinner').fadeOut();
-
-                // Enviar o agendamento via AJAX para o backend
-                $.ajax({
-                    type: 'POST',
-                    url: '/Cliente/ConfirmarAgendamento',
-                    data: {
-                        barbeiroId: barbeiroId,
-                        servicoIds: servicoIds.join(','), // Enviar como string separada por vírgulas
-                        dataHora: dataHora
-                    },
-                    success: function () {
-                        // Exibe o modal de sucesso
-                        $('#successModal').modal('show');
-                    },
-                    error: function () {
-                        alert('Erro ao confirmar o agendamento.');
-                    }
-                });
-            }, 2000);
+            $.ajax({
+                type: 'POST',
+                url: '/Agendamento/ConfirmarAgendamento',
+                data: {
+                    barbeiroId: barbeiroId,
+                    servicoIds: servicoIdsString,
+                    dataHora: dataHora
+                },
+                success: function () {
+                    $('#loadingSpinner').fadeOut();
+                    // Exibe o modal de sucesso
+                    $('#successModal').modal('show');
+                },
+                error: function () {
+                    $('#loadingSpinner').fadeOut();
+                    alert('Erro ao confirmar o agendamento.');
+                }
+            });
         });
 
         // Redirecionar para o menu principal ao clicar em "OK"
