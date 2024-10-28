@@ -335,12 +335,12 @@
 
             $('#loadingSpinner').fadeIn();
 
-            localStorage.setItem('servicosSelecionados', JSON.stringify(servicosSelecionados));
+            sessionStorage.setItem('servicosSelecionados', JSON.stringify(servicosSelecionados));
 
             window.location.href = `/Barbeiro/EscolherBarbeiro?duracaoTotal=${duracaoTotal}&servicoIds=${servicoIds.join(',')}`;
         };
 
-        var servicosArmazenados = JSON.parse(localStorage.getItem('servicosSelecionados')) || [];
+        var servicosArmazenados = JSON.parse(sessionStorage.getItem('servicosSelecionados')) || [];
         servicosArmazenados.forEach(function (servico) {
             servicosSelecionados.push(servico);
             valorTotal += parseFloat(servico.preco);
@@ -408,7 +408,7 @@
             } else {
                 $('#loadingSpinner').fadeIn();
 
-                localStorage.removeItem('servicosSelecionados');
+                sessionStorage.removeItem('servicosSelecionados');
 
                 var dataHora = new Date(horarioSelecionado);
                 window.location.href = `/Agendamento/ResumoAgendamento?barbeiroId=${selectedBarbeiroId}&dataHora=${encodeURIComponent(dataHora.toISOString())}&servicoIds=${selectedServicoIds}`;
