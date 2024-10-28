@@ -1,0 +1,32 @@
+﻿@{
+    ViewData["Title"] = "Menu Principal";
+}
+<div id="menuPrincipal"></div>
+<div class="container mt-5" id="menuPrincipalPage">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card bg-dark text-light p-4 text-center">
+                <h3 class="text-center text-danger mb-4">Bem-vindo, @User.Identity.Name</h3>
+                <p class="text-center">Escolha uma opção:</p>
+
+                <!-- Botão para Ver Histórico de Agendamentos -->
+                <div class="form-group mb-4">
+                    <a href="@Url.Action("Historico", "Cliente")" class="btn btn-danger btn-block" id="historicoButton">Ver Histórico de Agendamentos</a>
+                </div>
+
+                <!-- Botão para Solicitar Novo Serviço -->
+                <div class="form-group mb-4">
+                    <a href="@Url.Action("SolicitarServico", "Cliente")" class="btn btn-danger btn-block" id="servicoButton">Solicitar Novo Serviço</a>
+                </div>
+
+                <!-- Spinner de carregamento (inicialmente oculto) -->
+                <div id="loadingSpinner" class="text-center mt-3" style="display:none;">
+                    <div class="spinner-border text-danger" role="status">
+                        <span class="sr-only">Carregando...</span>
+                    </div>
+                    <p class="mt-2">Carregando...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

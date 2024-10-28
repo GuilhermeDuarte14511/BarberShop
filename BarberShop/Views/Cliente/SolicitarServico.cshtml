@@ -1,0 +1,61 @@
+﻿@model IEnumerable<BarberShop.Domain.Entities.Servico>
+
+@{
+    ViewData["Title"] = "Solicitar Novo Serviço";
+}
+
+<!-- Div com ID para identificação -->
+<div id="solicitarServicoPage">
+    <div class="container mt-5">
+        <div class="row">
+            <!-- Lista de Serviços Disponíveis (lado esquerdo) -->
+            <div class="col-md-6">
+                <h4>Serviços Disponíveis</h4>
+                <ul class="list-group">
+                    @foreach (var servico in Model)
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>
+                                <strong>@servico.Nome</strong> - R$ @servico.Preco <br>
+                                <small><em>Duração: @servico.Duracao minutos</em></small>
+                            </span>
+                            <button id="servico-@servico.ServicoId" class="btn btn-success btn-sm"
+                                    onclick="adicionarServico('@servico.ServicoId', '@servico.Nome', '@servico.Preco', '@servico.Duracao', this)">
+                                Adicionar
+                            </button>
+                        </li>
+                    }
+                </ul>
+            </div>
+
+            <!-- Serviços Selecionados (lado direito) -->
+            <div class="col-md-6">
+                <h4>Serviços Selecionados</h4>
+                <ul class="list-group" id="servicosSelecionados">
+                    <!-- Serviços Selecionados irão aparecer aqui dinamicamente -->
+                </ul>
+
+                <!-- Valor Total -->
+                <div class="mt-4">
+                    <h5>Total: R$ <span id="valorTotal">0,00</span></h5>
+                </div>
+
+                <!-- Botão para Confirmar Seleção -->
+                <button class="btn btn-primary mt-3" onclick="confirmarServico()">Confirmar Seleção</button>
+            </div>
+        </div>
+
+        <!-- Botão de Voltar -->
+        <div class="mt-4">
+            <button class="btn btn-secondary" onclick="history.back()">Voltar</button>
+        </div>
+    </div>
+
+    <!-- Spinner de carregamento (inicialmente oculto) -->
+    <div id="loadingSpinner" class="text-center mt-3" style="display:none;">
+        <div class="spinner-border text-danger" role="status">
+            <span class="sr-only">Carregando...</span>
+        </div>
+        <p class="mt-2">Carregando...</p>
+    </div>
+</div>

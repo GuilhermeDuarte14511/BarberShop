@@ -1,0 +1,61 @@
+﻿@using BarberShop.Application.DTOs
+@model ResumoAgendamentoDTO
+
+@{
+    ViewData["Title"] = "Resumo do Agendamento";
+}
+
+<div class="container mt-5" id="resumoAgendamentoPage"
+     data-barbeiro-id="@Model.BarbeiroId"
+     data-servico-ids="@string.Join(",", Model.ServicosSelecionados.Select(s => s.ServicoId))"
+     data-data-hora="@Model.DataHora.ToString("o")">
+    <h2 class="text-danger text-center">Resumo do Agendamento</h2>
+
+    <div class="card bg-dark text-light">
+        <div class="card-body">
+            <h4 class="card-title text-warning">Detalhes do Agendamento</h4>
+            <p><strong>Barbeiro:</strong> @Model.NomeBarbeiro</p>
+            <p><strong>Data e Hora:</strong> @Model.DataHora</p>
+
+            <h5>Serviços Selecionados:</h5>
+            <ul class="list-group bg-dark">
+                @foreach (var servico in Model.ServicosSelecionados)
+                {
+                    <li class="list-group-item bg-dark text-light d-flex justify-content-between">
+                        <span>@servico.Nome</span>
+                        <span>R$ @servico.Preco.ToString("F2")</span>
+                    </li>
+                }
+            </ul>
+
+            <hr />
+            <p><strong>Preço Total:</strong> R$ @Model.PrecoTotal.ToString("F2")</p>
+
+            <button id="confirmarAgendamentoBtn" class="btn btn-danger btn-block">Confirmar Agendamento</button>
+        </div>
+    </div>
+
+    <!-- Spinner de carregamento -->
+    <div id="loadingSpinner" class="text-center mt-3" style="display:none;">
+        <div class="spinner-border text-danger" role="status">
+            <span class="sr-only">Carregando...</span>
+        </div>
+        <p class="mt-2 text-light">Confirmando agendamento...</p>
+    </div>
+</div>
+
+<!-- Modal de Sucesso -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-light">
+            <div class="modal-header">
+                <h5 class="modal-title text-success" id="successModalLabel">Agendamento Confirmado!</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <p>Seu agendamento foi confirmado com sucesso!</p>
+                <button id="redirectMenuBtn" class="btn btn-success">OK</button>
+            </div>
+        </div>
+    </div>
+</div>

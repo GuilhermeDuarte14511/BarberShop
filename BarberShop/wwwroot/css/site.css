@@ -1,0 +1,198 @@
+/* Fundo escuro para a página toda */
+body {
+    background-color: #1c1c1c;
+    font-family: 'Poppins', sans-serif;
+    color: #ecf0f1;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Estilos de contêiner e inputs */
+#loginPage .card,
+#escolherBarbeiroPage .card {
+    background-color: #2b2b2b;
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+#loginPage h3,
+#escolherBarbeiroPage h2 {
+    color: #e74c3c;
+    font-weight: bold;
+}
+
+#loginPage p,
+#escolherBarbeiroPage p {
+    color: #bdc3c7;
+}
+
+/* Estilo dos inputs de telefone e email */
+#phoneInput, #emailInput {
+    background-color: #34495e;
+    border-color: #2c3e50;
+    color: #ecf0f1;
+    text-align: center;
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+    #phoneInput::placeholder, #emailInput::placeholder {
+        color: #bdc3c7;
+    }
+
+    /* Estilos quando os inputs estão em foco */
+    #phoneInput:focus, #emailInput:focus {
+        background-color: #2c3e50;
+        border-color: #e74c3c;
+        color: #ffffff;
+        box-shadow: none;
+    }
+
+/* Botão de avanço e botões de escolha de horário */
+#loginForm button,
+.barbeiro-btn,
+#confirmarHorarioBtn {
+    background-color: #e74c3c;
+    border-color: #e74c3c;
+    color: #ffffff;
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+    /* Efeito de hover no botão de envio */
+    #loginForm button:hover,
+    .barbeiro-btn:hover,
+    #confirmarHorarioBtn:hover {
+        background-color: #c0392b;
+        border-color: #c0392b;
+    }
+
+/* Mensagem de erro */
+#errorMessage {
+    color: #e74c3c;
+    font-size: 14px;
+    margin-top: 10px;
+}
+
+/* Autocomplete para o e-mail */
+#emailAutocomplete {
+    border: 1px solid #2c3e50;
+    background-color: #34495e;
+    max-width: 100%;
+    margin-top: 5px;
+    padding: 0;
+    border-radius: 5px;
+    position: absolute;
+    z-index: 10;
+    display: none;
+}
+
+/* Estilo das sugestões de autocomplete */
+.autocomplete-suggestion {
+    padding: 10px;
+    cursor: pointer;
+    color: #ecf0f1;
+    border-bottom: 1px solid #2c3e50;
+}
+
+    /* Estilo de hover nas sugestões de autocomplete */
+    .autocomplete-suggestion:hover {
+        background-color: #2c3e50;
+        color: #ffffff;
+    }
+
+/* Animação suave para esconder os inputs */
+.hidden {
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: opacity 0.4s ease, max-height 0.4s ease;
+}
+
+/* Garantir que o spinner tenha uma camada superior */
+#loadingSpinner {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1050; /* Coloca o spinner acima do modal */
+    background-color: rgba(0, 0, 0, 0.8); /* Fundo escuro para destacar o spinner */
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+    /* Spinner de carregamento texto */
+    #loadingSpinner p {
+        color: #ecf0f1;
+    }
+
+/* Estilos para o modal */
+.modal-content {
+    background-color: #2b2b2b;
+    color: #ecf0f1;
+}
+
+.modal-header h5 {
+    color: #e74c3c;
+}
+
+/* Dropdown de seleção de horário */
+.form-select {
+    background-color: #34495e;
+    color: #ecf0f1;
+    border-color: #2c3e50;
+}
+
+    .form-select option {
+        background-color: #2c3e50;
+        color: #ecf0f1;
+    }
+
+.spinner-border {
+    color: #e74c3c;
+}
+
+/* Estilo dos cartões dos barbeiros */
+#escolherBarbeiroPage .card-title {
+    color: #f39c12;
+    font-weight: bold;
+}
+
+/* Estilo geral do texto do dropdown */
+#dropdownHorarios label {
+    color: #bdc3c7;
+}
+
+/* Estilo do botão de confirmação dentro do modal */
+#confirmarHorarioBtn {
+    background-color: #e74c3c;
+    border-color: #e74c3c;
+}
+
+    #confirmarHorarioBtn:hover {
+        background-color: #c0392b;
+        border-color: #c0392b;
+    }
+
+.table-responsive {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-bottom: 15px;
+}
+
+.table-sm td, .table-sm th {
+    padding: 0.5rem; /* Diminuir o padding para uma tabela mais compacta */
+}
