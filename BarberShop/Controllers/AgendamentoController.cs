@@ -193,14 +193,14 @@ namespace BarberShopMVC.Controllers
                 var dataHoraFim = dataHora.AddMinutes(duracaoTotal);
 
                 // Gerar link para o Google Calendar
-                var tituloEvento = "Agendamento na Barbearia Neris";
+                var tituloEvento = "Agendamento na Barbearia CG DREAMS";
                 var descricaoEvento = $"Agendamento com o barbeiro {barbeiro.Nome} para os serviços: {string.Join(", ", servicos.Select(s => s.Nome))}";
                 var localEvento = "Endereço da Barbearia";
 
                 var googleCalendarLink = _emailService.GerarLinkGoogleCalendar(tituloEvento, dataHora, dataHoraFim, descricaoEvento, localEvento);
 
                 // Enviar e-mail para o cliente
-                var assuntoCliente = "Confirmação de Agendamento - Barbearia Neris";
+                var assuntoCliente = "Confirmação de Agendamento - Barbearia CG DREAMS";
                 var conteudoCliente = "Seu agendamento foi confirmado com sucesso!";
 
                 await _emailService.EnviarEmailAgendamentoAsync(
@@ -216,7 +216,7 @@ namespace BarberShopMVC.Controllers
                 );
 
                 // Enviar e-mail para o barbeiro
-                var assuntoBarbeiro = "Novo Agendamento - Barbearia Neris";
+                var assuntoBarbeiro = "Novo Agendamento - Barbearia CG DREAMS";
                 var conteudoBarbeiro = $"Você tem um novo agendamento com o cliente {cliente.Nome}.";
 
                 await _emailService.EnviarEmailAgendamentoAsync(
