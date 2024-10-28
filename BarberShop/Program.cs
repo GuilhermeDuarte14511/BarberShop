@@ -12,11 +12,20 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<BarbeariaContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BarberShopDb")));
 
-// Registrar serviços no contêiner de injeção de dependências
+// Carregar secrets somente em Development
+if (builder.Environment.IsDevelopment())
+{
+    builder.Configuration.AddUserSecrets<Program>();
+}
 
-// Serviço de Email com SendGrid
+// Obter a chave SendGridApiKey dinamicamente com base no ambiente
+string sendGridApiKey = builder.Environment.IsDevelopment()
+    ? builder.Configuration["SendGridApiKey"]  // Obtém dos secrets em Development
+    : Environment.GetEnvironmentVariable("SendGridApiKey"); // Obtém da variável de ambiente na Azure
+
+// Configurar o serviço de Email com SendGrid usando a chave configurada
 builder.Services.AddScoped<IEmailService, EmailService>(provider =>
-    new EmailService(builder.Configuration["SendGridApiKey"])); // SendGrid API Key do appsettings.json
+    new EmailService(sendGridApiKey));
 
 // Serviço RabbitMQ (Comentado porque você não irá usar agora)
 /*builder.Services.AddSingleton<IRabbitMQService, RabbitMQService>(provider =>
