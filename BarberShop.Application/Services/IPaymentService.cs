@@ -3,24 +3,28 @@
     public interface IPaymentService
     {
         /// <summary>
-        /// Cria um PaymentIntent para pagamentos com cartão de crédito.
+        /// Cria um PaymentIntent para pagamentos com cartão de crédito, associado a um cliente.
         /// </summary>
         /// <param name="amount">Valor do pagamento em decimal.</param>
+        /// <param name="clienteNome">Nome do cliente.</param>
+        /// <param name="clienteEmail">E-mail do cliente.</param>
         /// <returns>ClientSecret do PaymentIntent para confirmação no frontend.</returns>
-        Task<string> ProcessCreditCardPayment(decimal amount);
+        Task<string> ProcessCreditCardPayment(decimal amount, string clienteNome, string clienteEmail);
 
         /// <summary>
-        /// Simula ou implementa a criação de um PaymentIntent para pagamentos via PIX.
+        /// Cria um PaymentIntent para pagamentos via PIX, associado a um cliente.
         /// </summary>
         /// <param name="amount">Valor do pagamento em decimal.</param>
-        /// <returns>ClientSecret do PaymentIntent (simulado).</returns>
-        Task<string> ProcessPixPayment(decimal amount);
+        /// <param name="clienteNome">Nome do cliente.</param>
+        /// <param name="clienteEmail">E-mail do cliente.</param>
+        /// <returns>URL do QR Code para o pagamento via PIX.</returns>
+        Task<string> ProcessPixPayment(decimal amount, string clienteNome, string clienteEmail);
 
         /// <summary>
-        /// Simula ou implementa a criação de um PaymentIntent para transferências bancárias.
+        /// Simula um pagamento via transferência bancária.
         /// </summary>
         /// <param name="amount">Valor do pagamento em decimal.</param>
-        /// <returns>ClientSecret do PaymentIntent (simulado).</returns>
+        /// <returns>Mensagem simulada de confirmação de transferência bancária.</returns>
         Task<string> ProcessBankTransfer(decimal amount);
     }
 }

@@ -22,7 +22,7 @@ namespace BarberShop.Application.Services
             var agendamentos = await _agendamentoRepository.GetByClienteIdWithServicosAsync(clienteId);
 
             // Ordenar os agendamentos do mais recente para o mais antigo
-            return agendamentos.OrderByDescending(a => a.DataHora);
+            return agendamentos.OrderByDescending(a => a.AgendamentoId);
         }
 
 

@@ -42,7 +42,7 @@ namespace BarberShopMVC.Controllers
             _barbeiroService = barbeiroService;
             _servicoRepository = servicoRepository;
             _clienteService = clienteService;
-            _emailService = emailService; 
+            _emailService = emailService;
             _paymentService = paymentService;
         }
 
@@ -167,37 +167,21 @@ namespace BarberShopMVC.Controllers
         {
             try
             {
-                // Obtém o ID do cliente a partir do token de autenticação
                 var clienteId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
 
-                // Validação para verificar se algum serviço foi selecionado
                 if (string.IsNullOrEmpty(servicoIds))
                 {
                     TempData["MensagemErro"] = "Nenhum serviço selecionado.";
                     return RedirectToAction("MenuPrincipal", "Cliente");
                 }
 
-                // Converte a lista de IDs de serviço de string para uma lista de inteiros
                 var servicoIdList = servicoIds.Split(',').Select(int.Parse).ToList();
-
-                // Obter os serviços e calcular o preço total
                 var servicos = await _servicoRepository.ObterServicosPorIdsAsync(servicoIdList);
                 var precoTotal = servicos.Sum(s => s.Preco);
 
-                // Variável para armazenar o ClientSecret para o pagamento com Stripe
                 string clientSecret = null;
 
-                // Processamento do pagamento com cartão de crédito
-                if (formaPagamento == "creditCard")
-                {
-                    // Cria o PaymentIntent no Stripe e obtém o ClientSecret
-                    clientSecret = await _paymentService.ProcessCreditCardPayment((decimal)precoTotal);
-                }
-
-                // Criar o agendamento no sistema com as informações de pagamento
-                var agendamentoId = await _agendamentoService.CriarAgendamentoAsync(barbeiroId, dataHora, clienteId, servicoIdList, formaPagamento, (decimal)precoTotal);
-
-                // Obter o cliente e barbeiro para enviar notificações
+                // Obter informações do cliente e do barbeiro
                 var cliente = await _clienteRepository.GetByIdAsync(clienteId);
                 var barbeiro = await _barbeiroRepository.GetByIdAsync(barbeiroId);
 
@@ -207,7 +191,24 @@ namespace BarberShopMVC.Controllers
                     return RedirectToAction("MenuPrincipal", "Cliente");
                 }
 
-                // Calcular a data e hora de fim do agendamento com base na duração dos serviços
+                // Processamento do pagamento
+                if (formaPagamento == "creditCard")
+                {
+                    clientSecret = await _paymentService.ProcessCreditCardPayment((decimal)precoTotal, cliente.Nome, cliente.Email);
+                }
+                else if (formaPagamento == "pix")
+                {
+                    clientSecret = await _paymentService.ProcessPixPayment((decimal)precoTotal, cliente.Nome, cliente.Email);
+                }
+
+                // Criar o agendamento no sistema com as informações de pagamento
+                var agendamentoId = await _agendamentoService.CriarAgendamentoAsync(barbeiroId, dataHora, clienteId, servicoIdList, formaPagamento, (decimal)precoTotal);
+
+                // Atualizar o status do agendamento para Confirmado
+                var agendamento = await _agendamentoRepository.GetByIdAsync(agendamentoId);
+                agendamento.Status = StatusAgendamento.Confirmado;
+                await _agendamentoRepository.UpdateAsync(agendamento);
+
                 var duracaoTotal = servicos.Sum(s => s.Duracao);
                 var dataHoraFim = dataHora.AddMinutes(duracaoTotal);
 
@@ -229,8 +230,8 @@ namespace BarberShopMVC.Controllers
                     dataHora,
                     dataHoraFim,
                     (decimal)precoTotal,
-                    googleCalendarLink,
-                    formaPagamento
+                    formaPagamento,
+                    googleCalendarLink
                 );
 
                 // Enviar e-mail de notificação para o barbeiro com detalhes do agendamento
@@ -249,7 +250,6 @@ namespace BarberShopMVC.Controllers
 
                 TempData["MensagemSucesso"] = "Agendamento confirmado com sucesso!";
 
-                // Retorna o ClientSecret para o frontend se o pagamento for com cartão
                 if (formaPagamento == "creditCard" && clientSecret != null)
                 {
                     return Ok(new { clientSecret });
@@ -264,9 +264,5 @@ namespace BarberShopMVC.Controllers
 
             return RedirectToAction("MenuPrincipal", "Cliente");
         }
-
-
-
-
     }
 }
