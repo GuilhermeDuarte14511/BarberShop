@@ -15,11 +15,13 @@ namespace BarberShopMVC.Controllers
     {
         private readonly IClienteRepository _clienteRepository;
         private readonly IEmailService _emailService;
+        private readonly AutenticacaoService _autenticacaoService;
 
-        public LoginController(IClienteRepository clienteRepository, IEmailService emailService)
+        public LoginController(IClienteRepository clienteRepository, IEmailService emailService, AutenticacaoService autenticacaoService)
         {
             _clienteRepository = clienteRepository;
             _emailService = emailService;
+            _autenticacaoService = autenticacaoService;
         }
 
         [HttpGet]
@@ -77,7 +79,8 @@ namespace BarberShopMVC.Controllers
                 Email = registerEmailInput,
                 Telefone = registerPhoneInput,
                 CodigoValidacao = GerarCodigoVerificacao(),
-                CodigoValidacaoExpiracao = DateTime.UtcNow.AddMinutes(5)
+                CodigoValidacaoExpiracao = DateTime.UtcNow.AddMinutes(5),
+                Role = "Cliente" // Novo cliente será do tipo Cliente por padrão
             };
 
             await _clienteRepository.AddAsync(cliente);
@@ -96,22 +99,27 @@ namespace BarberShopMVC.Controllers
                 return Json(new { success = false, message = "Código inválido ou expirado." });
             }
 
+            // Gerar claims do usuário para autenticação
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, cliente.ClienteId.ToString()),
                 new Claim(ClaimTypes.Name, cliente.Nome),
-                new Claim(ClaimTypes.Email, cliente.Email ?? cliente.Telefone)
+                new Claim(ClaimTypes.Role, cliente.Role) // Adiciona a role do usuário
             };
 
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+
             var authProperties = new AuthenticationProperties { IsPersistent = true };
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal, authProperties);
 
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
+            // Redirecionar para a área administrativa se for administrador
+            var redirectUrl = cliente.Role == "Admin" ? Url.Action("Index", "Admin") : Url.Action("MenuPrincipal", "Cliente");
 
-            // Removendo a nulificação do CódigoValidacao e CodigoValidacaoExpiracao para manter registros
+            // Atualizando o cliente para manter registros do código
             await _clienteRepository.UpdateAsync(cliente);
 
-            return Json(new { success = true, redirectUrl = Url.Action("MenuPrincipal", "Cliente") });
+            return Json(new { success = true, redirectUrl });
         }
 
         [HttpGet]

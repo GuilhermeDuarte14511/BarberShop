@@ -24,61 +24,83 @@ namespace BarberShopMVC.Controllers
             return View(barbeiros);
         }
 
+        // Retorna os detalhes de um barbeiro específico em JSON
         public async Task<IActionResult> Details(int id)
         {
             var barbeiro = await _barbeiroRepository.GetByIdAsync(id);
-            if (barbeiro == null) return NotFound();
-            return View(barbeiro);
-        }
+            if (barbeiro == null)
+            {
+                return NotFound();
+            }
 
-        public IActionResult Create()
-        {
-            return View();
+            return Json(new
+            {
+                BarbeiroId = barbeiro.BarbeiroId,
+                Nome = barbeiro.Nome,
+                Email = barbeiro.Email,
+                Telefone = barbeiro.Telefone
+            });
         }
 
         [HttpPost]
         public async Task<IActionResult> Create(Barbeiro barbeiro)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                await _barbeiroRepository.AddAsync(barbeiro);
-                return RedirectToAction(nameof(Index));
+                return Json(new { success = false, message = "Dados inválidos." });
             }
-            return View(barbeiro);
+
+            // Verifica se já existe um barbeiro com o mesmo email ou telefone
+            var barbeiroExistente = await _barbeiroRepository.GetByEmailOrPhoneAsync(barbeiro.Email, barbeiro.Telefone);
+
+            if (barbeiroExistente != null)
+            {
+                string mensagemErro = "Já existe um cadastro com ";
+                if (barbeiroExistente.Email == barbeiro.Email)
+                {
+                    mensagemErro += "esse e-mail";
+                }
+                if (barbeiroExistente.Telefone == barbeiro.Telefone)
+                {
+                    mensagemErro += mensagemErro.Contains("e-mail") ? " e telefone." : "esse telefone.";
+                }
+
+                return Json(new { success = false, message = mensagemErro });
+            }
+
+            // Adiciona o novo barbeiro, pois não houve duplicação
+            await _barbeiroRepository.AddAsync(barbeiro);
+            return Json(new { success = true, message = "Barbeiro adicionado com sucesso." });
         }
 
-        public async Task<IActionResult> Edit(int id)
-        {
-            var barbeiro = await _barbeiroRepository.GetByIdAsync(id);
-            if (barbeiro == null) return NotFound();
-            return View(barbeiro);
-        }
-
+        // Método para editar barbeiro
         [HttpPost]
         public async Task<IActionResult> Edit(int id, Barbeiro barbeiro)
         {
-            if (id != barbeiro.BarbeiroId) return BadRequest();
+            if (id != barbeiro.BarbeiroId)
+                return BadRequest(new { success = false, message = "ID do barbeiro não corresponde." });
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                await _barbeiroRepository.UpdateAsync(barbeiro);
-                return RedirectToAction(nameof(Index));
+                return Json(new { success = false, message = "Dados inválidos." });
             }
-            return View(barbeiro);
+
+            await _barbeiroRepository.UpdateAsync(barbeiro);
+            return Json(new { success = true, message = "Barbeiro atualizado com sucesso." });
         }
 
-        public async Task<IActionResult> Delete(int id)
-        {
-            var barbeiro = await _barbeiroRepository.GetByIdAsync(id);
-            if (barbeiro == null) return NotFound();
-            return View(barbeiro);
-        }
-
-        [HttpPost, ActionName("Delete")]
+        // Método para deletar barbeiro
+        [HttpPost]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
+            var barbeiro = await _barbeiroRepository.GetByIdAsync(id);
+            if (barbeiro == null)
+            {
+                return NotFound();
+            }
+
             await _barbeiroRepository.DeleteAsync(id);
-            return RedirectToAction(nameof(Index));
+            return Json(new { success = true, message = "Barbeiro excluído com sucesso." });
         }
 
         // Certifique-se de que o método está retornando a view corretamente

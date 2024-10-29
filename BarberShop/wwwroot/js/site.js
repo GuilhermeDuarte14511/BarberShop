@@ -452,4 +452,139 @@
             window.location.href = '/Cliente/MenuPrincipal';
         });
     }
+
+   if ($('#barbeiroPage').length > 0) {
+    // Função para aplicar máscara de telefone
+    function aplicarMascaraTelefone(input) {
+        input.on('input', function () {
+            var inputValue = $(this).val().replace(/\D/g, '');
+            if (inputValue.length === 11) {
+                var phoneNumber = inputValue.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+                $(this).val(phoneNumber);
+            }
+        });
+    }
+
+    // Aplicando máscara nos campos de telefone
+    aplicarMascaraTelefone($('#adicionarTelefone'));
+    aplicarMascaraTelefone($('#editarTelefone'));
+
+    // Função para exibir o modal de notificação
+    function exibirNotificacaoModal(mensagem, tipo) {
+        $('#notificacaoMensagem').text(mensagem);
+        $('#notificacaoModal').modal('show');
+        $('#notificacaoModal .modal-body').removeClass('text-success text-danger')
+            .addClass(tipo === 'success' ? 'text-success' : 'text-danger');
+
+        // Fecha o modal após 5 segundos e recarrega a página
+        setTimeout(function () {
+            $('#notificacaoModal').modal('hide');
+            location.reload();
+        }, 5000);
+    }
+
+    // Ação para o botão "Adicionar Barbeiro"
+    $('#btnAdicionarBarbeiro').on('click', function () {
+        $('#adicionarNome').val('');
+        $('#adicionarEmail').val('');
+        $('#adicionarTelefone').val('');
+        $('#adicionarModal').modal('show');
+    });
+
+    // Submissão do formulário de adição via AJAX
+    $('#formAdicionarBarbeiro').on('submit', function (e) {
+        e.preventDefault();
+        var formData = $(this).serialize();
+        $('#loadingSpinner').show();
+
+        $.ajax({
+            url: '/Barbeiro/Create',
+            type: 'POST',
+            data: formData,
+            success: function (response) {
+                $('#loadingSpinner').hide();
+                $('#adicionarModal').modal('hide');
+                exibirNotificacaoModal(response.message, response.success ? 'success' : 'danger');
+            },
+            error: function () {
+                $('#loadingSpinner').hide();
+                exibirNotificacaoModal('Erro ao adicionar o barbeiro.', 'danger');
+            }
+        });
+    });
+
+    // Ação para o botão de editar
+    $('.btnEditar').on('click', function () {
+        var barbeiroId = $(this).data('id');
+        $('#loadingSpinner').show();
+
+        $.get(`/Barbeiro/Details/${barbeiroId}`, function (data) {
+            $('#loadingSpinner').hide();
+            $('#editarBarbeiroId').val(data.barbeiroId);
+            $('#editarNome').val(data.nome);
+            $('#editarEmail').val(data.email);
+            $('#editarTelefone').val(data.telefone);
+            $('#editarModal').modal('show');
+        });
+    });
+
+    // Submissão do formulário de edição via AJAX
+    $('#formEditarBarbeiro').on('submit', function (e) {
+        e.preventDefault();
+        var formData = $(this).serialize();
+        var barbeiroId = $('#editarBarbeiroId').val();
+        $('#loadingSpinner').show();
+
+        $.ajax({
+            url: `/Barbeiro/Edit/${barbeiroId}`,
+            type: 'POST',
+            data: formData,
+            success: function (response) {
+                $('#loadingSpinner').hide();
+                $('#editarModal').modal('hide');
+                exibirNotificacaoModal(response.message, response.success ? 'success' : 'danger');
+            },
+            error: function () {
+                $('#loadingSpinner').hide();
+                exibirNotificacaoModal('Erro ao editar o barbeiro.', 'danger');
+            }
+        });
+    });
+
+    // Ação para o botão de excluir
+    $('.btnExcluir').on('click', function () {
+        var barbeiroId = $(this).data('id');
+        var barbeiroNome = $(this).closest('tr').find('td:first').text();
+        $('#excluirBarbeiroNome').text(barbeiroNome);
+        $('#btnConfirmarExcluir').data('id', barbeiroId);
+        $('#excluirModal').modal('show');
+    });
+
+    // Confirmação de exclusão
+    $('#btnConfirmarExcluir').on('click', function () {
+        var barbeiroId = $(this).data('id');
+        $('#loadingSpinner').show();
+
+        $.ajax({
+            url: '/Barbeiro/DeleteConfirmed',
+            type: 'POST',
+            data: { id: barbeiroId },
+            success: function (response) {
+                $('#loadingSpinner').hide();
+                $('#excluirModal').modal('hide');
+                exibirNotificacaoModal(response.message, response.success ? 'success' : 'danger');
+            },
+            error: function () {
+                $('#loadingSpinner').hide();
+                exibirNotificacaoModal('Erro ao excluir o barbeiro.', 'danger');
+            }
+        });
+    });
+
+    // Fecha o modal de notificação ao clicar no botão "OK" e recarrega a página
+    $('#notificacaoModal .btn-primary').on('click', function () {
+        $('#notificacaoModal').modal('hide');
+        location.reload();
+    });
+}
 });

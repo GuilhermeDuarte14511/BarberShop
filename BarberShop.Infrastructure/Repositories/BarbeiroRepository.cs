@@ -49,5 +49,11 @@ namespace BarberShop.Infrastructure.Repositories
             _context.Barbeiros.Update(entity);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<Barbeiro> GetByEmailOrPhoneAsync(string email, string telefone)
+        {
+            return await _context.Barbeiros
+                .FirstOrDefaultAsync(b => b.Email == email || b.Telefone == telefone);
+        }
     }
 }

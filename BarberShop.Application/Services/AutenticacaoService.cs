@@ -1,4 +1,4 @@
-﻿using BarberShop.Domain.Interfaces;
+﻿using BarberShop.Domain.Entities;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Security.Claims;
 
@@ -6,16 +6,8 @@ namespace BarberShop.Application.Services
 {
     public class AutenticacaoService
     {
-        private readonly IClienteRepository _clienteRepository;
-
-        public AutenticacaoService(IClienteRepository clienteRepository)
+        public ClaimsPrincipal AutenticarCliente(Cliente cliente)
         {
-            _clienteRepository = clienteRepository;
-        }
-
-        public async Task<ClaimsPrincipal> AutenticarClienteAsync(string emailOuTelefone)
-        {
-            var cliente = await _clienteRepository.GetByEmailOrPhoneAsync(emailOuTelefone);
             if (cliente == null)
             {
                 return null;

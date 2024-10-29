@@ -8,5 +8,6 @@ namespace BarberShop.Application.Services
     {
         Task<IEnumerable<Barbeiro>> ObterTodosBarbeirosAsync();
         Task<Barbeiro> ObterBarbeiroPorIdAsync(int id);
+        Task<Barbeiro> VerificarExistenciaPorEmailOuTelefoneAsync(string email, string telefone);
     }
 }
