@@ -1,6 +1,38 @@
 ﻿@{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
-<h2>Bem-vindo ao Dashboard Administrativo</h2>
-<p>Esse é o painel principal do sistema administrativo da barbearia.</p>
-<!-- Aqui você pode adicionar gráficos e estatísticas utilizando, por exemplo, Chart.js -->
+<div id="adminDashboard">
+    <h2>Bem-vindo ao Dashboard Administrativo</h2>
+    <p>Esse é o painel principal do sistema administrativo da barbearia.</p>
+
+    <!-- Divisões dos gráficos -->
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <h5>Agendamentos da Semana</h5>
+            <canvas id="agendamentosSemanaChart"></canvas>
+        </div>
+        <div class="col-md-3">
+            <h5>Serviços Mais Solicitados</h5>
+            <canvas id="servicosMaisSolicitadosChart"></canvas>
+        </div>
+        <div class="col-md-3">
+            <h5>Lucro por Barbeiro</h5>
+            <canvas id="lucroPorBarbeiroChart"></canvas>
+        </div>
+        <div class="col-md-3">
+            <h5>Atendimentos por Barbeiro</h5>
+            <canvas id="atendimentosPorBarbeiroChart"></canvas>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <h5>Lucro da Semana</h5>
+            <canvas id="lucroSemanaChart"></canvas>
+        </div>
+        <div class="col-md-6">
+            <h5>Lucro do Mês</h5>
+            <canvas id="lucroMesChart"></canvas>
+        </div>
+    </div>
+</div>

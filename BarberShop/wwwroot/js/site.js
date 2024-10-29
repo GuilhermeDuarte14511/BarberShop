@@ -637,4 +637,138 @@
             location.reload();
         });
     }
+
+    if ($('#adminDashboard').length > 0) {
+        initCharts();
+    }
+
+    function initCharts() {
+        // Gráfico de Agendamentos da Semana
+        const agendamentosSemanaChart = new Chart(document.getElementById('agendamentosSemanaChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
+                datasets: [{
+                    label: 'Agendamentos',
+                    data: [5, 8, 3, 6, 7, 10, 2], // Dados fictícios
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Gráfico de Serviços Mais Solicitados
+        const servicosMaisSolicitadosChart = new Chart(document.getElementById('servicosMaisSolicitadosChart').getContext('2d'), {
+            type: 'pie',
+            data: {
+                labels: ['Corte de Cabelo', 'Barba', 'Hidratação Capilar'],
+                datasets: [{
+                    data: [12, 8, 5], // Dados fictícios
+                    backgroundColor: ['rgba(255, 99, 132, 0.5)', 'rgba(54, 162, 235, 0.5)', 'rgba(255, 206, 86, 0.5)'],
+                    borderColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true
+            }
+        });
+
+        // Gráfico de Lucro por Barbeiro
+        const lucroPorBarbeiroChart = new Chart(document.getElementById('lucroPorBarbeiroChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: ['Rafael Souza', 'Thiago Ribeiro', 'Gustavo Martins', 'Leonardo Costa', 'Bruno Fernandes', 'Carol Momo'],
+                datasets: [{
+                    label: 'Lucro (R$)',
+                    data: [500, 700, 400, 600, 750, 300], // Dados fictícios de lucro
+                    backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Gráfico de Atendimentos por Barbeiro
+        const atendimentosPorBarbeiroChart = new Chart(document.getElementById('atendimentosPorBarbeiroChart').getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Rafael Souza', 'Thiago Ribeiro', 'Gustavo Martins', 'Leonardo Costa', 'Bruno Fernandes', 'Carol Momo'],
+                datasets: [{
+                    data: [5, 7, 4, 6, 8, 3], // Dados fictícios de atendimentos
+                    backgroundColor: ['rgba(255, 99, 132, 0.5)', 'rgba(54, 162, 235, 0.5)', 'rgba(255, 206, 86, 0.5)', 'rgba(75, 192, 192, 0.5)', 'rgba(153, 102, 255, 0.5)', 'rgba(255, 159, 64, 0.5)'],
+                    borderColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)', 'rgba(75, 192, 192, 1)', 'rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true
+            }
+        });
+
+        // Gráfico de Lucro da Semana
+        const lucroSemanaChart = new Chart(document.getElementById('lucroSemanaChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
+                datasets: [{
+                    label: 'Lucro em R$',
+                    data: [200, 300, 250, 400, 350, 500, 450], // Dados fictícios
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 2,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Gráfico de Lucro do Mês
+        const lucroMesChart = new Chart(document.getElementById('lucroMesChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'],
+                datasets: [{
+                    label: 'Lucro em R$',
+                    data: [1500, 2000, 1800, 2200], // Dados fictícios
+                    backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                    borderColor: 'rgba(153, 102, 255, 1)',
+                    borderWidth: 2,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
 });

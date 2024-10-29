@@ -18,8 +18,4 @@
     <ProjectReference Include="..\BarberShop.Domain\BarberShop.Domain.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="PaymentService\" />
-  </ItemGroup>
-
 </Project>
