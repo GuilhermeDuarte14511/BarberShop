@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Stripe.net" Version="46.2.2" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\BarberShop.Application\BarberShop.Application.csproj" />
     <ProjectReference Include="..\BarberShop.Domain\BarberShop.Domain.csproj" />
     <ProjectReference Include="..\BarberShop.Infrastructure\BarberShop.Infrastructure.csproj" />

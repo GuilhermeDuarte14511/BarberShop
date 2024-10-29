@@ -420,38 +420,83 @@
         });
     }
 
-    // Lógica do resumo de agendamento
     if ($('#resumoAgendamentoPage').length > 0) {
-        $('#confirmarAgendamentoBtn').on('click', function () {
-            var barbeiroId = $('#resumoAgendamentoPage').data('barbeiro-id');
-            var servicoIdsString = $('#resumoAgendamentoPage').data('servico-ids');
-            var dataHora = $('#resumoAgendamentoPage').data('data-hora');
+        let selectedPaymentMethod = null;
+        const stripe = Stripe("pk_test_51QFMA5Hl3zYZjP9p3D5NFqiiQLD6P2G5175ZnhLFAf1KyIgQcNmnfJqBI7WHEkgInCDEMQoMcxeWEMPLN5sfnjIi00VLPKatjn"); // Chave pública do Stripe
+        const elements = stripe.elements(); // Inicializa os elementos do Stripe
+        const cardElement = elements.create('card'); // Cria o elemento do cartão
+        cardElement.mount('#card-element'); // Associa o campo ao div com id "card-element"
+
+        // Função para selecionar o método de pagamento e exibir o campo de cartão se necessário
+        window.selectPaymentMethod = function (method) {
+            selectedPaymentMethod = method;
+            $('#creditCardForm').hide();
+
+            if (method === 'creditCard') {
+                $('#creditCardForm').fadeIn();
+            }
+        };
+
+        // Evento de clique para confirmar o agendamento e processar o pagamento
+        $('#confirmarAgendamentoBtn').on('click', async function () {
+            const barbeiroId = $('#resumoAgendamentoPage').data('barbeiro-id');
+            const servicoIdsString = $('#resumoAgendamentoPage').data('servico-ids');
+            const dataHora = $('#resumoAgendamentoPage').data('data-hora');
+
+            if (!selectedPaymentMethod) {
+                alert('Por favor, selecione um método de pagamento.');
+                return;
+            }
 
             $('#loadingSpinner').fadeIn();
 
-            $.ajax({
-                type: 'POST',
-                url: '/Agendamento/ConfirmarAgendamento',
-                data: {
+            try {
+                // Faz uma chamada AJAX para criar o PaymentIntent e obter o ClientSecret
+                const response = await $.post('/Agendamento/ConfirmarAgendamento', {
                     barbeiroId: barbeiroId,
                     servicoIds: servicoIdsString,
-                    dataHora: dataHora
-                },
-                success: function () {
-                    $('#loadingSpinner').fadeOut();
-                    $('#successModal').modal('show');
-                },
-                error: function () {
-                    $('#loadingSpinner').fadeOut();
-                    alert('Erro ao confirmar o agendamento.');
+                    dataHora: dataHora,
+                    formaPagamento: selectedPaymentMethod
+                });
+
+                const clientSecret = response.clientSecret;
+
+                // Confirma o pagamento usando Stripe.js e o ClientSecret
+                if (selectedPaymentMethod === 'creditCard' && clientSecret) {
+                    const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+                        payment_method: {
+                            card: cardElement, // Usando o campo seguro do Stripe Elements
+                        }
+                    });
+
+                    if (error) {
+                        // Exibe uma mensagem de erro ao usuário
+                        alert(error.message);
+                        $('#loadingSpinner').fadeOut();
+                    } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+                        // Exibe o modal de sucesso se o pagamento foi concluído
+                        $('#loadingSpinner').fadeOut();
+                        $('#successModal').modal('show');
+                    }
                 }
-            });
+            } catch (error) {
+                $('#loadingSpinner').fadeOut();
+                alert('Erro ao confirmar o agendamento.');
+            }
         });
 
+        // Event listeners para as opções de pagamento
+        $('#creditCardOption').on('click', function () { selectPaymentMethod('creditCard'); });
+        $('#pixOption').on('click', function () { selectPaymentMethod('pix'); });
+        $('#transferOption').on('click', function () { selectPaymentMethod('transfer'); });
+
+        // Redireciona para "Cliente/MenuPrincipal" ao clicar no botão "OK" do modal de sucesso
         $('#redirectMenuBtn').on('click', function () {
             window.location.href = '/Cliente/MenuPrincipal';
         });
     }
+
+
 
     if ($('#barbeiroPage').length > 0) {
         // Função para aplicar máscara de telefone

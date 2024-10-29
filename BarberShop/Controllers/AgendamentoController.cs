@@ -20,7 +20,9 @@ namespace BarberShopMVC.Controllers
         private readonly IBarbeiroService _barbeiroService;
         private readonly IServicoRepository _servicoRepository;
         private readonly IClienteService _clienteService;
-        private readonly IEmailService _emailService; // Injetando o IEmailService
+        private readonly IEmailService _emailService;
+        private readonly IPaymentService _paymentService;
+
 
         public AgendamentoController(
             IAgendamentoRepository agendamentoRepository,
@@ -30,7 +32,8 @@ namespace BarberShopMVC.Controllers
             IBarbeiroService barbeiroService,
             IServicoRepository servicoRepository,
             IClienteService clienteService,
-            IEmailService emailService) // Recebendo via injeção de dependência
+            IEmailService emailService,
+            IPaymentService paymentService)
         {
             _agendamentoRepository = agendamentoRepository;
             _clienteRepository = clienteRepository;
@@ -39,7 +42,8 @@ namespace BarberShopMVC.Controllers
             _barbeiroService = barbeiroService;
             _servicoRepository = servicoRepository;
             _clienteService = clienteService;
-            _emailService = emailService; // Atribuindo ao campo privado
+            _emailService = emailService; 
+            _paymentService = paymentService;
         }
 
         public async Task<IActionResult> Index()
@@ -136,7 +140,6 @@ namespace BarberShopMVC.Controllers
             if (barbeiro == null) return NotFound("Barbeiro não encontrado.");
 
             var servicoIdList = servicoIds.Split(',').Select(int.Parse).ToList();
-
             var servicos = await _servicoRepository.ObterServicosPorIdsAsync(servicoIdList);
             var precoTotal = servicos.Sum(s => s.Preco);
 
@@ -151,31 +154,50 @@ namespace BarberShopMVC.Controllers
                     Nome = s.Nome,
                     Preco = (decimal)s.Preco
                 }).ToList(),
-                PrecoTotal = (decimal)precoTotal
+                PrecoTotal = (decimal)precoTotal,
+                FormaPagamento = ""
             };
 
             return View("ResumoAgendamento", resumoAgendamentoDTO);
         }
 
+
         [HttpPost]
-        public async Task<IActionResult> ConfirmarAgendamento(int barbeiroId, DateTime dataHora, string servicoIds)
+        public async Task<IActionResult> ConfirmarAgendamento(int barbeiroId, DateTime dataHora, string servicoIds, string formaPagamento)
         {
             try
             {
+                // Obtém o ID do cliente a partir do token de autenticação
                 var clienteId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
 
+                // Validação para verificar se algum serviço foi selecionado
                 if (string.IsNullOrEmpty(servicoIds))
                 {
                     TempData["MensagemErro"] = "Nenhum serviço selecionado.";
                     return RedirectToAction("MenuPrincipal", "Cliente");
                 }
 
+                // Converte a lista de IDs de serviço de string para uma lista de inteiros
                 var servicoIdList = servicoIds.Split(',').Select(int.Parse).ToList();
 
-                // Criar o agendamento e obter o ID
-                var agendamentoId = await _agendamentoService.CriarAgendamentoAsync(barbeiroId, dataHora, clienteId, servicoIdList);
+                // Obter os serviços e calcular o preço total
+                var servicos = await _servicoRepository.ObterServicosPorIdsAsync(servicoIdList);
+                var precoTotal = servicos.Sum(s => s.Preco);
 
-                // Obter informações adicionais
+                // Variável para armazenar o ClientSecret para o pagamento com Stripe
+                string clientSecret = null;
+
+                // Processamento do pagamento com cartão de crédito
+                if (formaPagamento == "creditCard")
+                {
+                    // Cria o PaymentIntent no Stripe e obtém o ClientSecret
+                    clientSecret = await _paymentService.ProcessCreditCardPayment((decimal)precoTotal);
+                }
+
+                // Criar o agendamento no sistema com as informações de pagamento
+                var agendamentoId = await _agendamentoService.CriarAgendamentoAsync(barbeiroId, dataHora, clienteId, servicoIdList, formaPagamento, (decimal)precoTotal);
+
+                // Obter o cliente e barbeiro para enviar notificações
                 var cliente = await _clienteRepository.GetByIdAsync(clienteId);
                 var barbeiro = await _barbeiroRepository.GetByIdAsync(barbeiroId);
 
@@ -185,10 +207,7 @@ namespace BarberShopMVC.Controllers
                     return RedirectToAction("MenuPrincipal", "Cliente");
                 }
 
-                var servicos = await _servicoRepository.ObterServicosPorIdsAsync(servicoIdList);
-                var precoTotal = servicos.Sum(s => s.Preco);
-
-                // Calcular a data e hora de fim do agendamento
+                // Calcular a data e hora de fim do agendamento com base na duração dos serviços
                 var duracaoTotal = servicos.Sum(s => s.Duracao);
                 var dataHoraFim = dataHora.AddMinutes(duracaoTotal);
 
@@ -196,13 +215,11 @@ namespace BarberShopMVC.Controllers
                 var tituloEvento = "Agendamento na Barbearia CG DREAMS";
                 var descricaoEvento = $"Agendamento com o barbeiro {barbeiro.Nome} para os serviços: {string.Join(", ", servicos.Select(s => s.Nome))}";
                 var localEvento = "Endereço da Barbearia";
-
                 var googleCalendarLink = _emailService.GerarLinkGoogleCalendar(tituloEvento, dataHora, dataHoraFim, descricaoEvento, localEvento);
 
-                // Enviar e-mail para o cliente
+                // Enviar e-mail de confirmação para o cliente
                 var assuntoCliente = "Confirmação de Agendamento - Barbearia CG DREAMS";
                 var conteudoCliente = "Seu agendamento foi confirmado com sucesso!";
-
                 await _emailService.EnviarEmailAgendamentoAsync(
                     cliente.Email,
                     cliente.Nome,
@@ -212,13 +229,13 @@ namespace BarberShopMVC.Controllers
                     dataHora,
                     dataHoraFim,
                     (decimal)precoTotal,
-                    googleCalendarLink
+                    googleCalendarLink,
+                    formaPagamento
                 );
 
-                // Enviar e-mail para o barbeiro com detalhes do cliente e dos serviços
+                // Enviar e-mail de notificação para o barbeiro com detalhes do agendamento
                 var assuntoBarbeiro = "Novo Agendamento - Barbearia CG DREAMS";
                 var servicoNomes = servicos.Select(s => s.Nome).ToList();
-
                 await _emailService.EnviarEmailNotificacaoBarbeiroAsync(
                     barbeiro.Email,
                     barbeiro.Nome,
@@ -226,18 +243,30 @@ namespace BarberShopMVC.Controllers
                     servicoNomes,
                     dataHora,
                     dataHoraFim,
-                    (decimal)precoTotal
+                    (decimal)precoTotal,
+                    formaPagamento
                 );
 
                 TempData["MensagemSucesso"] = "Agendamento confirmado com sucesso!";
+
+                // Retorna o ClientSecret para o frontend se o pagamento for com cartão
+                if (formaPagamento == "creditCard" && clientSecret != null)
+                {
+                    return Ok(new { clientSecret });
+                }
             }
             catch (Exception ex)
             {
                 TempData["MensagemErro"] = "Ocorreu um erro ao confirmar o agendamento. Tente novamente.";
                 Console.WriteLine($"Erro ao confirmar agendamento: {ex.Message}");
+                return StatusCode(500, "Erro ao processar pagamento.");
             }
 
             return RedirectToAction("MenuPrincipal", "Cliente");
         }
+
+
+
+
     }
 }

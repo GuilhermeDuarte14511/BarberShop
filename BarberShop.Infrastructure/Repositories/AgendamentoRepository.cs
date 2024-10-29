@@ -77,7 +77,6 @@ namespace BarberShop.Infrastructure.Repositories
                                  .ToListAsync();
         }
 
-        // Implementação do método GetAvailableSlotsAsync
         public async Task<IEnumerable<DateTime>> GetAvailableSlotsAsync(int barbeiroId, DateTime dataVisualizacao, int duracaoTotal)
         {
             var horariosDisponiveis = new List<DateTime>();
@@ -113,7 +112,7 @@ namespace BarberShop.Infrastructure.Repositories
                 {
                     // Verificar se o horário atual conflita com algum agendamento existente
                     bool existeConflito = agendamentosDoDia.Any(agendamento =>
-                        horarioAtual < agendamento.DataHora.AddMinutes(agendamento.DuracaoTotal) &&
+                        horarioAtual < agendamento.DataHora.AddMinutes(agendamento.DuracaoTotal ?? 0) &&  // Usar 0 se DuracaoTotal for nulo
                         horarioAtual.AddMinutes(duracaoTotal) > agendamento.DataHora
                     );
 
@@ -130,6 +129,7 @@ namespace BarberShop.Infrastructure.Repositories
 
             return horariosDisponiveis;
         }
+
 
 
 

@@ -11,10 +11,15 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="RabbitMQ.Client" Version="6.8.1" />
     <PackageReference Include="SendGrid" Version="9.29.3" />
+    <PackageReference Include="Stripe.net" Version="46.2.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\BarberShop.Domain\BarberShop.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="PaymentService\" />
   </ItemGroup>
 
 </Project>

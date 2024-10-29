@@ -13,8 +13,7 @@ namespace BarberShop.Application.Services
         }
 
         public async Task EnviarEmailAgendamentoAsync(string destinatarioEmail, string destinatarioNome, string assunto, string conteudo, string barbeiroNome, DateTime dataHoraInicio,
-            DateTime dataHoraFim, decimal total,
-            string googleCalendarLink = null)
+            DateTime dataHoraFim, decimal total, string formaPagamento, string googleCalendarLink = null)
         {
             try
             {
@@ -92,6 +91,7 @@ namespace BarberShop.Application.Services
                                 <p><strong>Barbeiro:</strong> {barbeiroNome}</p>
                                 <p><strong>Data e Hora de Início:</strong> {dataHoraInicio:dd/MM/yyyy - HH:mm}</p>
                                 <p><strong>Data e Hora de Fim:</strong> {dataHoraFim:dd/MM/yyyy - HH:mm}</p>
+                                <p><strong>Forma de Pagamento:</strong> {formaPagamento}</p>
                                 <p><strong>Valor Total:</strong> R$ {total:F2}</p>
                             </div>";
 
@@ -129,7 +129,7 @@ namespace BarberShop.Application.Services
             }
         }
 
-        public async Task EnviarEmailNotificacaoBarbeiroAsync(string barbeiroEmail, string barbeiroNome, string clienteNome, List<string> servicos, DateTime dataHoraInicio, DateTime dataHoraFim, decimal total)
+        public async Task EnviarEmailNotificacaoBarbeiroAsync(string barbeiroEmail, string barbeiroNome, string clienteNome, List<string> servicos, DateTime dataHoraInicio, DateTime dataHoraFim, decimal total, string formaPagamento)
         {
             try
             {
@@ -194,6 +194,7 @@ namespace BarberShop.Application.Services
                                     <p><strong>Cliente:</strong> {clienteNome}</p>
                                     <p><strong>Data e Hora de Início:</strong> {dataHoraInicio:dd/MM/yyyy - HH:mm}</p>
                                     <p><strong>Data e Hora de Fim:</strong> {dataHoraFim:dd/MM/yyyy - HH:mm}</p>
+                                    <p><strong>Forma de Pagamento:</strong> {formaPagamento}</p>
                                     <p><strong>Valor Total:</strong> R$ {total:F2}</p>
                                     <p><strong>Serviços Solicitados:</strong></p>
                                     <ul>";
@@ -243,7 +244,6 @@ namespace BarberShop.Application.Services
                 var assunto = "Seu Código de Verificação";
                 var conteudo = $"Olá, {destinatarioNome}!\n\nSeu código de verificação é: {codigoVerificacao}\n\nEste código expira em 5 minutos.";
 
-                // Estilizando o HTML do e-mail com as cores do projeto
                 string htmlContent = $@"
                 <html>
                 <head>

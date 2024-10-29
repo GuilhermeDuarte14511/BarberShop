@@ -272,6 +272,75 @@ body {
         margin-left: 1.5rem !important; /* Aumentar o espaço entre o botão de menu e o título */
     }
 
+.card-preview-container {
+    perspective: 1000px;
+}
+
+.card-preview {
+    width: 100%;
+    max-width: 300px;
+    height: 180px;
+    margin: 0 auto;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.6s, background-color 0.3s ease;
+    color: #fff;
+    font-family: Arial, sans-serif;
+    border-radius: 10px;
+    background-color: #333;
+}
+
+    .card-preview.visa {
+        background-color: #1a1f71;
+    }
+
+    .card-preview.mastercard {
+        background-color: #ff5f00;
+    }
+
+    .card-preview.amex {
+        background-color: #2e77a8;
+    }
+
+    .card-preview.discover {
+        background-color: #86b8b1;
+    }
+
+/* Face da frente e verso do cartão */
+.card-front, .card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: 10px;
+    padding: 15px;
+    box-sizing: border-box;
+}
+
+.card-back {
+    transform: rotateY(180deg);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2em;
+}
+
+.card-preview.show-back {
+    transform: rotateY(180deg);
+}
+
+/* Animação e estilo de hover para as opções de pagamento */
+.payment-option {
+    cursor: pointer;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+    .payment-option:hover {
+        transform: scale(1.1);
+        box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.3);
+    }
+
+
 /* Estilos de layout para exibição em dispositivos móveis */
 @media (max-width: 768px) {
     /* Esconde a tabela em telas pequenas */

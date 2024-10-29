@@ -12,6 +12,7 @@
             DateTime dataHoraInicio,
             DateTime dataHoraFim,
             decimal total,
+            string formaPagamento,
             string googleCalendarLink = null);
 
         // Método para enviar email de notificação de agendamento para o barbeiro
@@ -22,7 +23,8 @@
             List<string> servicos,
             DateTime dataHoraInicio,
             DateTime dataHoraFim,
-            decimal total);
+            decimal total,
+            string formaPagamento);
 
         // Método para enviar email de código de verificação
         Task EnviarEmailCodigoVerificacaoAsync(

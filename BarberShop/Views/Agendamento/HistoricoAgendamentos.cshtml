@@ -13,6 +13,7 @@
                     <th>Serviços</th>
                     <th>Valor Total</th>
                     <th>Status</th>
+                    <th>Forma de Pagamento</th>
                 </tr>
             </thead>
             <tbody>
@@ -56,6 +57,24 @@
                                 </span>
                             }
                         </td>
+                        <td class="align-middle text-center">
+                            @if (agendamento.FormaPagamento == "creditCard")
+                            {
+                                <i class="fas fa-credit-card text-primary"></i>
+                            }
+                            else if (agendamento.FormaPagamento == "pix")
+                            {
+                                <i class="fas fa-qrcode text-success"></i>
+                            }
+                            else if (agendamento.FormaPagamento == "transfer")
+                            {
+                                <i class="fas fa-university text-info"></i>
+                            }
+                            else
+                            {
+                                @agendamento.FormaPagamento
+                            }
+                        </td>
                     </tr>
                 }
             </tbody>
@@ -64,43 +83,7 @@
 
     <!-- Cards para dispositivos móveis -->
     <div class="d-md-none">
-        <!-- Primeiro Card com Margin-Top Adicional -->
-        <div class="card bg-dark text-light mb-3" style="margin-top: 400px;">
-            <div class="card-body">
-                <h5 class="card-title">@Model.First().DataHora.ToString("dd/MM/yyyy HH:mm")</h5>
-                <p class="card-text"><strong>Barbeiro:</strong> @Model.First().Barbeiro.Nome</p>
-                <p class="card-text"><strong>Serviços:</strong></p>
-                <ul>
-                    @foreach (var servico in Model.First().AgendamentoServicos)
-                    {
-                        <li>@servico.Servico.Nome - @servico.Servico.Preco.ToString("C")</li>
-                    }
-                </ul>
-                <p class="card-text"><strong>Valor Total:</strong> @Model.First().AgendamentoServicos.Sum(s => s.Servico.Preco).ToString("C")</p>
-                <p class="card-text">
-                    <strong>Status:</strong>
-                    @if (Model.First().Status == BarberShop.Domain.Entities.StatusAgendamento.Pendente)
-                    {
-                        <span><i class="fas fa-clock text-warning"></i> Pendente</span>
-                    }
-                    else if (Model.First().Status == BarberShop.Domain.Entities.StatusAgendamento.Confirmado)
-                    {
-                        <span><i class="fas fa-check text-success"></i> Confirmado</span>
-                    }
-                    else if (Model.First().Status == BarberShop.Domain.Entities.StatusAgendamento.Cancelado)
-                    {
-                        <span><i class="fas fa-times text-danger"></i> Cancelado</span>
-                    }
-                    else if (Model.First().Status == BarberShop.Domain.Entities.StatusAgendamento.Concluido)
-                    {
-                        <span><i class="fas fa-check-circle text-info"></i> Concluído</span>
-                    }
-                </p>
-            </div>
-        </div>
-
-        <!-- Outros Cards -->
-        @foreach (var agendamento in Model.Skip(1))
+        @foreach (var agendamento in Model)
         {
             <div class="card bg-dark text-light mb-3">
                 <div class="card-body">
@@ -114,6 +97,25 @@
                         }
                     </ul>
                     <p class="card-text"><strong>Valor Total:</strong> @agendamento.AgendamentoServicos.Sum(s => s.Servico.Preco).ToString("C")</p>
+                    <p class="card-text">
+                        <strong>Forma de Pagamento:</strong>
+                        @if (agendamento.FormaPagamento == "creditCard")
+                        {
+                            <i class="fas fa-credit-card text-primary"></i>
+                        }
+                        else if (agendamento.FormaPagamento == "pix")
+                        {
+                            <i class="fas fa-qrcode text-success"></i>
+                        }
+                        else if (agendamento.FormaPagamento == "transfer")
+                        {
+                            <i class="fas fa-university text-info"></i>
+                        }
+                        else
+                        {
+                            @agendamento.FormaPagamento
+                        }
+                    </p>
                     <p class="card-text">
                         <strong>Status:</strong>
                         @if (agendamento.Status == BarberShop.Domain.Entities.StatusAgendamento.Pendente)
@@ -154,6 +156,15 @@
         </li>
         <li class="list-inline-item">
             <i class="fas fa-check-circle text-info"></i> Concluído
+        </li>
+        <li class="list-inline-item">
+            <i class="fas fa-credit-card text-primary"></i> Cartão de Crédito
+        </li>
+        <li class="list-inline-item">
+            <i class="fas fa-qrcode text-success"></i> PIX
+        </li>
+        <li class="list-inline-item">
+            <i class="fas fa-university text-info"></i> Transferência Bancária
         </li>
     </ul>
 </div>

@@ -34,36 +34,46 @@ namespace BarberShop.Application.Services
             return await _barbeiroRepository.GetByEmailOrPhoneAsync(email, telefone);
         }
 
-        public async Task<IEnumerable<DateTime>> ObterHorariosDisponiveisAsync(int barbeiroId, int duracaoTotal)
+        public async Task<IEnumerable<DateTime>> ObterHorariosDisponiveisAsync(int barbeiroId, int? duracaoTotal)
         {
-            DateTime horarioInicio = DateTime.Today.AddHours(9); // 09:00
-            DateTime horarioFim = DateTime.Today.AddHours(18);  // 18:00
+            if (!duracaoTotal.HasValue)
+            {
+                throw new ArgumentException("A duração total é necessária", nameof(duracaoTotal));
+            }
 
+            DateTime horarioInicio = DateTime.Today.AddHours(9); // 09:00
+            DateTime horarioFim = DateTime.Today.AddHours(18);   // 18:00
+
+            // Obtém os agendamentos do barbeiro para o dia atual
             var agendamentos = await _agendamentoRepository.ObterAgendamentosPorBarbeiroIdAsync(barbeiroId, DateTime.Today);
 
+            // Mapeia os horários ocupados considerando a duração de cada agendamento
             var horariosOcupados = agendamentos.Select(a => new
             {
                 Inicio = a.DataHora,
-                Fim = a.DataHora.AddMinutes(a.DuracaoTotal)
+                Fim = a.DataHora.AddMinutes(a.DuracaoTotal ?? 0) // Usa 0 como valor padrão se DuracaoTotal for nulo
             }).ToList();
 
             List<DateTime> horariosDisponiveis = new List<DateTime>();
+            int duracao = duracaoTotal.Value; // Obtém o valor de duracaoTotal com certeza de que não é nulo
 
-            while (horarioInicio.AddMinutes(duracaoTotal) <= horarioFim)
+            // Itera pelos horários do expediente, pulando intervalos ocupados
+            while (horarioInicio.AddMinutes(duracao) <= horarioFim)
             {
                 bool horarioConflitante = horariosOcupados.Any(a =>
                     (horarioInicio >= a.Inicio && horarioInicio < a.Fim) ||
-                    (horarioInicio.AddMinutes(duracaoTotal) > a.Inicio && horarioInicio.AddMinutes(duracaoTotal) <= a.Fim));
+                    (horarioInicio.AddMinutes(duracao) > a.Inicio && horarioInicio.AddMinutes(duracao) <= a.Fim));
 
                 if (!horarioConflitante)
                 {
                     horariosDisponiveis.Add(horarioInicio);
                 }
 
-                horarioInicio = horarioInicio.AddMinutes(duracaoTotal);
+                horarioInicio = horarioInicio.AddMinutes(duracao);
             }
 
             return horariosDisponiveis;
+
         }
     }
 }

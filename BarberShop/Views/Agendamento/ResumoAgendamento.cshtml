@@ -31,7 +31,29 @@
             <hr />
             <p><strong>Preço Total:</strong> R$ @Model.PrecoTotal.ToString("F2")</p>
 
-            <button id="confirmarAgendamentoBtn" class="btn btn-danger btn-block">Confirmar Agendamento</button>
+            <h4 class="text-warning mt-4">Método de Pagamento</h4>
+            <div class="payment-options d-flex justify-content-around mt-3">
+                <div id="creditCardOption" class="payment-option text-center">
+                    <i class="fas fa-credit-card fa-2x text-primary"></i><br>
+                    <small>Cartão de Crédito</small>
+                </div>
+                <div id="pixOption" class="payment-option text-center">
+                    <i class="fas fa-qrcode fa-2x text-success"></i><br>
+                    <small>PIX</small>
+                </div>
+                <div id="transferOption" class="payment-option text-center">
+                    <i class="fas fa-university fa-2x text-info"></i><br>
+                    <small>Transferência Bancária</small>
+                </div>
+            </div>
+
+            <!-- Formulário do Cartão de Crédito com Stripe Elements -->
+            <div id="creditCardForm" style="display: none;">
+                <div id="card-element" class="form-control"></div> <!-- Stripe Elements vai injetar o campo seguro aqui -->
+                <small class="text-muted">Digite os detalhes do cartão de crédito acima.</small>
+            </div>
+
+            <button id="confirmarAgendamentoBtn" class="btn btn-danger btn-block mt-4">Confirmar Agendamento</button>
         </div>
     </div>
 

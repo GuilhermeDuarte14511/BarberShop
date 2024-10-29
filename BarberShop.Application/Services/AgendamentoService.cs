@@ -34,25 +34,30 @@ namespace BarberShop.Application.Services
             return await _agendamentoRepository.GetAvailableSlotsAsync(barbeiroId, data, duracaoTotal);
         }
 
-        // Método para criar um agendamento
-        public async Task<int> CriarAgendamentoAsync(int barbeiroId, DateTime dataHora, int clienteId, List<int> servicoIds)
+        public async Task<int> CriarAgendamentoAsync(int barbeiroId, DateTime dataHora, int clienteId, List<int> servicoIds, string formaPagamento, decimal precoTotal)
         {
             // Obter os serviços com base nos IDs fornecidos
             var servicos = await _servicoRepository.ObterServicosPorIdsAsync(servicoIds);
+
+            // Calcular a duração total com base nos serviços selecionados
+            var duracaoTotal = servicos.Sum(s => s.Duracao);
 
             // Criar o novo agendamento
             var novoAgendamento = new Agendamento
             {
                 BarbeiroId = barbeiroId,
-                ClienteId = clienteId, // Adicionando o ClienteId aqui
+                ClienteId = clienteId,
                 DataHora = dataHora,
-                DuracaoTotal = servicos.Sum(s => s.Duracao), // Calcular a duração total com base nos serviços
-                AgendamentoServicos = servicos.Select(s => new AgendamentoServico { ServicoId = s.ServicoId }).ToList() // Associar os serviços ao agendamento
+                DuracaoTotal = duracaoTotal,
+                FormaPagamento = formaPagamento,
+                PrecoTotal = precoTotal,
+                AgendamentoServicos = servicos.Select(s => new AgendamentoServico { ServicoId = s.ServicoId }).ToList()
             };
 
-            // Salvar o novo agendamento no repositório e retornar o ID
+            // Salvar o novo agendamento no repositório e retornar o ID do agendamento
             var agendamento = await _agendamentoRepository.AddAsync(novoAgendamento);
             return agendamento.AgendamentoId;
         }
+
     }
 }
