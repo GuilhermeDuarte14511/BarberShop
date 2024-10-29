@@ -215,16 +215,15 @@ namespace BarberShopMVC.Controllers
                     googleCalendarLink
                 );
 
-                // Enviar e-mail para o barbeiro
+                // Enviar e-mail para o barbeiro com detalhes do cliente e dos serviços
                 var assuntoBarbeiro = "Novo Agendamento - Barbearia CG DREAMS";
-                var conteudoBarbeiro = $"Você tem um novo agendamento com o cliente {cliente.Nome}.";
+                var servicoNomes = servicos.Select(s => s.Nome).ToList();
 
-                await _emailService.EnviarEmailAgendamentoAsync(
+                await _emailService.EnviarEmailNotificacaoBarbeiroAsync(
                     barbeiro.Email,
                     barbeiro.Nome,
-                    assuntoBarbeiro,
-                    conteudoBarbeiro,
                     cliente.Nome,
+                    servicoNomes,
                     dataHora,
                     dataHoraFim,
                     (decimal)precoTotal
@@ -235,7 +234,6 @@ namespace BarberShopMVC.Controllers
             catch (Exception ex)
             {
                 TempData["MensagemErro"] = "Ocorreu um erro ao confirmar o agendamento. Tente novamente.";
-                // Aqui você pode registrar o erro em um log para análise
                 Console.WriteLine($"Erro ao confirmar agendamento: {ex.Message}");
             }
 
