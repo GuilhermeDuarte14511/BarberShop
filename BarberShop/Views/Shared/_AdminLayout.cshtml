@@ -1,7 +1,6 @@
 ﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-377Y66G6FR"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
@@ -14,16 +13,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - BarberShop Admin</title>
 
-    <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-
-    <!-- Font Awesome (Ícones) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
-
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
-
-    <!-- Custom CSS -->
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body>
@@ -61,23 +53,34 @@
         </div>
     </div>
 
-    <!-- jQuery -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
-
-    <!-- Bootstrap JS -->
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-
-    <!-- Custom JS -->
     <script src="~/js/site.js" asp-append-version="true"></script>
 
     <script>
-        // Toggle sidebar visibility with smooth animation
-        $("#menu-toggle").click(function (e) {
-            e.preventDefault();
-            $("#wrapper").toggleClass("toggled");
+        $(document).ready(function () {
+            // Verifica se a tela é de um dispositivo móvel e esconde o menu lateral
+            if (window.innerWidth < 768) {
+                $("#wrapper").addClass("toggled");
+            }
+
+            // Toggle do menu lateral com animação suave
+            $("#menu-toggle").click(function (e) {
+                e.preventDefault();
+                $("#wrapper").toggleClass("toggled");
+            });
+
+            // Reajusta o estado do menu ao redimensionar a janela
+            $(window).resize(function () {
+                if (window.innerWidth < 768) {
+                    $("#wrapper").addClass("toggled");
+                } else {
+                    $("#wrapper").removeClass("toggled");
+                }
+            });
         });
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>
-</htm
+</html>

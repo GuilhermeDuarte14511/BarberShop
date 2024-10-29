@@ -3,38 +3,57 @@
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<div id="barbeiroPage">
-    <h2>Gerenciar Barbeiros</h2>
+<div id="barbeiroPage" class="container-fluid">
+    <h2 class="text-center">Gerenciar Barbeiros</h2>
     <button class="btn btn-success mb-3" id="btnAdicionarBarbeiro">Adicionar Barbeiro</button>
 
-    <table class="table table-dark table-striped" id="tabelaBarbeiros">
-        <thead>
-            <tr>
-                <th>Nome</th>
-                <th>Email</th>
-                <th>Telefone</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var barbeiro in Model)
-            {
-                <tr data-id="@barbeiro.BarbeiroId">
-                    <td>@barbeiro.Nome</td>
-                    <td>@barbeiro.Email</td>
-                    <td>@barbeiro.Telefone</td>
-                    <td>
-                        <button class="btn btn-warning btn-sm btnEditar" data-id="@barbeiro.BarbeiroId">Editar</button>
-                        <button class="btn btn-danger btn-sm btnExcluir" data-id="@barbeiro.BarbeiroId">Excluir</button>
-                    </td>
+    <!-- Tabela exibida em telas maiores -->
+    <div class="table-responsive d-none d-md-block">
+        <table class="table table-dark table-striped" id="tabelaBarbeiros">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Email</th>
+                    <th>Telefone</th>
+                    <th>Ações</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var barbeiro in Model)
+                {
+                    <tr data-id="@barbeiro.BarbeiroId">
+                        <td>@barbeiro.Nome</td>
+                        <td>@barbeiro.Email</td>
+                        <td>@barbeiro.Telefone</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm btnEditar" data-id="@barbeiro.BarbeiroId">Editar</button>
+                            <button class="btn btn-danger btn-sm btnExcluir" data-id="@barbeiro.BarbeiroId">Excluir</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Estrutura de cartões exibida em telas menores -->
+    <div class="barbeiros-list d-md-none">
+        @foreach (var barbeiro in Model)
+        {
+            <div class="barbeiro-card" data-id="@barbeiro.BarbeiroId">
+                <p><strong>Nome:</strong> @barbeiro.Nome</p>
+                <p><strong>Email:</strong> @barbeiro.Email</p>
+                <p><strong>Telefone:</strong> @barbeiro.Telefone</p>
+                <div class="actions">
+                    <button class="btn btn-warning btn-sm btnEditar" data-id="@barbeiro.BarbeiroId">Editar</button>
+                    <button class="btn btn-danger btn-sm btnExcluir" data-id="@barbeiro.BarbeiroId">Excluir</button>
+                </div>
+            </div>
+        }
+    </div>
 
     <!-- Modal para Adição -->
     <div class="modal fade" id="adicionarModal" tabindex="-1" aria-labelledby="adicionarModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <form id="formAdicionarBarbeiro">
                     <div class="modal-header">
@@ -66,7 +85,7 @@
 
     <!-- Modal para Edição -->
     <div class="modal fade" id="editarModal" tabindex="-1" aria-labelledby="editarModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <form id="formEditarBarbeiro">
                     <div class="modal-header">
@@ -107,7 +126,7 @@
 
     <!-- Modal para Exclusão -->
     <div class="modal fade" id="excluirModal" tabindex="-1" aria-labelledby="excluirModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="excluirModalLabel">Excluir Barbeiro</h5>
@@ -141,5 +160,4 @@
             </div>
         </div>
     </div>
-
 </div>

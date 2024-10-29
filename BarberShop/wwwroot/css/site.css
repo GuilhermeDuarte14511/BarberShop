@@ -271,3 +271,55 @@ body {
     .navbar .ml-3 {
         margin-left: 1.5rem !important; /* Aumentar o espaço entre o botão de menu e o título */
     }
+
+/* Estilos de layout para exibição em dispositivos móveis */
+@media (max-width: 768px) {
+    /* Esconde a tabela em telas pequenas */
+    .table-responsive {
+        display: none;
+    }
+
+    /* Exibe o layout em cartões para dispositivos móveis */
+    .barbeiros-list {
+        display: block;
+    }
+
+    .barbeiro-card {
+        background-color: #2b2b2b;
+        color: #ecf0f1;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+        .barbeiro-card p {
+            margin: 5px 0;
+            font-size: 0.9rem;
+        }
+
+        .barbeiro-card .actions {
+            display: flex;
+            justify-content: flex-start;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+    /* Ajustes para botões */
+    .btn {
+        font-size: 0.9rem;
+        padding: 8px 12px;
+    }
+
+    /* Ajuste do botão "Adicionar Barbeiro" */
+    #btnAdicionarBarbeiro {
+        width: 100%;
+    }
+}
+
+/* Layout padrão para desktops e tablets */
+@media (min-width: 769px) {
+    .barbeiros-list {
+        display: none;
+    }
+}
