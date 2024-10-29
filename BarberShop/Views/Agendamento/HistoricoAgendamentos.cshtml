@@ -2,8 +2,9 @@
 
 <h2 class="text-light">Histórico de Agendamentos</h2>
 
-<div class="container-fluid">
-    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+<div class="container-fluid" style="padding: 20px;">
+    <!-- Tabela para telas maiores -->
+    <div class="table-responsive d-none d-md-block" style="max-height: 400px; overflow-y: auto;">
         <table class="table table-bordered table-dark table-striped table-hover table-sm">
             <thead class="text-center">
                 <tr>
@@ -59,6 +60,82 @@
                 }
             </tbody>
         </table>
+    </div>
+
+    <!-- Cards para dispositivos móveis -->
+    <div class="d-md-none">
+        <!-- Primeiro Card com Margin-Top Adicional -->
+        <div class="card bg-dark text-light mb-3" style="margin-top: 250px;">
+            <div class="card-body">
+                <h5 class="card-title">@Model.First().DataHora.ToString("dd/MM/yyyy HH:mm")</h5>
+                <p class="card-text"><strong>Barbeiro:</strong> @Model.First().Barbeiro.Nome</p>
+                <p class="card-text"><strong>Serviços:</strong></p>
+                <ul>
+                    @foreach (var servico in Model.First().AgendamentoServicos)
+                    {
+                        <li>@servico.Servico.Nome - @servico.Servico.Preco.ToString("C")</li>
+                    }
+                </ul>
+                <p class="card-text"><strong>Valor Total:</strong> @Model.First().AgendamentoServicos.Sum(s => s.Servico.Preco).ToString("C")</p>
+                <p class="card-text">
+                    <strong>Status:</strong>
+                    @if (Model.First().Status == BarberShop.Domain.Entities.StatusAgendamento.Pendente)
+                    {
+                        <span><i class="fas fa-clock text-warning"></i> Pendente</span>
+                    }
+                    else if (Model.First().Status == BarberShop.Domain.Entities.StatusAgendamento.Confirmado)
+                    {
+                        <span><i class="fas fa-check text-success"></i> Confirmado</span>
+                    }
+                    else if (Model.First().Status == BarberShop.Domain.Entities.StatusAgendamento.Cancelado)
+                    {
+                        <span><i class="fas fa-times text-danger"></i> Cancelado</span>
+                    }
+                    else if (Model.First().Status == BarberShop.Domain.Entities.StatusAgendamento.Concluido)
+                    {
+                        <span><i class="fas fa-check-circle text-info"></i> Concluído</span>
+                    }
+                </p>
+            </div>
+        </div>
+
+        <!-- Outros Cards -->
+        @foreach (var agendamento in Model.Skip(1))
+        {
+            <div class="card bg-dark text-light mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">@agendamento.DataHora.ToString("dd/MM/yyyy HH:mm")</h5>
+                    <p class="card-text"><strong>Barbeiro:</strong> @agendamento.Barbeiro.Nome</p>
+                    <p class="card-text"><strong>Serviços:</strong></p>
+                    <ul>
+                        @foreach (var servico in agendamento.AgendamentoServicos)
+                        {
+                            <li>@servico.Servico.Nome - @servico.Servico.Preco.ToString("C")</li>
+                        }
+                    </ul>
+                    <p class="card-text"><strong>Valor Total:</strong> @agendamento.AgendamentoServicos.Sum(s => s.Servico.Preco).ToString("C")</p>
+                    <p class="card-text">
+                        <strong>Status:</strong>
+                        @if (agendamento.Status == BarberShop.Domain.Entities.StatusAgendamento.Pendente)
+                        {
+                            <span><i class="fas fa-clock text-warning"></i> Pendente</span>
+                        }
+                        else if (agendamento.Status == BarberShop.Domain.Entities.StatusAgendamento.Confirmado)
+                        {
+                            <span><i class="fas fa-check text-success"></i> Confirmado</span>
+                        }
+                        else if (agendamento.Status == BarberShop.Domain.Entities.StatusAgendamento.Cancelado)
+                        {
+                            <span><i class="fas fa-times text-danger"></i> Cancelado</span>
+                        }
+                        else if (agendamento.Status == BarberShop.Domain.Entities.StatusAgendamento.Concluido)
+                        {
+                            <span><i class="fas fa-check-circle text-info"></i> Concluído</span>
+                        }
+                    </p>
+                </div>
+            </div>
+        }
     </div>
 </div>
 
