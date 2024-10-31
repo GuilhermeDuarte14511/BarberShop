@@ -1,10 +1,14 @@
 {
   "dependencies": {
+    "apis1": {
+      "type": "apis"
+    },
     "mssql1": {
       "type": "mssql",
-      "connectionId": "BarberShopDb"
+      "connectionId": "BarberShopDb",
+      "dynamicId": null
     },
-    "apis1": {
+    "apis2": {
       "type": "apis"
     }
   }

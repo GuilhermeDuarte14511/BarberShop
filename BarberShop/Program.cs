@@ -110,16 +110,14 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
-else
+
+// Habilitar o middleware do Swagger para todos os ambientes
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    // Habilitar o middleware do Swagger para desenvolvimento
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "BarberShop API V1");
-        c.RoutePrefix = "swagger";
-    });
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "BarberShop API V1");
+    c.RoutePrefix = "swagger";
+});
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
