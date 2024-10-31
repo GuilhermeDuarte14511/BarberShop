@@ -9,6 +9,7 @@ using BarberShop.Application.Services;
 
 namespace BarberShop.Controllers
 {
+
     [Route("api/webhook")]
     [ApiController]
     public class WebhookController : ControllerBase
@@ -27,11 +28,13 @@ namespace BarberShop.Controllers
         [HttpPost("payment")]
         public async Task<IActionResult> ReceiveNotification([FromBody] dynamic webhookData)
         {
+            _logger.LogInformation("Iniciando processamento de webhook...");
+
             try
             {
-                // Extrai o paymentId e o status do pagamento do webhook
+                _logger.LogDebug("Tentando extrair 'paymentId' e 'paymentStatus' do webhook data...");
                 string paymentId = webhookData?.data?.id;
-                string paymentStatus = webhookData?.data?.status;
+                string paymentStatus = webhookData?.data?.status ?? "unknown"; // Valor padrão
 
                 if (string.IsNullOrEmpty(paymentId) || string.IsNullOrEmpty(paymentStatus))
                 {
@@ -44,6 +47,7 @@ namespace BarberShop.Controllers
                 await SaveLogAsync("INFO", "WebhookController", $"Recebido webhook para Payment ID: {paymentId}, Status: {paymentStatus}", webhookData.ToString());
 
                 // Mapeia o status recebido para o enum StatusPagamento
+                _logger.LogDebug("Mapeando status de pagamento para StatusPagamento enum...");
                 StatusPagamento statusPagamento = paymentStatus.ToLower() switch
                 {
                     "approved" => StatusPagamento.Aprovado,
@@ -51,6 +55,9 @@ namespace BarberShop.Controllers
                     _ => StatusPagamento.Pendente
                 };
 
+                _logger.LogDebug($"Status de pagamento mapeado para: {statusPagamento}");
+
+                _logger.LogDebug("Atualizando status do agendamento no banco de dados...");
                 bool updateSuccess = await _agendamentoService.UpdateAgendamentoStatusByPaymentIdAsync(paymentId, statusPagamento);
 
                 if (!updateSuccess)
@@ -71,11 +78,16 @@ namespace BarberShop.Controllers
                 await SaveLogAsync("ERROR", "WebhookController", $"Erro ao processar notificação de pagamento: {ex.Message}", webhookData.ToString());
                 return StatusCode(500, "Erro interno ao processar notificação.");
             }
+            finally
+            {
+                _logger.LogInformation("Processamento do webhook concluído.");
+            }
         }
 
         // Método auxiliar para salvar logs no banco de dados
         private async Task SaveLogAsync(string logLevel, string source, string message, string data)
         {
+            _logger.LogDebug("Salvando log no banco de dados...");
             var logEntry = new Log
             {
                 LogLevel = logLevel,
@@ -87,6 +99,7 @@ namespace BarberShop.Controllers
 
             _context.Logs.Add(logEntry);
             await _context.SaveChangesAsync();
+            _logger.LogDebug("Log salvo com sucesso.");
         }
     }
 }
