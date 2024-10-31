@@ -90,15 +90,15 @@ namespace BarberShop.Infrastructure.Repositories
                 if (dataAtual.DayOfWeek == DayOfWeek.Monday)
                     continue;
 
-                // Projeta apenas as propriedades necessárias, tratando StatusPagamento e PaymentId como opcionais
+                // Projeta as propriedades necessárias, sem tratamento adicional para StatusPagamento
                 var agendamentosDoDia = await _context.Agendamentos
                     .Where(a => a.BarbeiroId == barbeiroId && a.DataHora.Date == dataAtual.Date)
                     .Select(a => new
                     {
                         a.DataHora,
-                        DuracaoTotal = a.DuracaoTotal ?? 0,  // Tratar nulo com 0
-                        StatusPagamento = (StatusPagamento?)a.StatusPagamento, // Permitir nulo para StatusPagamento
-                        PaymentId = (string?)a.PaymentId // Permitir nulo para PaymentId
+                        DuracaoTotal = a.DuracaoTotal ?? 0, // Tratar nulo com 0
+                        a.StatusPagamento, // StatusPagamento como nullable int
+                        a.PaymentId // PaymentId pode ser nulo diretamente
                     })
                     .ToListAsync();
 
@@ -124,7 +124,6 @@ namespace BarberShop.Infrastructure.Repositories
 
             return horariosDisponiveis;
         }
-
         public async Task<Agendamento> ObterPorPaymentIdAsync(string paymentId)
         {
             return await _context.Agendamentos
@@ -132,6 +131,16 @@ namespace BarberShop.Infrastructure.Repositories
                 .Include(a => a.Barbeiro)
                 .FirstOrDefaultAsync(a => a.PaymentId == paymentId);
         }
+
+        public async Task<IEnumerable<Agendamento>> ObterAgendamentosPorBarbeiroEData(int barbeiroId, DateTime dataHoraInicio, DateTime dataHoraFim)
+        {
+            return await _context.Agendamentos
+                .Where(a => a.BarbeiroId == barbeiroId &&
+                            a.DataHora >= dataHoraInicio &&
+                            a.DataHora < dataHoraFim) // Verifica se o agendamento está dentro do intervalo
+                .ToListAsync();
+        }
+
 
 
         // Implementação do método ObterAgendamentosPorBarbeiroIdAsync

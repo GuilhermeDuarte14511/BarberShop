@@ -14,5 +14,8 @@ namespace BarberShop.Domain.Interfaces
 
         // Novo método para obter agendamento pelo PaymentId
         Task<Agendamento> ObterPorPaymentIdAsync(string paymentId);
+
+        Task<IEnumerable<Agendamento>> ObterAgendamentosPorBarbeiroEData(int barbeiroId, DateTime dataHoraInicio, DateTime dataHoraFim);
+
     }
 }

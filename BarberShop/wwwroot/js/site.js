@@ -597,15 +597,17 @@ if ($('#resumoAgendamentoPage').length > 0) {
         $.ajax({
             type: 'POST',
             url: '/Agendamento/ConfirmarAgendamento',
-            data: data,
+            data: $.param(data), // Usa $.param para converter o objeto em uma string de query
+            contentType: 'application/x-www-form-urlencoded; charset=UTF-8', // Define o tipo correto
             success: function (response) {
                 console.log("Resposta da confirmação de agendamento:", response);
                 $('#loadingSpinner').hide();
                 $('#successModal').modal('show'); // Exibe o modal de sucesso
 
-                // Configura o evento para redirecionar ao clicar em "OK"
-                $('#successModal').on('hidden.bs.modal', function () {
-                    window.location.href = "/Cliente/MenuPrincipal";
+                // Configura o evento para redirecionar ao clicar em "OK" no modal de sucesso
+                $('#successModal').on('click', '#redirectMenuBtn', function () {
+                    $('#successModal').modal('hide'); // Fecha o modal
+                    window.location.href = "/Cliente/MenuPrincipal"; // Redireciona
                 });
             },
             error: function (xhr, status, error) {
@@ -649,6 +651,9 @@ if ($('#resumoAgendamentoPage').length > 0) {
             cardPaymentBrickController = null;
         }
     });
+
+    // Inicializa o Payment Brick ao carregar a página
+    initializePaymentBrick();
 }
 
 

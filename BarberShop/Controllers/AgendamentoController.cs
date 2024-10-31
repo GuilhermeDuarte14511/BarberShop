@@ -172,12 +172,7 @@ namespace BarberShopMVC.Controllers
 
 
         [HttpPost]
-        public async Task<IActionResult> ConfirmarAgendamento(
-    int barbeiroId,
-    DateTime dataHora,
-    string servicoIds,
-    string formaPagamento,
-    string paymentMethodId = null)
+        public async Task<IActionResult> ConfirmarAgendamento(int barbeiroId, DateTime dataHora, string servicoIds, string formaPagamento, string paymentMethodId = null, string paymentId = null)
         {
             try
             {
@@ -203,21 +198,36 @@ namespace BarberShopMVC.Controllers
                     return RedirectToAction("MenuPrincipal", "Cliente");
                 }
 
-                // Variável para armazenar o paymentId
-                string paymentId = null;
-                string pixQrCode = null;
+                // Verificar se o horário já está ocupado
+                var duracaoTotal = servicos.Sum(s => s.Duracao);
+                var dataHoraFim = dataHora.AddMinutes(duracaoTotal);
+                var agendamentosExistentes = await _agendamentoRepository
+                    .ObterAgendamentosPorBarbeiroEData(barbeiroId, dataHora, dataHoraFim);
+
+                if (agendamentosExistentes.Any())
+                {
+                    TempData["MensagemErro"] = "O horário selecionado não está mais disponível. Por favor, escolha outro horário.";
+                    return RedirectToAction("MenuPrincipal", "Cliente");
+                }
 
                 // Criar o agendamento no sistema com as informações de pagamento
-                var agendamentoId = await _agendamentoService.CriarAgendamentoAsync(barbeiroId, dataHora, clienteId, servicoIdList, formaPagamento, precoTotal, paymentId);
+                var agendamentoId = await _agendamentoService.CriarAgendamentoAsync(
+                    barbeiroId,
+                    dataHora,
+                    clienteId,
+                    servicoIdList,
+                    formaPagamento,
+                    precoTotal,
+                    paymentId // Passa o paymentId recebido para o serviço de agendamento
+                );
 
                 // Atualizar o status do agendamento para Confirmado
                 var agendamento = await _agendamentoRepository.GetByIdAsync(agendamentoId);
                 agendamento.Status = StatusAgendamento.Confirmado;
+                agendamento.StatusPagamento = formaPagamento == "pix" && string.IsNullOrEmpty(paymentId) ? StatusPagamento.Pendente : StatusPagamento.Aprovado;
                 await _agendamentoRepository.UpdateAsync(agendamento);
 
                 // Gerar link para o Google Calendar
-                var duracaoTotal = servicos.Sum(s => s.Duracao);
-                var dataHoraFim = dataHora.AddMinutes(duracaoTotal);
                 var googleCalendarLink = _emailService.GerarLinkGoogleCalendar(
                     "Agendamento na Barbearia CG DREAMS",
                     dataHora,
@@ -256,8 +266,9 @@ namespace BarberShopMVC.Controllers
                 TempData["MensagemSucesso"] = "Agendamento confirmado com sucesso!";
 
                 // Retornar o QR Code para o Pix, caso seja necessário
-                if (formaPagamento == "pix" && pixQrCode != null)
+                if (formaPagamento == "pix" && paymentId == null)
                 {
+                    var pixQrCode = "Gerar QR code aqui"; // Substituir pelo código de geração do QR Code do Pix
                     return Ok(new { qrCode = pixQrCode });
                 }
             }
@@ -270,7 +281,6 @@ namespace BarberShopMVC.Controllers
 
             return RedirectToAction("MenuPrincipal", "Cliente");
         }
-
 
 
 
