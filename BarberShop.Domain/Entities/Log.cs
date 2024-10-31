@@ -10,5 +10,6 @@ namespace BarberShop.Domain.Entities
         public string Source { get; set; }
         public string Message { get; set; }
         public string Data { get; set; }
+        public string ResourceID { get; set; } // Nova propriedade para armazenar o ID do recurso
     }
 }

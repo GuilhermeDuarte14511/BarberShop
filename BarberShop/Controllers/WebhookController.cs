@@ -44,13 +44,13 @@ namespace BarberShop.Controllers
                     !dataElement.TryGetProperty("id", out JsonElement idElement))
                 {
                     _logger.LogWarning("Dados do webhook incompletos. 'data.id' ausente.");
-                    await SaveLogAsync("WARNING", "WebhookController", "Dados do webhook incompletos", webhookData.ToString());
+                    await SaveLogAsync("WARNING", "WebhookController", "Dados do webhook incompletos", webhookData.ToString(), null);
                     return BadRequest("Dados do webhook incompletos.");
                 }
 
                 string resourceId = idElement.GetString();
                 _logger.LogInformation($"Recebido webhook - Tipo: {type}, Ação: {action}, Resource ID: {resourceId}");
-                await SaveLogAsync("INFO", "WebhookController", $"Recebido webhook - Tipo: {type}, Ação: {action}, Resource ID: {resourceId}", webhookData.ToString());
+                await SaveLogAsync("INFO", "WebhookController", $"Recebido webhook - Tipo: {type}, Ação: {action}, Resource ID: {resourceId}", webhookData.ToString(), resourceId);
 
                 // Processamento de acordo com o tipo de notificação
                 StatusPagamento statusPagamento = StatusPagamento.Pendente; // Valor padrão
@@ -71,7 +71,7 @@ namespace BarberShop.Controllers
                     if (!updateSuccess)
                     {
                         _logger.LogWarning($"Agendamento não encontrado para o Payment ID: {resourceId}");
-                        await SaveLogAsync("WARNING", "WebhookController", $"Agendamento não encontrado para o Payment ID: {resourceId}", null);
+                        await SaveLogAsync("WARNING", "WebhookController", $"Agendamento não encontrado para o Payment ID: {resourceId}", null, resourceId);
                         return NotFound("Agendamento não encontrado.");
                     }
                 }
@@ -82,9 +82,7 @@ namespace BarberShop.Controllers
                     string oldCardId = dataElement.TryGetProperty("old_card_id", out JsonElement oldCardIdElement) ? oldCardIdElement.ToString() : null;
 
                     _logger.LogInformation($"Cartão atualizado - Novo Card ID: {newCardId}, Antigo Card ID: {oldCardId}");
-                    await SaveLogAsync("INFO", "WebhookController", $"Cartão atualizado - Novo Card ID: {newCardId}, Antigo Card ID: {oldCardId}", webhookData.ToString());
-
-                    // Aqui você pode chamar um serviço para atualizar o cartão no sistema, se necessário
+                    await SaveLogAsync("INFO", "WebhookController", $"Cartão atualizado - Novo Card ID: {newCardId}, Antigo Card ID: {oldCardId}", webhookData.ToString(), resourceId);
                 }
                 else if (type == "stop_delivery_op_wh" && action == "Created")
                 {
@@ -93,14 +91,12 @@ namespace BarberShop.Controllers
                     string merchantOrder = dataElement.TryGetProperty("merchant_order", out JsonElement merchantOrderElement) ? merchantOrderElement.ToString() : null;
 
                     _logger.LogWarning($"Alerta de fraude - Merchant Order: {merchantOrder}, Payment ID: {paymentId}");
-                    await SaveLogAsync("WARNING", "WebhookController", $"Alerta de fraude - Merchant Order: {merchantOrder}, Payment ID: {paymentId}", webhookData.ToString());
-
-                    // Você pode implementar uma lógica para cancelar o pedido automaticamente aqui
+                    await SaveLogAsync("WARNING", "WebhookController", $"Alerta de fraude - Merchant Order: {merchantOrder}, Payment ID: {paymentId}", webhookData.ToString(), resourceId);
                 }
                 else
                 {
                     _logger.LogWarning($"Tipo de notificação não suportado - Tipo: {type}, Ação: {action}");
-                    await SaveLogAsync("WARNING", "WebhookController", $"Tipo de notificação não suportado - Tipo: {type}, Ação: {action}", webhookData.ToString());
+                    await SaveLogAsync("WARNING", "WebhookController", $"Tipo de notificação não suportado - Tipo: {type}, Ação: {action}", webhookData.ToString(), resourceId);
                     return BadRequest("Tipo de notificação não suportado.");
                 }
 
@@ -110,13 +106,13 @@ namespace BarberShop.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"Erro ao processar notificação de pagamento: {ex.Message}");
-                await SaveLogAsync("ERROR", "WebhookController", $"Erro ao processar notificação: {ex.Message}", webhookData.ToString());
+                await SaveLogAsync("ERROR", "WebhookController", $"Erro ao processar notificação: {ex.Message}", webhookData.ToString(), null);
                 return StatusCode(500, "Erro interno ao processar notificação.");
             }
         }
 
-        // Método auxiliar para salvar logs no banco de dados
-        private async Task SaveLogAsync(string logLevel, string source, string message, string data)
+        // Método auxiliar para salvar logs no banco de dados, com suporte para ResourceID
+        private async Task SaveLogAsync(string logLevel, string source, string message, string data, string resourceId)
         {
             _logger.LogDebug("Salvando log no banco de dados...");
             var logEntry = new Log
@@ -125,6 +121,7 @@ namespace BarberShop.Controllers
                 Source = source,
                 Message = message,
                 Data = data,
+                ResourceID = resourceId,
                 LogDateTime = DateTime.UtcNow
             };
 
