@@ -5,11 +5,11 @@ using BarberShop.Domain.Entities;
 using BarberShop.Infrastructure.Data; // Supondo que BarbeariaContext esteja nesse namespace
 using System.Threading.Tasks;
 using System;
+using System.Text.Json;
 using BarberShop.Application.Services;
 
 namespace BarberShop.Controllers
 {
-
     [Route("api/webhook")]
     [ApiController]
     public class WebhookController : ControllerBase
@@ -26,22 +26,25 @@ namespace BarberShop.Controllers
         }
 
         [HttpPost("payment")]
-        public async Task<IActionResult> ReceiveNotification([FromBody] dynamic webhookData)
+        public async Task<IActionResult> ReceiveNotification([FromBody] JsonElement webhookData)
         {
             _logger.LogInformation("Iniciando processamento de webhook...");
 
             try
             {
                 _logger.LogDebug("Tentando extrair 'paymentId' e 'paymentStatus' do webhook data...");
-                string paymentId = webhookData?.data?.id;
-                string paymentStatus = webhookData?.data?.status ?? "unknown"; // Valor padrão
 
-                if (string.IsNullOrEmpty(paymentId) || string.IsNullOrEmpty(paymentStatus))
+                // Acessar os dados de forma segura
+                if (!webhookData.TryGetProperty("data", out JsonElement dataElement) ||
+                    !dataElement.TryGetProperty("id", out JsonElement idElement))
                 {
-                    _logger.LogWarning("Dados do webhook incompletos. paymentId ou paymentStatus ausentes.");
+                    _logger.LogWarning("Dados do webhook incompletos. 'data.id' ausente.");
                     await SaveLogAsync("WARNING", "WebhookController", "Dados do webhook incompletos", webhookData.ToString());
                     return BadRequest("Dados do webhook incompletos.");
                 }
+
+                string paymentId = idElement.GetString();
+                string paymentStatus = webhookData.TryGetProperty("type", out JsonElement typeElement) ? typeElement.GetString() : "unknown";
 
                 _logger.LogInformation($"Recebido webhook para Payment ID: {paymentId}, Status: {paymentStatus}");
                 await SaveLogAsync("INFO", "WebhookController", $"Recebido webhook para Payment ID: {paymentId}, Status: {paymentStatus}", webhookData.ToString());
