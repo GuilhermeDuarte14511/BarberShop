@@ -2,26 +2,26 @@
 using BarberShop.Application.DTOs;
 using MercadoPago.Client.Common;
 using MercadoPago.Client.Payment;
-using MercadoPago.Config;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging; // Adicione essa dependência
 using System;
 using System.Threading.Tasks;
 using MercadoPago.Resource.Payment;
 using System.Text.Json;
 using MercadoPago.Client;
+using BarberShop.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 public class PaymentController : ControllerBase
 {
     private readonly IPaymentService _paymentService;
+    private readonly ILogger<PaymentController> _logger; // Adicione o ILogger
 
-    public PaymentController(IPaymentService paymentService)
+    public PaymentController(IPaymentService paymentService, ILogger<PaymentController> logger)
     {
         _paymentService = paymentService;
-        // Pegue o token do Mercado Pago de uma variável de ambiente
-        MercadoPagoConfig.AccessToken = Environment.GetEnvironmentVariable("MERCADO_PAGO_ACCESS_TOKEN")
-                                         ?? "TEST-236275902252089-103018-3e74429f349b5f03d14f49344da52ec9-430792758"; // Remova esta linha em produção
+        _logger = logger;
     }
 
     [HttpPost("create-preference")]
@@ -32,12 +32,14 @@ public class PaymentController : ControllerBase
             decimal amount = data.GetProperty("amount").GetDecimal();
             string description = data.GetProperty("description").GetString();
 
+            _logger.LogInformation("Valor recebido no endpoint create-preference: Amount={Amount}", amount);
+
             var preferenceId = await _paymentService.CreateMercadoPagoPreference(amount, description);
             return Ok(new { preferenceId });
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Erro ao criar preferência: {ex.Message}");
+            _logger.LogError("Erro ao criar preferência: {Message}", ex.Message);
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -53,6 +55,9 @@ public class PaymentController : ControllerBase
             TransactionAmount = paymentRequest.TransactionAmount,
             Token = paymentRequest.Token,
             Description = paymentRequest.Description,
+            StatementDescriptor = "BarberShop",
+            NotificationUrl = "https://barbeariashopsandbox2.azurewebsites.net/api/webhook/payment",
+            ExternalReference = Guid.NewGuid().ToString(),
             Installments = paymentRequest.Installments,
             PaymentMethodId = paymentRequest.PaymentMethodId,
             Payer = new PaymentPayerRequest
@@ -69,8 +74,12 @@ public class PaymentController : ControllerBase
 
         try
         {
+            _logger.LogInformation("Iniciando pagamento para o valor de {TransactionAmount}", paymentRequest.TransactionAmount);
+
             var paymentClient = new PaymentClient();
             Payment payment = await paymentClient.CreateAsync(paymentCreateRequest, requestOptions);
+
+            _logger.LogInformation("Status do pagamento: {Status}, PaymentId: {PaymentId}", payment.Status, payment.Id);
 
             if (payment.Status == "approved")
             {
@@ -78,7 +87,8 @@ public class PaymentController : ControllerBase
             }
             else
             {
-                // Retorna um motivo detalhado de rejeição para exibir ao usuário
+                _logger.LogWarning("Pagamento rejeitado: {StatusDetail}", payment.StatusDetail);
+
                 return BadRequest(new
                 {
                     status = payment.Status,
@@ -89,13 +99,11 @@ public class PaymentController : ControllerBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Erro ao processar pagamento: {ex.Message}");
+            _logger.LogError("Erro ao processar pagamento: {Message}", ex.Message);
             return BadRequest(new { error = ex.Message });
         }
     }
 
-
-    // Método auxiliar para mapear status_detail para mensagens personalizadas
     private string GetRejectionMessage(string statusDetail)
     {
         return statusDetail switch
@@ -110,30 +118,4 @@ public class PaymentController : ControllerBase
             _ => "O pagamento foi recusado. Verifique os dados e tente novamente."
         };
     }
-}
-
-// DTO para Requisição de Pagamento
-public class PaymentRequestDTO
-{
-    public decimal TransactionAmount { get; set; }
-    public string Token { get; set; }
-    public string Description { get; set; }
-    public int Installments { get; set; }
-    public string PaymentMethodId { get; set; }
-    public PaymentPayer Payer { get; set; }
-}
-
-// DTO para Payer
-public class PaymentPayer
-{
-    public string Email { get; set; }
-    public string FirstName { get; set; }
-    public Identification Identification { get; set; }
-}
-
-// DTO para Identificação
-public class Identification
-{
-    public string Type { get; set; }
-    public string Number { get; set; }
 }

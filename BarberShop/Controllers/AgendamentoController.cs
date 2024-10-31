@@ -1,9 +1,12 @@
 ﻿using BarberShop.Application.DTOs;
 using BarberShop.Application.Interfaces;
 using BarberShop.Application.Services;
+using BarberShop.Controllers;
 using BarberShop.Domain.Entities;
 using BarberShop.Domain.Interfaces;
+using BarberShop.Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
 using System.Security.Claims;
@@ -11,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace BarberShopMVC.Controllers
 {
-    public class AgendamentoController : Controller
+    public class AgendamentoController : BaseController
     {
         private readonly IAgendamentoRepository _agendamentoRepository;
         private readonly IClienteRepository _clienteRepository;
@@ -23,7 +26,6 @@ namespace BarberShopMVC.Controllers
         private readonly IEmailService _emailService;
         private readonly IPaymentService _paymentService;
 
-
         public AgendamentoController(
             IAgendamentoRepository agendamentoRepository,
             IClienteRepository clienteRepository,
@@ -33,7 +35,10 @@ namespace BarberShopMVC.Controllers
             IServicoRepository servicoRepository,
             IClienteService clienteService,
             IEmailService emailService,
-            IPaymentService paymentService)
+            IPaymentService paymentService,
+            ILogger<AgendamentoController> logger,
+            BarbeariaContext context)
+            : base(logger, context)
         {
             _agendamentoRepository = agendamentoRepository;
             _clienteRepository = clienteRepository;
@@ -114,8 +119,6 @@ namespace BarberShopMVC.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // Métodos relacionados aos agendamentos
-
         public async Task<IActionResult> Historico()
         {
             var clienteId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
@@ -143,11 +146,9 @@ namespace BarberShopMVC.Controllers
             var servicos = await _servicoRepository.ObterServicosPorIdsAsync(servicoIdList);
             var precoTotal = servicos.Sum(s => s.Preco);
 
-            // Obter nome e email do cliente dos claims
             var clienteNome = User.FindFirst(ClaimTypes.Name)?.Value;
             var clienteEmail = User.FindFirst(ClaimTypes.Email)?.Value;
 
-            // Armazenar nome e email na ViewData
             ViewData["ClienteNome"] = clienteNome;
             ViewData["ClienteEmail"] = clienteEmail;
 
@@ -168,8 +169,6 @@ namespace BarberShopMVC.Controllers
 
             return View("ResumoAgendamento", resumoAgendamentoDTO);
         }
-
-
 
         [HttpPost]
         public async Task<IActionResult> ConfirmarAgendamento(int barbeiroId, DateTime dataHora, string servicoIds, string formaPagamento, string paymentMethodId = null, string paymentId = null)
@@ -198,7 +197,6 @@ namespace BarberShopMVC.Controllers
                     return RedirectToAction("MenuPrincipal", "Cliente");
                 }
 
-                // Verificar se o horário já está ocupado
                 var duracaoTotal = servicos.Sum(s => s.Duracao);
                 var dataHoraFim = dataHora.AddMinutes(duracaoTotal);
                 var agendamentosExistentes = await _agendamentoRepository
@@ -210,7 +208,6 @@ namespace BarberShopMVC.Controllers
                     return RedirectToAction("MenuPrincipal", "Cliente");
                 }
 
-                // Criar o agendamento no sistema com as informações de pagamento
                 var agendamentoId = await _agendamentoService.CriarAgendamentoAsync(
                     barbeiroId,
                     dataHora,
@@ -218,16 +215,14 @@ namespace BarberShopMVC.Controllers
                     servicoIdList,
                     formaPagamento,
                     precoTotal,
-                    paymentId // Passa o paymentId recebido para o serviço de agendamento
+                    paymentId
                 );
 
-                // Atualizar o status do agendamento para Confirmado
                 var agendamento = await _agendamentoRepository.GetByIdAsync(agendamentoId);
                 agendamento.Status = StatusAgendamento.Confirmado;
                 agendamento.StatusPagamento = formaPagamento == "pix" && string.IsNullOrEmpty(paymentId) ? StatusPagamento.Pendente : StatusPagamento.Aprovado;
                 await _agendamentoRepository.UpdateAsync(agendamento);
 
-                // Gerar link para o Google Calendar
                 var googleCalendarLink = _emailService.GerarLinkGoogleCalendar(
                     "Agendamento na Barbearia CG DREAMS",
                     dataHora,
@@ -236,7 +231,6 @@ namespace BarberShopMVC.Controllers
                     "Endereço da Barbearia"
                 );
 
-                // Enviar e-mail de confirmação para o cliente
                 await _emailService.EnviarEmailAgendamentoAsync(
                     cliente.Email,
                     cliente.Nome,
@@ -250,7 +244,6 @@ namespace BarberShopMVC.Controllers
                     googleCalendarLink
                 );
 
-                // Enviar e-mail de notificação para o barbeiro
                 var servicoNomes = servicos.Select(s => s.Nome).ToList();
                 await _emailService.EnviarEmailNotificacaoBarbeiroAsync(
                     barbeiro.Email,
@@ -265,24 +258,20 @@ namespace BarberShopMVC.Controllers
 
                 TempData["MensagemSucesso"] = "Agendamento confirmado com sucesso!";
 
-                // Retornar o QR Code para o Pix, caso seja necessário
                 if (formaPagamento == "pix" && paymentId == null)
                 {
-                    var pixQrCode = "Gerar QR code aqui"; // Substituir pelo código de geração do QR Code do Pix
+                    var pixQrCode = "Gerar QR code aqui";
                     return Ok(new { qrCode = pixQrCode });
                 }
             }
             catch (Exception ex)
             {
                 TempData["MensagemErro"] = "Ocorreu um erro ao confirmar o agendamento. Tente novamente.";
-                Console.WriteLine($"Erro ao confirmar agendamento: {ex.Message}");
+                await SaveLogAsync("ERROR", "AgendamentoController", $"Erro ao confirmar agendamento: {ex.Message}", null);
                 return StatusCode(500, "Erro ao processar pagamento.");
             }
 
             return RedirectToAction("MenuPrincipal", "Cliente");
         }
-
-
-
     }
 }

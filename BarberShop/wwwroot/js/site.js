@@ -499,16 +499,21 @@ if ($('#resumoAgendamentoPage').length > 0) {
                 cardPaymentBrickController.unmount();
             }
 
-            cardPaymentBrickController = await bricksBuilder.create('cardPayment', paymentContainerId, {
+            cardPaymentBrickController = await bricksBuilder.create('payment', paymentContainerId, {
                 initialization: {
                     amount: totalAmount,
                     preferenceId: data.preferenceId,
-                    payer: { email: clienteEmail, firstName: clienteNome }
+                    payer: { 
+                        email: clienteEmail, 
+                        firstName: clienteNome, 
+                        entityType: "individual" 
+                    }
                 },
                 customization: {
                     paymentMethods: {
                         ticket: "all",
                         bankTransfer: "all",
+                        pix: "all",
                         creditCard: "all",
                         debitCard: "all",
                         mercadoPago: "all"
@@ -519,9 +524,13 @@ if ($('#resumoAgendamentoPage').length > 0) {
                     onSubmit: async (formData) => {
                         console.log("Dados de pagamento recebidos no submit:", formData);
 
-                        if (!formData.payer || !formData.payer.first_name) {
-                            formData.payer = formData.payer || {};
-                            formData.payer.first_name = clienteNome;
+                        // Verifique se há um token de cartão. Caso contrário, gere um
+                        const cardToken = formData.formData.token || await createCardToken(formData.formData);
+
+                        if (!cardToken) {
+                            console.error("Erro: o token do cartão não foi gerado.");
+                            showToast("Erro ao processar o pagamento. Tente novamente.", "error");
+                            return Promise.reject("Token não gerado");
                         }
 
                         return new Promise((resolve, reject) => {
@@ -529,17 +538,17 @@ if ($('#resumoAgendamentoPage').length > 0) {
                                 type: 'POST',
                                 url: '/api/payment/process_payment',
                                 data: JSON.stringify({
-                                    transactionAmount: formData.transaction_amount,
-                                    token: formData.token,
+                                    transactionAmount: formData.formData.transaction_amount,
+                                    token: cardToken,
                                     description: "Serviço de Barbearia",
-                                    installments: formData.installments,
-                                    paymentMethodId: formData.payment_method_id,
+                                    installments: formData.formData.installments,
+                                    paymentMethodId: formData.formData.payment_method_id,
                                     payer: {
-                                        email: formData.payer.email,
-                                        firstName: formData.payer.first_name,
+                                        email: formData.formData.payer.email || clienteEmail,
+                                        firstName: formData.formData.payer.first_name || clienteNome,
                                         identification: {
-                                            type: formData.payer.identification.type,
-                                            number: formData.payer.identification.number
+                                            type: formData.formData.payer.identification?.type || "CPF",
+                                            number: formData.formData.payer.identification?.number || "00000000000"
                                         }
                                     }
                                 }),
@@ -548,19 +557,19 @@ if ($('#resumoAgendamentoPage').length > 0) {
                                     console.log("Resposta do backend para pagamento:", response);
                                     if (response.status === "approved") {
                                         $('#loadingSpinner').fadeIn();
-                                        confirmarAgendamento(response.paymentId); // Passa o paymentId para o backend
-                                        $(`#${paymentContainerId} button`).css('background-color', 'green'); // Muda o botão para verde
-                                        resolve(); // Confirma que o pagamento foi bem-sucedido
+                                        confirmarAgendamento(response.paymentId);
+                                        $(`#${paymentContainerId} button`).css('background-color', 'green');
+                                        resolve();
                                     } else {
                                         showToast("Erro ao processar pagamento.", "error");
-                                        $(`#${paymentContainerId} button`).css('background-color', 'red'); // Muda o botão para vermelho
-                                        reject(); // Rejeita o pagamento
+                                        $(`#${paymentContainerId} button`).css('background-color', 'red');
+                                        reject();
                                     }
                                 },
                                 error: function (xhr, status, error) {
                                     console.error("Erro ao processar pagamento:", xhr.responseText);
                                     showToast("Erro ao processar pagamento. Tente novamente.", "error");
-                                    $(`#${paymentContainerId} button`).css('background-color', 'red'); // Muda o botão para vermelho
+                                    $(`#${paymentContainerId} button`).css('background-color', 'red');
                                     reject();
                                 }
                             });
@@ -569,7 +578,7 @@ if ($('#resumoAgendamentoPage').length > 0) {
                     onError: (error) => {
                         console.log("Erro ao carregar método de pagamento:", error);
                         showToast("Erro na inicialização do método de pagamento.", "error");
-                        $(`#${paymentContainerId} button`).css('background-color', 'red'); // Muda o botão para vermelho em caso de erro
+                        $(`#${paymentContainerId} button`).css('background-color', 'red');
                     }
                 }
             });
@@ -581,6 +590,25 @@ if ($('#resumoAgendamentoPage').length > 0) {
         }
     }
 
+    // Função para gerar o card token com o SDK do Mercado Pago
+    async function createCardToken(formData) {
+        try {
+            const token = await mp.createCardToken({
+                cardNumber: formData.card_number,
+                cardholderName: formData.cardholder_name,
+                cardExpirationMonth: formData.expiration_month,
+                cardExpirationYear: formData.expiration_year,
+                securityCode: formData.security_code,
+                identificationType: formData.payer?.identification?.type || "CPF",
+                identificationNumber: formData.payer?.identification?.number || "00000000000"
+            });
+            return token.id; // Retorna o token para ser usado no pagamento
+        } catch (error) {
+            console.error("Erro ao gerar o token do cartão:", error);
+            return null;
+        }
+    }
+
     // Função para confirmar o agendamento após o pagamento aprovado
     async function confirmarAgendamento(paymentId) {
         const data = {
@@ -589,7 +617,7 @@ if ($('#resumoAgendamentoPage').length > 0) {
             servicoIds: $('#resumoAgendamentoPage').data('servico-ids'),
             formaPagamento: 'creditCard',
             paymentMethodId: 'mercadopago',
-            paymentId: paymentId // Passa o paymentId do pagamento aprovado
+            paymentId: paymentId
         };
 
         console.log("Enviando confirmação de agendamento com dados:", data);
@@ -597,17 +625,14 @@ if ($('#resumoAgendamentoPage').length > 0) {
         $.ajax({
             type: 'POST',
             url: '/Agendamento/ConfirmarAgendamento',
-            data: $.param(data), // Usa $.param para converter o objeto em uma string de query
-            contentType: 'application/x-www-form-urlencoded; charset=UTF-8', // Define o tipo correto
+            data: data,
             success: function (response) {
                 console.log("Resposta da confirmação de agendamento:", response);
                 $('#loadingSpinner').hide();
-                $('#successModal').modal('show'); // Exibe o modal de sucesso
+                $('#successModal').modal('show');
 
-                // Configura o evento para redirecionar ao clicar em "OK" no modal de sucesso
-                $('#successModal').on('click', '#redirectMenuBtn', function () {
-                    $('#successModal').modal('hide'); // Fecha o modal
-                    window.location.href = "/Cliente/MenuPrincipal"; // Redireciona
+                $('#successModal').on('hidden.bs.modal', function () {
+                    window.location.href = "/Cliente/MenuPrincipal";
                 });
             },
             error: function (xhr, status, error) {
@@ -651,10 +676,8 @@ if ($('#resumoAgendamentoPage').length > 0) {
             cardPaymentBrickController = null;
         }
     });
-
-    // Inicializa o Payment Brick ao carregar a página
-    initializePaymentBrick();
 }
+
 
 
 

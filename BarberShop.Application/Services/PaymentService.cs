@@ -1,7 +1,6 @@
 ﻿using BarberShop.Application.Settings;
 using Microsoft.Extensions.Options;
 using Stripe;
-using MercadoPago.Config;
 using MercadoPago.Client.Payment;
 using System;
 using System.Collections.Generic;
@@ -13,16 +12,11 @@ namespace BarberShop.Application.Services
     public class PaymentService : IPaymentService
     {
         private readonly StripeSettings _stripeSettings;
-        private readonly string _mercadoPagoAccessToken;
 
         public PaymentService(IOptions<StripeSettings> stripeOptions)
         {
             _stripeSettings = stripeOptions.Value;
             StripeConfiguration.ApiKey = _stripeSettings.SecretKey;
-
-            // Configura o token de acesso do Mercado Pago
-            _mercadoPagoAccessToken = "TEST-236275902252089-103018-3e74429f349b5f03d14f49344da52ec9-430792758"; // Substitua pelo seu Access Token real
-            MercadoPagoConfig.AccessToken = _mercadoPagoAccessToken;
         }
 
         #region Métodos do Stripe
@@ -102,14 +96,14 @@ namespace BarberShop.Application.Services
         #region Métodos do Mercado Pago
 
         public async Task<string> ProcessMercadoPagoCreditCardPayment(
-    decimal amount, string clienteEmail, string paymentMethodId, string cardToken, int installments = 1, string issuer = null,
-    string MPHiddenInputToken = null, string MPHiddenInputPaymentMethod = null, string MPHiddenInputProcessingMode = null, string MPHiddenInputMerchantAccountId = null)
+            decimal amount, string clienteEmail, string paymentMethodId, string cardToken, int installments = 1, string issuer = null,
+            string MPHiddenInputToken = null, string MPHiddenInputPaymentMethod = null, string MPHiddenInputProcessingMode = null, string MPHiddenInputMerchantAccountId = null)
         {
             try
             {
                 var paymentRequest = new PaymentCreateRequest
                 {
-                    TransactionAmount = amount, // Certifique-se que isso é um decimal
+                    TransactionAmount = amount,
                     Description = "Pagamento com Cartão de Crédito - BarberShop",
                     PaymentMethodId = paymentMethodId,
                     Token = cardToken,
@@ -121,7 +115,6 @@ namespace BarberShop.Application.Services
                     IssuerId = issuer
                 };
 
-                // Incluindo parâmetros adicionais, caso fornecidos
                 if (!string.IsNullOrEmpty(MPHiddenInputToken))
                     paymentRequest.Token = MPHiddenInputToken;
                 if (!string.IsNullOrEmpty(MPHiddenInputPaymentMethod))
@@ -160,7 +153,6 @@ namespace BarberShop.Application.Services
                     }
                 };
 
-                // Incluindo parâmetros adicionais, caso fornecidos
                 if (!string.IsNullOrEmpty(MPHiddenInputToken))
                     paymentRequest.Token = MPHiddenInputToken;
                 if (!string.IsNullOrEmpty(MPHiddenInputPaymentMethod))
@@ -187,27 +179,25 @@ namespace BarberShop.Application.Services
             }
         }
 
-
-
         public async Task<string> CreateMercadoPagoPreference(decimal amount, string description)
         {
             try
             {
-                // Log dos parâmetros recebidos
+                // Log para verificar o valor de amount ao criar a preferência
                 Console.WriteLine($"Criando preferência do Mercado Pago com: Amount={amount}, Description={description}");
 
                 var preferenceRequest = new PreferenceRequest
                 {
                     Items = new List<PreferenceItemRequest>
-                {
-                    new PreferenceItemRequest
                     {
-                        Title = description,
-                        Quantity = 1,
-                        CurrencyId = "BRL",
-                        UnitPrice = amount // Certifique-se que amount é decimal
-                    }
-                },
+                        new PreferenceItemRequest
+                        {
+                            Title = description,
+                            Quantity = 1,
+                            CurrencyId = "BRL",
+                            UnitPrice = amount
+                        }
+                    },
                     BackUrls = new PreferenceBackUrlsRequest
                     {
                         Success = "https://www.seusite.com/sucesso",
@@ -215,17 +205,13 @@ namespace BarberShop.Application.Services
                         Pending = "https://www.seusite.com/pendente"
                     },
                     AutoReturn = "approved",
-                    // Defina NotificationUrl se desejar receber notificações
                     NotificationUrl = "https://www.seusite.com/notifications"
                 };
-
-                // Log do objeto `preferenceRequest` que será enviado
-                Console.WriteLine($"PreferenceRequest: {Newtonsoft.Json.JsonConvert.SerializeObject(preferenceRequest)}");
 
                 var preferenceClient = new PreferenceClient();
                 var preference = await preferenceClient.CreateAsync(preferenceRequest);
 
-                // Log do resultado recebido
+                // Log para confirmar o ID de preferência criado
                 Console.WriteLine($"Preferência criada com sucesso. Preference ID: {preference.Id}");
 
                 return preference.Id;
@@ -236,7 +222,6 @@ namespace BarberShop.Application.Services
                 throw new Exception("Não foi possível criar a preferência de pagamento.");
             }
         }
-
 
 
         #endregion
