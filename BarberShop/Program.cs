@@ -34,17 +34,12 @@ builder.Services.AddScoped<IPaymentService, PaymentService>();
 
 // Obter a chave SendGridApiKey dinamicamente com base no ambiente
 string sendGridApiKey = builder.Environment.IsDevelopment()
-    ? builder.Configuration["SendGridApiKey"]  // Obtém dos secrets em Development
-    : Environment.GetEnvironmentVariable("SendGridApiKey"); // Obtém da variável de ambiente na Azure
+    ? builder.Configuration["SendGridApiKey"]
+    : Environment.GetEnvironmentVariable("SendGridApiKey");
 
 // Configurar o serviço de Email com SendGrid usando a chave configurada
 builder.Services.AddScoped<IEmailService, EmailService>(provider =>
     new EmailService(sendGridApiKey));
-
-// Serviço RabbitMQ (Comentado porque você não irá usar agora)
-/*builder.Services.AddSingleton<IRabbitMQService, RabbitMQService>(provider =>
-    new RabbitMQService(builder.Configuration["SendGridApiKey"], provider));
-*/
 
 // Registrar repositórios
 builder.Services.AddScoped<IClienteRepository, ClienteRepository>();
@@ -66,10 +61,10 @@ builder.Services.AddScoped<AutenticacaoService>();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
-        options.LoginPath = "/Login/Login";   // Define o caminho da página de login
-        options.LogoutPath = "/Login/Logout"; // Define o caminho da página de logout
-        options.ExpireTimeSpan = TimeSpan.FromMinutes(60); // Tempo de expiração da sessão (opcional)
-        options.SlidingExpiration = true; // Expiração deslizante (opcional)
+        options.LoginPath = "/Login/Login";
+        options.LogoutPath = "/Login/Logout";
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
+        options.SlidingExpiration = true;
     });
 
 // Adicionar serviços MVC
@@ -122,13 +117,12 @@ else
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "BarberShop API V1");
-        c.RoutePrefix = "swagger"; // URL base para acessar o Swagger (ex: /swagger)
+        c.RoutePrefix = "swagger";
     });
 }
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
 
 // Middleware de autenticação e autorização
@@ -138,11 +132,5 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Login}/{action=Login}/{id?}");
-
-// Inicializa o consumidor RabbitMQ ao iniciar o aplicativo (Comentado)
-/*
-var rabbitMQService = app.Services.GetRequiredService<IRabbitMQService>();
-Task.Run(() => rabbitMQService.IniciarConsumo());
-*/
 
 app.Run();
