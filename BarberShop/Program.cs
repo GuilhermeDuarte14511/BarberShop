@@ -162,10 +162,13 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
-// Middleware de autenticação e autorização
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Mapeia os controladores que possuem rotas definidas por atributos, como o WebhookController
+app.MapControllers(); // <- ESSA LINHA É NECESSÁRIA
+
+// Configuração de rota padrão
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Login}/{action=Login}/{id?}");
