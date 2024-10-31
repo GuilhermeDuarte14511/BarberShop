@@ -8,9 +8,11 @@
 <div class="container mt-5" id="resumoAgendamentoPage"
      data-barbeiro-id="@Model.BarbeiroId"
      data-servico-ids="@string.Join(",", Model.ServicosSelecionados.Select(s => s.ServicoId))"
-     data-data-hora="@Model.DataHora.ToString("o")">
+     data-data-hora="@Model.DataHora.ToString("o")"
+     data-preco-total="@Model.PrecoTotal">
     <h2 class="text-danger text-center">Resumo do Agendamento</h2>
-
+    <input type="hidden" id="clienteNome" value="@ViewData["ClienteNome"]" />
+    <input type="hidden" id="clienteEmail" value="@ViewData["ClienteEmail"]" />
     <div class="card bg-dark text-light">
         <div class="card-body">
             <h4 class="card-title text-warning">Detalhes do Agendamento</h4>
@@ -29,37 +31,30 @@
             </ul>
 
             <hr />
-            <p><strong>Preço Total:</strong> R$ @Model.PrecoTotal.ToString("F2")</p>
+            <p id="precoTotal" data-preco-total="@Model.PrecoTotal"><strong>Preço Total:</strong> R$ @Model.PrecoTotal.ToString("F2")</p>
 
             <h4 class="text-warning mt-4">Método de Pagamento</h4>
             <div class="payment-options d-flex justify-content-around mt-3">
-                <div id="creditCardOption" class="payment-option text-center">
-                    <i class="fas fa-credit-card fa-2x text-primary"></i><br>
-                    <small>Cartão de Crédito</small>
-                </div>
-                <div id="pixOption" class="payment-option text-center">
-                    <i class="fas fa-qrcode fa-2x text-success"></i><br>
-                    <small>PIX</small>
-                </div>
-                <div id="transferOption" class="payment-option text-center">
-                    <i class="fas fa-university fa-2x text-info"></i><br>
-                    <small>Transferência Bancária</small>
-                </div>
+                <button id="payWithCardOrPixButton" class="btn btn-danger">
+                    <i class="fas fa-credit-card"></i>
+                    <i class="fas fa-qrcode"></i>
+                    <span>Pagar com Cartão/Pix</span>
+                </button>
+
+                <button id="payAtLocationButton" class="btn btn-warning">
+                    <i class="fas fa-home"></i>
+                    <span>Pagar na Loja</span>
+                </button>
             </div>
 
-            <!-- Formulário do Cartão de Crédito com Stripe Elements -->
-            <div id="creditCardForm" style="display: none;">
-                <div id="card-element" class="form-control"></div> <!-- Stripe Elements vai injetar o campo seguro aqui -->
-                <small class="text-muted">Digite os detalhes do cartão de crédito acima.</small>
-            </div>
+            <div id="paymentBrick_container" class="mt-4" style="display: none;"></div>
 
-            <button id="confirmarAgendamentoBtn" class="btn btn-danger btn-block mt-4">Confirmar Agendamento</button>
+            <!-- Container dos botões de confirmação e mudança de forma de pagamento -->
+            <div id="paymentButtonsContainer" style="display: none;">
+                <button id="confirmarAgendamentoBtn" class="btn btn-danger">Confirmar Agendamento</button>
+                <button id="mudarFormaPagamentoBtn" class="btn btn-secondary">Mudar Forma de Pagamento</button>
+            </div>
         </div>
-    </div>
-
-    <!-- Botão de Voltar -->
-    <div class="mt-4">
-        <button class="btn btn-secondary" onclick="history.back()">Voltar</button>
     </div>
 
     <!-- Spinner de carregamento -->

@@ -10,7 +10,9 @@ namespace BarberShop.Application.Services
         Task<IEnumerable<DateTime>> ObterHorariosDisponiveisAsync(int barbeiroId, DateTime data, int duracaoTotal);
         Task<Agendamento> ObterAgendamentoPorIdAsync(int id);
         Task<IEnumerable<Servico>> ObterServicosAsync();
+        Task<int> CriarAgendamentoAsync(int barbeiroId, DateTime dataHora, int clienteId, List<int> servicoIds, string formaPagamento, decimal precoTotal, string paymentId = null);
 
-        Task<int> CriarAgendamentoAsync(int barbeiroId, DateTime dataHora, int clienteId, List<int> servicoIds, string formaPagamento, decimal precoTotal);
+        // Altere o parâmetro para StatusAgendamento em vez de StatusPagamento
+        Task<bool> UpdateAgendamentoStatusByPaymentIdAsync(string paymentId, StatusPagamento novoStatus);
     }
 }

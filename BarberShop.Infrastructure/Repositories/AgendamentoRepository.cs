@@ -130,7 +130,13 @@ namespace BarberShop.Infrastructure.Repositories
             return horariosDisponiveis;
         }
 
-
+        public async Task<Agendamento> ObterPorPaymentIdAsync(string paymentId)
+        {
+            return await _context.Agendamentos
+                .Include(a => a.Cliente)
+                .Include(a => a.Barbeiro)
+                .FirstOrDefaultAsync(a => a.PaymentId == paymentId);
+        }
 
 
         // Implementação do método ObterAgendamentosPorBarbeiroIdAsync

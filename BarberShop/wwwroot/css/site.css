@@ -317,6 +317,17 @@ body {
     box-sizing: border-box;
 }
 
+    .card-front .card-number,
+    .card-front .card-holder,
+    .card-front .card-expiry {
+        margin-bottom: 10px;
+    }
+
+        .card-front .card-holder label,
+        .card-front .card-expiry label {
+            font-size: 0.8em;
+        }
+
 .card-back {
     transform: rotateY(180deg);
     display: flex;
@@ -329,17 +340,64 @@ body {
     transform: rotateY(180deg);
 }
 
-/* Animação e estilo de hover para as opções de pagamento */
+.cvv-code {
+    font-size: 1.5em;
+}
+
 .payment-option {
     cursor: pointer;
     transition: transform 0.3s, box-shadow 0.3s;
 }
 
-    .payment-option:hover {
-        transform: scale(1.1);
-        box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.3);
-    }
+.payment-option:hover {
+    transform: scale(1.1);
+    box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.3);
+}
 
+.payment-option.selected {
+    border: 2px solid #e74c3c;
+    background-color: #333;
+    border-radius: 8px;
+    padding: 10px;
+    width: 100%;
+}
+
+#mudarFormaPagamentoBtn {
+    transition: all 0.3s ease;
+    background-color: #f39c12;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    padding: 10px 20px;
+    margin-left: 10px;
+}
+
+#mudarFormaPagamentoBtn:hover {
+    background-color: #e67e22;
+    box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+#confirmarAgendamentoBtn {
+    background-color: #e74c3c;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    padding: 12px 25px;
+}
+
+#confirmarAgendamentoBtn:hover {
+    background-color: #c0392b;
+    box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+#paymentButtonsContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 15px;
+}
 
 /* Estilos de layout para exibição em dispositivos móveis */
 @media (max-width: 768px) {

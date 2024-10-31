@@ -1,7 +1,7 @@
 ﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <!-- Google tag (gtag.js) -->
+    <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-377Y66G6FR"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
@@ -41,6 +41,9 @@
     <!-- jQuery -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
 
+    <!-- jQuery Mask Plugin -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+
     <!-- Bootstrap JS -->
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -57,10 +60,10 @@
         dayjs.locale('pt-br');
     </script>
 
-    <!-- Stripe.js - Inclua o Stripe com a chave pública -->
-    <script src="https://js.stripe.com/v3/"></script>
+    <!-- MercadoPago.js -->
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
     <script>
-        const stripe = Stripe("pk_test_51QFMA5Hl3zYZjP9p3D5NFqiiQLD6P2G5175ZnhLFAf1KyIgQcNmnfJqBI7WHEkgInCDEMQoMcxeWEMPLN5sfnjIi00VLPKatjn");
+        const mp = new MercadoPago("TEST-3ead7a80-31d5-4947-9b52-a81fe2dc2ff0");
     </script>
 
     <!-- Custom JS -->

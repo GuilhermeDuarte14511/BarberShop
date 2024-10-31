@@ -143,6 +143,14 @@ namespace BarberShopMVC.Controllers
             var servicos = await _servicoRepository.ObterServicosPorIdsAsync(servicoIdList);
             var precoTotal = servicos.Sum(s => s.Preco);
 
+            // Obter nome e email do cliente dos claims
+            var clienteNome = User.FindFirst(ClaimTypes.Name)?.Value;
+            var clienteEmail = User.FindFirst(ClaimTypes.Email)?.Value;
+
+            // Armazenar nome e email na ViewData
+            ViewData["ClienteNome"] = clienteNome;
+            ViewData["ClienteEmail"] = clienteEmail;
+
             var resumoAgendamentoDTO = new ResumoAgendamentoDTO
             {
                 NomeBarbeiro = barbeiro.Nome,
@@ -162,8 +170,14 @@ namespace BarberShopMVC.Controllers
         }
 
 
+
         [HttpPost]
-        public async Task<IActionResult> ConfirmarAgendamento(int barbeiroId, DateTime dataHora, string servicoIds, string formaPagamento)
+        public async Task<IActionResult> ConfirmarAgendamento(
+    int barbeiroId,
+    DateTime dataHora,
+    string servicoIds,
+    string formaPagamento,
+    string paymentMethodId = null)
         {
             try
             {
@@ -177,11 +191,9 @@ namespace BarberShopMVC.Controllers
 
                 var servicoIdList = servicoIds.Split(',').Select(int.Parse).ToList();
                 var servicos = await _servicoRepository.ObterServicosPorIdsAsync(servicoIdList);
-                var precoTotal = servicos.Sum(s => s.Preco);
 
-                string clientSecret = null;
+                decimal precoTotal = (decimal)servicos.Sum(s => s.Preco);
 
-                // Obter informações do cliente e do barbeiro
                 var cliente = await _clienteRepository.GetByIdAsync(clienteId);
                 var barbeiro = await _barbeiroRepository.GetByIdAsync(barbeiroId);
 
@@ -191,51 +203,44 @@ namespace BarberShopMVC.Controllers
                     return RedirectToAction("MenuPrincipal", "Cliente");
                 }
 
-                // Processamento do pagamento
-                if (formaPagamento == "creditCard")
-                {
-                    clientSecret = await _paymentService.ProcessCreditCardPayment((decimal)precoTotal, cliente.Nome, cliente.Email);
-                }
-                else if (formaPagamento == "pix")
-                {
-                    clientSecret = await _paymentService.ProcessPixPayment((decimal)precoTotal, cliente.Nome, cliente.Email);
-                }
+                // Variável para armazenar o paymentId
+                string paymentId = null;
+                string pixQrCode = null;
 
                 // Criar o agendamento no sistema com as informações de pagamento
-                var agendamentoId = await _agendamentoService.CriarAgendamentoAsync(barbeiroId, dataHora, clienteId, servicoIdList, formaPagamento, (decimal)precoTotal);
+                var agendamentoId = await _agendamentoService.CriarAgendamentoAsync(barbeiroId, dataHora, clienteId, servicoIdList, formaPagamento, precoTotal, paymentId);
 
                 // Atualizar o status do agendamento para Confirmado
                 var agendamento = await _agendamentoRepository.GetByIdAsync(agendamentoId);
                 agendamento.Status = StatusAgendamento.Confirmado;
                 await _agendamentoRepository.UpdateAsync(agendamento);
 
+                // Gerar link para o Google Calendar
                 var duracaoTotal = servicos.Sum(s => s.Duracao);
                 var dataHoraFim = dataHora.AddMinutes(duracaoTotal);
-
-                // Gerar link para o Google Calendar
-                var tituloEvento = "Agendamento na Barbearia CG DREAMS";
-                var descricaoEvento = $"Agendamento com o barbeiro {barbeiro.Nome} para os serviços: {string.Join(", ", servicos.Select(s => s.Nome))}";
-                var localEvento = "Endereço da Barbearia";
-                var googleCalendarLink = _emailService.GerarLinkGoogleCalendar(tituloEvento, dataHora, dataHoraFim, descricaoEvento, localEvento);
+                var googleCalendarLink = _emailService.GerarLinkGoogleCalendar(
+                    "Agendamento na Barbearia CG DREAMS",
+                    dataHora,
+                    dataHoraFim,
+                    $"Agendamento com o barbeiro {barbeiro.Nome} para os serviços: {string.Join(", ", servicos.Select(s => s.Nome))}",
+                    "Endereço da Barbearia"
+                );
 
                 // Enviar e-mail de confirmação para o cliente
-                var assuntoCliente = "Confirmação de Agendamento - Barbearia CG DREAMS";
-                var conteudoCliente = "Seu agendamento foi confirmado com sucesso!";
                 await _emailService.EnviarEmailAgendamentoAsync(
                     cliente.Email,
                     cliente.Nome,
-                    assuntoCliente,
-                    conteudoCliente,
+                    "Confirmação de Agendamento - Barbearia CG DREAMS",
+                    "Seu agendamento foi confirmado com sucesso!",
                     barbeiro.Nome,
                     dataHora,
                     dataHoraFim,
-                    (decimal)precoTotal,
+                    precoTotal,
                     formaPagamento,
                     googleCalendarLink
                 );
 
-                // Enviar e-mail de notificação para o barbeiro com detalhes do agendamento
-                var assuntoBarbeiro = "Novo Agendamento - Barbearia CG DREAMS";
+                // Enviar e-mail de notificação para o barbeiro
                 var servicoNomes = servicos.Select(s => s.Nome).ToList();
                 await _emailService.EnviarEmailNotificacaoBarbeiroAsync(
                     barbeiro.Email,
@@ -244,15 +249,16 @@ namespace BarberShopMVC.Controllers
                     servicoNomes,
                     dataHora,
                     dataHoraFim,
-                    (decimal)precoTotal,
+                    precoTotal,
                     formaPagamento
                 );
 
                 TempData["MensagemSucesso"] = "Agendamento confirmado com sucesso!";
 
-                if (formaPagamento == "creditCard" && clientSecret != null)
+                // Retornar o QR Code para o Pix, caso seja necessário
+                if (formaPagamento == "pix" && pixQrCode != null)
                 {
-                    return Ok(new { clientSecret });
+                    return Ok(new { qrCode = pixQrCode });
                 }
             }
             catch (Exception ex)
@@ -264,5 +270,9 @@ namespace BarberShopMVC.Controllers
 
             return RedirectToAction("MenuPrincipal", "Cliente");
         }
+
+
+
+
     }
 }

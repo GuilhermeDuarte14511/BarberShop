@@ -15,6 +15,54 @@
 
     var emailDomains = ["gmail.com", "yahoo.com.br", "outlook.com", "hotmail.com"];
 
+    // Função para exibir Toast
+function showToast(message, type) {
+    // Define a cor de fundo com base no tipo de mensagem
+    let backgroundColor;
+    switch (type) {
+        case 'success':
+            backgroundColor = '#27ae60'; // Verde para sucesso
+            break;
+        case 'error':
+            backgroundColor = '#e74c3c'; // Vermelho para erro
+            break;
+        case 'info':
+            backgroundColor = '#3498db'; // Azul para informativo
+            break;
+        case 'warning':
+            backgroundColor = '#f39c12'; // Amarelo para aviso
+            break;
+        default:
+            backgroundColor = '#2b2b2b'; // Fundo escuro padrão
+    }
+
+    var toastEl = $(`
+        <div class="toast align-items-center border-0" role="alert" aria-live="assertive" aria-atomic="true" style="background-color: ${backgroundColor}; color: #ecf0f1; border-radius: 8px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);">
+            <div class="d-flex">
+                <div class="toast-body">
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    `);
+
+    $('#toastContainer').append(toastEl);
+    var toast = new bootstrap.Toast(toastEl[0], { delay: 5000 }); // Define o tempo de exibição para 5 segundos
+    toast.show();
+
+    // Remove o toast da DOM após escondê-lo
+    toastEl.on('hidden.bs.toast', function () {
+        $(this).remove();
+    });
+
+    // Fecha automaticamente o toast após 5 segundos caso o usuário não feche manualmente
+    setTimeout(() => {
+        toast.hide();
+    }, 5000);
+}
+
+
     // Lógica do login
     if ($('#loginPage').length > 0) {
         $('#phoneInput').on('input', function () {
@@ -63,10 +111,9 @@
             var emailValue = $('#emailInput').val().trim();
 
             if ((!isValidEmail(emailValue) && emailValue.length > 0) && (!isValidPhone(phoneValue) && phoneValue.length > 0)) {
-                $('#errorMessage').fadeIn();
+                showToast('Por favor, preencha um email ou telefone válido.', 'danger');
                 return;
             } else {
-                $('#errorMessage').fadeOut();
                 $('#loadingSpinner').fadeIn();
                 $('button[type="submit"]').prop('disabled', true);
             }
@@ -96,13 +143,13 @@
                         startCountdown();
                     } else {
                         $('button[type="submit"]').prop('disabled', false);
-                        $('#errorMessage').text(data.message).fadeIn();
+                        showToast(data.message, 'danger');
                     }
                 },
                 error: function () {
                     $('#loadingSpinner').fadeOut();
                     $('button[type="submit"]').prop('disabled', false);
-                    $('#errorMessage').text('Ocorreu um erro. Por favor, tente novamente.').fadeIn();
+                    showToast('Ocorreu um erro. Por favor, tente novamente.', 'danger');
                 }
             });
         });
@@ -144,12 +191,11 @@
         var phone = $('#registerPhoneInput').val().trim();
 
         if (name === "" || !isValidEmail(email) || !isValidPhone(phone)) {
-            $('#registerErrorMessage').text("Por favor, preencha todos os campos corretamente.").fadeIn();
+            showToast("Por favor, preencha todos os campos corretamente.", "danger");
             return;
         }
 
         $('#loadingSpinner').fadeIn();
-        $('#registerErrorMessage').fadeOut();
 
         var formData = $(this).serialize();
 
@@ -175,12 +221,12 @@
                     $('#verificationModal').modal('show');
                     startCountdown();
                 } else {
-                    $('#registerErrorMessage').text(data.message).fadeIn();
+                    showToast(data.message, "danger");
                 }
             },
             error: function () {
                 $('#loadingSpinner').fadeOut();
-                $('#registerErrorMessage').text('Erro ao registrar. Por favor, tente novamente.').fadeIn();
+                showToast('Erro ao registrar. Por favor, tente novamente.', 'danger');
             }
         });
     });
@@ -190,7 +236,6 @@
         e.preventDefault();
 
         var clienteId = $('#clienteIdField').val();
-        console.log("Cliente ID sendo enviado para verificação:", clienteId);
 
         var formData = $(this).serialize();
 
@@ -200,14 +245,14 @@
             data: formData,
             success: function (data) {
                 if (data.success) {
-                    clearInterval(countdownInterval); // Parar o contador
+                    clearInterval(countdownInterval);
                     window.location.href = data.redirectUrl;
                 } else {
-                    $('#codeErrorMessage').text(data.message).fadeIn();
+                    showToast(data.message, "danger");
                 }
             },
             error: function () {
-                $('#codeErrorMessage').text('Ocorreu um erro. Por favor, tente novamente.').fadeIn();
+                showToast('Ocorreu um erro. Por favor, tente novamente.', 'danger');
             }
         });
     });
@@ -217,7 +262,6 @@
         e.preventDefault();
 
         var clienteId = $('#clienteIdField').val();
-        console.log("Cliente ID para reenvio de código:", clienteId);
 
         $.ajax({
             type: 'GET',
@@ -225,14 +269,14 @@
             data: { clienteId: clienteId },
             success: function (data) {
                 if (data.success) {
-                    $('#codeErrorMessage').text('Um novo código foi enviado para o seu email.').fadeIn();
-                    resetCountdown(); // Reiniciar o contador
+                    showToast('Um novo código foi enviado para o seu email.', "success");
+                    resetCountdown();
                 } else {
-                    $('#codeErrorMessage').text(data.message).fadeIn();
+                    showToast(data.message, "danger");
                 }
             },
             error: function () {
-                $('#codeErrorMessage').text('Erro ao reenviar o código. Por favor, tente novamente.').fadeIn();
+                showToast('Erro ao reenviar o código. Por favor, tente novamente.', "danger");
             }
         });
     });
@@ -242,7 +286,6 @@
         var timeLeft = countdownTime;
         $('#countdownTimer').text(timeLeft + ' segundos');
         $('#resendCodeLink').hide();
-        $('#codeErrorMessage').hide();
 
         countdownInterval = setInterval(function () {
             timeLeft--;
@@ -327,7 +370,7 @@
 
         window.confirmarServico = function () {
             if (servicosSelecionados.length === 0) {
-                alert('Nenhum serviço selecionado.');
+                showToast('Nenhum serviço selecionado.', "danger");
                 return;
             }
 
@@ -361,7 +404,7 @@
             selectedBarbeiroId = $(this).data('barbeiro-id');
 
             if (!selectedDuracaoTotal || selectedDuracaoTotal <= 0) {
-                alert("Nenhum serviço selecionado ou duração inválida.");
+                showToast("Nenhum serviço selecionado ou duração inválida.", "danger");
                 return;
             }
 
@@ -394,7 +437,7 @@
                     $('#loadingSpinner').fadeOut();
                 },
                 error: function () {
-                    alert('Erro ao carregar os horários.');
+                    showToast('Erro ao carregar os horários.', "danger");
                     $('#loadingSpinner').fadeOut();
                 }
             });
@@ -404,7 +447,7 @@
             var horarioSelecionado = $('#horariosDisponiveis').val();
 
             if (!horarioSelecionado) {
-                alert('Por favor, selecione um horário.');
+                showToast('Por favor, selecione um horário.', "danger");
             } else {
                 $('#loadingSpinner').fadeIn();
 
@@ -419,87 +462,198 @@
             window.location.href = '/Cliente/SolicitarServico';
         });
     }
+if ($('#resumoAgendamentoPage').length > 0) {
+    const totalAmount = parseFloat($('#precoTotal').data('preco-total'));
+    const paymentContainerId = "paymentBrick_container";
+    let cardPaymentBrickController = null;
+    const clienteNome = $('#clienteNome').val() || "Cliente";
+    const clienteEmail = $('#clienteEmail').val();
 
-    if ($('#resumoAgendamentoPage').length > 0) {
-        let selectedPaymentMethod = null;
-        const stripe = Stripe("pk_test_51QFMA5Hl3zYZjP9p3D5NFqiiQLD6P2G5175ZnhLFAf1KyIgQcNmnfJqBI7WHEkgInCDEMQoMcxeWEMPLN5sfnjIi00VLPKatjn"); // Chave pública do Stripe
-        const elements = stripe.elements(); // Inicializa os elementos do Stripe
-        const cardElement = elements.create('card'); // Cria o elemento do cartão
-        cardElement.mount('#card-element'); // Associa o campo ao div com id "card-element"
+    console.log("Cliente Nome:", clienteNome);
+    console.log("Cliente Email:", clienteEmail);
+    console.log("Total Amount:", totalAmount);
 
-        // Função para selecionar o método de pagamento e exibir o campo de cartão se necessário
-        window.selectPaymentMethod = function (method) {
-            selectedPaymentMethod = method;
-            $('#creditCardForm').hide();
+    // Função para inicializar o Payment Brick usando o preferenceId do backend
+    async function initializePaymentBrick() {
+        try {
+            console.log("Iniciando criação da preferência de pagamento...");
 
-            if (method === 'creditCard') {
-                $('#creditCardForm').fadeIn();
+            const response = await fetch('/api/payment/create-preference', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    amount: totalAmount,
+                    description: "Serviço de Barbearia"
+                })
+            });
+
+            if (!response.ok) throw new Error(`Erro ao criar preferência: ${response.statusText}`);
+
+            const data = await response.json();
+            console.log("Preference ID recebido:", data.preferenceId);
+
+            const bricksBuilder = mp.bricks();
+
+            // Se o brick já existir, desmonta-o
+            if (cardPaymentBrickController) {
+                cardPaymentBrickController.unmount();
             }
-        };
 
-        // Evento de clique para confirmar o agendamento e processar o pagamento
-        $('#confirmarAgendamentoBtn').on('click', async function () {
-            const barbeiroId = $('#resumoAgendamentoPage').data('barbeiro-id');
-            const servicoIdsString = $('#resumoAgendamentoPage').data('servico-ids');
-            const dataHora = $('#resumoAgendamentoPage').data('data-hora');
+            cardPaymentBrickController = await bricksBuilder.create('cardPayment', paymentContainerId, {
+                initialization: {
+                    amount: totalAmount,
+                    preferenceId: data.preferenceId,
+                    payer: { email: clienteEmail, firstName: clienteNome }
+                },
+                customization: {
+                    paymentMethods: {
+                        ticket: "all",
+                        bankTransfer: "all",
+                        creditCard: "all",
+                        debitCard: "all",
+                        mercadoPago: "all"
+                    }
+                },
+                callbacks: {
+                    onReady: () => { console.log("Brick carregado com sucesso!"); },
+                    onSubmit: async (formData) => {
+                        console.log("Dados de pagamento recebidos no submit:", formData);
 
-            if (!selectedPaymentMethod) {
-                alert('Por favor, selecione um método de pagamento.');
-                return;
-            }
-
-            $('#loadingSpinner').fadeIn();
-
-            try {
-                // Faz uma chamada AJAX para criar o PaymentIntent e obter o ClientSecret
-                const response = await $.post('/Agendamento/ConfirmarAgendamento', {
-                    barbeiroId: barbeiroId,
-                    servicoIds: servicoIdsString,
-                    dataHora: dataHora,
-                    formaPagamento: selectedPaymentMethod
-                });
-
-                const clientSecret = response.clientSecret;
-
-                // Confirma o pagamento usando Stripe.js e o ClientSecret
-                if (selectedPaymentMethod === 'creditCard' && clientSecret) {
-                    const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-                        payment_method: {
-                            card: cardElement, // Usando o campo seguro do Stripe Elements
+                        if (!formData.payer || !formData.payer.first_name) {
+                            formData.payer = formData.payer || {};
+                            formData.payer.first_name = clienteNome;
                         }
-                    });
 
-                    if (error) {
-                        // Exibe uma mensagem de erro ao usuário
-                        alert(error.message);
-                        $('#loadingSpinner').fadeOut();
-                    } else if (paymentIntent && paymentIntent.status === 'succeeded') {
-                        // Exibe o modal de sucesso se o pagamento foi concluído
-                        $('#loadingSpinner').fadeOut();
-                        $('#successModal').modal('show');
+                        return new Promise((resolve, reject) => {
+                            $.ajax({
+                                type: 'POST',
+                                url: '/api/payment/process_payment',
+                                data: JSON.stringify({
+                                    transactionAmount: formData.transaction_amount,
+                                    token: formData.token,
+                                    description: "Serviço de Barbearia",
+                                    installments: formData.installments,
+                                    paymentMethodId: formData.payment_method_id,
+                                    payer: {
+                                        email: formData.payer.email,
+                                        firstName: formData.payer.first_name,
+                                        identification: {
+                                            type: formData.payer.identification.type,
+                                            number: formData.payer.identification.number
+                                        }
+                                    }
+                                }),
+                                contentType: 'application/json',
+                                success: function (response) {
+                                    console.log("Resposta do backend para pagamento:", response);
+                                    if (response.status === "approved") {
+                                        $('#loadingSpinner').fadeIn();
+                                        confirmarAgendamento(response.paymentId); // Passa o paymentId para o backend
+                                        $(`#${paymentContainerId} button`).css('background-color', 'green'); // Muda o botão para verde
+                                        resolve(); // Confirma que o pagamento foi bem-sucedido
+                                    } else {
+                                        showToast("Erro ao processar pagamento.", "error");
+                                        $(`#${paymentContainerId} button`).css('background-color', 'red'); // Muda o botão para vermelho
+                                        reject(); // Rejeita o pagamento
+                                    }
+                                },
+                                error: function (xhr, status, error) {
+                                    console.error("Erro ao processar pagamento:", xhr.responseText);
+                                    showToast("Erro ao processar pagamento. Tente novamente.", "error");
+                                    $(`#${paymentContainerId} button`).css('background-color', 'red'); // Muda o botão para vermelho
+                                    reject();
+                                }
+                            });
+                        });
+                    },
+                    onError: (error) => {
+                        console.log("Erro ao carregar método de pagamento:", error);
+                        showToast("Erro na inicialização do método de pagamento.", "error");
+                        $(`#${paymentContainerId} button`).css('background-color', 'red'); // Muda o botão para vermelho em caso de erro
                     }
                 }
-            } catch (error) {
-                $('#loadingSpinner').fadeOut();
-                alert('Erro ao confirmar o agendamento.');
+            });
+
+            $('#mudarFormaPagamentoBtn').show();
+        } catch (error) {
+            console.log("Erro na inicialização do Payment Brick:", error);
+            showToast("Erro ao inicializar o método de pagamento.", "error");
+        }
+    }
+
+    // Função para confirmar o agendamento após o pagamento aprovado
+    async function confirmarAgendamento(paymentId) {
+        const data = {
+            barbeiroId: $('#resumoAgendamentoPage').data('barbeiro-id'),
+            dataHora: $('#resumoAgendamentoPage').data('data-hora'),
+            servicoIds: $('#resumoAgendamentoPage').data('servico-ids'),
+            formaPagamento: 'creditCard',
+            paymentMethodId: 'mercadopago',
+            paymentId: paymentId // Passa o paymentId do pagamento aprovado
+        };
+
+        console.log("Enviando confirmação de agendamento com dados:", data);
+
+        $.ajax({
+            type: 'POST',
+            url: '/Agendamento/ConfirmarAgendamento',
+            data: data,
+            success: function (response) {
+                console.log("Resposta da confirmação de agendamento:", response);
+                $('#loadingSpinner').hide();
+                $('#successModal').modal('show'); // Exibe o modal de sucesso
+
+                // Configura o evento para redirecionar ao clicar em "OK"
+                $('#successModal').on('hidden.bs.modal', function () {
+                    window.location.href = "/Cliente/MenuPrincipal";
+                });
+            },
+            error: function (xhr, status, error) {
+                console.error("Erro ao confirmar agendamento:", xhr.responseText);
+                $('#loadingSpinner').hide();
+                showToast("Erro ao confirmar o agendamento. Tente novamente.", "error");
             }
         });
-
-        // Event listeners para as opções de pagamento
-        $('#creditCardOption').on('click', function () { selectPaymentMethod('creditCard'); });
-        $('#pixOption').on('click', function () { selectPaymentMethod('pix'); });
-        $('#transferOption').on('click', function () { selectPaymentMethod('transfer'); });
-
-        // Redireciona para "Cliente/MenuPrincipal" ao clicar no botão "OK" do modal de sucesso
-        $('#redirectMenuBtn').on('click', function () {
-            window.location.href = '/Cliente/MenuPrincipal';
-        });
     }
+
+    // Clique no botão de pagamento com Cartão/Pix
+    $('#payWithCardOrPixButton').on('click', function () {
+        console.log("Selecionado: Pagar com Cartão/Pix");
+        $(this).addClass('selected');
+        $('#payAtLocationButton').removeClass('selected').hide();
+        $('#paymentBrick_container').show();
+        $('#paymentButtonsContainer').show();
+        $('#confirmarAgendamentoBtn').hide();
+        initializePaymentBrick();
+    });
+
+    // Clique no botão de pagamento na loja
+    $('#payAtLocationButton').on('click', function () {
+        console.log("Selecionado: Pagar na Loja");
+        $(this).addClass('selected');
+        $('#payWithCardOrPixButton').removeClass('selected').hide();
+        $('#paymentBrick_container').hide();
+        $('#paymentButtonsContainer').show();
+        $('#confirmarAgendamentoBtn').show();
+    });
+
+    // Clique no botão de Mudar Forma de Pagamento
+    $('#mudarFormaPagamentoBtn').on('click', function () {
+        console.log("Mudando forma de pagamento");
+        $('#paymentButtonsContainer').hide();
+        $('#payWithCardOrPixButton').removeClass('selected').show();
+        $('#payAtLocationButton').removeClass('selected').show();
+        $('#paymentBrick_container').hide();
+        if (cardPaymentBrickController) {
+            cardPaymentBrickController.unmount();
+            cardPaymentBrickController = null;
+        }
+    });
+}
 
 
 
     if ($('#barbeiroPage').length > 0) {
-        // Função para aplicar máscara de telefone
         function aplicarMascaraTelefone(input) {
             input.on('input', function () {
                 var inputValue = $(this).val().replace(/\D/g, '');
@@ -510,25 +664,13 @@
             });
         }
 
-        // Aplicando máscara nos campos de telefone
         aplicarMascaraTelefone($('#adicionarTelefone'));
         aplicarMascaraTelefone($('#editarTelefone'));
 
-        // Função para exibir o modal de notificação
         function exibirNotificacaoModal(mensagem, tipo) {
-            $('#notificacaoMensagem').text(mensagem);
-            $('#notificacaoModal').modal('show');
-            $('#notificacaoModal .modal-body').removeClass('text-success text-danger')
-                .addClass(tipo === 'success' ? 'text-success' : 'text-danger');
-
-            // Fecha o modal após 5 segundos e recarrega a página
-            setTimeout(function () {
-                $('#notificacaoModal').modal('hide');
-                location.reload();
-            }, 5000);
+            showToast(mensagem, tipo);
         }
 
-        // Ação para o botão "Adicionar Barbeiro"
         $('#btnAdicionarBarbeiro').on('click', function () {
             $('#adicionarNome').val('');
             $('#adicionarEmail').val('');
@@ -536,7 +678,6 @@
             $('#adicionarModal').modal('show');
         });
 
-        // Submissão do formulário de adição via AJAX
         $('#formAdicionarBarbeiro').on('submit', function (e) {
             e.preventDefault();
             var formData = $(this).serialize();
@@ -549,16 +690,15 @@
                 success: function (response) {
                     $('#loadingSpinner').hide();
                     $('#adicionarModal').modal('hide');
-                    exibirNotificacaoModal(response.message, response.success ? 'success' : 'danger');
+                    showToast(response.message, response.success ? 'success' : 'danger');
                 },
                 error: function () {
                     $('#loadingSpinner').hide();
-                    exibirNotificacaoModal('Erro ao adicionar o barbeiro.', 'danger');
+                    showToast('Erro ao adicionar o barbeiro.', 'danger');
                 }
             });
         });
 
-        // Ação para o botão de editar
         $('.btnEditar').on('click', function () {
             var barbeiroId = $(this).data('id');
             $('#loadingSpinner').show();
@@ -573,7 +713,6 @@
             });
         });
 
-        // Submissão do formulário de edição via AJAX
         $('#formEditarBarbeiro').on('submit', function (e) {
             e.preventDefault();
             var formData = $(this).serialize();
@@ -587,30 +726,26 @@
                 success: function (response) {
                     $('#loadingSpinner').hide();
                     $('#editarModal').modal('hide');
-                    exibirNotificacaoModal(response.message, response.success ? 'success' : 'danger');
+                    showToast(response.message, response.success ? 'success' : 'danger');
                 },
                 error: function () {
                     $('#loadingSpinner').hide();
-                    exibirNotificacaoModal('Erro ao editar o barbeiro.', 'danger');
+                    showToast('Erro ao editar o barbeiro.', 'danger');
                 }
             });
         });
 
-        // Ação para o botão de excluir
         $('.btnExcluir').on('click', function () {
             var barbeiroId = $(this).data('id');
-            
-            // Verificar se o botão está em uma tabela ou em um cartão
             var barbeiroNome = $(this).closest('tr').length > 0 ?
                 $(this).closest('tr').find('td:first').text() :
                 $(this).closest('.barbeiro-card').find('p').first().text().replace('Nome:', '').trim();
 
-            $('#excluirBarbeiroNome').text(barbeiroNome); // Exibe o nome no modal de exclusão
+            $('#excluirBarbeiroNome').text(barbeiroNome);
             $('#btnConfirmarExcluir').data('id', barbeiroId);
             $('#excluirModal').modal('show');
         });
 
-        // Confirmação de exclusão
         $('#btnConfirmarExcluir').on('click', function () {
             var barbeiroId = $(this).data('id');
             $('#loadingSpinner').show();
@@ -622,153 +757,147 @@
                 success: function (response) {
                     $('#loadingSpinner').hide();
                     $('#excluirModal').modal('hide');
-                    exibirNotificacaoModal(response.message, response.success ? 'success' : 'danger');
+                    showToast(response.message, response.success ? 'success' : 'danger');
                 },
                 error: function () {
                     $('#loadingSpinner').hide();
-                    exibirNotificacaoModal('Erro ao excluir o barbeiro.', 'danger');
+                    showToast('Erro ao excluir o barbeiro.', 'danger');
                 }
             });
-        });
-
-        // Fecha o modal de notificação ao clicar no botão "OK" e recarrega a página
-        $('#notificacaoModal .btn-primary').on('click', function () {
-            $('#notificacaoModal').modal('hide');
-            location.reload();
         });
     }
 
     if ($('#adminDashboard').length > 0) {
-        initCharts();
-    }
+            initCharts();
+        }
 
-    function initCharts() {
-        // Gráfico de Agendamentos da Semana
-        const agendamentosSemanaChart = new Chart(document.getElementById('agendamentosSemanaChart').getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
-                datasets: [{
-                    label: 'Agendamentos',
-                    data: [5, 8, 3, 6, 7, 10, 2], // Dados fictícios
-                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
+function initCharts() {
+    // Gráfico de Agendamentos da Semana
+    const agendamentosSemanaChart = new Chart(document.getElementById('agendamentosSemanaChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
+            datasets: [{
+                label: 'Agendamentos',
+                data: [5, 8, 3, 6, 7, 10, 2],
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
                 }
             }
-        });
+        }
+    });
 
-        // Gráfico de Serviços Mais Solicitados
-        const servicosMaisSolicitadosChart = new Chart(document.getElementById('servicosMaisSolicitadosChart').getContext('2d'), {
-            type: 'pie',
-            data: {
-                labels: ['Corte de Cabelo', 'Barba', 'Hidratação Capilar'],
-                datasets: [{
-                    data: [12, 8, 5], // Dados fictícios
-                    backgroundColor: ['rgba(255, 99, 132, 0.5)', 'rgba(54, 162, 235, 0.5)', 'rgba(255, 206, 86, 0.5)'],
-                    borderColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)'],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true
-            }
-        });
+    // Gráfico de Serviços Mais Solicitados
+    const servicosMaisSolicitadosChart = new Chart(document.getElementById('servicosMaisSolicitadosChart').getContext('2d'), {
+        type: 'pie',
+        data: {
+            labels: ['Corte de Cabelo', 'Barba', 'Hidratação Capilar'],
+            datasets: [{
+                data: [12, 8, 5],
+                backgroundColor: ['rgba(255, 99, 132, 0.5)', 'rgba(54, 162, 235, 0.5)', 'rgba(255, 206, 86, 0.5)'],
+                borderColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true
+        }
+    });
 
-        // Gráfico de Lucro por Barbeiro
-        const lucroPorBarbeiroChart = new Chart(document.getElementById('lucroPorBarbeiroChart').getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels: ['Rafael Souza', 'Thiago Ribeiro', 'Gustavo Martins', 'Leonardo Costa', 'Bruno Fernandes', 'Carol Momo'],
-                datasets: [{
-                    label: 'Lucro (R$)',
-                    data: [500, 700, 400, 600, 750, 300], // Dados fictícios de lucro
-                    backgroundColor: 'rgba(75, 192, 192, 0.5)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
+    // Gráfico de Lucro por Barbeiro
+    const lucroPorBarbeiroChart = new Chart(document.getElementById('lucroPorBarbeiroChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: ['Rafael Souza', 'Thiago Ribeiro', 'Gustavo Martins', 'Leonardo Costa', 'Bruno Fernandes', 'Carol Momo'],
+            datasets: [{
+                label: 'Lucro (R$)',
+                data: [500, 700, 400, 600, 750, 300],
+                backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
                 }
             }
-        });
+        }
+    });
 
-        // Gráfico de Atendimentos por Barbeiro
-        const atendimentosPorBarbeiroChart = new Chart(document.getElementById('atendimentosPorBarbeiroChart').getContext('2d'), {
-            type: 'doughnut',
-            data: {
-                labels: ['Rafael Souza', 'Thiago Ribeiro', 'Gustavo Martins', 'Leonardo Costa', 'Bruno Fernandes', 'Carol Momo'],
-                datasets: [{
-                    data: [5, 7, 4, 6, 8, 3], // Dados fictícios de atendimentos
-                    backgroundColor: ['rgba(255, 99, 132, 0.5)', 'rgba(54, 162, 235, 0.5)', 'rgba(255, 206, 86, 0.5)', 'rgba(75, 192, 192, 0.5)', 'rgba(153, 102, 255, 0.5)', 'rgba(255, 159, 64, 0.5)'],
-                    borderColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)', 'rgba(75, 192, 192, 1)', 'rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)'],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true
-            }
-        });
+    // Gráfico de Atendimentos por Barbeiro
+    const atendimentosPorBarbeiroChart = new Chart(document.getElementById('atendimentosPorBarbeiroChart').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Rafael Souza', 'Thiago Ribeiro', 'Gustavo Martins', 'Leonardo Costa', 'Bruno Fernandes', 'Carol Momo'],
+            datasets: [{
+                data: [5, 7, 4, 6, 8, 3],
+                backgroundColor: ['rgba(255, 99, 132, 0.5)', 'rgba(54, 162, 235, 0.5)', 'rgba(255, 206, 86, 0.5)', 'rgba(75, 192, 192, 0.5)', 'rgba(153, 102, 255, 0.5)', 'rgba(255, 159, 64, 0.5)'],
+                borderColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)', 'rgba(75, 192, 192, 1)', 'rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true
+        }
+    });
 
-        // Gráfico de Lucro da Semana
-        const lucroSemanaChart = new Chart(document.getElementById('lucroSemanaChart').getContext('2d'), {
-            type: 'line',
-            data: {
-                labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
-                datasets: [{
-                    label: 'Lucro em R$',
-                    data: [200, 300, 250, 400, 350, 500, 450], // Dados fictícios
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 2,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
+    // Gráfico de Lucro da Semana
+    const lucroSemanaChart = new Chart(document.getElementById('lucroSemanaChart').getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
+            datasets: [{
+                label: 'Lucro em R$',
+                data: [200, 300, 250, 400, 350, 500, 450],
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
                 }
             }
-        });
+        }
+    });
 
-        // Gráfico de Lucro do Mês
-        const lucroMesChart = new Chart(document.getElementById('lucroMesChart').getContext('2d'), {
-            type: 'line',
-            data: {
-                labels: ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'],
-                datasets: [{
-                    label: 'Lucro em R$',
-                    data: [1500, 2000, 1800, 2200], // Dados fictícios
-                    backgroundColor: 'rgba(153, 102, 255, 0.2)',
-                    borderColor: 'rgba(153, 102, 255, 1)',
-                    borderWidth: 2,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
+    // Gráfico de Lucro do Mês
+    const lucroMesChart = new Chart(document.getElementById('lucroMesChart').getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'],
+            datasets: [{
+                label: 'Lucro em R$',
+                data: [1500, 2000, 1800, 2200],
+                backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                borderColor: 'rgba(153, 102, 255, 1)',
+                borderWidth: 2,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
                 }
             }
-        });
-    }
+        }
+    });
+}
 });
