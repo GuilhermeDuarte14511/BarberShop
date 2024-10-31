@@ -3,13 +3,18 @@
     "apis1": {
       "type": "apis"
     },
+    "apis2": {
+      "type": "apis"
+    },
     "mssql1": {
       "type": "mssql",
       "connectionId": "BarberShopDb",
       "dynamicId": null
     },
-    "apis2": {
-      "type": "apis"
+    "mssql2": {
+      "type": "mssql",
+      "connectionId": "ConnectionStrings:BarberShopDb",
+      "dynamicId": null
     }
   }
 }
