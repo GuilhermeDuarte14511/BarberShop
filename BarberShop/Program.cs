@@ -111,6 +111,45 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+// Middleware para registrar e salvar cada requisição HTTP no banco de dados
+app.Use(async (context, next) =>
+{
+    var request = context.Request;
+    var dbContext = context.RequestServices.GetRequiredService<BarbeariaContext>();
+
+    // Preparar informações da requisição para salvar no log
+    var requestLog = new Log
+    {
+        LogLevel = "INFO",
+        Source = "Middleware",
+        Message = $"Requisição recebida - Método: {request.Method}, Path: {request.Path}, Query: {request.QueryString}",
+        Data = string.Join(", ", request.Headers.Select(h => $"{h.Key}: {h.Value}")),
+        LogDateTime = DateTime.UtcNow
+    };
+
+    // Salvar log da requisição no banco de dados
+    dbContext.Logs.Add(requestLog);
+    await dbContext.SaveChangesAsync();
+
+    // Executar o próximo middleware no pipeline
+    await next();
+
+    // Preparar informações da resposta para salvar no log
+    var response = context.Response;
+    var responseLog = new Log
+    {
+        LogLevel = "INFO",
+        Source = "Middleware",
+        Message = $"Resposta enviada - Status Code: {response.StatusCode}",
+        Data = null,
+        LogDateTime = DateTime.UtcNow
+    };
+
+    // Salvar log da resposta no banco de dados
+    dbContext.Logs.Add(responseLog);
+    await dbContext.SaveChangesAsync();
+});
+
 // Habilitar o middleware do Swagger para todos os ambientes
 app.UseSwagger();
 app.UseSwaggerUI(c =>
