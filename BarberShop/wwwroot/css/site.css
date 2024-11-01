@@ -48,7 +48,6 @@ body {
         color: #bdc3c7;
     }
 
-    /* Estilos quando os inputs estão em foco */
     #phoneInput:focus, #emailInput:focus {
         background-color: #2c3e50;
         border-color: #e74c3c;
@@ -56,7 +55,7 @@ body {
         box-shadow: none;
     }
 
-/* Botão de avanço e botões de escolha de horário */
+/* Botões */
 #loginForm button,
 .barbeiro-btn,
 #confirmarHorarioBtn,
@@ -72,7 +71,6 @@ body {
     transition: background-color 0.3s ease;
 }
 
-    /* Efeito de hover no botão de envio */
     #loginForm button:hover,
     .barbeiro-btn:hover,
     #confirmarHorarioBtn:hover,
@@ -101,7 +99,6 @@ body {
     display: none;
 }
 
-/* Estilo das sugestões de autocomplete */
 .autocomplete-suggestion {
     padding: 10px;
     cursor: pointer;
@@ -109,7 +106,6 @@ body {
     border-bottom: 1px solid #2c3e50;
 }
 
-    /* Estilo de hover nas sugestões de autocomplete */
     .autocomplete-suggestion:hover {
         background-color: #2c3e50;
         color: #ffffff;
@@ -123,14 +119,14 @@ body {
     transition: opacity 0.4s ease, max-height 0.4s ease;
 }
 
-/* Garantir que o spinner tenha uma camada superior */
+/* Spinner */
 #loadingSpinner {
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    z-index: 1050; /* Coloca o spinner acima do modal */
-    background-color: rgba(0, 0, 0, 0.8); /* Fundo escuro para destacar o spinner */
+    z-index: 1050;
+    background-color: rgba(0, 0, 0, 0.8);
     width: 100vw;
     height: 100vh;
     display: flex;
@@ -138,12 +134,11 @@ body {
     align-items: center;
 }
 
-    /* Spinner de carregamento texto */
     #loadingSpinner p {
         color: #ecf0f1;
     }
 
-/* Estilos para o modal */
+/* Modal */
 .modal-content {
     background-color: #2b2b2b;
     color: #ecf0f1;
@@ -153,7 +148,6 @@ body {
     color: #e74c3c;
 }
 
-/* Dropdown de seleção de horário */
 .form-select {
     background-color: #34495e;
     color: #ecf0f1;
@@ -169,18 +163,16 @@ body {
     color: #e74c3c;
 }
 
-/* Estilo dos cartões dos barbeiros */
+/* Cartões */
 #escolherBarbeiroPage .card-title {
     color: #f39c12;
     font-weight: bold;
 }
 
-/* Estilo geral do texto do dropdown */
 #dropdownHorarios label {
     color: #bdc3c7;
 }
 
-/* Estilo do botão de confirmação dentro do modal */
 #confirmarHorarioBtn {
     background-color: #e74c3c;
     border-color: #e74c3c;
@@ -191,7 +183,7 @@ body {
         border-color: #c0392b;
     }
 
-/* Estilos da Tabela Responsiva no Admin */
+/* Tabela Responsiva */
 .table-responsive {
     max-height: 400px;
     overflow-y: auto;
@@ -199,10 +191,10 @@ body {
 }
 
 .table-sm td, .table-sm th {
-    padding: 0.5rem; /* Diminuir o padding para uma tabela mais compacta */
+    padding: 0.5rem;
 }
 
-/* Estilos específicos para o layout do administrador */
+/* Layout do Admin */
 #wrapper {
     display: flex;
     width: 100%;
@@ -268,10 +260,6 @@ body {
             border-color: #c0392b;
         }
 
-    .navbar .ml-3 {
-        margin-left: 1.5rem !important; /* Aumentar o espaço entre o botão de menu e o título */
-    }
-
 .card-preview-container {
     perspective: 1000px;
 }
@@ -290,46 +278,6 @@ body {
     background-color: #333;
 }
 
-    .card-preview.visa {
-        background-color: #1a1f71;
-    }
-
-    .card-preview.mastercard {
-        background-color: #ff5f00;
-    }
-
-    .card-preview.amex {
-        background-color: #2e77a8;
-    }
-
-    .card-preview.discover {
-        background-color: #86b8b1;
-    }
-
-/* Face da frente e verso do cartão */
-.card-front, .card-back {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    backface-visibility: hidden;
-    border-radius: 10px;
-    padding: 15px;
-    box-sizing: border-box;
-}
-
-.card-back {
-    transform: rotateY(180deg);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 1.2em;
-}
-
-.card-preview.show-back {
-    transform: rotateY(180deg);
-}
-
-/* Animação e estilo de hover para as opções de pagamento */
 .payment-option {
     cursor: pointer;
     transition: transform 0.3s, box-shadow 0.3s;
@@ -340,53 +288,45 @@ body {
         box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.3);
     }
 
+    .payment-option.selected {
+        transform: scale(1.1);
+        box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.6);
+        border: 2px solid #00d1b2;
+    }
 
-/* Estilos de layout para exibição em dispositivos móveis */
+/* Responsivo para Dispositivos Móveis */
 @media (max-width: 768px) {
-    /* Esconde a tabela em telas pequenas */
     .table-responsive {
         display: none;
     }
 
-    /* Exibe o layout em cartões para dispositivos móveis */
-    .barbeiros-list {
-        display: block;
+    .d-md-none {
+        max-height: calc(100vh - 20px);
+        overflow-y: auto;
+        padding-top: 150px;
+        padding-bottom: 10px;
     }
 
-    .barbeiro-card {
+    .card {
+        margin: 5px;
         background-color: #2b2b2b;
         color: #ecf0f1;
         padding: 15px;
         border-radius: 8px;
-        margin-bottom: 10px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
 
-        .barbeiro-card p {
-            margin: 5px 0;
-            font-size: 0.9rem;
-        }
+    .barbeiro-card p {
+        margin: 5px 0;
+        font-size: 0.9rem;
+    }
 
-        .barbeiro-card .actions {
-            display: flex;
-            justify-content: flex-start;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-    /* Ajustes para botões */
     .btn {
         font-size: 0.9rem;
         padding: 8px 12px;
     }
-
-    /* Ajuste do botão "Adicionar Barbeiro" */
-    #btnAdicionarBarbeiro {
-        width: 100%;
-    }
 }
 
-/* Layout padrão para desktops e tablets */
 @media (min-width: 769px) {
     .barbeiros-list {
         display: none;

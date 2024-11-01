@@ -34,15 +34,11 @@ namespace BarberShop.Application.Services
             return await _agendamentoRepository.GetAvailableSlotsAsync(barbeiroId, data, duracaoTotal);
         }
 
-        public async Task<int> CriarAgendamentoAsync(int barbeiroId, DateTime dataHora, int clienteId, List<int> servicoIds, string formaPagamento, decimal precoTotal)
+        public async Task<int> CriarAgendamentoAsync(int barbeiroId, DateTime dataHora, int clienteId, List<int> servicoIds, string formaPagamento, decimal precoTotal, StatusPagamento statusPagamento = StatusPagamento.Pendente, string paymentId = null)
         {
-            // Obter os serviços com base nos IDs fornecidos
             var servicos = await _servicoRepository.ObterServicosPorIdsAsync(servicoIds);
-
-            // Calcular a duração total com base nos serviços selecionados
             var duracaoTotal = servicos.Sum(s => s.Duracao);
 
-            // Criar o novo agendamento
             var novoAgendamento = new Agendamento
             {
                 BarbeiroId = barbeiroId,
@@ -51,13 +47,20 @@ namespace BarberShop.Application.Services
                 DuracaoTotal = duracaoTotal,
                 FormaPagamento = formaPagamento,
                 PrecoTotal = precoTotal,
+                StatusPagamento = statusPagamento,
+                PaymentId = paymentId,
                 AgendamentoServicos = servicos.Select(s => new AgendamentoServico { ServicoId = s.ServicoId }).ToList()
             };
 
-            // Salvar o novo agendamento no repositório e retornar o ID do agendamento
             var agendamento = await _agendamentoRepository.AddAsync(novoAgendamento);
             return agendamento.AgendamentoId;
         }
+
+        public async Task AtualizarStatusPagamentoAsync(int agendamentoId, StatusPagamento statusPagamento, string paymentId = null)
+        {
+            await _agendamentoRepository.AtualizarStatusPagamentoAsync(agendamentoId, statusPagamento, paymentId);
+        }
+
 
     }
 }

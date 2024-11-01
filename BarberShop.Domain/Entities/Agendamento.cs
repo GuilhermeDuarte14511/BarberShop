@@ -9,9 +9,7 @@ namespace BarberShop.Domain.Entities
         public DateTime DataHora { get; set; }
         public StatusAgendamento Status { get; set; }
         public int? DuracaoTotal { get; set; }
-
         public string? FormaPagamento { get; set; }
-
         public decimal? PrecoTotal { get; set; }
 
         // Relacionamento com Cliente
@@ -21,6 +19,10 @@ namespace BarberShop.Domain.Entities
         public int BarbeiroId { get; set; }
         public Barbeiro Barbeiro { get; set; }
 
+        public StatusPagamento? StatusPagamento { get; set; } // Permite valores NULL
+
+        public string? PaymentId { get; set; }
         public ICollection<AgendamentoServico> AgendamentoServicos { get; set; }
     }
+
 }

@@ -143,6 +143,10 @@ namespace BarberShopMVC.Controllers
             var servicos = await _servicoRepository.ObterServicosPorIdsAsync(servicoIdList);
             var precoTotal = servicos.Sum(s => s.Preco);
 
+            // Obtém o cliente autenticado
+            var clienteId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var cliente = await _clienteRepository.GetByIdAsync(clienteId);
+
             var resumoAgendamentoDTO = new ResumoAgendamentoDTO
             {
                 NomeBarbeiro = barbeiro.Nome,
@@ -158,12 +162,18 @@ namespace BarberShopMVC.Controllers
                 FormaPagamento = ""
             };
 
+            // Armazenar o nome e o email do cliente na ViewData
+            if (cliente != null)
+            {
+                ViewData["ClienteNome"] = cliente.Nome;
+                ViewData["ClienteEmail"] = cliente.Email;
+            }
+
             return View("ResumoAgendamento", resumoAgendamentoDTO);
         }
 
-
         [HttpPost]
-        public async Task<IActionResult> ConfirmarAgendamento(int barbeiroId, DateTime dataHora, string servicoIds, string formaPagamento)
+        public async Task<IActionResult> ConfirmarAgendamento(int barbeiroId, DateTime dataHora, string servicoIds, string formaPagamento, StatusPagamento statusPagamento = StatusPagamento.Pendente, string paymentId = null)
         {
             try
             {
@@ -171,54 +181,40 @@ namespace BarberShopMVC.Controllers
 
                 if (string.IsNullOrEmpty(servicoIds))
                 {
-                    TempData["MensagemErro"] = "Nenhum serviço selecionado.";
-                    return RedirectToAction("MenuPrincipal", "Cliente");
+                    return Json(new { success = false, message = "Nenhum serviço selecionado." });
                 }
 
                 var servicoIdList = servicoIds.Split(',').Select(int.Parse).ToList();
                 var servicos = await _servicoRepository.ObterServicosPorIdsAsync(servicoIdList);
                 var precoTotal = servicos.Sum(s => s.Preco);
+                var duracaoTotal = servicos.Sum(s => s.Duracao);
 
-                string clientSecret = null;
+                // Verificar disponibilidade de horário
+                var horarioDisponivel = await _barbeiroService.VerificarDisponibilidadeHorarioAsync(barbeiroId, dataHora, duracaoTotal);
+                if (!horarioDisponivel)
+                {
+                    return Json(new { success = false, message = "O horário selecionado não está mais disponível. Por favor, escolha outro horário." });
+                }
 
-                // Obter informações do cliente e do barbeiro
                 var cliente = await _clienteRepository.GetByIdAsync(clienteId);
                 var barbeiro = await _barbeiroRepository.GetByIdAsync(barbeiroId);
 
                 if (cliente == null || barbeiro == null)
                 {
-                    TempData["MensagemErro"] = "Erro ao obter informações do cliente ou barbeiro.";
-                    return RedirectToAction("MenuPrincipal", "Cliente");
+                    return Json(new { success = false, message = "Erro ao obter informações do cliente ou barbeiro." });
                 }
 
-                // Processamento do pagamento
-                if (formaPagamento == "creditCard")
-                {
-                    clientSecret = await _paymentService.ProcessCreditCardPayment((decimal)precoTotal, cliente.Nome, cliente.Email);
-                }
-                else if (formaPagamento == "pix")
-                {
-                    clientSecret = await _paymentService.ProcessPixPayment((decimal)precoTotal, cliente.Nome, cliente.Email);
-                }
+                // Criar o agendamento com o status de pagamento e ID de pagamento fornecidos
+                var agendamentoId = await _agendamentoService.CriarAgendamentoAsync(
+                    barbeiroId, dataHora, clienteId, servicoIdList, formaPagamento, (decimal)precoTotal, statusPagamento, paymentId);
 
-                // Criar o agendamento no sistema com as informações de pagamento
-                var agendamentoId = await _agendamentoService.CriarAgendamentoAsync(barbeiroId, dataHora, clienteId, servicoIdList, formaPagamento, (decimal)precoTotal);
-
-                // Atualizar o status do agendamento para Confirmado
-                var agendamento = await _agendamentoRepository.GetByIdAsync(agendamentoId);
-                agendamento.Status = StatusAgendamento.Confirmado;
-                await _agendamentoRepository.UpdateAsync(agendamento);
-
-                var duracaoTotal = servicos.Sum(s => s.Duracao);
+                // Configurar informações para envio de email
                 var dataHoraFim = dataHora.AddMinutes(duracaoTotal);
-
-                // Gerar link para o Google Calendar
                 var tituloEvento = "Agendamento na Barbearia CG DREAMS";
                 var descricaoEvento = $"Agendamento com o barbeiro {barbeiro.Nome} para os serviços: {string.Join(", ", servicos.Select(s => s.Nome))}";
                 var localEvento = "Endereço da Barbearia";
                 var googleCalendarLink = _emailService.GerarLinkGoogleCalendar(tituloEvento, dataHora, dataHoraFim, descricaoEvento, localEvento);
 
-                // Enviar e-mail de confirmação para o cliente
                 var assuntoCliente = "Confirmação de Agendamento - Barbearia CG DREAMS";
                 var conteudoCliente = "Seu agendamento foi confirmado com sucesso!";
                 await _emailService.EnviarEmailAgendamentoAsync(
@@ -234,7 +230,6 @@ namespace BarberShopMVC.Controllers
                     googleCalendarLink
                 );
 
-                // Enviar e-mail de notificação para o barbeiro com detalhes do agendamento
                 var assuntoBarbeiro = "Novo Agendamento - Barbearia CG DREAMS";
                 var servicoNomes = servicos.Select(s => s.Nome).ToList();
                 await _emailService.EnviarEmailNotificacaoBarbeiroAsync(
@@ -248,21 +243,46 @@ namespace BarberShopMVC.Controllers
                     formaPagamento
                 );
 
-                TempData["MensagemSucesso"] = "Agendamento confirmado com sucesso!";
-
-                if (formaPagamento == "creditCard" && clientSecret != null)
-                {
-                    return Ok(new { clientSecret });
-                }
+                // Retorno de sucesso com o ID do agendamento
+                return Json(new { success = true, message = "Agendamento confirmado com sucesso!", agendamentoId = agendamentoId });
             }
             catch (Exception ex)
             {
-                TempData["MensagemErro"] = "Ocorreu um erro ao confirmar o agendamento. Tente novamente.";
                 Console.WriteLine($"Erro ao confirmar agendamento: {ex.Message}");
-                return StatusCode(500, "Erro ao processar pagamento.");
+                return Json(new { success = false, message = "Ocorreu um erro ao confirmar o agendamento. Tente novamente." });
             }
-
-            return RedirectToAction("MenuPrincipal", "Cliente");
         }
+
+
+        [HttpPost]
+        public async Task<IActionResult> AtualizarStatusPagamento(int agendamentoId, StatusPagamento statusPagamento, string paymentId)
+        {
+            try
+            {
+                var agendamento = await _agendamentoRepository.GetByIdAsync(agendamentoId);
+                if (agendamento == null)
+                {
+                    return Json(new { success = false, message = "Agendamento não encontrado." });
+                }
+
+                // Atualizar status de pagamento e paymentId
+                agendamento.StatusPagamento = statusPagamento;
+                agendamento.PaymentId = paymentId;
+
+                // Chamar o método de repositório para persistir as alterações
+                await _agendamentoRepository.AtualizarStatusPagamentoAsync(agendamentoId, statusPagamento, paymentId);
+
+                return Json(new { success = true, message = "Status de pagamento atualizado com sucesso!" });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro ao atualizar status de pagamento: {ex.Message}");
+                return Json(new { success = false, message = "Ocorreu um erro ao atualizar o status do pagamento. Tente novamente." });
+            }
+        }
+
+
+
+
     }
 }

@@ -19,6 +19,33 @@ namespace BarberShop.Application.Services
             StripeConfiguration.ApiKey = _stripeSettings.SecretKey;
         }
 
+        public async Task<string> CreatePaymentIntent(decimal amount, List<string> paymentMethods, string currency = "brl")
+        {
+            await _logService.SaveLogAsync("Information", "PaymentService", "Iniciando criação de PaymentIntent.", $"Valor: {amount}, Métodos de pagamento: {string.Join(", ", paymentMethods)}");
+
+            var options = new PaymentIntentCreateOptions
+            {
+                Amount = (long)(amount * 100), // Valor em centavos
+                Currency = currency,
+                PaymentMethodTypes = paymentMethods.Count > 0 ? paymentMethods : null
+            };
+
+            try
+            {
+                var service = new PaymentIntentService();
+                var paymentIntent = await service.CreateAsync(options);
+
+                await _logService.SaveLogAsync("Information", "PaymentService", "PaymentIntent criado com sucesso.", $"ID do PaymentIntent: {paymentIntent.Id}");
+
+                return paymentIntent.ClientSecret; // Retorna o client_secret para o frontend
+            }
+            catch (StripeException ex)
+            {
+                await _logService.SaveLogAsync("Error", "PaymentService", "Erro ao criar PaymentIntent.", ex.Message);
+                throw new Exception("Não foi possível criar o PaymentIntent.");
+            }
+        }
+
         public async Task<string> ProcessCreditCardPayment(decimal amount, string clienteNome, string clienteEmail)
         {
             await _logService.SaveLogAsync("Information", "PaymentService", "Iniciando processamento de pagamento com cartão de crédito.", $"Cliente: {clienteNome}, Email: {clienteEmail}");
@@ -109,24 +136,5 @@ namespace BarberShop.Application.Services
             await _logService.SaveLogAsync("Information", "PaymentService", "Simulando pagamento via transferência bancária.", $"Valor: {amount}");
             return "Simulação de pagamento com transferência bancária.";
         }
-
-        public async Task<string> CreatePaymentIntent(decimal amount, string currency = "brl")
-        {
-            var options = new PaymentIntentCreateOptions
-            {
-                Amount = (long)(amount * 100), // Valor em centavos
-                Currency = currency,
-                AutomaticPaymentMethods = new PaymentIntentAutomaticPaymentMethodsOptions
-                {
-                    Enabled = true,
-                },
-            };
-
-            var service = new PaymentIntentService();
-            var paymentIntent = await service.CreateAsync(options);
-
-            return paymentIntent.ClientSecret; // Retorna o client_secret para o frontend
-        }
-
     }
 }

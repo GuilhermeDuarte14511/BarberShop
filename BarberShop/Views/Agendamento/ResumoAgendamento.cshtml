@@ -9,6 +9,7 @@
      data-barbeiro-id="@Model.BarbeiroId"
      data-servico-ids="@string.Join(",", Model.ServicosSelecionados.Select(s => s.ServicoId))"
      data-data-hora="@Model.DataHora.ToString("o")">
+
     <h2 class="text-danger text-center">Resumo do Agendamento</h2>
 
     <div class="card bg-dark text-light">
@@ -29,37 +30,46 @@
             </ul>
 
             <hr />
-            <p><strong>Preço Total:</strong> R$ @Model.PrecoTotal.ToString("F2")</p>
+            <p id="total-price" data-preco-total="@Model.PrecoTotal">
+                <strong>Preço Total:</strong> R$ @Model.PrecoTotal.ToString("F2")
+            </p>
 
             <h4 class="text-warning mt-4">Método de Pagamento</h4>
             <div class="payment-options d-flex justify-content-around mt-3">
                 <div id="creditCardOption" class="payment-option text-center">
                     <i class="fas fa-credit-card fa-2x text-primary"></i><br>
-                    <small>Cartão de Crédito</small>
+                    <small>Cartão de Crédito/Débito</small>
                 </div>
-                <div id="pixOption" class="payment-option text-center">
-                    <i class="fas fa-qrcode fa-2x text-success"></i><br>
-                    <small>PIX</small>
-                </div>
-                <div id="transferOption" class="payment-option text-center">
-                    <i class="fas fa-university fa-2x text-info"></i><br>
-                    <small>Transferência Bancária</small>
+                <div id="storeOption" class="payment-option text-center">
+                    <i class="fas fa-store fa-2x text-warning"></i><br>
+                    <small>Pagar na Loja</small>
                 </div>
             </div>
 
-            <!-- Formulário do Cartão de Crédito com Stripe Elements -->
-            <div id="creditCardForm" style="display: none;">
-                <div id="card-element" class="form-control"></div> <!-- Stripe Elements vai injetar o campo seguro aqui -->
-                <small class="text-muted">Digite os detalhes do cartão de crédito acima.</small>
-            </div>
+            <!-- Formulário de Pagamento -->
+            <form id="payment-form" style="display: none;">
+                <div style="background-color: #ffffff; padding: 20px; border-radius: 8px; margin-top: 20px;">
+                    <div id="payment-element">
+                        <!-- Stripe Elements vai injetar o formulário completo aqui -->
+                    </div>
+                </div>
+                <button id="submit" class="btn btn-success mt-3" type="submit">
+                    <div class="spinner hidden" id="spinner"></div>
+                    <span id="button-text">Pagar e Finalizar Agendamento</span>
+                </button>
+                <div id="payment-message" class="text-danger mt-2 hidden"></div>
+            </form>
 
-            <button id="confirmarAgendamentoBtn" class="btn btn-danger btn-block mt-4">Confirmar Agendamento</button>
+            <!-- Inputs ocultos para nome e e-mail do cliente -->
+            <input type="hidden" name="clienteNome" value="@ViewData["ClienteNome"]" />
+            <input type="hidden" name="clienteEmail" value="@ViewData["ClienteEmail"]" />
+
+            <!-- Botões de controle adicionais -->
+            <div class="button-container">
+                <button id="confirmarAgendamentoBtn" class="btn btn-danger" style="display: none;">Finalizar Agendamento</button>
+                <button id="changePaymentMethodBtn" class="btn btn-secondary" style="display: none;">Mudar Forma de Pagamento</button>
+            </div>
         </div>
-    </div>
-
-    <!-- Botão de Voltar -->
-    <div class="mt-4">
-        <button class="btn btn-secondary" onclick="history.back()">Voltar</button>
     </div>
 
     <!-- Spinner de carregamento -->

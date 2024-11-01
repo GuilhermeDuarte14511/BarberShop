@@ -1,5 +1,34 @@
 ﻿$(document).ready(function () {
+    
+    
+
+  // Função para exibir Toasts
+function showToast(message, type = 'info') {
+    const toastHtml = `
+        <div class="toast align-items-center text-white bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">${message}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>`;
+    
+    $('#toastContainer').append(toastHtml);
+    const toastElement = $('#toastContainer .toast').last();
+    const toastInstance = new bootstrap.Toast(toastElement[0], { delay: 5000 });
+    toastInstance.show();
+    
+    // Fecha automaticamente após 5 segundos se o usuário não fechar manualmente
+    setTimeout(() => {
+        toastInstance.hide();
+    }, 5000);
+
+    // Remove o toast do DOM após ele ser ocultado
+    toastElement.on('hidden.bs.toast', function () {
+        $(this).remove();
+    });
+}
     // Variáveis globais
+
     var countdownInterval;
     var countdownTime = 30; // Tempo em segundos
 
@@ -15,101 +44,15 @@
 
     var emailDomains = ["gmail.com", "yahoo.com.br", "outlook.com", "hotmail.com"];
 
-    // Lógica do login
-    if ($('#loginPage').length > 0) {
-        $('#phoneInput').on('input', function () {
-            if ($(this).val().length > 0) {
-                $('#emailInputContainer').slideUp();
-            } else {
-                $('#emailInputContainer').slideDown();
-            }
+   // Lógica do login
+if ($('#loginPage').length > 0) {
+    $('#phoneInput').on('input', function () {
+        if ($(this).val().length > 0) {
+            $('#emailInputContainer').slideUp();
+        } else {
+            $('#emailInputContainer').slideDown();
+        }
 
-            var inputValue = $(this).val().replace(/\D/g, '');
-            if (inputValue.length === 11) {
-                var phoneNumber = inputValue.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-                $(this).val(phoneNumber);
-            }
-        });
-
-        $('#emailInput').on('input', function () {
-            if ($(this).val().length > 0) {
-                $('#phoneInputContainer').slideUp();
-            } else {
-                $('#phoneInputContainer').slideDown();
-            }
-
-            var inputValue = $(this).val();
-            if (inputValue.includes('@') && inputValue.indexOf('@') === inputValue.length - 1) {
-                var dropdownHtml = '';
-                emailDomains.forEach(function (domain) {
-                    dropdownHtml += '<div class="autocomplete-suggestion">' + inputValue + domain + '</div>';
-                });
-                $('#emailAutocomplete').html(dropdownHtml).fadeIn();
-            } else {
-                $('#emailAutocomplete').fadeOut();
-            }
-        });
-
-        $(document).on('click', '.autocomplete-suggestion', function () {
-            $('#emailInput').val($(this).text());
-            $('#emailAutocomplete').fadeOut();
-        });
-
-        // Submissão do formulário de login via AJAX
-        $('#loginForm').on('submit', function (e) {
-            e.preventDefault();
-
-            var phoneValue = $('#phoneInput').val().trim();
-            var emailValue = $('#emailInput').val().trim();
-
-            if ((!isValidEmail(emailValue) && emailValue.length > 0) && (!isValidPhone(phoneValue) && phoneValue.length > 0)) {
-                $('#errorMessage').fadeIn();
-                return;
-            } else {
-                $('#errorMessage').fadeOut();
-                $('#loadingSpinner').fadeIn();
-                $('button[type="submit"]').prop('disabled', true);
-            }
-
-            var formData = $(this).serialize();
-
-            $.ajax({
-                type: 'POST',
-                url: '/Login/Login',
-                data: formData,
-                success: function (data) {
-                    $('#loadingSpinner').fadeOut();
-                    if (data.success) {
-                        console.log("Cliente ID obtido após login:", data.clienteId);
-
-                        $('#clienteIdField').remove();
-
-                        $('<input>').attr({
-                            type: 'hidden',
-                            id: 'clienteIdField',
-                            name: 'clienteId',
-                            value: data.clienteId
-                        }).appendTo('#verificationForm');
-
-                        $('button[type="submit"]').prop('disabled', false);
-                        $('#verificationModal').modal('show');
-                        startCountdown();
-                    } else {
-                        $('button[type="submit"]').prop('disabled', false);
-                        $('#errorMessage').text(data.message).fadeIn();
-                    }
-                },
-                error: function () {
-                    $('#loadingSpinner').fadeOut();
-                    $('button[type="submit"]').prop('disabled', false);
-                    $('#errorMessage').text('Ocorreu um erro. Por favor, tente novamente.').fadeIn();
-                }
-            });
-        });
-    }
-
-    // Funções exclusivas para o modal de cadastro
-    $('#registerPhoneInput').on('input', function () {
         var inputValue = $(this).val().replace(/\D/g, '');
         if (inputValue.length === 11) {
             var phoneNumber = inputValue.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
@@ -117,154 +60,220 @@
         }
     });
 
-    $('#registerEmailInput').on('input', function () {
+    $('#emailInput').on('input', function () {
+        if ($(this).val().length > 0) {
+            $('#phoneInputContainer').slideUp();
+        } else {
+            $('#phoneInputContainer').slideDown();
+        }
+
         var inputValue = $(this).val();
         if (inputValue.includes('@') && inputValue.indexOf('@') === inputValue.length - 1) {
             var dropdownHtml = '';
             emailDomains.forEach(function (domain) {
                 dropdownHtml += '<div class="autocomplete-suggestion">' + inputValue + domain + '</div>';
             });
-            $('#registerEmailAutocomplete').html(dropdownHtml).fadeIn();
+            $('#emailAutocomplete').html(dropdownHtml).fadeIn();
         } else {
-            $('#registerEmailAutocomplete').fadeOut();
+            $('#emailAutocomplete').fadeOut();
         }
     });
 
     $(document).on('click', '.autocomplete-suggestion', function () {
-        $('#registerEmailInput').val($(this).text());
-        $('#registerEmailAutocomplete').fadeOut();
+        $('#emailInput').val($(this).text());
+        $('#emailAutocomplete').fadeOut();
     });
 
-    // Submissão do formulário de cadastro via AJAX com validação
-    $('#registerForm').on('submit', function (e) {
+    // Submissão do formulário de login via AJAX
+    $('#loginForm').on('submit', function (e) {
         e.preventDefault();
 
-        var name = $('#nameInput').val().trim();
-        var email = $('#registerEmailInput').val().trim();
-        var phone = $('#registerPhoneInput').val().trim();
+        var phoneValue = $('#phoneInput').val().trim();
+        var emailValue = $('#emailInput').val().trim();
 
-        if (name === "" || !isValidEmail(email) || !isValidPhone(phone)) {
-            $('#registerErrorMessage').text("Por favor, preencha todos os campos corretamente.").fadeIn();
+        if ((!isValidEmail(emailValue) && emailValue.length > 0) && (!isValidPhone(phoneValue) && phoneValue.length > 0)) {
+            showToast('Email ou telefone inválido.', 'danger');
             return;
         }
 
         $('#loadingSpinner').fadeIn();
-        $('#registerErrorMessage').fadeOut();
-
+        $('button[type="submit"]').prop('disabled', true);
         var formData = $(this).serialize();
 
         $.ajax({
             type: 'POST',
-            url: '/Login/Cadastro',
+            url: '/Login/Login',
             data: formData,
             success: function (data) {
                 $('#loadingSpinner').fadeOut();
                 if (data.success) {
-                    console.log("Cliente ID obtido após cadastro:", data.clienteId);
-
                     $('#clienteIdField').remove();
-
                     $('<input>').attr({
                         type: 'hidden',
                         id: 'clienteIdField',
                         name: 'clienteId',
                         value: data.clienteId
                     }).appendTo('#verificationForm');
-
-                    $('#registerModal').modal('hide');
+                    $('button[type="submit"]').prop('disabled', false);
                     $('#verificationModal').modal('show');
                     startCountdown();
                 } else {
-                    $('#registerErrorMessage').text(data.message).fadeIn();
+                    $('button[type="submit"]').prop('disabled', false);
+                    showToast(data.message, 'danger');
                 }
             },
             error: function () {
                 $('#loadingSpinner').fadeOut();
-                $('#registerErrorMessage').text('Erro ao registrar. Por favor, tente novamente.').fadeIn();
+                $('button[type="submit"]').prop('disabled', false);
+                showToast('Ocorreu um erro. Por favor, tente novamente.', 'danger');
             }
         });
     });
+}
 
-    // Submissão do formulário de verificação de código via AJAX
-    $('#verificationForm').on('submit', function (e) {
-        e.preventDefault();
+// Funções exclusivas para o modal de cadastro
+$('#registerPhoneInput').on('input', function () {
+    var inputValue = $(this).val().replace(/\D/g, '');
+    if (inputValue.length === 11) {
+        var phoneNumber = inputValue.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+        $(this).val(phoneNumber);
+    }
+});
 
-        var clienteId = $('#clienteIdField').val();
-        console.log("Cliente ID sendo enviado para verificação:", clienteId);
-
-        var formData = $(this).serialize();
-
-        $.ajax({
-            type: 'POST',
-            url: '/Login/VerificarCodigo',
-            data: formData,
-            success: function (data) {
-                if (data.success) {
-                    clearInterval(countdownInterval); // Parar o contador
-                    window.location.href = data.redirectUrl;
-                } else {
-                    $('#codeErrorMessage').text(data.message).fadeIn();
-                }
-            },
-            error: function () {
-                $('#codeErrorMessage').text('Ocorreu um erro. Por favor, tente novamente.').fadeIn();
-            }
+$('#registerEmailInput').on('input', function () {
+    var inputValue = $(this).val();
+    if (inputValue.includes('@') && inputValue.indexOf('@') === inputValue.length - 1) {
+        var dropdownHtml = '';
+        emailDomains.forEach(function (domain) {
+            dropdownHtml += '<div class="autocomplete-suggestion">' + inputValue + domain + '</div>';
         });
-    });
+        $('#registerEmailAutocomplete').html(dropdownHtml).fadeIn();
+    } else {
+        $('#registerEmailAutocomplete').fadeOut();
+    }
+});
 
-    // Reenvio do código de verificação via AJAX
-    $('#resendCode').on('click', function (e) {
-        e.preventDefault();
+$(document).on('click', '.autocomplete-suggestion', function () {
+    $('#registerEmailInput').val($(this).text());
+    $('#registerEmailAutocomplete').fadeOut();
+});
 
-        var clienteId = $('#clienteIdField').val();
-        console.log("Cliente ID para reenvio de código:", clienteId);
+// Submissão do formulário de cadastro via AJAX com validação
+$('#registerForm').on('submit', function (e) {
+    e.preventDefault();
 
-        $.ajax({
-            type: 'GET',
-            url: '/Login/ReenviarCodigo',
-            data: { clienteId: clienteId },
-            success: function (data) {
-                if (data.success) {
-                    $('#codeErrorMessage').text('Um novo código foi enviado para o seu email.').fadeIn();
-                    resetCountdown(); // Reiniciar o contador
-                } else {
-                    $('#codeErrorMessage').text(data.message).fadeIn();
-                }
-            },
-            error: function () {
-                $('#codeErrorMessage').text('Erro ao reenviar o código. Por favor, tente novamente.').fadeIn();
+    var name = $('#nameInput').val().trim();
+    var email = $('#registerEmailInput').val().trim();
+    var phone = $('#registerPhoneInput').val().trim();
+
+    if (name === "" || !isValidEmail(email) || !isValidPhone(phone)) {
+        showToast("Por favor, preencha todos os campos corretamente.", 'danger');
+        return;
+    }
+
+    $('#loadingSpinner').fadeIn();
+    var formData = $(this).serialize();
+
+    $.ajax({
+        type: 'POST',
+        url: '/Login/Cadastro',
+        data: formData,
+        success: function (data) {
+            $('#loadingSpinner').fadeOut();
+            if (data.success) {
+                $('#clienteIdField').remove();
+                $('<input>').attr({
+                    type: 'hidden',
+                    id: 'clienteIdField',
+                    name: 'clienteId',
+                    value: data.clienteId
+                }).appendTo('#verificationForm');
+                $('#registerModal').modal('hide');
+                $('#verificationModal').modal('show');
+                startCountdown();
+            } else {
+                showToast(data.message, 'danger');
             }
-        });
+        },
+        error: function () {
+            $('#loadingSpinner').fadeOut();
+            showToast('Erro ao registrar. Por favor, tente novamente.', 'danger');
+        }
     });
+});
 
-    // Funções do contador
-    function startCountdown() {
-        var timeLeft = countdownTime;
+// Submissão do formulário de verificação de código via AJAX
+$('#verificationForm').on('submit', function (e) {
+    e.preventDefault();
+    var clienteId = $('#clienteIdField').val();
+    var formData = $(this).serialize();
+
+    $.ajax({
+        type: 'POST',
+        url: '/Login/VerificarCodigo',
+        data: formData,
+        success: function (data) {
+            if (data.success) {
+                clearInterval(countdownInterval); // Parar o contador
+                window.location.href = data.redirectUrl;
+            } else {
+                showToast(data.message, 'danger');
+            }
+        },
+        error: function () {
+            showToast('Ocorreu um erro. Tente novamente.', 'danger');
+        }
+    });
+});
+
+// Reenvio do código de verificação via AJAX
+$('#resendCode').on('click', function (e) {
+    e.preventDefault();
+    var clienteId = $('#clienteIdField').val();
+
+    $.ajax({
+        type: 'GET',
+        url: '/Login/ReenviarCodigo',
+        data: { clienteId: clienteId },
+        success: function (data) {
+            if (data.success) {
+                showToast('Novo código enviado.', 'success');
+                resetCountdown();
+            } else {
+                showToast(data.message, 'danger');
+            }
+        },
+        error: function () {
+            showToast('Erro ao reenviar o código. Tente novamente.', 'danger');
+        }
+    });
+});
+
+// Funções do contador
+function startCountdown() {
+    var timeLeft = countdownTime;
+    $('#countdownTimer').text(timeLeft + ' segundos');
+    $('#resendCodeLink').hide();
+    countdownInterval = setInterval(function () {
+        timeLeft--;
         $('#countdownTimer').text(timeLeft + ' segundos');
-        $('#resendCodeLink').hide();
-        $('#codeErrorMessage').hide();
+        if (timeLeft <= 0) {
+            clearInterval(countdownInterval);
+            $('#countdownTimer').text('Caso não tenha recebído um código, solicite um novo.');
+            $('#resendCodeLink').show();
+        }
+    }, 1000);
+}
 
-        countdownInterval = setInterval(function () {
-            timeLeft--;
-            $('#countdownTimer').text(timeLeft + ' segundos');
+function resetCountdown() {
+    clearInterval(countdownInterval);
+    startCountdown();
+}
 
-            if (timeLeft <= 0) {
-                clearInterval(countdownInterval);
-                $('#countdownTimer').text('O tempo expirou.');
-                $('#resendCodeLink').show();
-            }
-        }, 1000);
-    }
-
-    function resetCountdown() {
-        clearInterval(countdownInterval);
-        startCountdown();
-    }
-
-    if ($('#loginErrorToast').length > 0) {
-        var toastEl = new bootstrap.Toast(document.getElementById('loginErrorToast'));
-        toastEl.show();
-    }
+if ($('#loginErrorToast').length > 0) {
+    var toastEl = new bootstrap.Toast(document.getElementById('loginErrorToast'));
+    toastEl.show();
+}
 
     // Lógica do menuPrincipal
     if ($('#menuPrincipal').length > 0) {
@@ -282,219 +291,367 @@
     }
 
     // Lógica para a página de Solicitar Serviço
-    if ($('#solicitarServicoPage').length > 0) {
-        var servicosSelecionados = [];
-        var valorTotal = 0;
-        var duracaoTotal = 0;
+if ($('#solicitarServicoPage').length > 0) {
+    var servicosSelecionados = [];
+    var valorTotal = 0;
+    var duracaoTotal = 0;
 
-        window.adicionarServico = function (id, nome, preco, duracao, element) {
-            var index = servicosSelecionados.findIndex(servico => servico.id === id);
+    window.adicionarServico = function (id, nome, preco, duracao, element) {
+        var index = servicosSelecionados.findIndex(servico => servico.id === id);
 
-            if (index === -1) {
-                servicosSelecionados.push({ id, nome, preco, duracao });
-                valorTotal += parseFloat(preco);
-                duracaoTotal += parseInt(duracao);
-                $(element).prop('disabled', true);
-            }
-
-            atualizarListaServicosSelecionados();
-        };
-
-        window.removerServico = function (index, id) {
-            valorTotal -= parseFloat(servicosSelecionados[index].preco);
-            duracaoTotal -= parseInt(servicosSelecionados[index].duracao);
-            servicosSelecionados.splice(index, 1);
-
-            $('#servico-' + id).prop('disabled', false);
-            atualizarListaServicosSelecionados();
-        };
-
-        function atualizarListaServicosSelecionados() {
-            var lista = $('#servicosSelecionados');
-            lista.empty();
-
-            servicosSelecionados.forEach(function (servico, index) {
-                lista.append(
-                    `<li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span>${servico.nome} - R$ ${servico.preco}</span>
-                        <button class="btn btn-danger btn-sm" onclick="removerServico(${index}, '${servico.id}')">Remover</button>
-                    </li>`
-                );
-            });
-
-            $('#valorTotal').text(valorTotal.toFixed(2));
+        if (index === -1) {
+            servicosSelecionados.push({ id, nome, preco, duracao });
+            valorTotal += parseFloat(preco);
+            duracaoTotal += parseInt(duracao);
+            $(element).prop('disabled', true);
         }
-
-        window.confirmarServico = function () {
-            if (servicosSelecionados.length === 0) {
-                alert('Nenhum serviço selecionado.');
-                return;
-            }
-
-            var servicoIds = servicosSelecionados.map(s => s.id);
-
-            $('#loadingSpinner').fadeIn();
-
-            sessionStorage.setItem('servicosSelecionados', JSON.stringify(servicosSelecionados));
-
-            window.location.href = `/Barbeiro/EscolherBarbeiro?duracaoTotal=${duracaoTotal}&servicoIds=${servicoIds.join(',')}`;
-        };
-
-        var servicosArmazenados = JSON.parse(sessionStorage.getItem('servicosSelecionados')) || [];
-        servicosArmazenados.forEach(function (servico) {
-            servicosSelecionados.push(servico);
-            valorTotal += parseFloat(servico.preco);
-            duracaoTotal += parseInt(servico.duracao);
-            $('#servico-' + servico.id).prop('disabled', true);
-        });
 
         atualizarListaServicosSelecionados();
-    }
+    };
 
-    // Lógica para a página de Escolher Barbeiro
-    if ($('#escolherBarbeiroPage').length > 0) {
-        var selectedBarbeiroId = null;
-        var selectedDuracaoTotal = $('#escolherBarbeiroPage').data('duracao-total');
-        var selectedServicoIds = $('#escolherBarbeiroPage').data('servico-ids');
+    window.removerServico = function (index, id) {
+        valorTotal -= parseFloat(servicosSelecionados[index].preco);
+        duracaoTotal -= parseInt(servicosSelecionados[index].duracao);
+        servicosSelecionados.splice(index, 1);
 
-        $('.barbeiro-btn').on('click', function () {
-            selectedBarbeiroId = $(this).data('barbeiro-id');
+        $('#servico-' + id).prop('disabled', false);
+        atualizarListaServicosSelecionados();
+    };
 
-            if (!selectedDuracaoTotal || selectedDuracaoTotal <= 0) {
-                alert("Nenhum serviço selecionado ou duração inválida.");
-                return;
-            }
+    function atualizarListaServicosSelecionados() {
+        var lista = $('#servicosSelecionados');
+        lista.empty();
 
-            $('#calendarioModal').modal('show');
-            carregarHorariosDropdown(selectedBarbeiroId, selectedDuracaoTotal);
+        servicosSelecionados.forEach(function (servico, index) {
+            lista.append(
+                `<li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>${servico.nome} - R$ ${servico.preco}</span>
+                    <button class="btn btn-danger btn-sm" onclick="removerServico(${index}, '${servico.id}')">Remover</button>
+                </li>`
+            );
         });
 
-        function carregarHorariosDropdown(barbeiroId, duracaoTotal) {
-            $('#loadingSpinner').fadeIn();
-            $.ajax({
-                url: '/Agendamento/ObterHorariosDisponiveis',
-                data: {
-                    barbeiroId: barbeiroId,
-                    duracaoTotal: duracaoTotal
-                },
-                success: function (data) {
-                    var select = $('#horariosDisponiveis');
-                    select.empty();
-                    select.append('<option value="">Escolha um horário...</option>');
+        $('#valorTotal').text(valorTotal.toFixed(2));
+    }
 
-                    data.forEach(function (horario) {
-                        var diaSemana = dayjs(horario).format('dddd');
-                        var dataFormatada = dayjs(horario).format('DD/MM');
-                        var horarioFormatado = dayjs(horario).format('HH:mm') + ' - ' + dayjs(horario).add(duracaoTotal, 'minute').format('HH:mm');
-
-                        var optionText = `${diaSemana} (${dataFormatada}) - ${horarioFormatado}`;
-                        select.append(`<option value="${horario}">${optionText}</option>`);
-                    });
-
-                    $('#loadingSpinner').fadeOut();
-                },
-                error: function () {
-                    alert('Erro ao carregar os horários.');
-                    $('#loadingSpinner').fadeOut();
-                }
-            });
+    window.confirmarServico = function () {
+        if (servicosSelecionados.length === 0) {
+            showToast('Nenhum serviço selecionado.', 'danger');
+            return;
         }
 
-        $('#confirmarHorarioBtn').on('click', function () {
-            var horarioSelecionado = $('#horariosDisponiveis').val();
+        var servicoIds = servicosSelecionados.map(s => s.id);
 
-            if (!horarioSelecionado) {
-                alert('Por favor, selecione um horário.');
-            } else {
-                $('#loadingSpinner').fadeIn();
+        $('#loadingSpinner').fadeIn();
 
-                sessionStorage.removeItem('servicosSelecionados');
+        sessionStorage.setItem('servicosSelecionados', JSON.stringify(servicosSelecionados));
 
-                var dataHora = new Date(horarioSelecionado);
-                window.location.href = `/Agendamento/ResumoAgendamento?barbeiroId=${selectedBarbeiroId}&dataHora=${encodeURIComponent(dataHora.toISOString())}&servicoIds=${selectedServicoIds}`;
-            }
-        });
+        window.location.href = `/Barbeiro/EscolherBarbeiro?duracaoTotal=${duracaoTotal}&servicoIds=${servicoIds.join(',')}`;
+    };
 
-        $('#voltarBtn').on('click', function () {
-            window.location.href = '/Cliente/SolicitarServico';
-        });
-    }
+    var servicosArmazenados = JSON.parse(sessionStorage.getItem('servicosSelecionados')) || [];
+    servicosArmazenados.forEach(function (servico) {
+        servicosSelecionados.push(servico);
+        valorTotal += parseFloat(servico.preco);
+        duracaoTotal += parseInt(servico.duracao);
+        $('#servico-' + servico.id).prop('disabled', true);
+    });
 
-    if ($('#resumoAgendamentoPage').length > 0) {
-        let selectedPaymentMethod = null;
-        const stripe = Stripe("pk_test_51QFMA5Hl3zYZjP9p3D5NFqiiQLD6P2G5175ZnhLFAf1KyIgQcNmnfJqBI7WHEkgInCDEMQoMcxeWEMPLN5sfnjIi00VLPKatjn"); // Chave pública do Stripe
-        const elements = stripe.elements(); // Inicializa os elementos do Stripe
-        const cardElement = elements.create('card'); // Cria o elemento do cartão
-        cardElement.mount('#card-element'); // Associa o campo ao div com id "card-element"
+    atualizarListaServicosSelecionados();
+}
 
-        // Função para selecionar o método de pagamento e exibir o campo de cartão se necessário
-        window.selectPaymentMethod = function (method) {
-            selectedPaymentMethod = method;
-            $('#creditCardForm').hide();
 
-            if (method === 'creditCard') {
-                $('#creditCardForm').fadeIn();
-            }
-        };
+// Lógica para a página de Escolher Barbeiro
+if ($('#escolherBarbeiroPage').length > 0) {
+    var selectedBarbeiroId = null;
+    var selectedDuracaoTotal = $('#escolherBarbeiroPage').data('duracao-total');
+    var selectedServicoIds = $('#escolherBarbeiroPage').data('servico-ids');
+    var horarioSelecionado = null; // Variável para armazenar o horário selecionado
 
-        // Evento de clique para confirmar o agendamento e processar o pagamento
-        $('#confirmarAgendamentoBtn').on('click', async function () {
-            const barbeiroId = $('#resumoAgendamentoPage').data('barbeiro-id');
-            const servicoIdsString = $('#resumoAgendamentoPage').data('servico-ids');
-            const dataHora = $('#resumoAgendamentoPage').data('data-hora');
+    $('.barbeiro-btn').on('click', function () {
+        selectedBarbeiroId = $(this).data('barbeiro-id');
 
-            if (!selectedPaymentMethod) {
-                alert('Por favor, selecione um método de pagamento.');
-                return;
-            }
+        if (!selectedDuracaoTotal || selectedDuracaoTotal <= 0) {
+            showToast("Nenhum serviço selecionado ou duração inválida.", "danger");
+            return;
+        }
 
-            $('#loadingSpinner').fadeIn();
+        $('#calendarioModal').modal('show');
+        carregarHorariosDropdown(selectedBarbeiroId, selectedDuracaoTotal);
+    });
 
-            try {
-                // Faz uma chamada AJAX para criar o PaymentIntent e obter o ClientSecret
-                const response = await $.post('/Agendamento/ConfirmarAgendamento', {
-                    barbeiroId: barbeiroId,
-                    servicoIds: servicoIdsString,
-                    dataHora: dataHora,
-                    formaPagamento: selectedPaymentMethod
+    function carregarHorariosDropdown(barbeiroId, duracaoTotal) {
+        $('#loadingSpinner').fadeIn();
+        console.log(`Carregando horários para o barbeiro ID: ${barbeiroId}, duração: ${duracaoTotal}`);
+
+        $.ajax({
+            url: '/Agendamento/ObterHorariosDisponiveis',
+            data: {
+                barbeiroId: barbeiroId,
+                duracaoTotal: duracaoTotal
+            },
+            success: function (data) {
+                console.log("Horários recebidos:", data);
+                var select = $('#horariosDisponiveis');
+                select.empty();
+                select.append('<option value="">Escolha um horário...</option>');
+
+                data.forEach(function (horario) {
+                    var diaSemana = dayjs(horario).format('dddd');
+                    var dataFormatada = dayjs(horario).format('DD/MM');
+                    var horarioFormatado = dayjs(horario).format('HH:mm') + ' - ' + dayjs(horario).add(duracaoTotal, 'minute').format('HH:mm');
+
+                    var optionText = `${diaSemana} (${dataFormatada}) - ${horarioFormatado}`;
+                    console.log(`Adicionando opção: ${optionText}, valor: ${horario}`);
+                    select.append(`<option value="${horario}">${optionText}</option>`);
                 });
 
-                const clientSecret = response.clientSecret;
-
-                // Confirma o pagamento usando Stripe.js e o ClientSecret
-                if (selectedPaymentMethod === 'creditCard' && clientSecret) {
-                    const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-                        payment_method: {
-                            card: cardElement, // Usando o campo seguro do Stripe Elements
-                        }
-                    });
-
-                    if (error) {
-                        // Exibe uma mensagem de erro ao usuário
-                        alert(error.message);
-                        $('#loadingSpinner').fadeOut();
-                    } else if (paymentIntent && paymentIntent.status === 'succeeded') {
-                        // Exibe o modal de sucesso se o pagamento foi concluído
-                        $('#loadingSpinner').fadeOut();
-                        $('#successModal').modal('show');
-                    }
-                }
-            } catch (error) {
                 $('#loadingSpinner').fadeOut();
-                alert('Erro ao confirmar o agendamento.');
+            },
+            error: function () {
+                showToast('Erro ao carregar os horários.', "danger");
+                $('#loadingSpinner').fadeOut();
             }
         });
-
-        // Event listeners para as opções de pagamento
-        $('#creditCardOption').on('click', function () { selectPaymentMethod('creditCard'); });
-        $('#pixOption').on('click', function () { selectPaymentMethod('pix'); });
-        $('#transferOption').on('click', function () { selectPaymentMethod('transfer'); });
-
-        // Redireciona para "Cliente/MenuPrincipal" ao clicar no botão "OK" do modal de sucesso
-        $('#redirectMenuBtn').on('click', function () {
-            window.location.href = '/Cliente/MenuPrincipal';
-        });
     }
+
+    // Evento para capturar o valor selecionado do dropdown
+    $('#horariosDisponiveis').on('change', function () {
+        var horarioUTC = $(this).val();
+        // Converte para uma string de horário local sem o deslocamento de fuso horário
+        horarioSelecionado = dayjs(horarioUTC).format('YYYY-MM-DDTHH:mm:ss');
+        console.log("Horário selecionado (local):", horarioSelecionado);
+    });
+
+    $('#confirmarHorarioBtn').on('click', function () {
+        if (!horarioSelecionado) { // Usa a variável armazenada
+            showToast('Por favor, selecione um horário.', "warning");
+        } else {
+            $('#loadingSpinner').fadeIn();
+
+            sessionStorage.removeItem('servicosSelecionados');
+
+            // Usa o valor armazenado em `horarioSelecionado` diretamente na URL
+            window.location.href = `/Agendamento/ResumoAgendamento?barbeiroId=${selectedBarbeiroId}&dataHora=${encodeURIComponent(horarioSelecionado)}&servicoIds=${selectedServicoIds}`;
+        }
+    });
+
+    $('#voltarBtn').on('click', function () {
+        window.location.href = '/Cliente/SolicitarServico';
+    });
+}
+
+
+if ($('#resumoAgendamentoPage').length > 0) {
+    let selectedPaymentMethod = null;
+    const stripe = Stripe("pk_test_51QFMA5Hl3zYZjP9p3D5NFqiiQLD6P2G5175ZnhLFAf1KyIgQcNmnfJqBI7WHEkgInCDEMQoMcxeWEMPLN5sfnjIi00VLPKatjn");
+    let elements = null;
+    let cardElement = null;
+    let clientSecret = null;
+    let agendamentoId = null; // ID do agendamento criado
+
+    const appearance = {
+        theme: 'stripe',
+        variables: {
+            colorPrimary: '#007bff',
+            colorBackground: '#1a1a2e',
+            colorText: '#ffffff',
+            colorTextSecondary: '#ffffff',
+            colorTextPlaceholder: '#ffffff',
+            colorDanger: '#ff3860',
+            fontFamily: 'Arial, sans-serif',
+            spacingUnit: '4px',
+            borderRadius: '4px'
+        }
+    };
+
+    async function initializeCardElement() {
+        try {
+            const amount = parseFloat($('#total-price').data('preco-total'));
+            console.log('Total amount:', amount);
+
+            const response = await $.ajax({
+                url: '/api/payment/create-payment-intent',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ amount: amount }),
+                dataType: 'json'
+            });
+
+            console.log('Payment Intent response:', response);
+
+            clientSecret = response.clientSecret;
+            elements = stripe.elements({ appearance });
+            cardElement = elements.create('card');
+            cardElement.mount('#payment-element');
+            console.log('Card element mounted');
+        } catch (error) {
+            console.error('Error in initializeCardElement:', error);
+            showToast('Erro ao configurar o pagamento. Tente novamente mais tarde.', 'danger');
+        }
+    }
+
+    function selectPaymentMethod(method) {
+        selectedPaymentMethod = method;
+        console.log('Selected payment method:', method);
+
+        $('.payment-option').removeClass('selected').hide();
+        $('#' + method + 'Option').addClass('selected').show();
+        $('#payment-form, #confirmarAgendamentoBtn').hide();
+        
+        if (method === 'creditCard') {
+            $('#payment-form').fadeIn();
+            initializeCardElement();
+        } else if (method === 'store') {
+            $('#confirmarAgendamentoBtn').fadeIn();
+        }
+
+        $('#changePaymentMethodBtn').show();
+    }
+
+    $('#submit').on('click', async function (e) {
+        e.preventDefault();
+        $('#loadingSpinner').fadeIn();
+
+        // Primeiro, chama a função confirmarAgendamento
+        const agendamentoConfirmado = await confirmarAgendamento();
+
+        // Se o agendamento foi confirmado com sucesso e é pagamento via cartão, processa o pagamento
+        if (agendamentoConfirmado && selectedPaymentMethod === 'creditCard') {
+            await processarPagamento();
+        } else if (agendamentoConfirmado) {
+            showToast('Agendamento confirmado com sucesso!', 'success');
+        }
+
+        $('#loadingSpinner').fadeOut();
+    });
+
+    async function confirmarAgendamento() {
+        const barbeiroId = $('#resumoAgendamentoPage').data('barbeiro-id');
+        const dataHora = $('#resumoAgendamentoPage').data('data-hora');
+        const servicoIds = $('#resumoAgendamentoPage').data('servico-ids');
+
+        try {
+            const response = await $.post('/Agendamento/ConfirmarAgendamento', {
+                barbeiroId,
+                dataHora,
+                servicoIds,
+                formaPagamento: selectedPaymentMethod
+            });
+
+            if (response.success) {
+                agendamentoId = response.agendamentoId; // Salva o ID do agendamento criado
+                $('#successModal').modal('show');
+                return true; // Confirmação bem-sucedida
+            } else {
+                showToast(response.message || 'Erro ao confirmar agendamento.', 'danger');
+                return false; // Falha na confirmação
+            }
+        } catch (error) {
+            console.error('Erro ao confirmar agendamento:', error);
+            showToast('Erro ao confirmar o agendamento. Tente novamente mais tarde.', 'danger');
+            return false;
+        }
+    }
+
+    async function processarPagamento() {
+        $('#payment-form').submit(); // Submete o formulário de pagamento
+    }
+
+    $('#payment-form').on('submit', async function (e) {
+        e.preventDefault();
+        $('#loadingSpinner').fadeIn();
+        console.log('Payment form submitted');
+
+        try {
+            if (selectedPaymentMethod === 'creditCard' && clientSecret) {
+                const clienteNome = $('input[name="clienteNome"]').val();
+                const clienteEmail = $('input[name="clienteEmail"]').val();
+
+                const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+                    payment_method: {
+                        card: cardElement,
+                        billing_details: {
+                            name: clienteNome,
+                            email: clienteEmail
+                        }
+                    }
+                });
+
+                console.log('Stripe confirmCardPayment response:', { error, paymentIntent });
+
+                if (error) {
+                    console.error('Payment error:', error.message);
+                    showToast(error.message || 'Erro ao confirmar o pagamento.', 'danger');
+                } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+                    console.log('Payment succeeded:', paymentIntent);
+                    
+                    // Atualizar o status do pagamento no agendamento
+                    await atualizarStatusPagamento(agendamentoId, "Aprovado", paymentIntent.id);
+                } else {
+                    console.log('Payment incomplete:', paymentIntent);
+                    showToast('O pagamento não foi concluído. Verifique os dados e tente novamente.', 'warning');
+                }
+            } else {
+                showToast('Erro: clientSecret não definido.', 'danger');
+            }
+        } catch (error) {
+            console.error('Error during payment confirmation:', error);
+            showToast('Erro ao confirmar o pagamento. Tente novamente mais tarde.', 'danger');
+        } finally {
+            $('#loadingSpinner').fadeOut();
+        }
+    });
+
+    async function atualizarStatusPagamento(agendamentoId, statusPagamento, paymentId) {
+        try {
+            const response = await $.post('/Agendamento/AtualizarStatusPagamento', {
+                agendamentoId,
+                statusPagamento,
+                paymentId
+            });
+
+            if (response.success) {
+                showToast('Status de pagamento atualizado com sucesso!', 'success');
+                $('#successModal').modal('show');
+            } else {
+                showToast(response.message || 'Erro ao atualizar status do pagamento.', 'danger');
+            }
+        } catch (error) {
+            console.error('Erro ao atualizar status do pagamento:', error);
+            showToast('Erro ao atualizar o status do pagamento. Tente novamente mais tarde.', 'danger');
+        }
+    }
+
+    $('#changePaymentMethodBtn').on('click', function () {
+        selectedPaymentMethod = null;
+        $('#payment-form, #confirmarAgendamentoBtn, #changePaymentMethodBtn').hide();
+        $('.payment-option').removeClass('selected').show();
+        console.log('Payment method reset');
+
+        if (cardElement) {
+            cardElement.unmount();
+            cardElement = null;
+            elements = null;
+            console.log('Card element unmounted');
+        }
+    });
+
+    $('#creditCardOption').on('click', function () { selectPaymentMethod('creditCard'); });
+    $('#storeOption').on('click', function () { selectPaymentMethod('store'); });
+
+    $('#redirectMenuBtn').on('click', function () {
+        console.log('Redirecting to main menu');
+        window.location.href = '/Cliente/MenuPrincipal';
+    });
+}
+
+
+
+
+
+
+
 
 
 

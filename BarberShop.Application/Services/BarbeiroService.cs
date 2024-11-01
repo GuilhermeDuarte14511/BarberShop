@@ -75,5 +75,15 @@ namespace BarberShop.Application.Services
             return horariosDisponiveis;
 
         }
+
+        // Novo método para verificar disponibilidade de horário
+        public async Task<bool> VerificarDisponibilidadeHorarioAsync(int barbeiroId, DateTime dataHora, int duracao)
+        {
+            // Obter os horários disponíveis para o barbeiro para a data visualizada
+            var horariosDisponiveis = await _agendamentoRepository.GetAvailableSlotsAsync(barbeiroId, dataHora, duracao);
+
+            // Verificar se o horário solicitado está na lista de horários disponíveis
+            return horariosDisponiveis.Contains(dataHora);
+        }
     }
 }

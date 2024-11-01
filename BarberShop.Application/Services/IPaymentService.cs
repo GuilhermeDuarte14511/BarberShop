@@ -34,6 +34,6 @@ namespace BarberShop.Application.Services
         /// </summary>
         /// <param name="amount">Valor do pagamento em decimal.</param>
         /// <returns>ClientSecret do PaymentIntent para confirmação no frontend.</returns>
-        Task<string> CreatePaymentIntent(decimal amount, string currency = "brl");
+        Task<string> CreatePaymentIntent(decimal amount, List<string> paymentMethods, string currency = "brl");
     }
 }

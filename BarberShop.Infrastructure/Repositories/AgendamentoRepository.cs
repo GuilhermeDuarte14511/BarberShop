@@ -2,6 +2,10 @@
 using BarberShop.Domain.Interfaces;
 using BarberShop.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace BarberShop.Infrastructure.Repositories
 {
@@ -81,57 +85,50 @@ namespace BarberShop.Infrastructure.Repositories
         {
             var horariosDisponiveis = new List<DateTime>();
 
-            // Data de início é a data de visualização sem o componente de tempo
             DateTime dataInicio = dataVisualizacao.Date;
-
-            // Encontrar a data do próximo domingo a partir da data de início
             int diasAteDomingo = ((int)DayOfWeek.Sunday - (int)dataInicio.DayOfWeek + 7) % 7;
             DateTime dataFim = dataInicio.AddDays(diasAteDomingo);
 
-            // Iterar de dataInicio até dataFim, um dia de cada vez
             for (DateTime dataAtual = dataInicio; dataAtual <= dataFim; dataAtual = dataAtual.AddDays(1))
             {
-                // Pular as segundas-feiras (sem expediente)
+                // Ignora as segundas-feiras (ou qualquer dia que o barbeiro não trabalhe)
                 if (dataAtual.DayOfWeek == DayOfWeek.Monday)
                     continue;
 
-                // Obter todos os agendamentos do barbeiro para o dia atual
+                // Obtem agendamentos do dia para o barbeiro
                 var agendamentosDoDia = await _context.Agendamentos
                     .Where(a => a.BarbeiroId == barbeiroId && a.DataHora.Date == dataAtual.Date)
                     .ToListAsync();
 
-                // Definir horário de abertura e fechamento do expediente (09:00 às 18:00)
                 DateTime horarioAbertura = dataAtual.AddHours(9);
                 DateTime horarioFechamento = dataAtual.AddHours(18);
 
-                // Iniciar o horário atual como o horário de abertura
                 DateTime horarioAtual = horarioAbertura;
 
-                // Iterar pelos horários disponíveis no dia atual
+                // Loop para verificar disponibilidade de horários com a duração total do serviço
                 while (horarioAtual.AddMinutes(duracaoTotal) <= horarioFechamento)
                 {
-                    // Verificar se o horário atual conflita com algum agendamento existente
+                    DateTime horarioFimProposto = horarioAtual.AddMinutes(duracaoTotal);
+
+                    // Verificar se o horário proposto conflita com qualquer agendamento existente
                     bool existeConflito = agendamentosDoDia.Any(agendamento =>
-                        horarioAtual < agendamento.DataHora.AddMinutes(agendamento.DuracaoTotal ?? 0) &&  // Usar 0 se DuracaoTotal for nulo
-                        horarioAtual.AddMinutes(duracaoTotal) > agendamento.DataHora
+                        horarioAtual < agendamento.DataHora.AddMinutes(agendamento.DuracaoTotal ?? 0) &&
+                        horarioFimProposto > agendamento.DataHora
                     );
 
-                    // Se não houver conflito, adicionar o horário à lista de horários disponíveis
+                    // Se não houver conflito, adiciona o horário como disponível
                     if (!existeConflito)
                     {
                         horariosDisponiveis.Add(horarioAtual);
                     }
 
-                    // Avançar para o próximo intervalo de tempo
+                    // Incrementa o horário atual para o próximo intervalo
                     horarioAtual = horarioAtual.AddMinutes(duracaoTotal);
                 }
             }
 
             return horariosDisponiveis;
         }
-
-
-
 
         // Implementação do método ObterAgendamentosPorBarbeiroIdAsync
         public async Task<IEnumerable<Agendamento>> ObterAgendamentosPorBarbeiroIdAsync(int barbeiroId, DateTime data)
@@ -140,5 +137,31 @@ namespace BarberShop.Infrastructure.Repositories
                 .Where(a => a.BarbeiroId == barbeiroId && a.DataHora.Date == data.Date)
                 .ToListAsync();
         }
+
+        // Implementação do método ObterAgendamentosPorBarbeiroEHorarioAsync
+        public async Task<IEnumerable<Agendamento>> ObterAgendamentosPorBarbeiroEHorarioAsync(int barbeiroId, DateTime dataHoraInicio, DateTime dataHoraFim)
+        {
+            return await _context.Agendamentos
+                .Where(a => a.BarbeiroId == barbeiroId &&
+                            a.DataHora < dataHoraFim &&
+                            a.DataHora.AddMinutes(a.DuracaoTotal ?? 0) > dataHoraInicio)
+                .ToListAsync();
+        }
+
+        public async Task AtualizarStatusPagamentoAsync(int agendamentoId, StatusPagamento statusPagamento, string paymentId = null)
+        {
+            var agendamento = await _context.Agendamentos.FindAsync(agendamentoId);
+            if (agendamento != null)
+            {
+                agendamento.StatusPagamento = statusPagamento;
+                agendamento.PaymentId = paymentId;
+
+                _context.Entry(agendamento).Property(a => a.StatusPagamento).IsModified = true;
+                _context.Entry(agendamento).Property(a => a.PaymentId).IsModified = true;
+
+                await _context.SaveChangesAsync();
+            }
+        }
+
     }
 }
