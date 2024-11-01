@@ -39,6 +39,13 @@ string sendGridApiKey = builder.Environment.IsDevelopment()
 builder.Services.AddScoped<IEmailService, EmailService>(provider =>
     new EmailService(sendGridApiKey));
 
+// Obter a PublishableKey do Stripe e definir para a ViewData na aplicação
+builder.Services.AddSingleton(provider =>
+{
+    var configuration = provider.GetRequiredService<IConfiguration>();
+    return configuration["Stripe:PublishableKey"];
+});
+
 // Serviço RabbitMQ (Comentado porque você não irá usar agora)
 /*
 builder.Services.AddSingleton<IRabbitMQService, RabbitMQService>(provider =>

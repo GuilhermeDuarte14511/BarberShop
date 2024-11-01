@@ -63,6 +63,7 @@
             <!-- Inputs ocultos para nome e e-mail do cliente -->
             <input type="hidden" name="clienteNome" value="@ViewData["ClienteNome"]" />
             <input type="hidden" name="clienteEmail" value="@ViewData["ClienteEmail"]" />
+            <input type="hidden" name="stripe-publishable-key" value="@ViewData["StripePublishableKey"]" />
 
             <!-- Botões de controle adicionais -->
             <div class="button-container">
@@ -92,6 +93,22 @@
             <div class="modal-body text-center">
                 <p>Seu agendamento foi confirmado com sucesso!</p>
                 <button id="redirectMenuBtn" class="btn btn-success">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Erro de Pagamento -->
+<div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-light">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger" id="errorModalLabel">Erro no Pagamento</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <p id="errorMessage">Agendamento confirmado, mas o pagamento foi recusado. Entre em contato conosco.</p>
+                <button id="errorRedirectBtn" class="btn btn-danger">OK</button>
             </div>
         </div>
     </div>

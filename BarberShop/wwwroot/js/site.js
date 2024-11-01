@@ -444,7 +444,7 @@ if ($('#escolherBarbeiroPage').length > 0) {
 
 if ($('#resumoAgendamentoPage').length > 0) {
     let selectedPaymentMethod = null;
-    const stripe = Stripe("pk_live_51QFMA5Hl3zYZjP9pt96kFgHES5ArjpXgdXa2AXrZr3IXsqpWC9JpHAsLajdeOMCIoCu31wruWj5SLeqbmh9aeVPU003NEkIbJe");
+    const stripe = Stripe("pk_test_51QFMA5Hl3zYZjP9p3D5NFqiiQLD6P2G5175ZnhLFAf1KyIgQcNmnfJqBI7WHEkgInCDEMQoMcxeWEMPLN5sfnjIi00VLPKatjn");
     let elements = null;
     let cardElement = null;
     let clientSecret = null;
@@ -501,22 +501,6 @@ if ($('#resumoAgendamentoPage').length > 0) {
 
         $('#changePaymentMethodBtn').show();
     }
-
-    // Vinculando a função de confirmação ao botão "Confirmar Agendamento"
-    $('#confirmarAgendamentoBtn').on('click', async function (e) {
-        e.preventDefault();
-        $('#loadingSpinner').fadeIn();
-
-        // Chama a função confirmarAgendamento diretamente
-        const agendamentoConfirmado = await confirmarAgendamento();
-
-        if (agendamentoConfirmado && selectedPaymentMethod === 'store') {
-            showToast('Agendamento confirmado com sucesso!', 'success');
-            $('#successModal').modal('show');
-        }
-
-        $('#loadingSpinner').fadeOut();
-    });
 
     async function confirmarAgendamento() {
         const barbeiroId = $('#resumoAgendamentoPage').data('barbeiro-id');
@@ -634,10 +618,47 @@ if ($('#resumoAgendamentoPage').length > 0) {
     $('#creditCardOption').on('click', function () { selectPaymentMethod('creditCard'); });
     $('#storeOption').on('click', function () { selectPaymentMethod('store'); });
 
+    $('#submit').on('click', async function (e) {
+        e.preventDefault();
+        $('#loadingSpinner').fadeIn();
+
+        // 1. Confirmar agendamento primeiro
+        const agendamentoConfirmado = await confirmarAgendamento();
+
+        if (agendamentoConfirmado) {
+            // 2. Mostrar toast e processar pagamento
+            showToast('Confirmando pagamento...', 'info');
+            await processarPagamento();
+        } else {
+            showToast("Erro ao confirmar o agendamento. Tente novamente.", 'danger');
+        }
+
+        $('#loadingSpinner').fadeOut();
+    });
+
+    $('#confirmarAgendamentoBtn').on('click', async function (e) {
+        e.preventDefault();
+        $('#loadingSpinner').fadeIn();
+
+        // Confirmação de agendamento para "Pagar na Loja"
+        const agendamentoConfirmado = await confirmarAgendamento();
+
+        if (agendamentoConfirmado) {
+            showToast('Agendamento confirmado com sucesso!', 'success');
+            $('#successModal').modal('show');
+        } else {
+            $('#errorModal').modal('show');
+        }
+
+        $('#loadingSpinner').fadeOut();
+    });
+
     $('#redirectMenuBtn').on('click', function () {
         window.location.href = '/Cliente/MenuPrincipal';
     });
 }
+
+
 
 
 
