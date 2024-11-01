@@ -1,4 +1,6 @@
-﻿namespace BarberShop.Application.Services
+﻿using System.Threading.Tasks;
+
+namespace BarberShop.Application.Services
 {
     public interface IPaymentService
     {
@@ -26,5 +28,12 @@
         /// <param name="amount">Valor do pagamento em decimal.</param>
         /// <returns>Mensagem simulada de confirmação de transferência bancária.</returns>
         Task<string> ProcessBankTransfer(decimal amount);
+
+        /// <summary>
+        /// Cria um PaymentIntent para um valor específico, sem associar a um cliente.
+        /// </summary>
+        /// <param name="amount">Valor do pagamento em decimal.</param>
+        /// <returns>ClientSecret do PaymentIntent para confirmação no frontend.</returns>
+        Task<string> CreatePaymentIntent(decimal amount, string currency = "brl");
     }
 }

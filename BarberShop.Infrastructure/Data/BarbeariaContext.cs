@@ -17,6 +17,8 @@ namespace BarberShop.Infrastructure.Data
         public DbSet<Servico> Servicos { get; set; }
         public DbSet<Agendamento> Agendamentos { get; set; }
         public DbSet<AgendamentoServico> AgendamentoServicos { get; set; }
+        public DbSet<Log> Logs { get; set; } // Adicione essa linha para a tabela de logs
+
 
         // Configuração adicional
         protected override void OnModelCreating(ModelBuilder modelBuilder)

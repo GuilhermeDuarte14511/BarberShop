@@ -27,6 +27,9 @@ StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 // Registrar o serviço de pagamento com Stripe
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 
+// Registrar o serviço de logging customizado
+builder.Services.AddScoped<ILogService, LogService>();
+
 // Obter a chave SendGridApiKey dinamicamente com base no ambiente
 string sendGridApiKey = builder.Environment.IsDevelopment()
     ? builder.Configuration["SendGridApiKey"]  // Obtém dos secrets em Development
@@ -37,7 +40,8 @@ builder.Services.AddScoped<IEmailService, EmailService>(provider =>
     new EmailService(sendGridApiKey));
 
 // Serviço RabbitMQ (Comentado porque você não irá usar agora)
-/*builder.Services.AddSingleton<IRabbitMQService, RabbitMQService>(provider =>
+/*
+builder.Services.AddSingleton<IRabbitMQService, RabbitMQService>(provider =>
     new RabbitMQService(builder.Configuration["SendGridApiKey"], provider));
 */
 

@@ -10,25 +10,21 @@ namespace BarberShop.Application.Services
     public class PaymentService : IPaymentService
     {
         private readonly StripeSettings _stripeSettings;
+        private readonly ILogService _logService;
 
-        public PaymentService(IOptions<StripeSettings> stripeOptions)
+        public PaymentService(IOptions<StripeSettings> stripeOptions, ILogService logService)
         {
             _stripeSettings = stripeOptions.Value;
+            _logService = logService;
             StripeConfiguration.ApiKey = _stripeSettings.SecretKey;
         }
 
-        /// <summary>
-        /// Processa o pagamento com cartão de crédito, criando um Customer associado ao PaymentIntent.
-        /// </summary>
-        /// <param name="amount">Valor do pagamento.</param>
-        /// <param name="clienteNome">Nome do cliente.</param>
-        /// <param name="clienteEmail">E-mail do cliente.</param>
-        /// <returns>ClientSecret do PaymentIntent para confirmação no frontend.</returns>
         public async Task<string> ProcessCreditCardPayment(decimal amount, string clienteNome, string clienteEmail)
         {
+            await _logService.SaveLogAsync("Information", "PaymentService", "Iniciando processamento de pagamento com cartão de crédito.", $"Cliente: {clienteNome}, Email: {clienteEmail}");
+
             try
             {
-                // Cria um cliente no Stripe
                 var customerOptions = new CustomerCreateOptions
                 {
                     Name = clienteNome,
@@ -37,7 +33,8 @@ namespace BarberShop.Application.Services
                 var customerService = new CustomerService();
                 var customer = await customerService.CreateAsync(customerOptions);
 
-                // Cria o PaymentIntent associado ao Customer criado
+                await _logService.SaveLogAsync("Information", "PaymentService", "Cliente criado com sucesso no Stripe.", $"ID do cliente: {customer.Id}");
+
                 var options = new PaymentIntentCreateOptions
                 {
                     Amount = (long)(amount * 100),
@@ -48,27 +45,24 @@ namespace BarberShop.Application.Services
 
                 var service = new PaymentIntentService();
                 var paymentIntent = await service.CreateAsync(options);
+
+                await _logService.SaveLogAsync("Information", "PaymentService", "PaymentIntent criado com sucesso.", $"ID do PaymentIntent: {paymentIntent.Id}");
+
                 return paymentIntent.ClientSecret;
             }
             catch (StripeException ex)
             {
-                Console.WriteLine($"Erro ao criar PaymentIntent: {ex.Message}");
+                await _logService.SaveLogAsync("Error", "PaymentService", "Erro ao criar PaymentIntent para cartão de crédito.", ex.Message);
                 throw new Exception("Não foi possível processar o pagamento com cartão de crédito.");
             }
         }
 
-        /// <summary>
-        /// Processa o pagamento via PIX, criando um Customer e gerando um QR Code.
-        /// </summary>
-        /// <param name="amount">Valor do pagamento.</param>
-        /// <param name="clienteNome">Nome do cliente.</param>
-        /// <param name="clienteEmail">E-mail do cliente.</param>
-        /// <returns>URL do QR Code para o pagamento via PIX.</returns>
         public async Task<string> ProcessPixPayment(decimal amount, string clienteNome, string clienteEmail)
         {
+            await _logService.SaveLogAsync("Information", "PaymentService", "Iniciando processamento de pagamento via PIX.", $"Cliente: {clienteNome}, Email: {clienteEmail}");
+
             try
             {
-                // Cria um cliente no Stripe
                 var customerOptions = new CustomerCreateOptions
                 {
                     Name = clienteNome,
@@ -77,7 +71,8 @@ namespace BarberShop.Application.Services
                 var customerService = new CustomerService();
                 var customer = await customerService.CreateAsync(customerOptions);
 
-                // Cria o PaymentIntent associado ao Customer para PIX
+                await _logService.SaveLogAsync("Information", "PaymentService", "Cliente criado com sucesso no Stripe para pagamento PIX.", $"ID do cliente: {customer.Id}");
+
                 var options = new PaymentIntentCreateOptions
                 {
                     Amount = (long)(amount * 100),
@@ -89,31 +84,49 @@ namespace BarberShop.Application.Services
                 var service = new PaymentIntentService();
                 var paymentIntent = await service.CreateAsync(options);
 
-                // Verifica se o PaymentIntent possui a ação "pix_display_qr_code" e retorna a URL do QR Code
+                await _logService.SaveLogAsync("Information", "PaymentService", "PaymentIntent criado com sucesso para PIX.", $"ID do PaymentIntent: {paymentIntent.Id}");
+
                 if (paymentIntent.NextAction?.PixDisplayQrCode != null)
                 {
+                    await _logService.SaveLogAsync("Information", "PaymentService", "QR Code gerado com sucesso para pagamento PIX.", null);
                     return paymentIntent.NextAction.PixDisplayQrCode.Data;
                 }
                 else
                 {
+                    await _logService.SaveLogAsync("Warning", "PaymentService", "Não foi possível obter o QR Code para pagamento PIX.", null);
                     throw new Exception("Não foi possível obter o QR Code para o pagamento via PIX.");
                 }
             }
             catch (StripeException ex)
             {
-                Console.WriteLine($"Erro ao criar PaymentIntent para PIX: {ex.Message}");
+                await _logService.SaveLogAsync("Error", "PaymentService", "Erro ao criar PaymentIntent para PIX.", ex.Message);
                 throw new Exception("Não foi possível processar o pagamento com PIX.");
             }
         }
 
-        /// <summary>
-        /// Simulação de pagamento via transferência bancária.
-        /// </summary>
-        /// <param name="amount">Valor do pagamento.</param>
-        /// <returns>Mensagem simulada de pagamento por transferência.</returns>
-        public Task<string> ProcessBankTransfer(decimal amount)
+        public async Task<string> ProcessBankTransfer(decimal amount)
         {
-            return Task.FromResult("Simulação de pagamento com transferência bancária.");
+            await _logService.SaveLogAsync("Information", "PaymentService", "Simulando pagamento via transferência bancária.", $"Valor: {amount}");
+            return "Simulação de pagamento com transferência bancária.";
         }
+
+        public async Task<string> CreatePaymentIntent(decimal amount, string currency = "brl")
+        {
+            var options = new PaymentIntentCreateOptions
+            {
+                Amount = (long)(amount * 100), // Valor em centavos
+                Currency = currency,
+                AutomaticPaymentMethods = new PaymentIntentAutomaticPaymentMethodsOptions
+                {
+                    Enabled = true,
+                },
+            };
+
+            var service = new PaymentIntentService();
+            var paymentIntent = await service.CreateAsync(options);
+
+            return paymentIntent.ClientSecret; // Retorna o client_secret para o frontend
+        }
+
     }
 }
