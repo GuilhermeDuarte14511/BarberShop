@@ -66,7 +66,7 @@ namespace BarberShopMVC.Controllers
             return View(agendamento);
         }
 
-        public IActionResult Create()
+        public async Task<IActionResult> CreateAsync()
         {
             await LogAsync("INFO", nameof(Create), "Tela de criação de agendamento acessada", "");
             ViewBag.Clientes = _clienteRepository.GetAllAsync();
