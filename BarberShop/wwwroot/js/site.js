@@ -448,7 +448,7 @@ if ($('#resumoAgendamentoPage').length > 0) {
     let elements = null;
     let cardElement = null;
     let clientSecret = null;
-    let agendamentoId = null; // ID do agendamento criado
+    let agendamentoId = null;
 
     const appearance = {
         theme: 'stripe',
@@ -468,8 +468,6 @@ if ($('#resumoAgendamentoPage').length > 0) {
     async function initializeCardElement() {
         try {
             const amount = parseFloat($('#total-price').data('preco-total'));
-            console.log('Total amount:', amount);
-
             const response = await $.ajax({
                 url: '/api/payment/create-payment-intent',
                 type: 'POST',
@@ -478,13 +476,10 @@ if ($('#resumoAgendamentoPage').length > 0) {
                 dataType: 'json'
             });
 
-            console.log('Payment Intent response:', response);
-
             clientSecret = response.clientSecret;
             elements = stripe.elements({ appearance });
             cardElement = elements.create('card');
             cardElement.mount('#payment-element');
-            console.log('Card element mounted');
         } catch (error) {
             console.error('Error in initializeCardElement:', error);
             showToast('Erro ao configurar o pagamento. Tente novamente mais tarde.', 'danger');
@@ -493,8 +488,6 @@ if ($('#resumoAgendamentoPage').length > 0) {
 
     function selectPaymentMethod(method) {
         selectedPaymentMethod = method;
-        console.log('Selected payment method:', method);
-
         $('.payment-option').removeClass('selected').hide();
         $('#' + method + 'Option').addClass('selected').show();
         $('#payment-form, #confirmarAgendamentoBtn').hide();
@@ -509,18 +502,17 @@ if ($('#resumoAgendamentoPage').length > 0) {
         $('#changePaymentMethodBtn').show();
     }
 
-    $('#submit').on('click', async function (e) {
+    // Vinculando a função de confirmação ao botão "Confirmar Agendamento"
+    $('#confirmarAgendamentoBtn').on('click', async function (e) {
         e.preventDefault();
         $('#loadingSpinner').fadeIn();
 
-        // Primeiro, chama a função confirmarAgendamento
+        // Chama a função confirmarAgendamento diretamente
         const agendamentoConfirmado = await confirmarAgendamento();
 
-        // Se o agendamento foi confirmado com sucesso e é pagamento via cartão, processa o pagamento
-        if (agendamentoConfirmado && selectedPaymentMethod === 'creditCard') {
-            await processarPagamento();
-        } else if (agendamentoConfirmado) {
+        if (agendamentoConfirmado && selectedPaymentMethod === 'store') {
             showToast('Agendamento confirmado com sucesso!', 'success');
+            $('#successModal').modal('show');
         }
 
         $('#loadingSpinner').fadeOut();
@@ -540,12 +532,11 @@ if ($('#resumoAgendamentoPage').length > 0) {
             });
 
             if (response.success) {
-                agendamentoId = response.agendamentoId; // Salva o ID do agendamento criado
-                $('#successModal').modal('show');
-                return true; // Confirmação bem-sucedida
+                agendamentoId = response.agendamentoId;
+                return true;
             } else {
                 showToast(response.message || 'Erro ao confirmar agendamento.', 'danger');
-                return false; // Falha na confirmação
+                return false;
             }
         } catch (error) {
             console.error('Erro ao confirmar agendamento:', error);
@@ -555,13 +546,12 @@ if ($('#resumoAgendamentoPage').length > 0) {
     }
 
     async function processarPagamento() {
-        $('#payment-form').submit(); // Submete o formulário de pagamento
+        $('#payment-form').submit();
     }
 
     $('#payment-form').on('submit', async function (e) {
         e.preventDefault();
         $('#loadingSpinner').fadeIn();
-        console.log('Payment form submitted');
 
         try {
             if (selectedPaymentMethod === 'creditCard' && clientSecret) {
@@ -578,26 +568,23 @@ if ($('#resumoAgendamentoPage').length > 0) {
                     }
                 });
 
-                console.log('Stripe confirmCardPayment response:', { error, paymentIntent });
-
                 if (error) {
-                    console.error('Payment error:', error.message);
-                    showToast(error.message || 'Erro ao confirmar o pagamento.', 'danger');
+                    showToast('O pagamento não foi concluído. Entre em contato com a loja.', 'danger');
+                    redirecionarParaMenu();
                 } else if (paymentIntent && paymentIntent.status === 'succeeded') {
-                    console.log('Payment succeeded:', paymentIntent);
-                    
-                    // Atualizar o status do pagamento no agendamento
                     await atualizarStatusPagamento(agendamentoId, "Aprovado", paymentIntent.id);
                 } else {
-                    console.log('Payment incomplete:', paymentIntent);
                     showToast('O pagamento não foi concluído. Verifique os dados e tente novamente.', 'warning');
+                    redirecionarParaMenu();
                 }
             } else {
                 showToast('Erro: clientSecret não definido.', 'danger');
+                redirecionarParaMenu();
             }
         } catch (error) {
             console.error('Error during payment confirmation:', error);
             showToast('Erro ao confirmar o pagamento. Tente novamente mais tarde.', 'danger');
+            redirecionarParaMenu();
         } finally {
             $('#loadingSpinner').fadeOut();
         }
@@ -612,28 +599,35 @@ if ($('#resumoAgendamentoPage').length > 0) {
             });
 
             if (response.success) {
-                showToast('Status de pagamento atualizado com sucesso!', 'success');
+                showToast('Agendamento e pagamento confirmados com sucesso!', 'success');
                 $('#successModal').modal('show');
             } else {
                 showToast(response.message || 'Erro ao atualizar status do pagamento.', 'danger');
+                redirecionarParaMenu();
             }
         } catch (error) {
             console.error('Erro ao atualizar status do pagamento:', error);
             showToast('Erro ao atualizar o status do pagamento. Tente novamente mais tarde.', 'danger');
+            redirecionarParaMenu();
         }
+    }
+
+    function redirecionarParaMenu() {
+        $('#successModal').on('hidden.bs.modal', function () {
+            window.location.href = '/Cliente/MenuPrincipal';
+        });
+        $('#successModal').modal('show');
     }
 
     $('#changePaymentMethodBtn').on('click', function () {
         selectedPaymentMethod = null;
         $('#payment-form, #confirmarAgendamentoBtn, #changePaymentMethodBtn').hide();
         $('.payment-option').removeClass('selected').show();
-        console.log('Payment method reset');
 
         if (cardElement) {
             cardElement.unmount();
             cardElement = null;
             elements = null;
-            console.log('Card element unmounted');
         }
     });
 
@@ -641,10 +635,11 @@ if ($('#resumoAgendamentoPage').length > 0) {
     $('#storeOption').on('click', function () { selectPaymentMethod('store'); });
 
     $('#redirectMenuBtn').on('click', function () {
-        console.log('Redirecting to main menu');
         window.location.href = '/Cliente/MenuPrincipal';
     });
 }
+
+
 
 
 

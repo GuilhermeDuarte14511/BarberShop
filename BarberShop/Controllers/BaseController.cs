@@ -1,38 +1,21 @@
-﻿using BarberShop.Infrastructure.Data;
-using BarberShop.Domain.Entities;
-using Microsoft.Extensions.Logging;
-using System;
+﻿using Microsoft.AspNetCore.Mvc;
+using BarberShop.Application.Services;
 using System.Threading.Tasks;
 
-namespace BarberShop.Application.Services
+namespace BarberShopMVC.Controllers
 {
-    public class LogService : ILogService
+    public class BaseController : Controller
     {
-        private readonly BarbeariaContext _context;
-        private readonly ILogger<LogService> _logger;
+        private readonly ILogService _logService;
 
-        public LogService(BarbeariaContext context, ILogger<LogService> logger)
+        public BaseController(ILogService logService)
         {
-            _context = context;
-            _logger = logger;
+            _logService = logService;
         }
 
-        public async Task SaveLogAsync(string logLevel, string source, string message, string data, string resourceId = null)
+        protected async Task LogAsync(string logLevel, string source, string message, string data, string resourceId = null)
         {
-            _logger.LogDebug("Salvando log no banco de dados...");
-            var logEntry = new Log
-            {
-                LogLevel = logLevel,
-                Source = source,
-                Message = message,
-                Data = data,
-                ResourceID = resourceId,
-                LogDateTime = DateTime.UtcNow
-            };
-
-            _context.Logs.Add(logEntry);
-            await _context.SaveChangesAsync();
-            _logger.LogDebug("Log salvo com sucesso.");
+            await _logService.SaveLogAsync(logLevel, source, message, data, resourceId);
         }
     }
 }
