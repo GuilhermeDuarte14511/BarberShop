@@ -220,7 +220,10 @@ namespace BarberShopMVC.Controllers
         [HttpPost]
         public async Task<IActionResult> ConfirmarAgendamento(int barbeiroId, DateTime dataHora, string servicoIds, string formaPagamento, StatusPagamento statusPagamento = StatusPagamento.Pendente, string paymentId = null)
         {
-            await LogAsync("INFO", nameof(ConfirmarAgendamento), "Iniciando confirmação do agendamento", $"ID do Barbeiro: {barbeiroId}, DataHora: {dataHora}, Serviços: {servicoIds}", paymentId);
+            // Formata `dataHora` para o fuso horário brasileiro no formato 24 horas (dd/MM/yyyy HH:mm)
+            string dataHoraFormatada = dataHora.ToString("dd/MM/yyyy HH:mm");
+
+            await LogAsync("INFO", nameof(ConfirmarAgendamento), "Iniciando confirmação do agendamento", $"ID do Barbeiro: {barbeiroId}, DataHora: {dataHoraFormatada}, Serviços: {servicoIds}", paymentId);
 
             try
             {
@@ -237,10 +240,11 @@ namespace BarberShopMVC.Controllers
                 var precoTotal = servicos.Sum(s => s.Preco);
                 var duracaoTotal = servicos.Sum(s => s.Duracao);
 
+                // Usa `dataHora` sem ajuste para verificar a disponibilidade
                 var horarioDisponivel = await _barbeiroService.VerificarDisponibilidadeHorarioAsync(barbeiroId, dataHora, duracaoTotal);
                 if (!horarioDisponivel)
                 {
-                    await LogAsync("WARNING", nameof(ConfirmarAgendamento), "Horário indisponível", $"ID do Barbeiro: {barbeiroId}, DataHora: {dataHora}", paymentId);
+                    await LogAsync("WARNING", nameof(ConfirmarAgendamento), "Horário indisponível", $"ID do Barbeiro: {barbeiroId}, DataHora: {dataHoraFormatada}", paymentId);
                     return Json(new { success = false, message = "O horário selecionado não está mais disponível. Por favor, escolha outro horário." });
                 }
 
@@ -303,6 +307,7 @@ namespace BarberShopMVC.Controllers
                 return Json(new { success = false, message = "Ocorreu um erro ao confirmar o agendamento. Tente novamente." });
             }
         }
+
 
 
 

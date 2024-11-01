@@ -44,7 +44,7 @@ function showToast(message, type = 'info') {
 
     var emailDomains = ["gmail.com", "yahoo.com.br", "outlook.com", "hotmail.com"];
 
-   // Lógica do login
+// Lógica do login
 if ($('#loginPage').length > 0) {
     $('#phoneInput').on('input', function () {
         if ($(this).val().length > 0) {
@@ -368,8 +368,11 @@ if ($('#escolherBarbeiroPage').length > 0) {
     var selectedServicoIds = $('#escolherBarbeiroPage').data('servico-ids');
     var horarioSelecionado = null; // Variável para armazenar o horário selecionado
 
+    console.log("Página de Escolher Barbeiro carregada");
+
     $('.barbeiro-btn').on('click', function () {
         selectedBarbeiroId = $(this).data('barbeiro-id');
+        console.log("Barbeiro selecionado com ID:", selectedBarbeiroId);
 
         if (!selectedDuracaoTotal || selectedDuracaoTotal <= 0) {
             showToast("Nenhum serviço selecionado ou duração inválida.", "danger");
@@ -398,7 +401,7 @@ if ($('#escolherBarbeiroPage').length > 0) {
 
                 data.forEach(function (horario) {
                     var diaSemana = dayjs(horario).format('dddd');
-                    var dataFormatada = dayjs(horario).format('DD/MM');
+                    var dataFormatada = dayjs(horario).format('DD/MM/YYYY');
                     var horarioFormatado = dayjs(horario).format('HH:mm') + ' - ' + dayjs(horario).add(duracaoTotal, 'minute').format('HH:mm');
 
                     var optionText = `${diaSemana} (${dataFormatada}) - ${horarioFormatado}`;
@@ -418,9 +421,9 @@ if ($('#escolherBarbeiroPage').length > 0) {
     // Evento para capturar o valor selecionado do dropdown
     $('#horariosDisponiveis').on('change', function () {
         var horarioUTC = $(this).val();
-        // Armazena o horário selecionado sem o deslocamento de fuso horário
-        horarioSelecionado = dayjs(horarioUTC).format('YYYY-MM-DDTHH:mm:ss'); // Formato sem o deslocamento
-        console.log("Horário selecionado (sem deslocamento):", horarioSelecionado);
+        // Formata o horário para o formato brasileiro de 24 horas sem subtrair horas
+        horarioSelecionado = dayjs(horarioUTC).format('YYYY-MM-DD HH:mm');
+        console.log("Horário selecionado no formato 24 horas:", horarioSelecionado);
     });
 
     $('#confirmarHorarioBtn').on('click', function () {
@@ -431,7 +434,7 @@ if ($('#escolherBarbeiroPage').length > 0) {
 
             sessionStorage.removeItem('servicosSelecionados');
 
-            // Usa o valor armazenado em `horarioSelecionado` diretamente na URL
+            // Usa o valor ajustado em `horarioSelecionado` diretamente na URL
             window.location.href = `/Agendamento/ResumoAgendamento?barbeiroId=${selectedBarbeiroId}&dataHora=${encodeURIComponent(horarioSelecionado)}&servicoIds=${selectedServicoIds}`;
         }
     });
@@ -465,9 +468,13 @@ if ($('#resumoAgendamentoPage').length > 0) {
         }
     };
 
+    console.log("Página de Resumo de Agendamento carregada");
+
     async function initializeCardElement() {
         try {
             const amount = parseFloat($('#total-price').data('preco-total'));
+            console.log("Inicializando pagamento com valor:", amount);
+
             const response = await $.ajax({
                 url: '/api/payment/create-payment-intent',
                 type: 'POST',
@@ -480,8 +487,9 @@ if ($('#resumoAgendamentoPage').length > 0) {
             elements = stripe.elements({ appearance });
             cardElement = elements.create('card');
             cardElement.mount('#payment-element');
+            console.log("Elemento de cartão inicializado com clientSecret:", clientSecret);
         } catch (error) {
-            console.error('Error in initializeCardElement:', error);
+            console.error('Erro ao inicializar o elemento do cartão:', error);
             showToast('Erro ao configurar o pagamento. Tente novamente mais tarde.', 'danger');
         }
     }
@@ -520,11 +528,15 @@ if ($('#resumoAgendamentoPage').length > 0) {
                 return true;
             } else {
                 showToast(response.message || 'Erro ao confirmar agendamento.', 'danger');
+                $('#errorMessage').text(response.message || 'Erro ao confirmar agendamento.');
+                $('#errorModal').modal('show');
                 return false;
             }
         } catch (error) {
             console.error('Erro ao confirmar agendamento:', error);
             showToast('Erro ao confirmar o agendamento. Tente novamente mais tarde.', 'danger');
+            $('#errorMessage').text('Erro ao confirmar o agendamento. Tente novamente mais tarde.');
+            $('#errorModal').modal('show');
             return false;
         }
     }
@@ -554,21 +566,25 @@ if ($('#resumoAgendamentoPage').length > 0) {
 
                 if (error) {
                     showToast('O pagamento não foi concluído. Entre em contato com a loja.', 'danger');
-                    redirecionarParaMenu();
+                    $('#errorMessage').text('O pagamento não foi concluído. Entre em contato com a loja.');
+                    $('#errorModal').modal('show');
                 } else if (paymentIntent && paymentIntent.status === 'succeeded') {
                     await atualizarStatusPagamento(agendamentoId, "Aprovado", paymentIntent.id);
                 } else {
                     showToast('O pagamento não foi concluído. Verifique os dados e tente novamente.', 'warning');
-                    redirecionarParaMenu();
+                    $('#errorMessage').text('O pagamento não foi concluído. Verifique os dados e tente novamente.');
+                    $('#errorModal').modal('show');
                 }
             } else {
                 showToast('Erro: clientSecret não definido.', 'danger');
-                redirecionarParaMenu();
+                $('#errorMessage').text('Erro: clientSecret não definido.');
+                $('#errorModal').modal('show');
             }
         } catch (error) {
-            console.error('Error during payment confirmation:', error);
+            console.error('Erro durante a confirmação do pagamento:', error);
             showToast('Erro ao confirmar o pagamento. Tente novamente mais tarde.', 'danger');
-            redirecionarParaMenu();
+            $('#errorMessage').text('Erro ao confirmar o pagamento. Tente novamente mais tarde.');
+            $('#errorModal').modal('show');
         } finally {
             $('#loadingSpinner').fadeOut();
         }
@@ -587,12 +603,14 @@ if ($('#resumoAgendamentoPage').length > 0) {
                 $('#successModal').modal('show');
             } else {
                 showToast(response.message || 'Erro ao atualizar status do pagamento.', 'danger');
-                redirecionarParaMenu();
+                $('#errorMessage').text(response.message || 'Erro ao atualizar status do pagamento.');
+                $('#errorModal').modal('show');
             }
         } catch (error) {
             console.error('Erro ao atualizar status do pagamento:', error);
             showToast('Erro ao atualizar o status do pagamento. Tente novamente mais tarde.', 'danger');
-            redirecionarParaMenu();
+            $('#errorMessage').text('Erro ao atualizar o status do pagamento. Tente novamente mais tarde.');
+            $('#errorModal').modal('show');
         }
     }
 
@@ -622,11 +640,9 @@ if ($('#resumoAgendamentoPage').length > 0) {
         e.preventDefault();
         $('#loadingSpinner').fadeIn();
 
-        // 1. Confirmar agendamento primeiro
         const agendamentoConfirmado = await confirmarAgendamento();
 
         if (agendamentoConfirmado) {
-            // 2. Mostrar toast e processar pagamento
             showToast('Confirmando pagamento...', 'info');
             await processarPagamento();
         } else {
@@ -640,7 +656,6 @@ if ($('#resumoAgendamentoPage').length > 0) {
         e.preventDefault();
         $('#loadingSpinner').fadeIn();
 
-        // Confirmação de agendamento para "Pagar na Loja"
         const agendamentoConfirmado = await confirmarAgendamento();
 
         if (agendamentoConfirmado) {
@@ -656,7 +671,12 @@ if ($('#resumoAgendamentoPage').length > 0) {
     $('#redirectMenuBtn').on('click', function () {
         window.location.href = '/Cliente/MenuPrincipal';
     });
+
+    $('#errorRedirectBtn').on('click', function () {
+        $('#errorModal').modal('hide');
+    });
 }
+
 
 
 

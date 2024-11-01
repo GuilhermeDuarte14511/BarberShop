@@ -23,14 +23,14 @@ namespace BarberShop.Infrastructure.Repositories
         {
             await _context.Agendamentos.AddAsync(entity);
             await _context.SaveChangesAsync();
-            return entity;  // Retorna o agendamento adicionado
+            return entity;
         }
 
         // Implementação do método UpdateAsync
         public async Task UpdateAsync(Agendamento entity)
         {
-            _context.Agendamentos.Update(entity);  // Atualiza o agendamento existente
-            await _context.SaveChangesAsync();  // Salva as alterações no banco de dados
+            _context.Agendamentos.Update(entity);
+            await _context.SaveChangesAsync();
         }
 
         // Implementação do método DeleteAsync
@@ -77,10 +77,33 @@ namespace BarberShop.Infrastructure.Repositories
                                  .Include(a => a.Cliente)
                                  .Include(a => a.Barbeiro)
                                  .Include(a => a.AgendamentoServicos)
-                                     .ThenInclude(ags => ags.Servico)  // Inclui os serviços relacionados
+                                     .ThenInclude(ags => ags.Servico)
                                  .ToListAsync();
         }
 
+        // Método para verificar a disponibilidade de horário específico
+        public async Task<bool> VerificarDisponibilidadeHorarioAsync(int barbeiroId, DateTime dataHora, int duracao)
+        {
+            // Registrar log de depuração
+            await LogAgendamentoDebugAsync(nameof(VerificarDisponibilidadeHorarioAsync), "Iniciando verificação de horário", dataHora, barbeiroId);
+
+            DateTime horarioInicio = dataHora;
+            DateTime horarioFim = dataHora.AddMinutes(duracao);
+
+            var agendamentosConflitantes = await _context.Agendamentos
+                .Where(a => a.BarbeiroId == barbeiroId &&
+                            ((a.DataHora <= horarioInicio && a.DataHora.AddMinutes(a.DuracaoTotal ?? 0) > horarioInicio) ||
+                             (a.DataHora < horarioFim && a.DataHora.AddMinutes(a.DuracaoTotal ?? 0) >= horarioFim)))
+                .ToListAsync();
+
+            bool disponibilidade = !agendamentosConflitantes.Any();
+
+            await LogAgendamentoDebugAsync(nameof(VerificarDisponibilidadeHorarioAsync), $"Verificação concluída. Disponível: {disponibilidade}", dataHora, barbeiroId);
+
+            return disponibilidade;
+        }
+
+        // Implementação do método GetAvailableSlotsAsync
         public async Task<IEnumerable<DateTime>> GetAvailableSlotsAsync(int barbeiroId, DateTime dataVisualizacao, int duracaoTotal)
         {
             var horariosDisponiveis = new List<DateTime>();
@@ -91,38 +114,31 @@ namespace BarberShop.Infrastructure.Repositories
 
             for (DateTime dataAtual = dataInicio; dataAtual <= dataFim; dataAtual = dataAtual.AddDays(1))
             {
-                // Ignora as segundas-feiras (ou qualquer dia que o barbeiro não trabalhe)
                 if (dataAtual.DayOfWeek == DayOfWeek.Monday)
                     continue;
 
-                // Obtem agendamentos do dia para o barbeiro
                 var agendamentosDoDia = await _context.Agendamentos
                     .Where(a => a.BarbeiroId == barbeiroId && a.DataHora.Date == dataAtual.Date)
                     .ToListAsync();
 
                 DateTime horarioAbertura = dataAtual.AddHours(9);
                 DateTime horarioFechamento = dataAtual.AddHours(18);
-
                 DateTime horarioAtual = horarioAbertura;
 
-                // Loop para verificar disponibilidade de horários com a duração total do serviço
                 while (horarioAtual.AddMinutes(duracaoTotal) <= horarioFechamento)
                 {
                     DateTime horarioFimProposto = horarioAtual.AddMinutes(duracaoTotal);
 
-                    // Verificar se o horário proposto conflita com qualquer agendamento existente
                     bool existeConflito = agendamentosDoDia.Any(agendamento =>
                         horarioAtual < agendamento.DataHora.AddMinutes(agendamento.DuracaoTotal ?? 0) &&
                         horarioFimProposto > agendamento.DataHora
                     );
 
-                    // Se não houver conflito, adiciona o horário como disponível
                     if (!existeConflito)
                     {
                         horariosDisponiveis.Add(horarioAtual);
                     }
 
-                    // Incrementa o horário atual para o próximo intervalo
                     horarioAtual = horarioAtual.AddMinutes(duracaoTotal);
                 }
             }
@@ -163,5 +179,21 @@ namespace BarberShop.Infrastructure.Repositories
             }
         }
 
+        // Método de log para depuração de agendamento
+        private async Task LogAgendamentoDebugAsync(string source, string message, DateTime dataHora, int barbeiroId)
+        {
+            var log = new Log
+            {
+                LogDateTime = DateTime.UtcNow,
+                LogLevel = "DEBUG",
+                Source = source,
+                Message = message,
+                Data = $"DataHora: {dataHora}, BarbeiroId: {barbeiroId}",
+                ResourceID = null
+            };
+
+            await _context.Logs.AddAsync(log);
+            await _context.SaveChangesAsync();
+        }
     }
 }
