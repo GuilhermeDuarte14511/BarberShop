@@ -325,6 +325,17 @@ body {
         font-size: 0.9rem;
         padding: 8px 12px;
     }
+
+    /* Cards de barbeiros em colunas únicas */
+    .col-md-4 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    /* Ajuste para melhorar o espaçamento no topo */
+    #escolherBarbeiroPage {
+        padding-top: 250px;
+    }
 }
 
 @media (min-width: 769px) {

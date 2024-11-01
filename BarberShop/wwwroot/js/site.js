@@ -418,9 +418,9 @@ if ($('#escolherBarbeiroPage').length > 0) {
     // Evento para capturar o valor selecionado do dropdown
     $('#horariosDisponiveis').on('change', function () {
         var horarioUTC = $(this).val();
-        // Converte para uma string de horário local sem o deslocamento de fuso horário
-        horarioSelecionado = dayjs(horarioUTC).format('YYYY-MM-DDTHH:mm:ss');
-        console.log("Horário selecionado (local):", horarioSelecionado);
+        // Armazena o horário selecionado sem o deslocamento de fuso horário
+        horarioSelecionado = dayjs(horarioUTC).format('YYYY-MM-DDTHH:mm:ss'); // Formato sem o deslocamento
+        console.log("Horário selecionado (sem deslocamento):", horarioSelecionado);
     });
 
     $('#confirmarHorarioBtn').on('click', function () {
