@@ -179,22 +179,25 @@ namespace BarberShop.Infrastructure.Repositories
             }
         }
 
-        // Método de log para depuração de agendamento
         // Método de log para depuração de agendamento, incluindo a duração total
-        private async Task LogAgendamentoDebugAsync(string source, string message, DateTime dataHora, int barbeiroId, int duracao)
+        private async Task LogAgendamentoDebugAsync(string source, string message, DateTime dataHora, int barbeiroId, int? duracao = null)
         {
+            // Define a duração total como "00" se o valor não estiver presente
+            string duracaoTotal = duracao.HasValue ? duracao.Value.ToString() : "00";
+
             var log = new Log
             {
                 LogDateTime = DateTime.UtcNow,
                 LogLevel = "DEBUG",
                 Source = source,
                 Message = message,
-                Data = $"DataHora: {dataHora}, BarbeiroId: {barbeiroId}, DuracaoTotal: {duracao}",
+                Data = $"DataHora: {dataHora}, BarbeiroId: {barbeiroId}, DuracaoTotal: {duracaoTotal}",
                 ResourceID = null
             };
 
             await _context.Logs.AddAsync(log);
             await _context.SaveChangesAsync();
         }
+
     }
 }
