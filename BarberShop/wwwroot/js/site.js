@@ -252,18 +252,26 @@ $('#resendCode').on('click', function (e) {
 // Funções do contador
 function startCountdown() {
     var timeLeft = countdownTime;
-    $('#countdownTimer').text(timeLeft + ' segundos');
+    $('#countdownTimer').text('Você poderá solicitar um novo código em: ' + timeLeft + ' segundos');
     $('#resendCodeLink').hide();
+    
     countdownInterval = setInterval(function () {
         timeLeft--;
-        $('#countdownTimer').text(timeLeft + ' segundos');
+        $('#countdownTimer').text('Você poderá solicitar um novo código em: ' + timeLeft + ' segundos');
+        
         if (timeLeft <= 0) {
             clearInterval(countdownInterval);
-            $('#countdownTimer').text('Caso não tenha recebído um código, solicite um novo.');
+            $('#countdownTimer').text('Clique em reenviar para solicitar um novo código.');
             $('#resendCodeLink').show();
         }
     }, 1000);
 }
+
+function resetCountdown() {
+    clearInterval(countdownInterval);
+    startCountdown();
+}
+
 
 function resetCountdown() {
     clearInterval(countdownInterval);
