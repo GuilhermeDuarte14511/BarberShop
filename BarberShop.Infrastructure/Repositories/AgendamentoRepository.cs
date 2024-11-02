@@ -107,38 +107,42 @@ namespace BarberShop.Infrastructure.Repositories
         {
             var horariosDisponiveis = new List<DateTime>();
 
-            DateTime dataInicio = dataVisualizacao.Date;
+            // Ajusta a data de início para o horário de abertura (9:00) no dia selecionado ou a hora atual, caso seja depois das 9:00
+            DateTime dataInicio = DateTime.Now > dataVisualizacao.Date.AddHours(9) ? DateTime.Now : dataVisualizacao.Date.AddHours(9);
             int diasAteDomingo = ((int)DayOfWeek.Sunday - (int)dataInicio.DayOfWeek + 7) % 7;
-            DateTime dataFim = dataInicio.AddDays(diasAteDomingo);
+            DateTime dataFim = dataInicio.AddDays(diasAteDomingo).Date.AddHours(18);
 
-            for (DateTime dataAtual = dataInicio; dataAtual <= dataFim; dataAtual = dataAtual.AddDays(1))
+            for (DateTime dataAtual = dataInicio; dataAtual <= dataFim; dataAtual = dataAtual.AddDays(1).Date.AddHours(9))
             {
                 if (dataAtual.DayOfWeek == DayOfWeek.Monday)
                     continue;
 
-                // Obter todos os agendamentos do barbeiro para o dia específico, ordenados pelo horário de início
+                DateTime horarioAbertura = dataAtual;
+                DateTime horarioFechamento = dataAtual.Date.AddHours(18);
+                DateTime horarioAtual = horarioAbertura;
+
                 var agendamentosDoDia = await _context.Agendamentos
                     .Where(a => a.BarbeiroId == barbeiroId && a.DataHora.Date == dataAtual.Date)
                     .OrderBy(a => a.DataHora)
                     .ToListAsync();
-
-                DateTime horarioAbertura = dataAtual.AddHours(9);  // Início do expediente às 9h
-                DateTime horarioFechamento = dataAtual.AddHours(18);  // Fim do expediente às 18h
-                DateTime horarioAtual = horarioAbertura;
 
                 foreach (var agendamento in agendamentosDoDia)
                 {
                     DateTime inicioAgendamento = agendamento.DataHora;
                     DateTime fimAgendamento = inicioAgendamento.AddMinutes(agendamento.DuracaoTotal ?? 0);
 
-                    // Adicionar todos os horários disponíveis até o início do próximo agendamento
+                    // Adiciona horários disponíveis até o próximo agendamento (inicioAgendamento)
                     while (horarioAtual.AddMinutes(duracaoTotal) <= inicioAgendamento)
                     {
-                        horariosDisponiveis.Add(horarioAtual);
+                        // Ignora horários anteriores ao horário atual
+                        if (horarioAtual >= DateTime.Now)
+                        {
+                            horariosDisponiveis.Add(horarioAtual);
+                        }
                         horarioAtual = horarioAtual.AddMinutes(duracaoTotal);
                     }
 
-                    // Avançar o horário atual para o fim do agendamento atual
+                    // Avança o horário atual para o final do agendamento atual
                     horarioAtual = fimAgendamento;
 
                     // Se o horário atual ultrapassar o horário de fechamento, interrompe o loop
@@ -146,16 +150,21 @@ namespace BarberShop.Infrastructure.Repositories
                         break;
                 }
 
-                // Adicionar horários após o último agendamento do dia até o horário de fechamento
+                // Adiciona horários após o último agendamento do dia até o horário de fechamento
                 while (horarioAtual.AddMinutes(duracaoTotal) <= horarioFechamento)
                 {
-                    horariosDisponiveis.Add(horarioAtual);
+                    if (horarioAtual >= DateTime.Now)
+                    {
+                        horariosDisponiveis.Add(horarioAtual);
+                    }
                     horarioAtual = horarioAtual.AddMinutes(duracaoTotal);
                 }
             }
 
             return horariosDisponiveis;
         }
+
+
 
         // Implementação do método ObterAgendamentosPorBarbeiroIdAsync
         public async Task<IEnumerable<Agendamento>> ObterAgendamentosPorBarbeiroIdAsync(int barbeiroId, DateTime data)

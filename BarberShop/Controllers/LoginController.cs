@@ -44,6 +44,8 @@ namespace BarberShopMVC.Controllers
 
             if (cliente != null)
             {
+                // Código de verificação desativado
+                /*
                 string codigoVerificacao = GerarCodigoVerificacao();
                 cliente.CodigoValidacao = codigoVerificacao;
                 cliente.CodigoValidacaoExpiracao = DateTime.UtcNow.AddMinutes(5);
@@ -52,6 +54,10 @@ namespace BarberShopMVC.Controllers
                 await _emailService.EnviarEmailCodigoVerificacaoAsync(cliente.Email, cliente.Nome, codigoVerificacao);
 
                 return Json(new { success = true, clienteId = cliente.ClienteId });
+                */
+
+                // Login direto sem verificação de código
+                return await RealizarLogin(cliente);
             }
             else
             {
@@ -78,17 +84,21 @@ namespace BarberShopMVC.Controllers
                 Nome = nameInput,
                 Email = registerEmailInput,
                 Telefone = registerPhoneInput,
+                // Código de verificação desativado
+                /*
                 CodigoValidacao = GerarCodigoVerificacao(),
                 CodigoValidacaoExpiracao = DateTime.UtcNow.AddMinutes(5),
+                */
                 Role = "Cliente" // Novo cliente será do tipo Cliente por padrão
             };
 
             await _clienteRepository.AddAsync(cliente);
-            await _emailService.EnviarEmailCodigoVerificacaoAsync(cliente.Email, cliente.Nome, cliente.CodigoValidacao);
+            // await _emailService.EnviarEmailCodigoVerificacaoAsync(cliente.Email, cliente.Nome, cliente.CodigoValidacao);
 
             return Json(new { success = true, clienteId = cliente.ClienteId });
         }
 
+        /*
         [HttpPost]
         public async Task<IActionResult> VerificarCodigo(int clienteId, string codigo)
         {
@@ -99,7 +109,12 @@ namespace BarberShopMVC.Controllers
                 return Json(new { success = false, message = "Código inválido ou expirado." });
             }
 
-            // Gerar claims do usuário para autenticação
+            return await RealizarLogin(cliente);
+        }
+        */
+
+        private async Task<IActionResult> RealizarLogin(Cliente cliente)
+        {
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, cliente.ClienteId.ToString()),
@@ -116,29 +131,9 @@ namespace BarberShopMVC.Controllers
             // Redirecionar para a área administrativa se for administrador
             var redirectUrl = cliente.Role == "Admin" ? Url.Action("Index", "Admin") : Url.Action("MenuPrincipal", "Cliente");
 
-            // Atualizando o cliente para manter registros do código
             await _clienteRepository.UpdateAsync(cliente);
 
             return Json(new { success = true, redirectUrl });
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> ReenviarCodigo(int clienteId)
-        {
-            var cliente = await _clienteRepository.GetByIdAsync(clienteId);
-
-            if (cliente == null)
-            {
-                return Json(new { success = false, message = "Cliente não encontrado." });
-            }
-
-            string codigoVerificacao = GerarCodigoVerificacao();
-            cliente.CodigoValidacao = codigoVerificacao;
-            cliente.CodigoValidacaoExpiracao = DateTime.UtcNow.AddMinutes(5);
-            await _clienteRepository.UpdateAsync(cliente);
-            await _emailService.EnviarEmailCodigoVerificacaoAsync(cliente.Email, cliente.Nome, codigoVerificacao);
-
-            return Json(new { success = true });
         }
 
         [HttpPost]
