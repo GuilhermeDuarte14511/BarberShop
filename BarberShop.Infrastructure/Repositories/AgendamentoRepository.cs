@@ -107,8 +107,16 @@ namespace BarberShop.Infrastructure.Repositories
         {
             var horariosDisponiveis = new List<DateTime>();
 
-            // Ajusta a data de início para o horário de abertura (9:00) no dia selecionado ou a hora atual, caso seja depois das 9:00
-            DateTime dataInicio = DateTime.Now > dataVisualizacao.Date.AddHours(9) ? DateTime.Now : dataVisualizacao.Date.AddHours(9);
+            // Define o fuso horário de Brasília
+            TimeZoneInfo brasiliaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time");
+
+            // Ajusta a data de início para o horário de abertura (9:00) no horário de Brasília ou a hora atual, caso seja depois das 9:00
+            DateTime dataInicio = dataVisualizacao.Date.AddHours(9);
+            dataInicio = TimeZoneInfo.ConvertTime(dataInicio, brasiliaTimeZone);
+            dataInicio = dataInicio.AddHours(3);
+            if (DateTime.Now > dataInicio)
+                dataInicio = DateTime.Now;
+
             int diasAteDomingo = ((int)DayOfWeek.Sunday - (int)dataInicio.DayOfWeek + 7) % 7;
             DateTime dataFim = dataInicio.AddDays(diasAteDomingo).Date.AddHours(18);
 
@@ -131,10 +139,8 @@ namespace BarberShop.Infrastructure.Repositories
                     DateTime inicioAgendamento = agendamento.DataHora;
                     DateTime fimAgendamento = inicioAgendamento.AddMinutes(agendamento.DuracaoTotal ?? 0);
 
-                    // Adiciona horários disponíveis até o próximo agendamento (inicioAgendamento)
                     while (horarioAtual.AddMinutes(duracaoTotal) <= inicioAgendamento)
                     {
-                        // Ignora horários anteriores ao horário atual
                         if (horarioAtual >= DateTime.Now)
                         {
                             horariosDisponiveis.Add(horarioAtual);
@@ -142,15 +148,12 @@ namespace BarberShop.Infrastructure.Repositories
                         horarioAtual = horarioAtual.AddMinutes(duracaoTotal);
                     }
 
-                    // Avança o horário atual para o final do agendamento atual
                     horarioAtual = fimAgendamento;
 
-                    // Se o horário atual ultrapassar o horário de fechamento, interrompe o loop
                     if (horarioAtual >= horarioFechamento)
                         break;
                 }
 
-                // Adiciona horários após o último agendamento do dia até o horário de fechamento
                 while (horarioAtual.AddMinutes(duracaoTotal) <= horarioFechamento)
                 {
                     if (horarioAtual >= DateTime.Now)
