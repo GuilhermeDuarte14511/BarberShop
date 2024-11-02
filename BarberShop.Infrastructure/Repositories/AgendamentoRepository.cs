@@ -122,8 +122,8 @@ namespace BarberShop.Infrastructure.Repositories
                     .OrderBy(a => a.DataHora)
                     .ToListAsync();
 
-                DateTime horarioAbertura = dataAtual.AddHours(9);  // Mudando para 6:00 como início
-                DateTime horarioFechamento = dataAtual.AddHours(18);
+                DateTime horarioAbertura = dataAtual.AddHours(9);  // Início do expediente às 9h
+                DateTime horarioFechamento = dataAtual.AddHours(18);  // Fim do expediente às 18h
                 DateTime horarioAtual = horarioAbertura;
 
                 foreach (var agendamento in agendamentosDoDia)
