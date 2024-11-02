@@ -31,6 +31,9 @@ builder.Services.AddScoped<IPaymentService, PaymentService>();
 // Registrar o serviço de logging customizado
 builder.Services.AddScoped<ILogService, LogService>();
 
+// Registrar o PagamentoRepository
+builder.Services.AddScoped<IPagamentoRepository, PagamentoRepository>();
+
 // Obter a chave SendGridApiKey dinamicamente com base no ambiente
 string sendGridApiKey = builder.Environment.IsDevelopment()
     ? builder.Configuration["SendGridApiKey"]  // Obtém dos secrets em Development

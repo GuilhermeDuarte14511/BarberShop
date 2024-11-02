@@ -7,11 +7,13 @@ namespace BarberShop.Application.Services
     {
         private readonly IAgendamentoRepository _agendamentoRepository;
         private readonly IServicoRepository _servicoRepository;
+        private readonly IPagamentoRepository _pagamentoRepository;
 
-        public AgendamentoService(IAgendamentoRepository agendamentoRepository, IServicoRepository servicoRepository)
+        public AgendamentoService(IAgendamentoRepository agendamentoRepository, IServicoRepository servicoRepository, IPagamentoRepository pagamentoRepository)
         {
             _agendamentoRepository = agendamentoRepository;
             _servicoRepository = servicoRepository;
+            _pagamentoRepository = pagamentoRepository;
         }
 
         public async Task<Servico> CriarServicoAsync(Servico servico)
@@ -34,7 +36,7 @@ namespace BarberShop.Application.Services
             return await _agendamentoRepository.GetAvailableSlotsAsync(barbeiroId, data, duracaoTotal);
         }
 
-        public async Task<int> CriarAgendamentoAsync(int barbeiroId, DateTime dataHora, int clienteId, List<int> servicoIds, string formaPagamento, decimal precoTotal, StatusPagamento statusPagamento = StatusPagamento.Pendente, string paymentId = null)
+        public async Task<int> CriarAgendamentoAsync(int barbeiroId, DateTime dataHora, int clienteId, List<int> servicoIds, string formaPagamento, decimal precoTotal)
         {
             var servicos = await _servicoRepository.ObterServicosPorIdsAsync(servicoIds);
             var duracaoTotal = servicos.Sum(s => s.Duracao);
@@ -47,20 +49,38 @@ namespace BarberShop.Application.Services
                 DuracaoTotal = duracaoTotal,
                 FormaPagamento = formaPagamento,
                 PrecoTotal = precoTotal,
-                StatusPagamento = statusPagamento,
-                PaymentId = paymentId,
                 AgendamentoServicos = servicos.Select(s => new AgendamentoServico { ServicoId = s.ServicoId }).ToList()
             };
 
             var agendamento = await _agendamentoRepository.AddAsync(novoAgendamento);
+
+            // Criar um pagamento associado ao agendamento
+            var pagamento = new Pagamento
+            {
+                AgendamentoId = agendamento.AgendamentoId,
+                ClienteId = clienteId,
+                ValorPago = precoTotal,
+                StatusPagamento = StatusPagamento.Pendente
+            };
+
+            await _pagamentoRepository.AddAsync(pagamento);
+
             return agendamento.AgendamentoId;
         }
 
-        public async Task AtualizarStatusPagamentoAsync(int agendamentoId, StatusPagamento statusPagamento, string paymentId = null)
+        public async Task AtualizarStatusPagamentoAsync(int pagamentoId, StatusPagamento statusPagamento)
         {
-            await _agendamentoRepository.AtualizarStatusPagamentoAsync(agendamentoId, statusPagamento, paymentId);
+            var pagamento = await _pagamentoRepository.GetByIdAsync(pagamentoId);
+            if (pagamento != null)
+            {
+                pagamento.StatusPagamento = statusPagamento;
+                await _pagamentoRepository.UpdateAsync(pagamento);
+            }
         }
 
-
+        public async Task<IEnumerable<Pagamento>> ObterPagamentosPorAgendamentoIdAsync(int agendamentoId)
+        {
+            return await _pagamentoRepository.GetPagamentosPorAgendamentoIdAsync(agendamentoId);
+        }
     }
 }

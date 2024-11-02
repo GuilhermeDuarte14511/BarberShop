@@ -3,6 +3,7 @@ using BarberShop.Application.Interfaces;
 using BarberShop.Application.Services;
 using BarberShop.Domain.Entities;
 using BarberShop.Domain.Interfaces;
+using BarberShop.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Linq;
@@ -22,8 +23,8 @@ namespace BarberShopMVC.Controllers
         private readonly IClienteService _clienteService;
         private readonly IEmailService _emailService;
         private readonly IPaymentService _paymentService;
+        private readonly IPagamentoRepository _pagamentoRepository;
         private readonly IConfiguration _configuration;
-
 
         public AgendamentoController(
                 IAgendamentoRepository agendamentoRepository,
@@ -35,9 +36,9 @@ namespace BarberShopMVC.Controllers
                 IClienteService clienteService,
                 IEmailService emailService,
                 IPaymentService paymentService,
+                IPagamentoRepository pagamentoRepository,
                 ILogService logService,
                 IConfiguration configuration
-
             ) : base(logService)
         {
             _agendamentoRepository = agendamentoRepository;
@@ -49,8 +50,10 @@ namespace BarberShopMVC.Controllers
             _clienteService = clienteService;
             _emailService = emailService;
             _paymentService = paymentService;
+            _pagamentoRepository = pagamentoRepository;
             _configuration = configuration;
         }
+
 
         public async Task<IActionResult> Index()
         {
@@ -218,12 +221,9 @@ namespace BarberShopMVC.Controllers
 
 
         [HttpPost]
-        public async Task<IActionResult> ConfirmarAgendamento(int barbeiroId, DateTime dataHora, string servicoIds, string formaPagamento, StatusPagamento statusPagamento = StatusPagamento.Pendente, string paymentId = null)
+        public async Task<IActionResult> ConfirmarAgendamento(int barbeiroId, DateTime dataHora, string servicoIds, string formaPagamento)
         {
-            // Formata `dataHora` para o fuso horário brasileiro no formato 24 horas (dd/MM/yyyy HH:mm)
-            string dataHoraFormatada = dataHora.ToString("dd/MM/yyyy HH:mm");
-
-            await LogAsync("INFO", nameof(ConfirmarAgendamento), "Iniciando confirmação do agendamento", $"ID do Barbeiro: {barbeiroId}, DataHora: {dataHoraFormatada}, Serviços: {servicoIds}", paymentId);
+            await LogAsync("INFO", nameof(ConfirmarAgendamento), "Iniciando confirmação do agendamento", $"ID do Barbeiro: {barbeiroId}, DataHora: {dataHora}, Serviços: {servicoIds}");
 
             try
             {
@@ -231,7 +231,7 @@ namespace BarberShopMVC.Controllers
 
                 if (string.IsNullOrEmpty(servicoIds))
                 {
-                    await LogAsync("WARNING", nameof(ConfirmarAgendamento), "Nenhum serviço selecionado", $"ID do Cliente: {clienteId}", paymentId);
+                    await LogAsync("WARNING", nameof(ConfirmarAgendamento), "Nenhum serviço selecionado", $"ID do Cliente: {clienteId}");
                     return Json(new { success = false, message = "Nenhum serviço selecionado." });
                 }
 
@@ -240,11 +240,10 @@ namespace BarberShopMVC.Controllers
                 var precoTotal = servicos.Sum(s => s.Preco);
                 var duracaoTotal = servicos.Sum(s => s.Duracao);
 
-                // Usa `dataHora` sem ajuste para verificar a disponibilidade
                 var horarioDisponivel = await _barbeiroService.VerificarDisponibilidadeHorarioAsync(barbeiroId, dataHora, duracaoTotal);
                 if (!horarioDisponivel)
                 {
-                    await LogAsync("WARNING", nameof(ConfirmarAgendamento), "Horário indisponível", $"ID do Barbeiro: {barbeiroId}, DataHora: {dataHoraFormatada}", paymentId);
+                    await LogAsync("WARNING", nameof(ConfirmarAgendamento), "Horário indisponível", $"ID do Barbeiro: {barbeiroId}, DataHora: {dataHora}");
                     return Json(new { success = false, message = "O horário selecionado não está mais disponível. Por favor, escolha outro horário." });
                 }
 
@@ -253,14 +252,15 @@ namespace BarberShopMVC.Controllers
 
                 if (cliente == null || barbeiro == null)
                 {
-                    await LogAsync("ERROR", nameof(ConfirmarAgendamento), "Erro ao obter cliente ou barbeiro", $"ID do Cliente: {clienteId}, ID do Barbeiro: {barbeiroId}", paymentId);
+                    await LogAsync("ERROR", nameof(ConfirmarAgendamento), "Erro ao obter cliente ou barbeiro", $"ID do Cliente: {clienteId}, ID do Barbeiro: {barbeiroId}");
                     return Json(new { success = false, message = "Erro ao obter informações do cliente ou barbeiro." });
                 }
 
+                // Criação do agendamento
                 var agendamentoId = await _agendamentoService.CriarAgendamentoAsync(
-                    barbeiroId, dataHora, clienteId, servicoIdList, formaPagamento, (decimal)precoTotal, statusPagamento, paymentId);
+                    barbeiroId, dataHora, clienteId, servicoIdList, formaPagamento, (decimal)precoTotal);
 
-                // Envio de emails após a criação do agendamento
+                // Envio de e-mails após a criação do agendamento
                 var dataHoraFim = dataHora.AddMinutes(duracaoTotal);
                 var tituloEvento = "Agendamento na Barbearia CG DREAMS";
                 var descricaoEvento = $"Agendamento com o barbeiro {barbeiro.Nome} para os serviços: {string.Join(", ", servicos.Select(s => s.Nome))}";
@@ -281,7 +281,7 @@ namespace BarberShopMVC.Controllers
                     formaPagamento,
                     googleCalendarLink
                 );
-                await LogAsync("INFO", nameof(ConfirmarAgendamento), "Email de confirmação enviado ao cliente", $"Email do Cliente: {cliente.Email}", paymentId);
+                await LogAsync("INFO", nameof(ConfirmarAgendamento), "Email de confirmação enviado ao cliente", $"Email do Cliente: {cliente.Email}");
 
                 var assuntoBarbeiro = "Novo Agendamento - Barbearia CG DREAMS";
                 var servicoNomes = servicos.Select(s => s.Nome).ToList();
@@ -295,50 +295,59 @@ namespace BarberShopMVC.Controllers
                     (decimal)precoTotal,
                     formaPagamento
                 );
-                await LogAsync("INFO", nameof(ConfirmarAgendamento), "Email de notificação enviado ao barbeiro", $"Email do Barbeiro: {barbeiro.Email}", paymentId);
+                await LogAsync("INFO", nameof(ConfirmarAgendamento), "Email de notificação enviado ao barbeiro", $"Email do Barbeiro: {barbeiro.Email}");
 
-                await LogAsync("INFO", nameof(ConfirmarAgendamento), "Agendamento confirmado com sucesso", $"ID do Agendamento: {agendamentoId}", paymentId);
+                await LogAsync("INFO", nameof(ConfirmarAgendamento), "Agendamento confirmado com sucesso", $"ID do Agendamento: {agendamentoId}");
 
                 return Json(new { success = true, message = "Agendamento confirmado com sucesso!", agendamentoId = agendamentoId });
             }
             catch (Exception ex)
             {
-                await LogAsync("ERROR", nameof(ConfirmarAgendamento), $"Erro ao confirmar agendamento: {ex.Message}", $"ID do Barbeiro: {barbeiroId}, DataHora: {dataHora}, Serviços: {servicoIds}", paymentId);
+                await LogAsync("ERROR", nameof(ConfirmarAgendamento), $"Erro ao confirmar agendamento: {ex.Message}", $"ID do Barbeiro: {barbeiroId}, DataHora: {dataHora}, Serviços: {servicoIds}");
                 return Json(new { success = false, message = "Ocorreu um erro ao confirmar o agendamento. Tente novamente." });
             }
         }
 
 
-
-
         [HttpPost]
-        public async Task<IActionResult> AtualizarStatusPagamento(int agendamentoId, StatusPagamento statusPagamento, string paymentId)
+        public async Task<IActionResult> AtualizarStatusPagamento(int agendamentoId, StatusPagamento statusPagamento, string paymentId = null)
         {
-            await LogAsync("INFO", nameof(AtualizarStatusPagamento), "Iniciando atualização de status de pagamento", $"ID do Agendamento: {agendamentoId}, Status: {statusPagamento}", paymentId);
+            await LogAsync("INFO", nameof(AtualizarStatusPagamento), "Iniciando atualização de status de pagamento", $"ID do Agendamento: {agendamentoId}, Status: {statusPagamento}");
 
             try
             {
-                var agendamento = await _agendamentoRepository.GetByIdAsync(agendamentoId);
-                if (agendamento == null)
+                // Obtém o pagamento usando o AgendamentoId
+                var pagamentos = await _pagamentoRepository.GetPagamentosPorAgendamentoIdAsync(agendamentoId);
+
+                if (pagamentos == null || !pagamentos.Any())
                 {
-                    await LogAsync("WARNING", nameof(AtualizarStatusPagamento), "Agendamento não encontrado para atualizar status de pagamento", $"ID do Agendamento: {agendamentoId}", paymentId);
-                    return Json(new { success = false, message = "Agendamento não encontrado." });
+                    await LogAsync("WARNING", nameof(AtualizarStatusPagamento), "Pagamento não encontrado", $"ID do Agendamento: {agendamentoId}");
+                    return Json(new { success = false, message = "Pagamento não encontrado." });
                 }
 
-                agendamento.StatusPagamento = statusPagamento;
-                agendamento.PaymentId = paymentId;
+                // Atualiza o primeiro pagamento encontrado
+                var pagamentoAtual = pagamentos.First();
+                pagamentoAtual.StatusPagamento = statusPagamento;
 
-                await _agendamentoRepository.AtualizarStatusPagamentoAsync(agendamentoId, statusPagamento, paymentId);
-                await LogAsync("INFO", nameof(AtualizarStatusPagamento), "Status de pagamento atualizado com sucesso", $"ID do Agendamento: {agendamentoId}", paymentId);
+                if (!string.IsNullOrEmpty(paymentId))
+                {
+                    pagamentoAtual.PaymentId = paymentId;
+                    pagamentoAtual.DataPagamento = DateTime.Now;
+                }
 
+                await _pagamentoRepository.UpdateAsync(pagamentoAtual);
+
+                await LogAsync("INFO", nameof(AtualizarStatusPagamento), "Status de pagamento atualizado com sucesso", $"ID do Agendamento: {agendamentoId}");
                 return Json(new { success = true, message = "Status de pagamento atualizado com sucesso!" });
             }
             catch (Exception ex)
             {
-                await LogAsync("ERROR", nameof(AtualizarStatusPagamento), $"Erro ao atualizar status de pagamento: {ex.Message}", $"ID do Agendamento: {agendamentoId}", paymentId);
+                await LogAsync("ERROR", nameof(AtualizarStatusPagamento), $"Erro ao atualizar status de pagamento: {ex.Message}", $"ID do Agendamento: {agendamentoId}");
                 return Json(new { success = false, message = "Ocorreu um erro ao atualizar o status do pagamento. Tente novamente." });
             }
         }
+
+
 
     }
 }

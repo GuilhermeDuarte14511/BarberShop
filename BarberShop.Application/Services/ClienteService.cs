@@ -19,11 +19,18 @@ namespace BarberShop.Application.Services
         public async Task<IEnumerable<Agendamento>> ObterHistoricoAgendamentosAsync(int clienteId)
         {
             // Busca o histórico de agendamentos do cliente
-            var agendamentos = await _agendamentoRepository.GetByClienteIdWithServicosAsync(clienteId);
+            var agendamentos = await _agendamentoRepository.GetByClienteIdWithServicosAsync(clienteId) as IEnumerable<Agendamento>;
+
+            // Verifique se a conversão foi bem-sucedida
+            if (agendamentos == null)
+            {
+                throw new InvalidCastException("O resultado de GetByClienteIdWithServicosAsync não pôde ser convertido para IEnumerable<Agendamento>.");
+            }
 
             // Ordenar os agendamentos do mais recente para o mais antigo
             return agendamentos.OrderByDescending(a => a.AgendamentoId);
         }
+
 
 
         public async Task<IEnumerable<Cliente>> ObterTodosClientesAsync()

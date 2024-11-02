@@ -69,17 +69,32 @@ namespace BarberShop.Infrastructure.Repositories
                                               .ToListAsync();
         }
 
-        // Implementação do método GetByClienteIdWithServicosAsync
         public async Task<IEnumerable<Agendamento>> GetByClienteIdWithServicosAsync(int clienteId)
         {
-            return await _context.Agendamentos
-                                 .Where(a => a.ClienteId == clienteId)
-                                 .Include(a => a.Cliente)
-                                 .Include(a => a.Barbeiro)
-                                 .Include(a => a.AgendamentoServicos)
-                                     .ThenInclude(ags => ags.Servico)
-                                 .ToListAsync();
+            try
+            {
+                return await _context.Agendamentos
+                    .Where(a => a.ClienteId == clienteId)
+                    .Include(a => a.Cliente)
+                    .Include(a => a.Barbeiro)
+                    .Include(a => a.Pagamento) // Inclui o pagamento associado
+                    .Include(a => a.AgendamentoServicos) // Inclui AgendamentoServicos
+                        .ThenInclude(ags => ags.Servico) // Inclui o serviço relacionado
+                    .ToListAsync();
+            }
+            catch (InvalidCastException ex)
+            {
+                // Log detalhado para ajudar no diagnóstico
+                Console.WriteLine($"Erro ao converter tipos: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                throw;
+            }
         }
+
+
+
+
+
 
         // Método para verificar a disponibilidade de horário específico
         public async Task<bool> VerificarDisponibilidadeHorarioAsync(int barbeiroId, DateTime dataHora, int duracao)
@@ -113,22 +128,24 @@ namespace BarberShop.Infrastructure.Repositories
             // Ajusta a data de início para o horário de abertura (9:00) no horário de Brasília ou a hora atual, caso seja depois das 9:00
             DateTime dataInicio = dataVisualizacao.Date.AddHours(9);
             dataInicio = TimeZoneInfo.ConvertTime(dataInicio, brasiliaTimeZone);
-            dataInicio = dataInicio.AddHours(3);
+            dataInicio = dataInicio.AddHours(3); // Ajuste para o horário de Brasília
+
             if (DateTime.Now > dataInicio)
                 dataInicio = DateTime.Now;
 
-            int diasAteDomingo = ((int)DayOfWeek.Sunday - (int)dataInicio.DayOfWeek + 7) % 7;
-            DateTime dataFim = dataInicio.AddDays(diasAteDomingo).Date.AddHours(18);
+            // Define o final da janela de exibição (7 dias a partir de dataInicio)
+            DateTime dataFim = dataInicio.AddDays(7).Date.AddHours(18);
 
             for (DateTime dataAtual = dataInicio; dataAtual <= dataFim; dataAtual = dataAtual.AddDays(1).Date.AddHours(9))
             {
-                if (dataAtual.DayOfWeek == DayOfWeek.Monday)
-                    continue;
+                if (dataAtual.DayOfWeek == DayOfWeek.Sunday)
+                    continue; // Pula os domingos
 
                 DateTime horarioAbertura = dataAtual;
                 DateTime horarioFechamento = dataAtual.Date.AddHours(18);
                 DateTime horarioAtual = horarioAbertura;
 
+                // Buscar agendamentos do barbeiro no dia atual
                 var agendamentosDoDia = await _context.Agendamentos
                     .Where(a => a.BarbeiroId == barbeiroId && a.DataHora.Date == dataAtual.Date)
                     .OrderBy(a => a.DataHora)
@@ -154,6 +171,7 @@ namespace BarberShop.Infrastructure.Repositories
                         break;
                 }
 
+                // Preenche o restante do dia com horários disponíveis até o fechamento
                 while (horarioAtual.AddMinutes(duracaoTotal) <= horarioFechamento)
                 {
                     if (horarioAtual >= DateTime.Now)
@@ -166,7 +184,6 @@ namespace BarberShop.Infrastructure.Repositories
 
             return horariosDisponiveis;
         }
-
 
 
         // Implementação do método ObterAgendamentosPorBarbeiroIdAsync
@@ -189,18 +206,33 @@ namespace BarberShop.Infrastructure.Repositories
 
         public async Task AtualizarStatusPagamentoAsync(int agendamentoId, StatusPagamento statusPagamento, string paymentId = null)
         {
-            var agendamento = await _context.Agendamentos.FindAsync(agendamentoId);
-            if (agendamento != null)
+            var pagamento = await _context.Pagamentos.FirstOrDefaultAsync(p => p.AgendamentoId == agendamentoId);
+            if (pagamento != null)
             {
-                agendamento.StatusPagamento = statusPagamento;
-                agendamento.PaymentId = paymentId;
+                pagamento.StatusPagamento = statusPagamento;
+                pagamento.PaymentId = paymentId;
 
-                _context.Entry(agendamento).Property(a => a.StatusPagamento).IsModified = true;
-                _context.Entry(agendamento).Property(a => a.PaymentId).IsModified = true;
+                _context.Entry(pagamento).Property(p => p.StatusPagamento).IsModified = true;
+                _context.Entry(pagamento).Property(p => p.PaymentId).IsModified = true;
 
                 await _context.SaveChangesAsync();
             }
+            else
+            {
+                // Caso não exista um pagamento para o agendamento, pode-se decidir criar um novo ou lançar uma exceção.
+                var novoPagamento = new Pagamento
+                {
+                    AgendamentoId = agendamentoId,
+                    StatusPagamento = statusPagamento,
+                    PaymentId = paymentId,
+                    DataPagamento = DateTime.UtcNow // ou outra lógica para a data de pagamento
+                };
+
+                await _context.Pagamentos.AddAsync(novoPagamento);
+                await _context.SaveChangesAsync();
+            }
         }
+
 
         // Método de log para depuração de agendamento, incluindo a duração total
         private async Task LogAgendamentoDebugAsync(string source, string message, DateTime dataHora, int barbeiroId, int? duracao = null)

@@ -31,7 +31,7 @@
                                 }
                             </ul>
                         </td>
-                        <td class="align-middle text-center">@agendamento.AgendamentoServicos.Sum(s => s.Servico.Preco).ToString("C")</td>
+                        <td class="align-middle text-center">@agendamento.PrecoTotal.GetValueOrDefault().ToString("C")</td>
                         <td class="align-middle text-center">
                             @if (agendamento.Status == BarberShop.Domain.Entities.StatusAgendamento.Pendente)
                             {
@@ -59,27 +59,33 @@
                             }
                         </td>
                         <td class="align-middle text-center">
-                            @if (agendamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.Pendente)
+                            @if (agendamento.Pagamento == null)
+                            {
+                                <span data-bs-toggle="tooltip" title="Sem Pagamento">
+                                    <i class="fas fa-question text-secondary"></i>
+                                </span>
+                            }
+                            else if (agendamento.Pagamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.Pendente)
                             {
                                 <i class="fas fa-clock text-warning" title="Pendente"></i>
                             }
-                            else if (agendamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.Aprovado)
+                            else if (agendamento.Pagamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.Aprovado)
                             {
                                 <i class="fas fa-check-circle text-success" title="Aprovado"></i>
                             }
-                            else if (agendamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.Recusado)
+                            else if (agendamento.Pagamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.Recusado)
                             {
                                 <i class="fas fa-times-circle text-danger" title="Recusado"></i>
                             }
-                            else if (agendamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.Cancelado)
+                            else if (agendamento.Pagamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.Cancelado)
                             {
                                 <i class="fas fa-ban text-danger" title="Cancelado"></i>
                             }
-                            else if (agendamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.Reembolsado)
+                            else if (agendamento.Pagamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.Reembolsado)
                             {
                                 <i class="fas fa-undo text-info" title="Reembolsado"></i>
                             }
-                            else if (agendamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.EmProcessamento)
+                            else if (agendamento.Pagamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.EmProcessamento)
                             {
                                 <i class="fas fa-spinner text-primary" title="Em Processamento"></i>
                             }
@@ -97,11 +103,7 @@
                             {
                                 <i class="fas fa-university text-info"></i>
                             }
-                            else if (agendamento.FormaPagamento == "naLoja")
-                            {
-                                <i class="fas fa-store text-warning"></i>
-                            }
-                            else if (agendamento.FormaPagamento == "store")
+                            else if (agendamento.FormaPagamento == "naLoja" || agendamento.FormaPagamento == "store")
                             {
                                 <i class="fas fa-store text-warning"></i>
                             }
@@ -146,11 +148,7 @@
                         {
                             <i class="fas fa-university text-info"></i>
                         }
-                        else if (agendamento.FormaPagamento == "naLoja")
-                        {
-                            <i class="fas fa-store text-warning"></i>
-                        } 
-                        else if (agendamento.FormaPagamento == "store")
+                        else if (agendamento.FormaPagamento == "naLoja" || agendamento.FormaPagamento == "store")
                         {
                             <i class="fas fa-store text-warning"></i>
                         }
@@ -180,29 +178,33 @@
                     </p>
                     <p class="card-text">
                         <strong>Status do Pagamento:</strong>
-                        @if (agendamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.Pendente)
+                        @if (agendamento.Pagamento == null)
                         {
-                            <i class="fas fa-clock text-warning"></i> 
+                            <i class="fas fa-question text-secondary" title="Sem Pagamento"></i>
                         }
-                        else if (agendamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.Aprovado)
+                        else if (agendamento.Pagamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.Pendente)
                         {
-                            <i class="fas fa-check-circle text-success"></i> 
+                            <i class="fas fa-clock text-warning" title="Pendente"></i>
                         }
-                        else if (agendamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.Recusado)
+                        else if (agendamento.Pagamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.Aprovado)
                         {
-                            <i class="fas fa-times-circle text-danger"></i>
+                            <i class="fas fa-check-circle text-success" title="Aprovado"></i>
                         }
-                        else if (agendamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.Cancelado)
+                        else if (agendamento.Pagamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.Recusado)
                         {
-                            <i class="fas fa-ban text-danger"></i>
+                            <i class="fas fa-times-circle text-danger" title="Recusado"></i>
                         }
-                        else if (agendamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.Reembolsado)
+                        else if (agendamento.Pagamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.Cancelado)
                         {
-                            <i class="fas fa-undo text-info"></i>
+                            <i class="fas fa-ban text-danger" title="Cancelado"></i>
                         }
-                        else if (agendamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.EmProcessamento)
+                        else if (agendamento.Pagamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.Reembolsado)
                         {
-                            <i class="fas fa-spinner text-primary"></i>
+                            <i class="fas fa-undo text-info" title="Reembolsado"></i>
+                        }
+                        else if (agendamento.Pagamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.EmProcessamento)
+                        {
+                            <i class="fas fa-spinner text-primary" title="Em Processamento"></i>
                         }
                     </p>
                 </div>

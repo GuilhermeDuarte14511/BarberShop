@@ -39,8 +39,14 @@ namespace BarberShop.Infrastructure.Migrations
                     b.Property<DateTime>("DataHora")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("DuracaoTotal")
+                    b.Property<int?>("DuracaoTotal")
                         .HasColumnType("int");
+
+                    b.Property<string>("FormaPagamento")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("PrecoTotal")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -104,11 +110,21 @@ namespace BarberShop.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ClienteId"));
 
+                    b.Property<string>("CodigoValidacao")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("CodigoValidacaoExpiracao")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Role")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -119,6 +135,77 @@ namespace BarberShop.Infrastructure.Migrations
                     b.HasKey("ClienteId");
 
                     b.ToTable("Clientes");
+                });
+
+            modelBuilder.Entity("BarberShop.Domain.Entities.Log", b =>
+                {
+                    b.Property<int>("LogId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("LogId"));
+
+                    b.Property<string>("Data")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("LogDateTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LogLevel")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ResourceID")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("LogId");
+
+                    b.ToTable("Logs");
+                });
+
+            modelBuilder.Entity("BarberShop.Domain.Entities.Pagamento", b =>
+                {
+                    b.Property<int>("PagamentoId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PagamentoId"));
+
+                    b.Property<int>("AgendamentoId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ClienteId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("DataPagamento")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PaymentId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("StatusPagamento")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("ValorPago")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("PagamentoId");
+
+                    b.HasIndex("AgendamentoId")
+                        .IsUnique();
+
+                    b.ToTable("Pagamentos");
                 });
 
             modelBuilder.Entity("BarberShop.Domain.Entities.Servico", b =>
@@ -182,9 +269,23 @@ namespace BarberShop.Infrastructure.Migrations
                     b.Navigation("Servico");
                 });
 
+            modelBuilder.Entity("BarberShop.Domain.Entities.Pagamento", b =>
+                {
+                    b.HasOne("BarberShop.Domain.Entities.Agendamento", "Agendamento")
+                        .WithOne("Pagamento")
+                        .HasForeignKey("BarberShop.Domain.Entities.Pagamento", "AgendamentoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Agendamento");
+                });
+
             modelBuilder.Entity("BarberShop.Domain.Entities.Agendamento", b =>
                 {
                     b.Navigation("AgendamentoServicos");
+
+                    b.Navigation("Pagamento")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("BarberShop.Domain.Entities.Servico", b =>

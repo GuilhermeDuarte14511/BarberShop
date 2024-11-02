@@ -17,8 +17,8 @@ namespace BarberShop.Infrastructure.Data
         public DbSet<Servico> Servicos { get; set; }
         public DbSet<Agendamento> Agendamentos { get; set; }
         public DbSet<AgendamentoServico> AgendamentoServicos { get; set; }
-        public DbSet<Log> Logs { get; set; } // Adicione essa linha para a tabela de logs
-
+        public DbSet<Log> Logs { get; set; }
+        public DbSet<Pagamento> Pagamentos { get; set; }
 
         // Configuração adicional
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -27,8 +27,19 @@ namespace BarberShop.Infrastructure.Data
             modelBuilder.Entity<AgendamentoServico>()
                 .HasKey(agendamentoServico => new { agendamentoServico.AgendamentoId, agendamentoServico.ServicoId });
 
-            // Configuração adicional pode ser feita aqui
-            // Exemplo: Definição de relacionamento, configurações de propriedade, etc.
+            // Configura o relacionamento um-para-um entre Agendamento e Pagamento
+            modelBuilder.Entity<Agendamento>()
+                .HasOne(a => a.Pagamento)
+                .WithOne(p => p.Agendamento)
+                .HasForeignKey<Pagamento>(p => p.AgendamentoId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configuração do tipo de coluna para ValorPago em Pagamento
+            modelBuilder.Entity<Pagamento>()
+                .Property(p => p.ValorPago)
+                .HasColumnType("decimal(18,2)");
+
+            // Outras configurações podem ser feitas aqui
         }
     }
 }

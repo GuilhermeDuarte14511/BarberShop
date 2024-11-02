@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace BarberShop.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class AzureMigration : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -34,11 +34,32 @@ namespace BarberShop.Infrastructure.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Nome = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Telefone = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Telefone = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CodigoValidacao = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CodigoValidacaoExpiracao = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Role = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Clientes", x => x.ClienteId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Logs",
+                columns: table => new
+                {
+                    LogId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    LogDateTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    LogLevel = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Source = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Message = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Data = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ResourceID = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Logs", x => x.LogId);
                 });
 
             migrationBuilder.CreateTable(
@@ -64,7 +85,9 @@ namespace BarberShop.Infrastructure.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     DataHora = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Status = table.Column<int>(type: "int", nullable: false),
-                    DuracaoTotal = table.Column<int>(type: "int", nullable: false),
+                    DuracaoTotal = table.Column<int>(type: "int", nullable: true),
+                    FormaPagamento = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PrecoTotal = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     ClienteId = table.Column<int>(type: "int", nullable: false),
                     BarbeiroId = table.Column<int>(type: "int", nullable: false)
                 },
@@ -109,6 +132,30 @@ namespace BarberShop.Infrastructure.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "Pagamentos",
+                columns: table => new
+                {
+                    PagamentoId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    AgendamentoId = table.Column<int>(type: "int", nullable: false),
+                    ClienteId = table.Column<int>(type: "int", nullable: false),
+                    ValorPago = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    StatusPagamento = table.Column<int>(type: "int", nullable: false),
+                    PaymentId = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DataPagamento = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Pagamentos", x => x.PagamentoId);
+                    table.ForeignKey(
+                        name: "FK_Pagamentos_Agendamentos_AgendamentoId",
+                        column: x => x.AgendamentoId,
+                        principalTable: "Agendamentos",
+                        principalColumn: "AgendamentoId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_Agendamentos_BarbeiroId",
                 table: "Agendamentos",
@@ -123,6 +170,12 @@ namespace BarberShop.Infrastructure.Migrations
                 name: "IX_AgendamentoServicos_ServicoId",
                 table: "AgendamentoServicos",
                 column: "ServicoId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Pagamentos_AgendamentoId",
+                table: "Pagamentos",
+                column: "AgendamentoId",
+                unique: true);
         }
 
         /// <inheritdoc />
@@ -132,10 +185,16 @@ namespace BarberShop.Infrastructure.Migrations
                 name: "AgendamentoServicos");
 
             migrationBuilder.DropTable(
-                name: "Agendamentos");
+                name: "Logs");
+
+            migrationBuilder.DropTable(
+                name: "Pagamentos");
 
             migrationBuilder.DropTable(
                 name: "Servicos");
+
+            migrationBuilder.DropTable(
+                name: "Agendamentos");
 
             migrationBuilder.DropTable(
                 name: "Barbeiros");
