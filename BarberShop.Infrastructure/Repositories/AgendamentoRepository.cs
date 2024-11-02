@@ -117,35 +117,46 @@ namespace BarberShop.Infrastructure.Repositories
                 if (dataAtual.DayOfWeek == DayOfWeek.Monday)
                     continue;
 
+                // Obter todos os agendamentos do barbeiro para o dia específico, ordenados pelo horário de início
                 var agendamentosDoDia = await _context.Agendamentos
                     .Where(a => a.BarbeiroId == barbeiroId && a.DataHora.Date == dataAtual.Date)
+                    .OrderBy(a => a.DataHora)
                     .ToListAsync();
 
                 DateTime horarioAbertura = dataAtual.AddHours(9);
                 DateTime horarioFechamento = dataAtual.AddHours(18);
                 DateTime horarioAtual = horarioAbertura;
 
-                while (horarioAtual.AddMinutes(duracaoTotal) <= horarioFechamento)
+                foreach (var agendamento in agendamentosDoDia)
                 {
+                    // Calcula o fim do horário atual considerando a duração total do serviço selecionado
                     DateTime horarioFimProposto = horarioAtual.AddMinutes(duracaoTotal);
 
-                    // Verifica se o horário atual conflita com algum agendamento existente
-                    bool existeConflito = agendamentosDoDia.Any(agendamento =>
-                        horarioAtual < agendamento.DataHora.AddMinutes(agendamento.DuracaoTotal ?? 0) &&
-                        horarioFimProposto > agendamento.DataHora
-                    );
-
-                    if (!existeConflito)
+                    // Verifica se o horário proposto termina antes do próximo agendamento começar
+                    if (horarioFimProposto <= agendamento.DataHora)
                     {
                         horariosDisponiveis.Add(horarioAtual);
                     }
 
+                    // Avança o horário atual para o fim do agendamento atual
+                    horarioAtual = agendamento.DataHora.AddMinutes(agendamento.DuracaoTotal ?? 0);
+
+                    // Se o horário atual ultrapassar o horário de fechamento, interrompe o loop
+                    if (horarioAtual >= horarioFechamento)
+                        break;
+                }
+
+                // Adiciona horários após o último agendamento do dia até o horário de fechamento
+                while (horarioAtual.AddMinutes(duracaoTotal) <= horarioFechamento)
+                {
+                    horariosDisponiveis.Add(horarioAtual);
                     horarioAtual = horarioAtual.AddMinutes(duracaoTotal);
                 }
             }
 
             return horariosDisponiveis;
         }
+
 
         // Implementação do método ObterAgendamentosPorBarbeiroIdAsync
         public async Task<IEnumerable<Agendamento>> ObterAgendamentosPorBarbeiroIdAsync(int barbeiroId, DateTime data)
