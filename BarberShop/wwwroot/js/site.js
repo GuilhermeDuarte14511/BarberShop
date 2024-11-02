@@ -458,7 +458,7 @@ if ($('#escolherBarbeiroPage').length > 0) {
 
 if ($('#resumoAgendamentoPage').length > 0) {
     let selectedPaymentMethod = null;
-    const stripe = Stripe("pk_test_51QFMA5Hl3zYZjP9p3D5NFqiiQLD6P2G5175ZnhLFAf1KyIgQcNmnfJqBI7WHEkgInCDEMQoMcxeWEMPLN5sfnjIi00VLPKatjn");
+    const stripe = Stripe("pk_live_51QFMA5Hl3zYZjP9pt96kFgHES5ArjpXgdXa2AXrZr3IXsqpWC9JpHAsLajdeOMCIoCu31wruWj5SLeqbmh9aeVPU003NEkIbJe");
     let elements = null;
     let cardElement = null;
     let clientSecret = null;
