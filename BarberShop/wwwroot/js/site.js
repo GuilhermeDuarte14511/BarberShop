@@ -107,11 +107,6 @@ if ($('#loginPage').length > 0) {
             success: function (data) {
                 $('#loadingSpinner').fadeOut();
                 if (data.success) {
-                    // Descomente esta linha se não precisar da verificação de código:
-                    window.location.href = "/Cliente/MenuPrincipal";
-
-                    /* 
-                    // Código comentado para desativar a verificação:
                     $('#clienteIdField').remove();
                     $('<input>').attr({
                         type: 'hidden',
@@ -122,7 +117,6 @@ if ($('#loginPage').length > 0) {
                     $('button[type="submit"]').prop('disabled', false);
                     $('#verificationModal').modal('show');
                     startCountdown();
-                    */
                 } else {
                     $('button[type="submit"]').prop('disabled', false);
                     showToast(data.message, 'danger');
@@ -136,6 +130,9 @@ if ($('#loginPage').length > 0) {
         });
     });
 }
+
+
+
 
 
 // Funções exclusivas para o modal de cadastro
