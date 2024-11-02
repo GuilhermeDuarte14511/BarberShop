@@ -5,6 +5,7 @@ using BarberShop.Domain.Interfaces;
 using BarberShop.Infrastructure.Data;
 using BarberShop.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Stripe;
 
@@ -41,6 +42,7 @@ builder.Services.AddScoped<IEmailService, EmailService>(provider =>
     var logService = provider.GetRequiredService<ILogService>(); // Obtém a instância de ILogService
     return new EmailService(sendGridApiKey, logService); // Passa sendGridApiKey e logService para o construtor
 });
+
 // Obter a PublishableKey do Stripe e definir para a ViewData na aplicação
 builder.Services.AddSingleton(provider =>
 {
@@ -79,8 +81,10 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.SlidingExpiration = true; // Expiração deslizante (opcional)
     });
 
-// Adicionar serviços MVC
+// Adicionar serviços MVC e configurar o Swagger
 builder.Services.AddControllersWithViews();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
@@ -90,6 +94,14 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
+
+// Habilitar o Swagger e a UI do Swagger em todos os ambientes
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "BarberShop API V1");
+    c.RoutePrefix = "swagger"; // Acesso em /swagger
+});
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();

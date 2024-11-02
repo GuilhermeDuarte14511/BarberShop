@@ -294,6 +294,32 @@ body {
         border: 2px solid #00d1b2;
     }
 
+.whatsapp-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #25D366;
+    color: white;
+    border-radius: 30px;
+    padding: 10px 20px; /* Ajuste de largura e altura */
+    font-size: 20px;
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    transition: transform 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+    .whatsapp-button i {
+        font-size: 24px;
+    }
+
+    .whatsapp-button:hover {
+        transform: scale(1.1);
+    }
+
 /* Responsivo para Dispositivos Móveis */
 @media (max-width: 768px) {
     .table-responsive {

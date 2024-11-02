@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace BarberShop.Application.Services
 {
@@ -33,7 +34,17 @@ namespace BarberShop.Application.Services
         /// Cria um PaymentIntent para um valor específico, sem associar a um cliente.
         /// </summary>
         /// <param name="amount">Valor do pagamento em decimal.</param>
+        /// <param name="paymentMethods">Lista de métodos de pagamento aceitos.</param>
+        /// <param name="currency">Moeda do pagamento (padrão: "brl").</param>
         /// <returns>ClientSecret do PaymentIntent para confirmação no frontend.</returns>
         Task<string> CreatePaymentIntent(decimal amount, List<string> paymentMethods, string currency = "brl");
+
+        /// <summary>
+        /// Processa o reembolso de um pagamento específico.
+        /// </summary>
+        /// <param name="paymentId">ID do pagamento a ser reembolsado.</param>
+        /// <param name="amount">Valor do reembolso em centavos (opcional). Se null, o valor total será reembolsado.</param>
+        /// <returns>Status do reembolso.</returns>
+        Task<string> RefundPaymentAsync(string paymentId, long? amount = null);
     }
 }

@@ -455,7 +455,6 @@ if ($('#escolherBarbeiroPage').length > 0) {
     });
 }
 
-
 if ($('#resumoAgendamentoPage').length > 0) {
     let selectedPaymentMethod = null;
     const stripe = Stripe("pk_live_51QFMA5Hl3zYZjP9pt96kFgHES5ArjpXgdXa2AXrZr3IXsqpWC9JpHAsLajdeOMCIoCu31wruWj5SLeqbmh9aeVPU003NEkIbJe");
@@ -539,8 +538,11 @@ if ($('#resumoAgendamentoPage').length > 0) {
                 return true;
             } else {
                 showToast(response.message || 'Erro ao confirmar agendamento.', 'danger');
-                $('#errorMessage').text(response.message || 'Erro ao confirmar agendamento.');
+                $('#errorMessage').text(response.message || 'Erro ao confirmar agendamento. Tente novamente.');
                 $('#errorModal').modal('show');
+                $('#errorRedirectBtn').off('click').on('click', function () {
+                    $('#errorModal').modal('hide'); // Fechar o modal para tentar novamente
+                });
                 return false;
             }
         } catch (error) {
@@ -548,6 +550,9 @@ if ($('#resumoAgendamentoPage').length > 0) {
             showToast('Erro ao confirmar o agendamento. Tente novamente mais tarde.', 'danger');
             $('#errorMessage').text('Erro ao confirmar o agendamento. Tente novamente mais tarde.');
             $('#errorModal').modal('show');
+            $('#errorRedirectBtn').off('click').on('click', function () {
+                $('#errorModal').modal('hide'); // Fechar o modal para tentar novamente
+            });
             return false;
         }
     }
@@ -576,26 +581,40 @@ if ($('#resumoAgendamentoPage').length > 0) {
                 });
 
                 if (error) {
+                    console.error('Erro no pagamento:', error);
                     showToast('O pagamento não foi concluído. Entre em contato com a loja.', 'danger');
-                    $('#errorMessage').text('O pagamento não foi concluído. Entre em contato com a loja.');
+                    $('#errorMessage').text('O pagamento não foi concluído. Entre em contato com a barbearia para confirmar o agendamento.');
                     $('#errorModal').modal('show');
+                    $('#errorRedirectBtn').off('click').on('click', function () {
+                        window.location.href = '/Cliente/MenuPrincipal';
+                    });
                 } else if (paymentIntent && paymentIntent.status === 'succeeded') {
                     await atualizarStatusPagamento(agendamentoId, "Aprovado", paymentIntent.id);
                 } else {
+                    console.warn('Pagamento não concluído. Verifique os dados.');
                     showToast('O pagamento não foi concluído. Verifique os dados e tente novamente.', 'warning');
                     $('#errorMessage').text('O pagamento não foi concluído. Verifique os dados e tente novamente.');
                     $('#errorModal').modal('show');
+                    $('#errorRedirectBtn').off('click').on('click', function () {
+                        $('#errorModal').modal('hide'); // Fechar o modal para tentar novamente
+                    });
                 }
             } else {
                 showToast('Erro: clientSecret não definido.', 'danger');
                 $('#errorMessage').text('Erro: clientSecret não definido.');
                 $('#errorModal').modal('show');
+                $('#errorRedirectBtn').off('click').on('click', function () {
+                    $('#errorModal').modal('hide'); // Fechar o modal para tentar novamente
+                });
             }
         } catch (error) {
             console.error('Erro durante a confirmação do pagamento:', error);
             showToast('Erro ao confirmar o pagamento. Tente novamente mais tarde.', 'danger');
-            $('#errorMessage').text('Erro ao confirmar o pagamento. Tente novamente mais tarde.');
+            $('#errorMessage').text('Erro ao confirmar o pagamento. Entre em contato com a barbearia para confirmar o agendamento.');
             $('#errorModal').modal('show');
+            $('#errorRedirectBtn').off('click').on('click', function () {
+                window.location.href = '/Cliente/MenuPrincipal';
+            });
         } finally {
             $('#loadingSpinner').fadeOut();
         }

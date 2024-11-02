@@ -136,5 +136,37 @@ namespace BarberShop.Application.Services
             await _logService.SaveLogAsync("Information", "PaymentService", "Simulando pagamento via transferência bancária.", $"Valor: {amount}");
             return "Simulação de pagamento com transferência bancária.";
         }
+
+        /// <summary>
+        /// Processa o reembolso de um pagamento específico.
+        /// </summary>
+        /// <param name="paymentId">ID do pagamento a ser reembolsado.</param>
+        /// <param name="amount">Valor do reembolso em centavos (opcional). Se null, o valor total será reembolsado.</param>
+        /// <returns>Status do reembolso.</returns>
+        public async Task<string> RefundPaymentAsync(string paymentId, long? amount = null)
+        {
+            await _logService.SaveLogAsync("Information", "PaymentService", "Iniciando processo de reembolso.", $"ID do pagamento: {paymentId}, Valor: {amount ?? 0}");
+
+            try
+            {
+                var refundService = new RefundService();
+                var options = new RefundCreateOptions
+                {
+                    PaymentIntent = paymentId,
+                    Amount = amount // Se null, reembolsa o valor total; caso contrário, define o valor parcial em centavos
+                };
+
+                var refund = await refundService.CreateAsync(options);
+
+                await _logService.SaveLogAsync("Information", "PaymentService", "Reembolso processado com sucesso.", $"ID do Reembolso: {refund.Id}, Status: {refund.Status}");
+
+                return refund.Status;
+            }
+            catch (StripeException ex)
+            {
+                await _logService.SaveLogAsync("Error", "PaymentService", "Erro ao processar o reembolso.", ex.Message);
+                throw new Exception("Não foi possível processar o reembolso.");
+            }
+        }
     }
 }
