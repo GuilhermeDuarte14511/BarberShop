@@ -1,15 +1,21 @@
 ﻿using SendGrid;
 using SendGrid.Helpers.Mail;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using BarberShop.Domain.Interfaces;
 
 namespace BarberShop.Application.Services
 {
     public class EmailService : IEmailService
     {
         private readonly string _sendGridApiKey;
+        private readonly ILogService _logService;
 
-        public EmailService(string sendGridApiKey)
+        public EmailService(string sendGridApiKey, ILogService logService)
         {
             _sendGridApiKey = sendGridApiKey;
+            _logService = logService;
         }
 
         public async Task EnviarEmailAgendamentoAsync(string destinatarioEmail, string destinatarioNome, string assunto, string conteudo, string barbeiroNome, DateTime dataHoraInicio,
@@ -17,11 +23,12 @@ namespace BarberShop.Application.Services
         {
             try
             {
+                await _logService.SaveLogAsync("EmailService", $"Iniciando envio de email de agendamento para {destinatarioEmail}", "INFO", _sendGridApiKey);
+
                 var client = new SendGridClient(_sendGridApiKey);
-                var from = new EmailAddress("projetobarberia14511@outlook.com", "Barbearia CG DREAMS");
+                var from = new EmailAddress("barbershoperbrasil@outlook.com", "Barbearia CG DREAMS");
                 var to = new EmailAddress(destinatarioEmail, destinatarioNome);
 
-                // Estilizando o HTML do e-mail com as cores do projeto
                 string htmlContent = $@"
                     <html>
                     <head>
@@ -63,7 +70,7 @@ namespace BarberShop.Application.Services
                             }}
                             .btn {{
                                 background-color: #e74c3c;
-                                color: #000000; /* Texto em preto */
+                                color: #000000;
                                 padding: 10px 15px;
                                 text-decoration: none;
                                 border-radius: 5px;
@@ -86,7 +93,6 @@ namespace BarberShop.Application.Services
                             <h1>Confirmação de Agendamento</h1>
                             <p>Olá, <strong>{destinatarioNome}</strong>,</p>
                             <p>Aqui está o resumo do seu agendamento:</p>
-                
                             <div class='details'>
                                 <p><strong>Barbeiro:</strong> {barbeiroNome}</p>
                                 <p><strong>Data e Hora de Início:</strong> {dataHoraInicio:dd/MM/yyyy - HH:mm}</p>
@@ -113,18 +119,19 @@ namespace BarberShop.Application.Services
                     </html>";
 
                 var msg = MailHelper.CreateSingleEmail(from, to, assunto, conteudo, htmlContent);
-
                 var response = await client.SendEmailAsync(msg);
+
                 if (response.StatusCode != System.Net.HttpStatusCode.OK && response.StatusCode != System.Net.HttpStatusCode.Accepted)
                 {
+                    await _logService.SaveLogAsync("EmailService", $"Falha ao enviar o e-mail, status code: {response.StatusCode}", "ERROR", _sendGridApiKey);
                     throw new Exception($"Falha ao enviar o e-mail, status code: {response.StatusCode}");
                 }
 
-                Console.WriteLine($"E-mail enviado com sucesso para: {destinatarioEmail}");
+                await _logService.SaveLogAsync("EmailService", $"E-mail enviado com sucesso para: {destinatarioEmail}", "INFO", _sendGridApiKey);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erro ao enviar e-mail para {destinatarioEmail}: {ex.Message}");
+                await _logService.SaveLogAsync("EmailService", $"Erro ao enviar e-mail para {destinatarioEmail}: {ex.Message}", "ERROR", _sendGridApiKey);
                 throw;
             }
         }
@@ -133,6 +140,8 @@ namespace BarberShop.Application.Services
         {
             try
             {
+                await _logService.SaveLogAsync("EmailService", $"Iniciando envio de email de notificação para {barbeiroEmail}", "INFO", _sendGridApiKey);
+
                 var client = new SendGridClient(_sendGridApiKey);
                 var from = new EmailAddress("barbershoperbrasil@outlook.com", "Barbearia CG DREAMS");
                 var to = new EmailAddress(barbeiroEmail, barbeiroNome);
@@ -189,7 +198,6 @@ namespace BarberShop.Application.Services
                                 <h1>Novo Agendamento Recebido</h1>
                                 <p>Olá, <strong>{barbeiroNome}</strong>,</p>
                                 <p>Um novo agendamento foi realizado. Confira os detalhes:</p>
-        
                                 <div class='details'>
                                     <p><strong>Cliente:</strong> {clienteNome}</p>
                                     <p><strong>Data e Hora de Início:</strong> {dataHoraInicio:dd/MM/yyyy - HH:mm}</p>
@@ -217,27 +225,29 @@ namespace BarberShop.Application.Services
 
                 var assunto = "Novo Agendamento Confirmado";
                 var msg = MailHelper.CreateSingleEmail(from, to, assunto, string.Empty, htmlContent);
-
                 var response = await client.SendEmailAsync(msg);
+
                 if (response.StatusCode != System.Net.HttpStatusCode.OK && response.StatusCode != System.Net.HttpStatusCode.Accepted)
                 {
+                    await _logService.SaveLogAsync("EmailService", $"Falha ao enviar o e-mail, status code: {response.StatusCode}", "ERROR", _sendGridApiKey);
                     throw new Exception($"Falha ao enviar o e-mail, status code: {response.StatusCode}");
                 }
 
-                Console.WriteLine($"E-mail de notificação enviado com sucesso para: {barbeiroEmail}");
+                await _logService.SaveLogAsync("EmailService", $"E-mail de notificação enviado com sucesso para: {barbeiroEmail}", "INFO", _sendGridApiKey);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erro ao enviar e-mail de notificação para {barbeiroEmail}: {ex.Message}");
+                await _logService.SaveLogAsync("EmailService", $"Erro ao enviar e-mail de notificação para {barbeiroEmail}: {ex.Message}", "ERROR", _sendGridApiKey);
                 throw;
             }
         }
 
-        // Novo método para enviar email de código de verificação
         public async Task EnviarEmailCodigoVerificacaoAsync(string destinatarioEmail, string destinatarioNome, string codigoVerificacao)
         {
             try
             {
+                await _logService.SaveLogAsync("EmailService", $"Iniciando envio de email de verificação para {destinatarioEmail}", "INFO", _sendGridApiKey);
+
                 var client = new SendGridClient(_sendGridApiKey);
                 var from = new EmailAddress("barbershoperbrasil@outlook.com", "Barbearia CG DREAMS");
                 var to = new EmailAddress(destinatarioEmail, destinatarioNome);
@@ -310,23 +320,23 @@ namespace BarberShop.Application.Services
                 </html>";
 
                 var msg = MailHelper.CreateSingleEmail(from, to, assunto, conteudo, htmlContent);
-
                 var response = await client.SendEmailAsync(msg);
+
                 if (response.StatusCode != System.Net.HttpStatusCode.OK && response.StatusCode != System.Net.HttpStatusCode.Accepted)
                 {
+                    await _logService.SaveLogAsync("EmailService", $"Falha ao enviar o e-mail, status code: {response.StatusCode}", "ERROR", _sendGridApiKey);
                     throw new Exception($"Falha ao enviar o e-mail, status code: {response.StatusCode}");
                 }
 
-                Console.WriteLine($"E-mail de código de verificação enviado com sucesso para: {destinatarioEmail}");
+                await _logService.SaveLogAsync("EmailService", $"E-mail de verificação enviado com sucesso para: {destinatarioEmail}", "INFO", _sendGridApiKey);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erro ao enviar e-mail para {destinatarioEmail}: {ex.Message}");
+                await _logService.SaveLogAsync("EmailService", $"Erro ao enviar e-mail de verificação para {destinatarioEmail}: {ex.Message}", "ERROR", _sendGridApiKey);
                 throw;
             }
         }
 
-        // Método para gerar o link do Google Calendar
         public string GerarLinkGoogleCalendar(string titulo, DateTime dataInicio, DateTime dataFim, string descricao, string local)
         {
             dataInicio = dataInicio.ToUniversalTime();

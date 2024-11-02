@@ -37,8 +37,10 @@ string sendGridApiKey = builder.Environment.IsDevelopment()
 
 // Configurar o serviço de Email com SendGrid usando a chave configurada
 builder.Services.AddScoped<IEmailService, EmailService>(provider =>
-    new EmailService(sendGridApiKey));
-
+{
+    var logService = provider.GetRequiredService<ILogService>(); // Obtém a instância de ILogService
+    return new EmailService(sendGridApiKey, logService); // Passa sendGridApiKey e logService para o construtor
+});
 // Obter a PublishableKey do Stripe e definir para a ViewData na aplicação
 builder.Services.AddSingleton(provider =>
 {
