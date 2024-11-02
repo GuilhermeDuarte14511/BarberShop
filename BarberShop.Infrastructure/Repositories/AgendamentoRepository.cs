@@ -84,8 +84,8 @@ namespace BarberShop.Infrastructure.Repositories
         // Método para verificar a disponibilidade de horário específico
         public async Task<bool> VerificarDisponibilidadeHorarioAsync(int barbeiroId, DateTime dataHora, int duracao)
         {
-            // Registrar log de depuração
-            await LogAgendamentoDebugAsync(nameof(VerificarDisponibilidadeHorarioAsync), "Iniciando verificação de horário", dataHora, barbeiroId);
+            // Registrar log de depuração com duração total
+            await LogAgendamentoDebugAsync(nameof(VerificarDisponibilidadeHorarioAsync), "Iniciando verificação de horário", dataHora, barbeiroId, duracao);
 
             DateTime horarioInicio = dataHora;
             DateTime horarioFim = dataHora.AddMinutes(duracao);
@@ -98,7 +98,7 @@ namespace BarberShop.Infrastructure.Repositories
 
             bool disponibilidade = !agendamentosConflitantes.Any();
 
-            await LogAgendamentoDebugAsync(nameof(VerificarDisponibilidadeHorarioAsync), $"Verificação concluída. Disponível: {disponibilidade}", dataHora, barbeiroId);
+            await LogAgendamentoDebugAsync(nameof(VerificarDisponibilidadeHorarioAsync), $"Verificação concluída. Disponível: {disponibilidade}", dataHora, barbeiroId, duracao);
 
             return disponibilidade;
         }
@@ -180,7 +180,8 @@ namespace BarberShop.Infrastructure.Repositories
         }
 
         // Método de log para depuração de agendamento
-        private async Task LogAgendamentoDebugAsync(string source, string message, DateTime dataHora, int barbeiroId)
+        // Método de log para depuração de agendamento, incluindo a duração total
+        private async Task LogAgendamentoDebugAsync(string source, string message, DateTime dataHora, int barbeiroId, int duracao)
         {
             var log = new Log
             {
@@ -188,7 +189,7 @@ namespace BarberShop.Infrastructure.Repositories
                 LogLevel = "DEBUG",
                 Source = source,
                 Message = message,
-                Data = $"DataHora: {dataHora}, BarbeiroId: {barbeiroId}",
+                Data = $"DataHora: {dataHora}, BarbeiroId: {barbeiroId}, DuracaoTotal: {duracao}",
                 ResourceID = null
             };
 
