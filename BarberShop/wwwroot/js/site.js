@@ -252,16 +252,16 @@ $('#resendCode').on('click', function (e) {
 // Funções do contador
 function startCountdown() {
     var timeLeft = countdownTime;
-    $('#countdownTimer').text('Você poderá solicitar um novo código em: ' + timeLeft + ' segundos');
+    $('#countdownText').html('Você poderá solicitar um novo código em: <span id="countdownTimer">' + timeLeft + '</span> segundos.');
     $('#resendCodeLink').hide();
     
     countdownInterval = setInterval(function () {
         timeLeft--;
-        $('#countdownTimer').text('Você poderá solicitar um novo código em: ' + timeLeft + ' segundos');
+        $('#countdownTimer').text(timeLeft);
         
         if (timeLeft <= 0) {
             clearInterval(countdownInterval);
-            $('#countdownTimer').text('Clique em reenviar para solicitar um novo código.');
+            $('#countdownText').text('Clique em reenviar para solicitar um novo código.');
             $('#resendCodeLink').show();
         }
     }, 1000);
@@ -271,7 +271,6 @@ function resetCountdown() {
     clearInterval(countdownInterval);
     startCountdown();
 }
-
 
 function resetCountdown() {
     clearInterval(countdownInterval);

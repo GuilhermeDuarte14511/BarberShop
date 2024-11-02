@@ -78,7 +78,7 @@
             </div>
             <div class="modal-body">
                 <p>Um código foi enviado para o seu email. Por favor, insira-o abaixo:</p>
-                <p>O código expira em <span id="countdownTimer">30 segundos</span>.</p>                
+                <p id="countdownText">Você poderá solicitar um novo código em: <span id="countdownTimer">30</span> segundos.</p>
                 <form id="verificationForm">
                     <!-- Campo oculto para armazenar o clienteId -->
                     <input type="hidden" id="clienteIdField" name="clienteId" value="">
@@ -98,6 +98,7 @@
         </div>
     </div>
 </div>
+
 
 <!-- Toast de Erro -->
 <div class="toast-container position-fixed bottom-0 end-0 p-3">
