@@ -129,6 +129,7 @@ namespace BarberShop.Infrastructure.Repositories
                 {
                     DateTime horarioFimProposto = horarioAtual.AddMinutes(duracaoTotal);
 
+                    // Verifica se o horário atual conflita com algum agendamento existente
                     bool existeConflito = agendamentosDoDia.Any(agendamento =>
                         horarioAtual < agendamento.DataHora.AddMinutes(agendamento.DuracaoTotal ?? 0) &&
                         horarioFimProposto > agendamento.DataHora
