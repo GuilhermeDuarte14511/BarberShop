@@ -4,7 +4,6 @@
     ViewData["Title"] = "Escolher Barbeiro";
 }
 
-<!-- Div com ID para identificação -->
 <div id="escolherBarbeiroPage" class="container mt-5"
      data-servico-ids="@ViewData["ServicoIds"]"
      data-duracao-total="@ViewData["DuracaoTotal"]">
@@ -12,8 +11,8 @@
     <div class="row">
         @foreach (var barbeiro in Model)
         {
-            <div class="col-md-4">
-                <div class="card mb-4 bg-dark text-light">
+            <div class="col-md-4 col-sm-6 mb-3">
+                <div class="card bg-dark text-light">
                     <div class="card-body text-center">
                         <h5 class="card-title text-warning">@barbeiro.Nome</h5>
                         <button class="btn btn-danger barbeiro-btn"
@@ -26,7 +25,6 @@
         }
     </div>
 
-    <!-- Botão de Voltar -->
     <div class="mt-4">
         <button class="btn btn-secondary" onclick="history.back()">Voltar</button>
     </div>
@@ -41,7 +39,6 @@
             </div>
             <div class="modal-body">
                 <div id="dropdownHorarios">
-                    <!-- Dropdown renderizado aqui -->
                     <label for="horariosDisponiveis">Selecione um horário:</label>
                     <select id="horariosDisponiveis" class="form-select bg-dark text-light border-secondary">
                         <option value="">Escolha um horário...</option>
@@ -55,7 +52,6 @@
     </div>
 </div>
 
-<!-- Spinner de carregamento (inicialmente oculto) -->
 <div id="loadingSpinner" class="text-center mt-3" style="display:none;">
     <div class="spinner-border text-danger" role="status">
         <span class="sr-only">Carregando...</span>

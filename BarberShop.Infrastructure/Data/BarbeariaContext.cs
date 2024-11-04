@@ -20,6 +20,9 @@ namespace BarberShop.Infrastructure.Data
         public DbSet<Log> Logs { get; set; }
         public DbSet<Pagamento> Pagamentos { get; set; }
 
+        public DbSet<Usuario> Usuarios { get; set; } // Novo DbSet para Usuario
+
+
         // Configuração adicional
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -39,6 +42,16 @@ namespace BarberShop.Infrastructure.Data
                 .Property(p => p.ValorPago)
                 .HasColumnType("decimal(18,2)");
 
+
+            // Configuração para a entidade Usuario
+            modelBuilder.Entity<Usuario>()
+                .Property(u => u.Email)
+                .HasMaxLength(255)
+                .IsRequired();
+
+            modelBuilder.Entity<Usuario>()
+                .HasIndex(u => u.Email)
+                .IsUnique();
             // Outras configurações podem ser feitas aqui
         }
     }

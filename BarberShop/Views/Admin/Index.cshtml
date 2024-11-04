@@ -1,38 +1,95 @@
 ﻿@{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
-<div id="adminDashboard">
-    <h2>Bem-vindo ao Dashboard Administrativo</h2>
-    <p>Esse é o painel principal do sistema administrativo da barbearia.</p>
 
-    <!-- Divisões dos gráficos -->
-    <div class="row mt-4">
-        <div class="col-md-3">
-            <h5>Agendamentos da Semana</h5>
-            <canvas id="agendamentosSemanaChart"></canvas>
-        </div>
-        <div class="col-md-3">
-            <h5>Serviços Mais Solicitados</h5>
-            <canvas id="servicosMaisSolicitadosChart"></canvas>
-        </div>
-        <div class="col-md-3">
-            <h5>Lucro por Barbeiro</h5>
-            <canvas id="lucroPorBarbeiroChart"></canvas>
-        </div>
-        <div class="col-md-3">
-            <h5>Atendimentos por Barbeiro</h5>
-            <canvas id="atendimentosPorBarbeiroChart"></canvas>
-        </div>
-    </div>
+<div id="adminDashboard" class="container-fluid p-4">
+    <h2 class="text-center">Bem-vindo ao Dashboard Administrativo</h2>
+    <p class="text-center">Esse é o painel principal do sistema administrativo da barbearia.</p>
 
-    <div class="row mt-4">
-        <div class="col-md-6">
-            <h5>Lucro da Semana</h5>
-            <canvas id="lucroSemanaChart"></canvas>
+    <div class="row mt-4 g-4">
+        <!-- Agendamentos da Semana -->
+        <div class="col-lg-4 col-md-6 col-12">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h5>Agendamentos da Semana</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="agendamentosSemanaChart"></canvas>
+                </div>
+            </div>
         </div>
-        <div class="col-md-6">
-            <h5>Lucro do Mês</h5>
-            <canvas id="lucroMesChart"></canvas>
+
+        <!-- Serviços Mais Solicitados -->
+        <div class="col-lg-4 col-md-6 col-12">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h5>Serviços Mais Solicitados</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="servicosMaisSolicitadosChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lucro por Barbeiro -->
+        <div class="col-lg-4 col-md-6 col-12">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h5>Lucro por Barbeiro</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="lucroPorBarbeiroChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Atendimentos por Barbeiro -->
+        <div class="col-lg-4 col-md-6 col-12">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h5>Atendimentos por Barbeiro</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="atendimentosPorBarbeiroChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lucro da Semana -->
+        <div class="col-lg-6 col-md-6 col-12">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h5>Lucro da Semana</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="lucroSemanaChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lucro do Mês -->
+        <div class="col-lg-6 col-md-6 col-12">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h5>Lucro do Mês</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="lucroMesChart"></canvas>
+                </div>
+            </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        // Passando os dados do servidor para o JavaScript
+        const agendamentosPorSemanaData = @Html.Raw(Json.Serialize(ViewBag.AgendamentosPorSemana));
+        const servicosMaisSolicitadosData = @Html.Raw(Json.Serialize(ViewBag.ServicosMaisSolicitados));
+        const lucroPorBarbeiroData = @Html.Raw(Json.Serialize(ViewBag.LucroPorBarbeiro));
+        const atendimentosPorBarbeiroData = @Html.Raw(Json.Serialize(ViewBag.AtendimentosPorBarbeiro));
+        const lucroDaSemanaData = @Html.Raw(Json.Serialize(ViewBag.LucroDaSemana));
+        const lucroDoMesData = @Html.Raw(Json.Serialize(ViewBag.LucroDoMes));
+    </script>
+    <script src="~/js/site.js"></script>
+}

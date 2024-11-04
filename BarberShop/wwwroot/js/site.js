@@ -301,13 +301,17 @@ if ($('#loginErrorToast').length > 0) {
         });
     }
 
-    // Lógica para a página de Solicitar Serviço
+// Lógica para a página de Solicitar Serviço
 if ($('#solicitarServicoPage').length > 0) {
     var servicosSelecionados = [];
     var valorTotal = 0;
     var duracaoTotal = 0;
 
     window.adicionarServico = function (id, nome, preco, duracao, element) {
+        // Substitui vírgula por ponto no preço antes de converter para número
+        preco = preco.replace(',', '.');
+        console.log("Adicionando serviço:", nome, "Preço:", preco, "Duração:", duracao);
+
         var index = servicosSelecionados.findIndex(servico => servico.id === id);
 
         if (index === -1) {
@@ -315,15 +319,21 @@ if ($('#solicitarServicoPage').length > 0) {
             valorTotal += parseFloat(preco);
             duracaoTotal += parseInt(duracao);
             $(element).prop('disabled', true);
+
+            console.log("Serviço adicionado:", servicosSelecionados);
+            console.log("Novo valor total (adicionado):", valorTotal);
         }
 
         atualizarListaServicosSelecionados();
     };
 
     window.removerServico = function (index, id) {
-        valorTotal -= parseFloat(servicosSelecionados[index].preco);
+        valorTotal -= parseFloat(servicosSelecionados[index].preco.toString().replace(',', '.'));
         duracaoTotal -= parseInt(servicosSelecionados[index].duracao);
         servicosSelecionados.splice(index, 1);
+
+        console.log("Serviço removido:", servicosSelecionados);
+        console.log("Novo valor total (removido):", valorTotal);
 
         $('#servico-' + id).prop('disabled', false);
         atualizarListaServicosSelecionados();
@@ -336,13 +346,14 @@ if ($('#solicitarServicoPage').length > 0) {
         servicosSelecionados.forEach(function (servico, index) {
             lista.append(
                 `<li class="list-group-item d-flex justify-content-between align-items-center">
-                    <span>${servico.nome} - R$ ${servico.preco}</span>
+                    <span>${servico.nome} - R$ ${parseFloat(servico.preco.replace(',', '.')).toFixed(2)}</span>
                     <button class="btn btn-danger btn-sm" onclick="removerServico(${index}, '${servico.id}')">Remover</button>
                 </li>`
             );
         });
 
         $('#valorTotal').text(valorTotal.toFixed(2));
+        console.log("Atualizando valor total exibido:", valorTotal.toFixed(2));
     }
 
     window.confirmarServico = function () {
@@ -352,6 +363,9 @@ if ($('#solicitarServicoPage').length > 0) {
         }
 
         var servicoIds = servicosSelecionados.map(s => s.id);
+
+        console.log("Serviços selecionados para confirmação:", servicosSelecionados);
+        console.log("Valor total para confirmação:", valorTotal);
 
         $('#loadingSpinner').fadeIn();
 
@@ -363,7 +377,7 @@ if ($('#solicitarServicoPage').length > 0) {
     var servicosArmazenados = JSON.parse(sessionStorage.getItem('servicosSelecionados')) || [];
     servicosArmazenados.forEach(function (servico) {
         servicosSelecionados.push(servico);
-        valorTotal += parseFloat(servico.preco);
+        valorTotal += parseFloat(servico.preco.toString().replace(',', '.'));
         duracaoTotal += parseInt(servico.duracao);
         $('#servico-' + servico.id).prop('disabled', true);
     });
@@ -861,137 +875,356 @@ if ($('#resumoAgendamentoPage').length > 0) {
         });
     }
 
-    if ($('#adminDashboard').length > 0) {
-        initCharts();
-    }
+// Lógica do login administrativo
+if ($('#adminLoginPageAdm').length > 0) {
+    console.log("Página de login administrativo carregada.");
 
-    function initCharts() {
-        // Gráfico de Agendamentos da Semana
-        const agendamentosSemanaChart = new Chart(document.getElementById('agendamentosSemanaChart').getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
-                datasets: [{
-                    label: 'Agendamentos',
-                    data: [5, 8, 3, 6, 7, 10, 2], // Dados fictícios
-                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
+    const mensagens = [
+        "Bem-vindo ao ambiente administrativo da BarberShop",
+        "O Ambiente administrativo perfeito para sua barbearia"
+    ];
+    let indiceMensagemAtual = 0;
 
-        // Gráfico de Serviços Mais Solicitados
-        const servicosMaisSolicitadosChart = new Chart(document.getElementById('servicosMaisSolicitadosChart').getContext('2d'), {
-            type: 'pie',
-            data: {
-                labels: ['Corte de Cabelo', 'Barba', 'Hidratação Capilar'],
-                datasets: [{
-                    data: [12, 8, 5], // Dados fictícios
-                    backgroundColor: ['rgba(255, 99, 132, 0.5)', 'rgba(54, 162, 235, 0.5)', 'rgba(255, 206, 86, 0.5)'],
-                    borderColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)'],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true
-            }
-        });
-
-        // Gráfico de Lucro por Barbeiro
-        const lucroPorBarbeiroChart = new Chart(document.getElementById('lucroPorBarbeiroChart').getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels: ['Rafael Souza', 'Thiago Ribeiro', 'Gustavo Martins', 'Leonardo Costa', 'Bruno Fernandes', 'Carol Momo'],
-                datasets: [{
-                    label: 'Lucro (R$)',
-                    data: [500, 700, 400, 600, 750, 300], // Dados fictícios de lucro
-                    backgroundColor: 'rgba(75, 192, 192, 0.5)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-
-        // Gráfico de Atendimentos por Barbeiro
-        const atendimentosPorBarbeiroChart = new Chart(document.getElementById('atendimentosPorBarbeiroChart').getContext('2d'), {
-            type: 'doughnut',
-            data: {
-                labels: ['Rafael Souza', 'Thiago Ribeiro', 'Gustavo Martins', 'Leonardo Costa', 'Bruno Fernandes', 'Carol Momo'],
-                datasets: [{
-                    data: [5, 7, 4, 6, 8, 3], // Dados fictícios de atendimentos
-                    backgroundColor: ['rgba(255, 99, 132, 0.5)', 'rgba(54, 162, 235, 0.5)', 'rgba(255, 206, 86, 0.5)', 'rgba(75, 192, 192, 0.5)', 'rgba(153, 102, 255, 0.5)', 'rgba(255, 159, 64, 0.5)'],
-                    borderColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)', 'rgba(75, 192, 192, 1)', 'rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)'],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true
-            }
-        });
-
-        // Gráfico de Lucro da Semana
-        const lucroSemanaChart = new Chart(document.getElementById('lucroSemanaChart').getContext('2d'), {
-            type: 'line',
-            data: {
-                labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
-                datasets: [{
-                    label: 'Lucro em R$',
-                    data: [200, 300, 250, 400, 350, 500, 450], // Dados fictícios
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 2,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-
-        // Gráfico de Lucro do Mês
-        const lucroMesChart = new Chart(document.getElementById('lucroMesChart').getContext('2d'), {
-            type: 'line',
-            data: {
-                labels: ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'],
-                datasets: [{
-                    label: 'Lucro em R$',
-                    data: [1500, 2000, 1800, 2200], // Dados fictícios
-                    backgroundColor: 'rgba(153, 102, 255, 0.2)',
-                    borderColor: 'rgba(153, 102, 255, 1)',
-                    borderWidth: 2,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
+    function atualizarMensagem() {
+        $('#adminWelcomeTextAdm').fadeOut(1000, function () {
+            $(this).text(mensagens[indiceMensagemAtual]).fadeIn(1000);
+            indiceMensagemAtual = (indiceMensagemAtual + 1) % mensagens.length;
         });
     }
+
+    setInterval(atualizarMensagem, 7000);
+
+    let tempoContagemRegressivaAdm = 30;
+    let intervaloContagemRegressivaAdm;
+
+    function iniciarContagemRegressivaAdm() {
+        console.log("Iniciando contagem regressiva...");
+        tempoContagemRegressivaAdm = 30;
+        $('#adminCountdownTimerAdm').text(tempoContagemRegressivaAdm);
+        $('#resendCodeLinkAdm').hide();
+        intervaloContagemRegressivaAdm = setInterval(function () {
+            tempoContagemRegressivaAdm--;
+            $('#adminCountdownTimerAdm').text(tempoContagemRegressivaAdm);
+            if (tempoContagemRegressivaAdm <= 0) {
+                clearInterval(intervaloContagemRegressivaAdm);
+                $('#resendCodeLinkAdm').show();
+                console.log("Contagem regressiva finalizada.");
+            }
+        }, 1000);
+    }
+
+    function validarEmailAdm(email) {
+        const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return regex.test(email);
+    }
+
+    $('#togglePasswordAdm').on('click', function () {
+        const campoSenha = $('#adminPasswordInputAdm');
+        const icone = $(this).find('i');
+
+        if (campoSenha.attr('type') === 'password') {
+            campoSenha.attr('type', 'text');
+            icone.removeClass('fa-eye').addClass('fa-eye-slash');
+        } else {
+            campoSenha.attr('type', 'password');
+            icone.removeClass('fa-eye-slash').addClass('fa-eye');
+        }
+    });
+
+    $('#adminLoginFormAdm').on('submit', function (e) {
+        e.preventDefault();
+        console.log("Tentativa de login administrativo.");
+
+        const email = $('#adminEmailInputAdm').val().trim();
+        const senha = $('#adminPasswordInputAdm').val().trim();
+
+        if (!validarEmailAdm(email)) {
+            showToast('Por favor, insira um e-mail válido.', 'danger');
+            return;
+        }
+
+        if (senha.length === 0) {
+            showToast('Por favor, insira sua senha.', 'danger');
+            return;
+        }
+
+        $('#adminFullScreenSpinnerAdm').fadeIn(); // Mostra o spinner
+        $('#adminSubmitButtonAdm').prop('disabled', true);
+
+        const formData = $(this).serialize();
+        $.ajax({
+            type: 'POST',
+            url: '/Login/AdminLogin',
+            data: formData,
+            success: function (data) {
+                $('#adminFullScreenSpinnerAdm').fadeOut(); // Esconde o spinner após sucesso
+                if (data.success) {
+                    console.log("Login administrativo bem-sucedido.");
+                    $('#usuarioIdFieldAdm').val(data.usuarioId);
+                    $('#adminSubmitButtonAdm').prop('disabled', false);
+                    $('#verificationModalAdm').modal('show');
+                    iniciarContagemRegressivaAdm();
+                } else {
+                    $('#adminSubmitButtonAdm').prop('disabled', false);
+                    showToast(data.message, 'danger');
+                    console.log("Erro no login administrativo:", data.message);
+                }
+            },
+            error: function (xhr, status, error) {
+                $('#adminFullScreenSpinnerAdm').fadeOut(); // Esconde o spinner após erro
+                $('#adminSubmitButtonAdm').prop('disabled', false);
+                showToast('Ocorreu um erro. Por favor, tente novamente.', 'danger');
+                console.log("Erro na requisição de login administrativo:", error);
+            }
+        });
+    });
+
+    $('#resendCodeAdm').on('click', function (e) {
+        e.preventDefault();
+        console.log("Solicitação de reenvio de código.");
+
+        const usuarioId = $('#usuarioIdFieldAdm').val();
+
+        $.ajax({
+            type: 'GET',
+            url: `/Login/ReenviarCodigoAdm?usuarioId=${usuarioId}`,
+            success: function (data) {
+                if (data.success) {
+                    showToast("Código de verificação reenviado!", 'info');
+                    iniciarContagemRegressivaAdm();
+                    console.log("Código de verificação reenviado com sucesso.");
+                } else {
+                    showToast(data.message, 'danger');
+                    console.log("Erro ao reenviar código:", data.message);
+                }
+            },
+            error: function (xhr, status, error) {
+                showToast('Erro ao reenviar o código. Tente novamente.', 'danger');
+                console.log("Erro na requisição de reenvio de código:", error);
+            }
+        });
+    });
+
+    $('#verificationFormAdm').on('submit', function (e) {
+        e.preventDefault();
+        console.log("Tentativa de verificação de código.");
+
+        $('#verifySpinnerAdm').show();
+        $('#VerifyCodeAdm').prop('disabled', true);
+
+        const dadosVerificacao = $(this).serialize();
+        $.ajax({
+            type: 'POST',
+            url: '/Login/VerificarAdminCodigo',
+            data: dadosVerificacao,
+            success: function (data) {
+                $('#verifySpinnerAdm').hide();
+                $('#VerifyCodeAdm').prop('disabled', false);
+
+                if (data.success) {
+                    console.log("Verificação de código bem-sucedida.");
+                    window.location.href = data.redirectUrl;
+                } else {
+                    $('#codeErrorMessageAdm').show();
+                    showToast(data.message, 'danger');
+                    console.log("Código inválido ou expirado:", data.message);
+                }
+            },
+            error: function (xhr, status, error) {
+                $('#verifySpinnerAdm').hide();
+                $('#VerifyCodeAdm').prop('disabled', false);
+                showToast('Erro ao verificar o código. Tente novamente.', 'danger');
+                console.log("Erro na requisição de verificação de código:", error);
+            }
+        });
+    });
+}
+
+
+
+
+
+
+
+// Variáveis globais para os gráficos
+let agendamentosSemanaChart;
+let servicosMaisSolicitadosChart;
+let lucroPorBarbeiroChart;
+let atendimentosPorBarbeiroChart;
+let lucroSemanaChart;
+let lucroMesChart;
+
+if ($('#adminDashboard').length > 0) {
+    initCharts();
+}
+
+function initCharts() {
+    // Função para destruir o gráfico, se ele já existir
+    function destroyChart(chart) {
+        if (chart) {
+            chart.destroy();
+        }
+    }
+
+    // Gráfico de Agendamentos da Semana
+    destroyChart(agendamentosSemanaChart);
+    agendamentosSemanaChart = new Chart(document.getElementById('agendamentosSemanaChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
+            datasets: [{
+                label: 'Agendamentos',
+                data: agendamentosPorSemanaData,  // Usando os dados do servidor
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: true, position: 'top', labels: { font: { size: 14 } } },
+                tooltip: { callbacks: { label: context => `Agendamentos: ${context.raw}` } }
+            },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 2, font: { size: 12 } }, title: { display: true, text: 'Número de Agendamentos' } },
+                x: { ticks: { font: { size: 12 } } }
+            }
+        }
+    });
+
+    // Gráfico de Serviços Mais Solicitados
+    destroyChart(servicosMaisSolicitadosChart);
+    servicosMaisSolicitadosChart = new Chart(document.getElementById('servicosMaisSolicitadosChart').getContext('2d'), {
+        type: 'pie',
+        data: {
+            labels: Object.keys(servicosMaisSolicitadosData),
+            datasets: [{
+                data: Object.values(servicosMaisSolicitadosData),
+                backgroundColor: ['rgba(255, 99, 132, 0.5)', 'rgba(54, 162, 235, 0.5)', 'rgba(255, 206, 86, 0.5)'],
+                borderColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: true, position: 'bottom', labels: { font: { size: 14 } } },
+                tooltip: { callbacks: { label: context => `Quantidade: ${context.raw}` } }
+            }
+        }
+    });
+
+    // Gráfico de Lucro por Barbeiro
+    destroyChart(lucroPorBarbeiroChart);
+    lucroPorBarbeiroChart = new Chart(document.getElementById('lucroPorBarbeiroChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: Object.keys(lucroPorBarbeiroData),
+            datasets: [{
+                label: 'Lucro (R$)',
+                data: Object.values(lucroPorBarbeiroData),
+                backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: true, labels: { font: { size: 14 } } },
+                tooltip: { callbacks: { label: context => `Lucro: R$${context.raw}` } }
+            },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 100, font: { size: 12 } }, title: { display: true, text: 'Lucro em R$' } },
+                x: { ticks: { font: { size: 12 } } }
+            }
+        }
+    });
+
+    // Gráfico de Atendimentos por Barbeiro
+    destroyChart(atendimentosPorBarbeiroChart);
+    atendimentosPorBarbeiroChart = new Chart(document.getElementById('atendimentosPorBarbeiroChart').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(atendimentosPorBarbeiroData),
+            datasets: [{
+                data: Object.values(atendimentosPorBarbeiroData),
+                backgroundColor: ['rgba(255, 99, 132, 0.5)', 'rgba(54, 162, 235, 0.5)', 'rgba(255, 206, 86, 0.5)', 'rgba(75, 192, 192, 0.5)', 'rgba(153, 102, 255, 0.5)', 'rgba(255, 159, 64, 0.5)'],
+                borderColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)', 'rgba(75, 192, 192, 1)', 'rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: true, position: 'bottom', labels: { font: { size: 14 } } },
+                tooltip: { callbacks: { label: context => `Atendimentos: ${context.raw}` } }
+            }
+        }
+    });
+
+    // Gráfico de Lucro da Semana
+    destroyChart(lucroSemanaChart);
+    lucroSemanaChart = new Chart(document.getElementById('lucroSemanaChart').getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
+            datasets: [{
+                label: 'Lucro em R$',
+                data: lucroDaSemanaData,
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2,
+                fill: true,
+                pointStyle: 'circle',
+                pointRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: true, labels: { font: { size: 14 } } },
+                tooltip: { callbacks: { label: context => `Lucro: R$${context.raw}` } }
+            },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 100, font: { size: 12 } }, title: { display: true, text: 'Lucro em R$' } },
+                x: { ticks: { font: { size: 12 } } }
+            }
+        }
+    });
+
+    // Gráfico de Lucro do Mês
+    destroyChart(lucroMesChart);
+    lucroMesChart = new Chart(document.getElementById('lucroMesChart').getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'],
+            datasets: [{
+                label: 'Lucro em R$',
+                data: lucroDoMesData,
+                backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                borderColor: 'rgba(153, 102, 255, 1)',
+                borderWidth: 2,
+                fill: true,
+                pointStyle: 'rectRot',
+                pointRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: true, labels: { font: { size: 14 } } },
+                tooltip: { callbacks: { label: context => `Lucro: R$${context.raw}` } }
+            },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 500, font: { size: 12 } }, title: { display: true, text: 'Lucro em R$' } },
+                x: { ticks: { font: { size: 12 } } }
+            }
+        }
+    });
+}
+
+
+
 });

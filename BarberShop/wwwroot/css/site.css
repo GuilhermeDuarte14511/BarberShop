@@ -3,10 +3,129 @@ body {
     background-color: #1c1c1c;
     font-family: 'Poppins', sans-serif;
     color: #ecf0f1;
-    height: 100vh;
+    min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
+    overflow-x: hidden;
+}
+
+/* Container principal da página de solicitação de serviço */
+#solicitarServicoPage .containe {
+    padding: 2rem;
+    max-width: 100%;
+    overflow-y: auto;
+}
+
+/* Lista de Serviços Disponíveis */
+#solicitarServicoPage .list-group {
+    max-height: 70vh;
+    overflow-y: auto;
+    background-color: #2b2b2b;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 2rem;
+}
+
+#solicitarServicoPage .list-group-item {
+    background-color: #34495e;
+    border: none;
+    color: #ecf0f1;
+    margin-bottom: 0.5rem;
+    border-radius: 5px;
+}
+
+/* Títulos */
+#solicitarServicoPage h4 {
+    color: #e74c3c;
+    font-weight: bold;
+    margin-bottom: 1rem;
+}
+
+/* Botões de adicionar */
+#solicitarServicoPage .btn-success {
+    background-color: #27ae60;
+    border-color: #27ae60;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+    #solicitarServicoPage .btn-success:hover {
+        background-color: #229954;
+        border-color: #229954;
+    }
+
+/* Total e confirmação */
+#solicitarServicoPage .text-warning {
+    color: #f39c12;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+#solicitarServicoPage .btn-primary {
+    background-color: #3498db;
+    border-color: #3498db;
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+    #solicitarServicoPage .btn-primary:hover {
+        background-color: #2980b9;
+        border-color: #2980b9;
+    }
+
+/* Botão de voltar */
+#solicitarServicoPage .btn-secondary {
+    background-color: #7f8c8d;
+    border-color: #7f8c8d;
+    font-size: 1rem;
+    width: 100%;
+    padding: 10px;
+}
+
+    #solicitarServicoPage .btn-secondary:hover {
+        background-color: #6c7a7a;
+        border-color: #6c7a7a;
+    }
+
+/* Scroll personalizado para listas */
+#solicitarServicoPage .list-group {
+    scrollbar-width: thin;
+    scrollbar-color: #34495e #2b2b2b;
+}
+
+    #solicitarServicoPage .list-group::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    #solicitarServicoPage .list-group::-webkit-scrollbar-track {
+        background: #2b2b2b;
+    }
+
+    #solicitarServicoPage .list-group::-webkit-scrollbar-thumb {
+        background-color: #34495e;
+        border-radius: 5px;
+    }
+
+/* Ajustes de layout responsivo */
+@media (max-width: 768px) {
+    #solicitarServicoPage .containe {
+        padding: 1rem;
+    }
+
+    #solicitarServicoPage h4 {
+        font-size: 1.2rem;
+    }
+
+    #solicitarServicoPage .list-group {
+        max-height: 50vh;
+    }
+
+    #solicitarServicoPage .btn-primary, #solicitarServicoPage .btn-secondary {
+        font-size: 0.9rem;
+    }
 }
 
 /* Estilos de contêiner e inputs */
@@ -301,7 +420,7 @@ body {
     background-color: #25D366;
     color: white;
     border-radius: 30px;
-    padding: 10px 20px; /* Ajuste de largura e altura */
+    padding: 10px 20px;
     font-size: 20px;
     z-index: 1000;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
@@ -320,52 +439,59 @@ body {
         transform: scale(1.1);
     }
 
+
+/* Dashboard Administrativo CSS */
+#adminDashboard {
+    font-family: 'Poppins', sans-serif;
+}
+
+.card {
+    border-radius: 15px;
+    overflow: hidden;
+    background-color: #2b2b2b;
+    color: #ecf0f1;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.card-header {
+    background-color: #343a40;
+    border-bottom: none;
+}
+
+.card h5 {
+    font-weight: 600;
+}
+
 /* Responsivo para Dispositivos Móveis */
 @media (max-width: 768px) {
-    .table-responsive {
-        display: none;
-    }
-
-    .d-md-none {
-        max-height: calc(100vh - 20px);
-        overflow-y: auto;
-        padding-top: 150px;
-        padding-bottom: 10px;
-    }
-
-    .card {
-        margin: 5px;
-        background-color: #2b2b2b;
-        color: #ecf0f1;
-        padding: 15px;
-        border-radius: 8px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .barbeiro-card p {
-        margin: 5px 0;
-        font-size: 0.9rem;
-    }
-
-    .btn {
-        font-size: 0.9rem;
-        padding: 8px 12px;
-    }
-
-    /* Cards de barbeiros em colunas únicas */
-    .col-md-4 {
+    #adminDashboard .col-lg-4,
+    #adminDashboard .col-md-6,
+    #adminDashboard .col-12 {
         flex: 0 0 100%;
         max-width: 100%;
     }
 
-    /* Ajuste para melhorar o espaçamento no topo */
-    #escolherBarbeiroPage {
-        padding-top: 350px;
+    /* Ajuste de altura dos gráficos em mobile */
+    .card-body canvas {
+        height: 250px !important;
     }
 }
 
-@media (min-width: 769px) {
-    .barbeiros-list {
-        display: none;
+/* Responsivo para Desktops */
+@media (min-width: 992px) {
+    /* Para desktop, mantém 2 ou 3 colunas */
+    .col-lg-4 {
+        flex: 0 0 33.3333%;
+        max-width: 33.3333%;
+    }
+
+    .col-lg-6 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+
+    /* Ajuste de altura dos gráficos em desktop */
+    .card-body canvas {
+        height: 300px !important;
     }
 }

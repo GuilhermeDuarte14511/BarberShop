@@ -1,6 +1,8 @@
 ﻿using BarberShop.Domain.Entities;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace BarberShop.Application.Services
 {
@@ -23,5 +25,18 @@ namespace BarberShop.Application.Services
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             return new ClaimsPrincipal(claimsIdentity);
         }
+
+        public bool VerifyPassword(string senha, string senhaHash)
+        {
+            using var sha256 = SHA256.Create();
+            var hashBytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(senha));
+            var hashedPassword = new StringBuilder();
+            foreach (var b in hashBytes)
+            {
+                hashedPassword.Append(b.ToString("x2"));
+            }
+            return hashedPassword.ToString() == senhaHash;
+        }
+
     }
 }

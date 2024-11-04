@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Stripe;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -65,6 +66,8 @@ builder.Services.AddScoped<IBarbeiroRepository, BarbeiroRepository>();
 builder.Services.AddScoped<IServicoRepository, ServicoRepository>();
 builder.Services.AddScoped<IAgendamentoRepository, AgendamentoRepository>();
 builder.Services.AddScoped<IRepository<AgendamentoServico>, AgendamentoServicoRepository>();
+builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>(); // Repositório para usuário
+builder.Services.AddScoped<IDashboardRepository, DashboardRepository>(); // Repositório para Dashboard
 
 // Registrar serviços da camada de aplicação
 builder.Services.AddScoped<IClienteService, ClienteService>();
@@ -91,6 +94,22 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+// Middleware para redirecionar para login de admin se a URL contiver "admin"
+app.Use(async (context, next) =>
+{
+    if (context.Request.Host.Host.Contains("admin", StringComparison.OrdinalIgnoreCase))
+    {
+        // Se o usuário não estiver autenticado ou não for admin, redireciona para /Admin/Login
+        if (!context.User.Identity.IsAuthenticated || !context.User.IsInRole("Admin"))
+        {
+            context.Response.Redirect("/Login/AdminLogin");
+            return;
+        }
+    }
+
+    await next();
+});
+
 // Configurar pipeline de processamento de requisições HTTP
 if (!app.Environment.IsDevelopment())
 {
@@ -115,9 +134,15 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Mapeamento de Rotas
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Login}/{action=Login}/{id?}");
+
+app.MapControllerRoute(
+    name: "adminLogin",
+    pattern: "Admin/Login",
+    defaults: new { controller = "Login", action = "AdminLogin" });
 
 // Inicializa o consumidor RabbitMQ ao iniciar o aplicativo (Comentado)
 /*
