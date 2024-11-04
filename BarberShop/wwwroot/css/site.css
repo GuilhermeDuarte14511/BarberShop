@@ -462,6 +462,25 @@ body {
     font-weight: 600;
 }
 
+/* Spinner */
+#adminFullScreenSpinnerAdm {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1050;
+    background-color: rgba(0, 0, 0, 0.8);
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+    #adminFullScreenSpinnerAdm p {
+        color: #ecf0f1;
+    }
+
 /* Responsivo para Dispositivos Móveis */
 @media (max-width: 768px) {
     #adminDashboard .col-lg-4,
