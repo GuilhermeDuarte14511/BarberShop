@@ -1045,185 +1045,325 @@
 
 
 
-
-    // Variáveis globais para os gráficos
-    let agendamentosSemanaChart;
-    let servicosMaisSolicitadosChart;
-    let lucroPorBarbeiroChart;
-    let atendimentosPorBarbeiroChart;
-    let lucroSemanaChart;
-    let lucroMesChart;
-
+    // Verifica se está na página do dashboard administrativo
     if ($('#adminDashboard').length > 0) {
-        initCharts();
-    }
+        console.log("Dashboard administrativo detectado - Carregando dados...");
 
-    function initCharts() {
-        // Função para destruir o gráfico, se ele já existir
-        function destroyChart(chart) {
-            if (chart) {
-                chart.destroy();
+        let customCharts = []; // Array para armazenar gráficos personalizados
+        let loadReportDataUsuario = false; // Variável de controle para evitar chamadas duplicadas
+
+        // Inicialização dos gráficos e habilitação da funcionalidade de arrastar
+        fetchDashboardData();
+        enableSortable();
+        loadChartPositions(); // Carregar posições dos gráficos salvas no banco
+
+        // Verifica se a função loadUserReports já foi chamada
+        if (!loadReportDataUsuario) {
+            const usuarioId = $('#UserIdAdm').val();
+            console.log('Esse é o ID do usuário:', usuarioId);
+            loadUserReports(usuarioId);
+            loadReportDataUsuario = true;
+        }
+
+        $('#addReportButton').on('click', addReportHandler); // Evento para adicionar relatórios
+
+        // Função principal para buscar e renderizar os dados
+        async function fetchDashboardData() {
+            console.log("Buscando dados para gráficos...");
+            try {
+                const response = await $.ajax({
+                    url: "/Dashboard/GetDashboardData",
+                    method: "GET",
+                });
+                console.log("Dados recebidos para gráficos:", response);
+                initializeDashboardCharts(response);
+            } catch (error) {
+                console.log("Erro ao obter dados do dashboard:", error);
             }
         }
 
-        // Gráfico de Agendamentos da Semana
-        destroyChart(agendamentosSemanaChart);
-        agendamentosSemanaChart = new Chart(document.getElementById('agendamentosSemanaChart').getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
-                datasets: [{
-                    label: 'Agendamentos',
-                    data: agendamentosPorSemanaData,  // Usando os dados do servidor
-                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { display: true, position: 'top', labels: { font: { size: 14 } } },
-                    tooltip: { callbacks: { label: context => `Agendamentos: ${context.raw}` } }
+        // Função para carregar relatórios salvos do usuário
+        async function loadUserReports(usuarioId) {
+            try {
+                const response = await $.ajax({
+                    url: `/Dashboard/LoadUserReports?usuarioId=${usuarioId}`,
+                    method: "GET",
+                });
+
+                const reportTitles = {
+                    "agendamentosPorStatus": "Agendamentos por Status",
+                    "servicosMaisSolicitados": "Serviços Mais Solicitados",
+                    "lucroPorFormaPagamento": "Lucro por Forma de Pagamento",
+                    "atendimentosPorBarbeiro": "Atendimentos por Barbeiro",
+                    "clientesFrequentes": "Clientes Frequentes",
+                    "pagamentosPorStatus": "Pagamentos por Status",
+                    "servicosPorPreco": "Serviços por Faixa de Preço",
+                    "lucroPorPeriodo": "Lucro Diário/Semanal/Mensal",
+                    "tempoMedioPorServico": "Tempo Médio por Tipo de Serviço",
+                    "agendamentosCancelados": "Agendamentos Cancelados"
+                };
+
+                response.forEach(report => {
+                    const data = JSON.parse(report.configuracoes);
+                    const title = reportTitles[report.tipoRelatorio] || report.tipoRelatorio;
+
+                    const ctxId = `customChart${customCharts.length}`;
+                    $('#dashboard-container').append(`
+                    <div class="col-lg-4 col-md-6 col-12 dashboard-card" id="${ctxId}Card">
+                        <div class="card">
+                            <div class="card-header text-center">
+                                <h5>${title}</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="${ctxId}"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                `);
+
+                    const customChart = initializeChart(
+                        null,
+                        ctxId,
+                        createChartConfig('bar', Object.values(data), title, Object.keys(data))
+                    );
+
+                    customCharts.push(customChart);
+                });
+            } catch (error) {
+                console.log("Erro ao carregar relatórios do usuário:", error);
+            }
+        }
+
+        // Função para inicializar gráficos
+        function initializeDashboardCharts(data) {
+            if (data.agendamentosPorSemana && $('#agendamentosSemanaChart').length) {
+                console.log("Renderizando Agendamentos da Semana");
+                initializeChart(
+                    null,
+                    'agendamentosSemanaChart',
+                    createChartConfig('bar', data.agendamentosPorSemana, 'Agendamentos', ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'])
+                );
+            }
+
+            if (data.servicosMaisSolicitados && $('#servicosMaisSolicitadosChart').length) {
+                console.log("Renderizando Serviços Mais Solicitados");
+                initializeChart(
+                    null,
+                    'servicosMaisSolicitadosChart',
+                    createChartConfig('pie', Object.values(data.servicosMaisSolicitados), 'Serviços Mais Solicitados', Object.keys(data.servicosMaisSolicitados))
+                );
+            }
+
+            if (data.lucroPorBarbeiro && $('#lucroPorBarbeiroChart').length) {
+                console.log("Renderizando Lucro por Barbeiro");
+                initializeChart(
+                    null,
+                    'lucroPorBarbeiroChart',
+                    createChartConfig('bar', Object.values(data.lucroPorBarbeiro), 'Lucro por Barbeiro', Object.keys(data.lucroPorBarbeiro))
+                );
+            }
+
+            if (data.atendimentosPorBarbeiro && $('#atendimentosPorBarbeiroChart').length) {
+                console.log("Renderizando Atendimentos por Barbeiro");
+                initializeChart(
+                    null,
+                    'atendimentosPorBarbeiroChart',
+                    createChartConfig('doughnut', Object.values(data.atendimentosPorBarbeiro), 'Atendimentos por Barbeiro', Object.keys(data.atendimentosPorBarbeiro))
+                );
+            }
+
+            if (data.lucroDaSemana && $('#lucroSemanaChart').length) {
+                console.log("Renderizando Lucro da Semana");
+                initializeChart(
+                    null,
+                    'lucroSemanaChart',
+                    createChartConfig('line', data.lucroDaSemana, 'Lucro da Semana', ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'])
+                );
+            }
+
+            if (data.lucroDoMes && $('#lucroMesChart').length) {
+                console.log("Renderizando Lucro do Mês");
+                initializeChart(
+                    null,
+                    'lucroMesChart',
+                    createChartConfig('line', data.lucroDoMes, 'Lucro do Mês', ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'])
+                );
+            }
+        }
+
+        function initializeChart(chart, ctxId, config) {
+            const ctx = document.getElementById(ctxId);
+            if (chart instanceof Chart) chart.destroy();
+            const existingChart = Chart.getChart(ctxId);
+            if (existingChart) existingChart.destroy();
+            return ctx && ctx.getContext ? new Chart(ctx.getContext('2d'), config) : null;
+        }
+
+        // Função para adicionar relatórios personalizados
+        function addReportHandler() {
+            const reportType = $('#reportType').val();
+            const periodDays = parseInt($('#reportPeriod').val());
+
+            $.ajax({
+                url: `/Dashboard/GetCustomReportData?reportType=${reportType}&periodDays=${periodDays}`,
+                method: "GET",
+                success: function (data) {
+                    const reportTitles = {
+                        "agendamentosPorStatus": "Agendamentos por Status",
+                        "servicosMaisSolicitados": "Serviços Mais Solicitados",
+                        "lucroPorFormaPagamento": "Lucro por Forma de Pagamento",
+                        "atendimentosPorBarbeiro": "Atendimentos por Barbeiro",
+                        "clientesFrequentes": "Clientes Frequentes",
+                        "pagamentosPorStatus": "Pagamentos por Status",
+                        "servicosPorPreco": "Serviços por Faixa de Preço",
+                        "lucroPorPeriodo": "Lucro Diário/Semanal/Mensal",
+                        "tempoMedioPorServico": "Tempo Médio por Tipo de Serviço",
+                        "agendamentosCancelados": "Agendamentos Cancelados"
+                    };
+                    const ctxId = `customChart${customCharts.length}`;
+                    const title = reportTitles[reportType] || reportType;
+
+                    $('#dashboard-container').append(`
+                    <div class="col-lg-4 col-md-6 col-12 dashboard-card" id="${ctxId}Card">
+                        <div class="card">
+                            <div class="card-header text-center">
+                                <h5>${title}</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="${ctxId}"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                `);
+
+                    const customChart = initializeChart(
+                        null,
+                        ctxId,
+                        createChartConfig('bar', Object.values(data), title, Object.keys(data))
+                    );
+
+                    customCharts.push(customChart);
+                    saveCustomReport(reportType, periodDays, data);
+                    $('#addReportModal').modal('hide');
                 },
-                scales: {
-                    y: { beginAtZero: true, ticks: { stepSize: 2, font: { size: 12 } }, title: { display: true, text: 'Número de Agendamentos' } },
-                    x: { ticks: { font: { size: 12 } } }
+                error: function () {
+                    showToast("Erro ao carregar relatório", "danger");
                 }
-            }
-        });
+            });
+        }
 
-        // Gráfico de Serviços Mais Solicitados
-        destroyChart(servicosMaisSolicitadosChart);
-        servicosMaisSolicitadosChart = new Chart(document.getElementById('servicosMaisSolicitadosChart').getContext('2d'), {
-            type: 'pie',
-            data: {
-                labels: Object.keys(servicosMaisSolicitadosData),
-                datasets: [{
-                    data: Object.values(servicosMaisSolicitadosData),
-                    backgroundColor: ['rgba(255, 99, 132, 0.5)', 'rgba(54, 162, 235, 0.5)', 'rgba(255, 206, 86, 0.5)'],
-                    borderColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)'],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { display: true, position: 'bottom', labels: { font: { size: 14 } } },
-                    tooltip: { callbacks: { label: context => `Quantidade: ${context.raw}` } }
-                }
-            }
-        });
+        function saveCustomReport(reportType, periodDays, data) {
+            const relatorioPersonalizado = {
+                usuarioId: $('#UserIdAdm').val(),
+                tipoRelatorio: reportType,
+                periodoDias: periodDays,
+                configuracoes: JSON.stringify(data)
+            };
 
-        // Gráfico de Lucro por Barbeiro
-        destroyChart(lucroPorBarbeiroChart);
-        lucroPorBarbeiroChart = new Chart(document.getElementById('lucroPorBarbeiroChart').getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels: Object.keys(lucroPorBarbeiroData),
-                datasets: [{
-                    label: 'Lucro (R$)',
-                    data: Object.values(lucroPorBarbeiroData),
-                    backgroundColor: 'rgba(75, 192, 192, 0.5)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { display: true, labels: { font: { size: 14 } } },
-                    tooltip: { callbacks: { label: context => `Lucro: R$${context.raw}` } }
+            $.ajax({
+                url: "/Dashboard/SaveCustomReport",
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(relatorioPersonalizado),
+                success: function () {
+                    showToast("Relatório salvo com sucesso", "success");
                 },
-                scales: {
-                    y: { beginAtZero: true, ticks: { stepSize: 100, font: { size: 12 } }, title: { display: true, text: 'Lucro em R$' } },
-                    x: { ticks: { font: { size: 12 } } }
+                error: function () {
+                    showToast("Erro ao salvar relatório", "danger");
                 }
-            }
-        });
+            });
+        }
 
-        // Gráfico de Atendimentos por Barbeiro
-        destroyChart(atendimentosPorBarbeiroChart);
-        atendimentosPorBarbeiroChart = new Chart(document.getElementById('atendimentosPorBarbeiroChart').getContext('2d'), {
-            type: 'doughnut',
-            data: {
-                labels: Object.keys(atendimentosPorBarbeiroData),
-                datasets: [{
-                    data: Object.values(atendimentosPorBarbeiroData),
-                    backgroundColor: ['rgba(255, 99, 132, 0.5)', 'rgba(54, 162, 235, 0.5)', 'rgba(255, 206, 86, 0.5)', 'rgba(75, 192, 192, 0.5)', 'rgba(153, 102, 255, 0.5)', 'rgba(255, 159, 64, 0.5)'],
-                    borderColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)', 'rgba(75, 192, 192, 1)', 'rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)'],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { display: true, position: 'bottom', labels: { font: { size: 14 } } },
-                    tooltip: { callbacks: { label: context => `Atendimentos: ${context.raw}` } }
-                }
-            }
-        });
+        function saveChartPositions() {
+            const positions = [];
+            $('.dashboard-card').each(function (index) {
+                positions.push({
+                    GraficoId: $(this).attr('id'),
+                    Posicao: index,
+                    UsuarioId: $('#UserIdAdm').val()
+                });
+            });
 
-        // Gráfico de Lucro da Semana
-        destroyChart(lucroSemanaChart);
-        lucroSemanaChart = new Chart(document.getElementById('lucroSemanaChart').getContext('2d'), {
-            type: 'line',
-            data: {
-                labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
-                datasets: [{
-                    label: 'Lucro em R$',
-                    data: lucroDaSemanaData,
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 2,
-                    fill: true,
-                    pointStyle: 'circle',
-                    pointRadius: 5
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { display: true, labels: { font: { size: 14 } } },
-                    tooltip: { callbacks: { label: context => `Lucro: R$${context.raw}` } }
+            $.ajax({
+                url: "/Dashboard/SaveChartPositions",
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(positions),
+                success: function () {
+                    showToast("Posição dos gráficos salva com sucesso", "success");
                 },
-                scales: {
-                    y: { beginAtZero: true, ticks: { stepSize: 100, font: { size: 12 } }, title: { display: true, text: 'Lucro em R$' } },
-                    x: { ticks: { font: { size: 12 } } }
+                error: function () {
+                    showToast("Erro ao salvar posição dos gráficos", "danger");
                 }
-            }
-        });
+            });
+        }
 
-        // Gráfico de Lucro do Mês
-        destroyChart(lucroMesChart);
-        lucroMesChart = new Chart(document.getElementById('lucroMesChart').getContext('2d'), {
-            type: 'line',
-            data: {
-                labels: ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'],
-                datasets: [{
-                    label: 'Lucro em R$',
-                    data: lucroDoMesData,
-                    backgroundColor: 'rgba(153, 102, 255, 0.2)',
-                    borderColor: 'rgba(153, 102, 255, 1)',
-                    borderWidth: 2,
-                    fill: true,
-                    pointStyle: 'rectRot',
-                    pointRadius: 6
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { display: true, labels: { font: { size: 14 } } },
-                    tooltip: { callbacks: { label: context => `Lucro: R$${context.raw}` } }
+        function loadChartPositions() {
+            $.ajax({
+                url: "/Dashboard/GetChartPositions",
+                method: "GET",
+                data: { usuarioId: $('#UserIdAdm').val() },
+                success: function (positions) {
+                    positions.forEach(pos => {
+                        const chartCard = $(`#${pos.GraficoId}`);
+                        $('#dashboard-container').append(chartCard);
+                    });
                 },
-                scales: {
-                    y: { beginAtZero: true, ticks: { stepSize: 500, font: { size: 12 } }, title: { display: true, text: 'Lucro em R$' } },
-                    x: { ticks: { font: { size: 12 } } }
+                error: function () {
+                    console.log("Erro ao carregar posições dos gráficos.");
                 }
-            }
-        });
+            });
+        }
+
+        function enableSortable() {
+            $(".sortable").sortable({
+                handle: ".card-header",
+                update: function () {
+                    saveChartPositions();
+                }
+            });
+        }
+
+        // Função para criar configurações de gráficos
+        function createChartConfig(type, data, label, labels) {
+            return {
+                type: type,
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: label,
+                        data: data,
+                        backgroundColor: generateBackgroundColors(data.length),
+                        borderColor: generateBorderColors(data.length),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: true, labels: { font: { size: 14 } } },
+                        tooltip: { callbacks: { label: context => `${label}: ${context.raw}` } }
+                    },
+                    scales: type !== 'pie' && type !== 'doughnut' ? {
+                        y: { beginAtZero: true, title: { display: true, text: label } },
+                        x: { ticks: { font: { size: 12 } } }
+                    } : {}
+                }
+            };
+        }
+
+        // Funções para gerar cores de fundo e borda
+        function generateBackgroundColors(count) {
+            const colors = ['rgba(255, 99, 132, 0.5)', 'rgba(54, 162, 235, 0.5)', 'rgba(255, 206, 86, 0.5)', 'rgba(75, 192, 192, 0.5)'];
+            return Array.from({ length: count }, (_, i) => colors[i % colors.length]);
+        }
+
+        function generateBorderColors(count) {
+            const colors = ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)', 'rgba(75, 192, 192, 1)'];
+            return Array.from({ length: count }, (_, i) => colors[i % colors.length]);
+        }
     }
+
 
 
 

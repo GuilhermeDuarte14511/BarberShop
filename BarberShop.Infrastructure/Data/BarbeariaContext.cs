@@ -5,7 +5,6 @@ namespace BarberShop.Infrastructure.Data
 {
     public class BarbeariaContext : DbContext
     {
-        // Construtor necessário para o Entity Framework
         public BarbeariaContext(DbContextOptions<BarbeariaContext> options)
             : base(options)
         {
@@ -19,11 +18,12 @@ namespace BarberShop.Infrastructure.Data
         public DbSet<AgendamentoServico> AgendamentoServicos { get; set; }
         public DbSet<Log> Logs { get; set; }
         public DbSet<Pagamento> Pagamentos { get; set; }
+        public DbSet<Usuario> Usuarios { get; set; }
+        public DbSet<RelatorioPersonalizado> RelatoriosPersonalizados { get; set; } // Novo DbSet para RelatorioPersonalizado
 
-        public DbSet<Usuario> Usuarios { get; set; } // Novo DbSet para Usuario
+        public DbSet<GraficoPosicao> GraficoPosicao { get; set; }
 
 
-        // Configuração adicional
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Definir chave composta para a entidade AgendamentoServico
@@ -42,7 +42,6 @@ namespace BarberShop.Infrastructure.Data
                 .Property(p => p.ValorPago)
                 .HasColumnType("decimal(18,2)");
 
-
             // Configuração para a entidade Usuario
             modelBuilder.Entity<Usuario>()
                 .Property(u => u.Email)
@@ -52,7 +51,13 @@ namespace BarberShop.Infrastructure.Data
             modelBuilder.Entity<Usuario>()
                 .HasIndex(u => u.Email)
                 .IsUnique();
-            // Outras configurações podem ser feitas aqui
+
+            // Configuração para RelatorioPersonalizado
+            modelBuilder.Entity<RelatorioPersonalizado>()
+                .HasOne(r => r.Usuario)
+                .WithMany(u => u.RelatoriosPersonalizados) // Assumindo que a propriedade de navegação foi adicionada em Usuario
+                .HasForeignKey(r => r.UsuarioId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

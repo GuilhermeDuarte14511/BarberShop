@@ -3,12 +3,24 @@
 }
 
 <div id="adminDashboard" class="container-fluid p-4">
-    <h2 class="text-center">Bem-vindo ao Dashboard Administrativo</h2>
+    <input type="hidden" id="UserIdAdm" value="@ViewData["UserId"]" />
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Bem-vindo ao Dashboard Administrativo</h2>
+        <div>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addReportModal">
+                Adicionar Relatório
+            </button>
+            <!-- Botão oculto inicialmente para salvar posições -->
+            <button class="btn btn-success d-none" id="savePositionsButton">
+                Salvar Posições
+            </button>
+        </div>
+    </div>
     <p class="text-center">Esse é o painel principal do sistema administrativo da barbearia.</p>
 
-    <div class="row mt-4 g-4">
+    <div id="dashboard-container" class="row mt-4 g-4 sortable">
         <!-- Agendamentos da Semana -->
-        <div class="col-lg-4 col-md-6 col-12">
+        <div class="col-lg-4 col-md-6 col-12 dashboard-card" id="agendamentosSemanaChartCard">
             <div class="card">
                 <div class="card-header text-center">
                     <h5>Agendamentos da Semana</h5>
@@ -20,7 +32,7 @@
         </div>
 
         <!-- Serviços Mais Solicitados -->
-        <div class="col-lg-4 col-md-6 col-12">
+        <div class="col-lg-4 col-md-6 col-12 dashboard-card" id="servicosMaisSolicitadosChartCard">
             <div class="card">
                 <div class="card-header text-center">
                     <h5>Serviços Mais Solicitados</h5>
@@ -32,7 +44,7 @@
         </div>
 
         <!-- Lucro por Barbeiro -->
-        <div class="col-lg-4 col-md-6 col-12">
+        <div class="col-lg-4 col-md-6 col-12 dashboard-card" id="lucroPorBarbeiroChartCard">
             <div class="card">
                 <div class="card-header text-center">
                     <h5>Lucro por Barbeiro</h5>
@@ -44,7 +56,7 @@
         </div>
 
         <!-- Atendimentos por Barbeiro -->
-        <div class="col-lg-4 col-md-6 col-12">
+        <div class="col-lg-4 col-md-6 col-12 dashboard-card" id="atendimentosPorBarbeiroChartCard">
             <div class="card">
                 <div class="card-header text-center">
                     <h5>Atendimentos por Barbeiro</h5>
@@ -56,7 +68,7 @@
         </div>
 
         <!-- Lucro da Semana -->
-        <div class="col-lg-6 col-md-6 col-12">
+        <div class="col-lg-6 col-md-6 col-12 dashboard-card" id="lucroSemanaChartCard">
             <div class="card">
                 <div class="card-header text-center">
                     <h5>Lucro da Semana</h5>
@@ -68,7 +80,7 @@
         </div>
 
         <!-- Lucro do Mês -->
-        <div class="col-lg-6 col-md-6 col-12">
+        <div class="col-lg-6 col-md-6 col-12 dashboard-card" id="lucroMesChartCard">
             <div class="card">
                 <div class="card-header text-center">
                     <h5>Lucro do Mês</h5>
@@ -81,15 +93,62 @@
     </div>
 </div>
 
-@section Scripts {
-    <script>
-        // Passando os dados do servidor para o JavaScript
-        const agendamentosPorSemanaData = @Html.Raw(Json.Serialize(ViewBag.AgendamentosPorSemana));
-        const servicosMaisSolicitadosData = @Html.Raw(Json.Serialize(ViewBag.ServicosMaisSolicitados));
+<!-- Modal para criação de relatórios personalizados -->
+<div class="modal fade" id="addReportModal" tabindex="-1" aria-labelledby="addReportModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addReportModalLabel">Criar Novo Relatório</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createReportForm">
+                    <div class="mb-3">
+                        <label for="reportType" class="form-label">Tipo de Relatório</label>
+                        <select id="reportType" class="form-select">
+                            <option value="agendamentosPorStatus">Agendamentos por Status</option>
+                            <option value="servicosMaisSolicitados">Serviços Mais Solicitados</option>
+                            <option value="lucroPorFormaPagamento">Lucro por Forma de Pagamento</option>
+                            <option value="atendimentosPorBarbeiro">Atendimentos por Barbeiro</option>
+                            <option value="clientesFrequentes">Clientes Frequentes</option>
+                            <option value="pagamentosPorStatus">Pagamentos por Status</option>
+                            <option value="servicosPorPreco">Serviços por Faixa de Preço</option>
+                            <option value="lucroPorPeriodo">Lucro Diário/Semanal/Mensal</option>
+                            <option value="tempoMedioPorServico">Tempo Médio por Tipo de Serviço</option>
+                            <option value="agendamentosCancelados">Agendamentos Cancelados</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="reportPeriod" class="form-label">Período</label>
+                        <select id="reportPeriod" class="form-select">
+                            <option value="30">Últimos 30 dias</option>
+                            <option value="15">Últimos 15 dias</option>
+                            <option value="7">Últimos 7 dias</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="addReportButton">Adicionar Relatório</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Footer fixo com botões de ação -->
+<div id="footerActions" class="fixed-bottom bg-light p-3 d-none text-center">
+    <button class="btn btn-success me-2" onclick="saveChartPositions()">Salvar Posições</button>
+    <button class="btn btn-danger" onclick="cancelPositionChanges()">Cancelar</button>
+</div>
+
+<!-- Bloco de Script para Definir Dados dos Gráficos -->
+<script>
+    const agendamentosPorSemanaData = @Html.Raw(Json.Serialize(ViewBag.AgendamentosPorSemana));
+    const servicosMaisSolicitadosData = @Html.Raw(Json.Serialize(ViewBag.ServicosMaisSolicitados));
         const lucroPorBarbeiroData = @Html.Raw(Json.Serialize(ViewBag.LucroPorBarbeiro));
         const atendimentosPorBarbeiroData = @Html.Raw(Json.Serialize(ViewBag.AtendimentosPorBarbeiro));
         const lucroDaSemanaData = @Html.Raw(Json.Serialize(ViewBag.LucroDaSemana));
         const lucroDoMesData = @Html.Raw(Json.Serialize(ViewBag.LucroDoMes));
-    </script>
-    <script src="~/js/site.js"></script>
-}
+        const tempoMedioPorServicoData = @Html.Raw(Json.Serialize(ViewBag.TempoMedioPorServico));
+</script>

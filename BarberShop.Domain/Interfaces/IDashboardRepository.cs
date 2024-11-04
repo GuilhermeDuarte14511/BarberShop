@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BarberShop.Domain.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,6 +15,9 @@ namespace BarberShop.Domain.Interfaces
         Task<Dictionary<string, int>> GetAtendimentosPorBarbeiroAsync();
         Task<decimal[]> GetLucroDaSemanaAsync();
         Task<decimal[]> GetLucroDoMesAsync();
+        Task<Dictionary<string, decimal>> GetCustomReportDataAsync(string reportType, int periodDays);
+        Task SaveChartPositionsAsync(List<GraficoPosicao> posicoes);
+        Task<List<GraficoPosicao>> GetChartPositionsAsync(int usuarioId);
     }
-
 }
+

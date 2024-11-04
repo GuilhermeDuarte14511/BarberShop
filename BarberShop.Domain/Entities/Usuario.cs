@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace BarberShop.Domain.Entities
 {
@@ -16,5 +17,8 @@ namespace BarberShop.Domain.Entities
         // Novas propriedades para código de validação
         public string CodigoValidacao { get; set; }
         public DateTime? CodigoValidacaoExpiracao { get; set; }
+
+        // Propriedade de navegação para RelatoriosPersonalizados
+        public ICollection<RelatorioPersonalizado> RelatoriosPersonalizados { get; set; } = new List<RelatorioPersonalizado>();
     }
 }

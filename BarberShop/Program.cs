@@ -68,6 +68,7 @@ builder.Services.AddScoped<IAgendamentoRepository, AgendamentoRepository>();
 builder.Services.AddScoped<IRepository<AgendamentoServico>, AgendamentoServicoRepository>();
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>(); // Repositório para usuário
 builder.Services.AddScoped<IDashboardRepository, DashboardRepository>(); // Repositório para Dashboard
+builder.Services.AddScoped<IRelatorioPersonalizadoRepository, RelatorioPersonalizadoRepository>(); // Repositório para Dashboard
 
 // Registrar serviços da camada de aplicação
 builder.Services.AddScoped<IClienteService, ClienteService>();
@@ -94,12 +95,13 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Middleware para redirecionar para login de admin se a URL contiver "admin"
 app.Use(async (context, next) =>
 {
-    if (context.Request.Host.Host.Contains("admin", StringComparison.OrdinalIgnoreCase))
+    // Verifica se a URL contém "admin" e não é exatamente "/Login/AdminLogin"
+    if (context.Request.Host.Host.Contains("admin", StringComparison.OrdinalIgnoreCase) &&
+        !context.Request.Path.Equals("/Login/AdminLogin", StringComparison.OrdinalIgnoreCase))
     {
-        // Se o usuário não estiver autenticado ou não for admin, redireciona para /Admin/Login
+        // Se o usuário não estiver autenticado ou não for admin, redireciona para /Login/AdminLogin
         if (!context.User.Identity.IsAuthenticated || !context.User.IsInRole("Admin"))
         {
             context.Response.Redirect("/Login/AdminLogin");
@@ -109,6 +111,7 @@ app.Use(async (context, next) =>
 
     await next();
 });
+
 
 // Configurar pipeline de processamento de requisições HTTP
 if (!app.Environment.IsDevelopment())

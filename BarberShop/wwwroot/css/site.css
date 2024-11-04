@@ -462,6 +462,60 @@ body {
     font-weight: 600;
 }
 
+/* Botão Adicionar Relatório */
+#dashboard-container .btn-primary {
+    font-weight: 600;
+    background-color: #3498db;
+    border: none;
+    padding: 10px 20px;
+    margin-top: 20px;
+    transition: background-color 0.3s ease;
+}
+
+    #dashboard-container .btn-primary:hover {
+        background-color: #2980b9;
+    }
+
+/* Modal de Adicionar Relatório */
+.modal-content {
+    background-color: #2b2b2b;
+    color: #ecf0f1;
+    border-radius: 10px;
+    border: none;
+}
+
+.modal-header, .modal-footer {
+    background-color: #343a40;
+}
+
+    .modal-header h5 {
+        font-weight: 600;
+    }
+
+.modal-body label {
+    color: #ecf0f1;
+}
+
+.modal-footer .btn-secondary {
+    background-color: #7f8c8d;
+    border: none;
+    transition: background-color 0.3s ease;
+}
+
+    .modal-footer .btn-secondary:hover {
+        background-color: #95a5a6;
+    }
+
+.modal-footer .btn-primary {
+    background-color: #3498db;
+    border: none;
+    transition: background-color 0.3s ease;
+}
+
+    .modal-footer .btn-primary:hover {
+        background-color: #2980b9;
+    }
+
 /* Spinner */
 #adminFullScreenSpinnerAdm {
     position: fixed;
@@ -480,6 +534,18 @@ body {
     #adminFullScreenSpinnerAdm p {
         color: #ecf0f1;
     }
+
+
+.loading-spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+#footerActions {
+    box-shadow: 0px -2px 10px rgba(0, 0, 0, 0.1);
+}
 
 /* Responsivo para Dispositivos Móveis */
 @media (max-width: 768px) {
