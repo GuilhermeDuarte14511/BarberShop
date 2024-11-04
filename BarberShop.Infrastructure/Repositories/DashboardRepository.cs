@@ -151,8 +151,12 @@ namespace BarberShop.Infrastructure.Repositories
                         return await _context.AgendamentoServicos
                             .Include(a => a.Servico)
                             .Where(a => a.Agendamento.DataHora >= startDate)
-                            .GroupBy(a => a.Servico.Preco)
-                            .ToDictionaryAsync(g => g.Key.ToString(), g => (decimal)g.Count());
+                            .GroupBy(a => new { a.Servico.Nome, a.Servico.Preco }) // Agrupa por nome e preço do serviço
+                            .ToDictionaryAsync(
+                                g => $"{g.Key.Nome} - R$ {g.Key.Preco.ToString("F2")}", // Chave composta por nome e preço formatado
+                                g => (decimal)g.Count()
+                            );
+
 
                     case "lucroPorPeriodo":
                         return await _context.Agendamentos

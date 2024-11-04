@@ -1,0 +1,124 @@
+﻿@model IEnumerable<BarberShop.Domain.Entities.Pagamento>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div id="pagamentoPage" class="container-fluid">
+    <h2 class="text-center">Gerenciar Pagamentos</h2>
+
+    <!-- Tabela exibida em telas maiores -->
+    <div class="table-responsive d-none d-md-block">
+        <table class="table table-dark table-striped" id="tabelaPagamentos">
+            <thead>
+                <tr>
+                    <th>Cliente</th>
+                    <th>Valor Pago</th>
+                    <th>Status</th>
+                    <th>Data do Pagamento</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var pagamento in Model)
+                {
+                    <tr data-id="@pagamento.PagamentoId">
+                        <td>@pagamento.Cliente?.Nome</td> <!-- Exibe o nome do cliente -->
+                        <td>@(pagamento.ValorPago.HasValue ? pagamento.ValorPago.Value.ToString("C") : "")</td>
+                        <td>@pagamento.StatusPagamento.ToString()</td>
+                        <td>@(pagamento.DataPagamento.HasValue ? pagamento.DataPagamento.Value.ToString("dd/MM/yyyy") : "")</td>
+                        <td>
+                            <button class="btn btn-primary btn-sm btnDetalhes" data-id="@pagamento.PagamentoId">Ver</button>
+                            @if (pagamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.Aprovado)
+                            {
+                                <button class="btn btn-danger btn-sm btnReembolso" data-id="@pagamento.PagamentoId">Reembolso</button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Estrutura de cartões exibida em telas menores -->
+    <div class="pagamentos-list d-md-none">
+        @foreach (var pagamento in Model)
+        {
+            <div class="pagamento-card p-3 mb-3 border rounded" data-id="@pagamento.PagamentoId">
+                <p><strong>Cliente:</strong> @pagamento.Cliente?.Nome</p> <!-- Exibe o nome do cliente -->
+                <p><strong>Valor Pago:</strong> @(pagamento.ValorPago.HasValue ? pagamento.ValorPago.Value.ToString("C") : "N/A")</p>
+                <p><strong>Status:</strong> @pagamento.StatusPagamento.ToString()</p>
+                <p><strong>Data do Pagamento:</strong> @(pagamento.DataPagamento.HasValue ? pagamento.DataPagamento.Value.ToString("dd/MM/yyyy") : "N/A")</p>
+                <div class="actions">
+                    <button class="btn btn-primary btn-sm btnDetalhes" data-id="@pagamento.PagamentoId">Ver</button>
+                    @if (pagamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.Aprovado)
+                    {
+                        <button class="btn btn-danger btn-sm btnReembolso" data-id="@pagamento.PagamentoId">Reembolso</button>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Modal para Detalhes -->
+    <div class="modal fade" id="detalhesModal" tabindex="-1" aria-labelledby="detalhesModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="detalhesModalLabel">Detalhes do Pagamento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="detalhesModalBody">
+                    <!-- Informações detalhadas do pagamento serão inseridas aqui -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Reembolso -->
+    <div class="modal fade" id="reembolsoModal" tabindex="-1" aria-labelledby="reembolsoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="reembolsoModalLabel">Solicitar Reembolso</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Você tem certeza que deseja solicitar o reembolso para o pagamento <strong id="reembolsoPagamentoId"></strong>?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" id="btnConfirmarReembolso" class="btn btn-danger">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Spinner de carregamento (inicialmente oculto) -->
+    <div id="loadingSpinnerPagamento" class="text-center mt-3" style="display:none; z-index: 1000;">
+        <div class="spinner-border text-danger" role="status">
+            <span class="sr-only">Carregando...</span>
+        </div>
+        <p class="mt-2 text-light">Carregando...</p>
+    </div>
+
+    <!-- Modal de Notificação -->
+    <div class="modal fade" id="notificacaoModal" tabindex="-1" aria-labelledby="notificacaoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="notificacaoModalLabel">Notificação</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="notificacaoMensagem">
+                    <!-- A mensagem de notificação será inserida aqui -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

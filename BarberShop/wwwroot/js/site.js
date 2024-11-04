@@ -1043,285 +1043,114 @@
 
 
 
-
-
-    // Verifica se está na página do dashboard administrativo
+    // Verifica se o elemento com o ID 'adminDashboard' está presente na página
     if ($('#adminDashboard').length > 0) {
-        console.log("Dashboard administrativo detectado - Carregando dados...");
 
-        let customCharts = []; // Array para armazenar gráficos personalizados
-        let loadReportDataUsuario = false; // Variável de controle para evitar chamadas duplicadas
-
-        // Inicialização dos gráficos e habilitação da funcionalidade de arrastar
-        fetchDashboardData();
-        enableSortable();
-        loadChartPositions(); // Carregar posições dos gráficos salvas no banco
-
-        // Verifica se a função loadUserReports já foi chamada
-        if (!loadReportDataUsuario) {
-            const usuarioId = $('#UserIdAdm').val();
-            console.log('Esse é o ID do usuário:', usuarioId);
-            loadUserReports(usuarioId);
-            loadReportDataUsuario = true;
-        }
-
-        $('#addReportButton').on('click', addReportHandler); // Evento para adicionar relatórios
-
-        // Função principal para buscar e renderizar os dados
+        // Função para buscar os dados do backend
         async function fetchDashboardData() {
-            console.log("Buscando dados para gráficos...");
             try {
                 const response = await $.ajax({
                     url: "/Dashboard/GetDashboardData",
                     method: "GET",
                 });
-                console.log("Dados recebidos para gráficos:", response);
-                initializeDashboardCharts(response);
+                return response;
             } catch (error) {
-                console.log("Erro ao obter dados do dashboard:", error);
+                console.error("Erro ao obter dados do dashboard:", error);
+                throw error;
             }
         }
 
-        // Função para carregar relatórios salvos do usuário
-        async function loadUserReports(usuarioId) {
+        // Configuração padrão das posições dos gráficos
+        const defaultPositions = [
+            { GraficoId: "lucroSemanaChart", Posicao: 0 },
+            { GraficoId: "lucroMesChart", Posicao: 1 },
+            { GraficoId: "agendamentosSemanaChart", Posicao: 2 },
+            { GraficoId: "servicosMaisSolicitadosChart", Posicao: 3 },
+            { GraficoId: "lucroPorBarbeiroChart", Posicao: 4 },
+            { GraficoId: "atendimentosPorBarbeiroChart", Posicao: 5 }
+        ];
+
+        // Função para inicializar o dashboard
+        async function initializeDashboard() {
+            $('#dashboard-container').empty();
             try {
-                const response = await $.ajax({
-                    url: `/Dashboard/LoadUserReports?usuarioId=${usuarioId}`,
-                    method: "GET",
-                });
+                const data = await fetchDashboardData();
+                console.log("Dados recebidos para gráficos:", data);
 
-                const reportTitles = {
-                    "agendamentosPorStatus": "Agendamentos por Status",
-                    "servicosMaisSolicitados": "Serviços Mais Solicitados",
-                    "lucroPorFormaPagamento": "Lucro por Forma de Pagamento",
-                    "atendimentosPorBarbeiro": "Atendimentos por Barbeiro",
-                    "clientesFrequentes": "Clientes Frequentes",
-                    "pagamentosPorStatus": "Pagamentos por Status",
-                    "servicosPorPreco": "Serviços por Faixa de Preço",
-                    "lucroPorPeriodo": "Lucro Diário/Semanal/Mensal",
-                    "tempoMedioPorServico": "Tempo Médio por Tipo de Serviço",
-                    "agendamentosCancelados": "Agendamentos Cancelados"
-                };
-
-                response.forEach(report => {
-                    const data = JSON.parse(report.configuracoes);
-                    const title = reportTitles[report.tipoRelatorio] || report.tipoRelatorio;
-
-                    const ctxId = `customChart${customCharts.length}`;
-                    $('#dashboard-container').append(`
-                    <div class="col-lg-4 col-md-6 col-12 dashboard-card" id="${ctxId}Card">
-                        <div class="card">
-                            <div class="card-header text-center">
-                                <h5>${title}</h5>
-                            </div>
-                            <div class="card-body">
-                                <canvas id="${ctxId}"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                `);
-
-                    const customChart = initializeChart(
-                        null,
-                        ctxId,
-                        createChartConfig('bar', Object.values(data), title, Object.keys(data))
-                    );
-
-                    customCharts.push(customChart);
-                });
-            } catch (error) {
-                console.log("Erro ao carregar relatórios do usuário:", error);
-            }
-        }
-
-        // Função para inicializar gráficos
-        function initializeDashboardCharts(data) {
-            if (data.agendamentosPorSemana && $('#agendamentosSemanaChart').length) {
-                console.log("Renderizando Agendamentos da Semana");
-                initializeChart(
-                    null,
-                    'agendamentosSemanaChart',
-                    createChartConfig('bar', data.agendamentosPorSemana, 'Agendamentos', ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'])
-                );
-            }
-
-            if (data.servicosMaisSolicitados && $('#servicosMaisSolicitadosChart').length) {
-                console.log("Renderizando Serviços Mais Solicitados");
-                initializeChart(
-                    null,
-                    'servicosMaisSolicitadosChart',
-                    createChartConfig('pie', Object.values(data.servicosMaisSolicitados), 'Serviços Mais Solicitados', Object.keys(data.servicosMaisSolicitados))
-                );
-            }
-
-            if (data.lucroPorBarbeiro && $('#lucroPorBarbeiroChart').length) {
-                console.log("Renderizando Lucro por Barbeiro");
-                initializeChart(
-                    null,
-                    'lucroPorBarbeiroChart',
-                    createChartConfig('bar', Object.values(data.lucroPorBarbeiro), 'Lucro por Barbeiro', Object.keys(data.lucroPorBarbeiro))
-                );
-            }
-
-            if (data.atendimentosPorBarbeiro && $('#atendimentosPorBarbeiroChart').length) {
-                console.log("Renderizando Atendimentos por Barbeiro");
-                initializeChart(
-                    null,
-                    'atendimentosPorBarbeiroChart',
-                    createChartConfig('doughnut', Object.values(data.atendimentosPorBarbeiro), 'Atendimentos por Barbeiro', Object.keys(data.atendimentosPorBarbeiro))
-                );
-            }
-
-            if (data.lucroDaSemana && $('#lucroSemanaChart').length) {
-                console.log("Renderizando Lucro da Semana");
-                initializeChart(
-                    null,
-                    'lucroSemanaChart',
-                    createChartConfig('line', data.lucroDaSemana, 'Lucro da Semana', ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'])
-                );
-            }
-
-            if (data.lucroDoMes && $('#lucroMesChart').length) {
-                console.log("Renderizando Lucro do Mês");
-                initializeChart(
-                    null,
-                    'lucroMesChart',
-                    createChartConfig('line', data.lucroDoMes, 'Lucro do Mês', ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'])
-                );
-            }
-        }
-
-        function initializeChart(chart, ctxId, config) {
-            const ctx = document.getElementById(ctxId);
-            if (chart instanceof Chart) chart.destroy();
-            const existingChart = Chart.getChart(ctxId);
-            if (existingChart) existingChart.destroy();
-            return ctx && ctx.getContext ? new Chart(ctx.getContext('2d'), config) : null;
-        }
-
-        // Função para adicionar relatórios personalizados
-        function addReportHandler() {
-            const reportType = $('#reportType').val();
-            const periodDays = parseInt($('#reportPeriod').val());
-
-            $.ajax({
-                url: `/Dashboard/GetCustomReportData?reportType=${reportType}&periodDays=${periodDays}`,
-                method: "GET",
-                success: function (data) {
-                    const reportTitles = {
-                        "agendamentosPorStatus": "Agendamentos por Status",
-                        "servicosMaisSolicitados": "Serviços Mais Solicitados",
-                        "lucroPorFormaPagamento": "Lucro por Forma de Pagamento",
-                        "atendimentosPorBarbeiro": "Atendimentos por Barbeiro",
-                        "clientesFrequentes": "Clientes Frequentes",
-                        "pagamentosPorStatus": "Pagamentos por Status",
-                        "servicosPorPreco": "Serviços por Faixa de Preço",
-                        "lucroPorPeriodo": "Lucro Diário/Semanal/Mensal",
-                        "tempoMedioPorServico": "Tempo Médio por Tipo de Serviço",
-                        "agendamentosCancelados": "Agendamentos Cancelados"
-                    };
-                    const ctxId = `customChart${customCharts.length}`;
-                    const title = reportTitles[reportType] || reportType;
-
-                    $('#dashboard-container').append(`
-                    <div class="col-lg-4 col-md-6 col-12 dashboard-card" id="${ctxId}Card">
-                        <div class="card">
-                            <div class="card-header text-center">
-                                <h5>${title}</h5>
-                            </div>
-                            <div class="card-body">
-                                <canvas id="${ctxId}"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                `);
-
-                    const customChart = initializeChart(
-                        null,
-                        ctxId,
-                        createChartConfig('bar', Object.values(data), title, Object.keys(data))
-                    );
-
-                    customCharts.push(customChart);
-                    saveCustomReport(reportType, periodDays, data);
-                    $('#addReportModal').modal('hide');
-                },
-                error: function () {
-                    showToast("Erro ao carregar relatório", "danger");
+                if (data && Object.values(data).some(item => item && ((Array.isArray(item) && item.length > 0) || (typeof item === 'object' && Object.keys(item).length > 0)))) {
+                    window.dashboardData = data;
+                    initializeDashboardCharts(data); // Inicializa os gráficos com os dados recebidos
+                    await loadCustomReportsFromLocalStorage(); // Carrega relatórios personalizados salvos no localStorage
+                } else {
+                    displayDefaultLayout(); // Aplica layout padrão se os dados estiverem vazios
                 }
-            });
+            } catch (error) {
+                console.error("Erro ao inicializar o dashboard:", error);
+                displayDefaultLayout();
+            }
         }
 
-        function saveCustomReport(reportType, periodDays, data) {
-            const relatorioPersonalizado = {
-                usuarioId: $('#UserIdAdm').val(),
-                tipoRelatorio: reportType,
-                periodoDias: periodDays,
-                configuracoes: JSON.stringify(data)
+        // Função para exibir um layout padrão se não houver dados
+        function displayDefaultLayout() {
+            console.log("Exibindo layout padrão - Nenhum dado encontrado.");
+            $('#dashboard-container').html(`
+        <div class="text-center my-5">
+            <h4>Nenhum dado disponível</h4>
+            <p>Adicione alguns registros para visualizar os gráficos.</p>
+        </div>
+    `);
+        }
+
+        // Função para renderizar o gráfico com a configuração fornecida
+        function renderChart(config, chartId) {
+            try {
+                $('#dashboard-container').append(`
+            <div class="col-lg-4 col-md-6 col-12 dashboard-card" id="${chartId}Card">
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h5>${config.title || "Gráfico"}</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="${chartId}Canvas"></canvas>
+                    </div>
+                </div>
+            </div>
+        `);
+                initializeChart(`${chartId}Canvas`, config.config); // Usar um ID único para o canvas
+            } catch (error) {
+                console.error(`Erro ao renderizar o gráfico ${chartId}:`, error);
+            }
+        }
+
+        // Função para inicializar cada gráfico
+        function initializeChart(ctxId, config) {
+            const ctx = document.getElementById(ctxId);
+            if (ctx) {
+                const existingChart = Chart.getChart(ctxId);
+                if (existingChart) existingChart.destroy();
+                try {
+                    new Chart(ctx.getContext('2d'), config);
+                } catch (error) {
+                    console.error(`Erro ao inicializar o gráfico ${ctxId}:`, error);
+                }
+            } else {
+                console.warn(`Canvas com ID ${ctxId} não encontrado.`);
+            }
+        }
+
+        // Função para obter a configuração do gráfico pelo ID
+        function getChartConfigById(id) {
+            const data = window.dashboardData; // Supondo que os dados estejam carregados em uma variável global
+            const chartConfigs = {
+                lucroSemanaChart: createChartConfig('line', data.lucroDaSemana, 'Lucro da Semana', ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']),
+                lucroMesChart: createChartConfig('line', data.lucroDoMes, 'Lucro do Mês', ['Semana 1', 'Semana 2']),
+                agendamentosSemanaChart: createChartConfig('bar', data.agendamentosPorSemana, 'Agendamentos', ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']),
+                servicosMaisSolicitadosChart: createChartConfig('pie', Object.values(data.servicosMaisSolicitados), 'Serviços Mais Solicitados', Object.keys(data.servicosMaisSolicitados)),
+                lucroPorBarbeiroChart: createChartConfig('bar', Object.values(data.lucroPorBarbeiro), 'Lucro por Barbeiro', Object.keys(data.lucroPorBarbeiro)),
+                atendimentosPorBarbeiroChart: createChartConfig('doughnut', Object.values(data.atendimentosPorBarbeiro), 'Atendimentos por Barbeiro', Object.keys(data.atendimentosPorBarbeiro))
             };
 
-            $.ajax({
-                url: "/Dashboard/SaveCustomReport",
-                method: "POST",
-                contentType: "application/json",
-                data: JSON.stringify(relatorioPersonalizado),
-                success: function () {
-                    showToast("Relatório salvo com sucesso", "success");
-                },
-                error: function () {
-                    showToast("Erro ao salvar relatório", "danger");
-                }
-            });
-        }
-
-        function saveChartPositions() {
-            const positions = [];
-            $('.dashboard-card').each(function (index) {
-                positions.push({
-                    GraficoId: $(this).attr('id'),
-                    Posicao: index,
-                    UsuarioId: $('#UserIdAdm').val()
-                });
-            });
-
-            $.ajax({
-                url: "/Dashboard/SaveChartPositions",
-                method: "POST",
-                contentType: "application/json",
-                data: JSON.stringify(positions),
-                success: function () {
-                    showToast("Posição dos gráficos salva com sucesso", "success");
-                },
-                error: function () {
-                    showToast("Erro ao salvar posição dos gráficos", "danger");
-                }
-            });
-        }
-
-        function loadChartPositions() {
-            $.ajax({
-                url: "/Dashboard/GetChartPositions",
-                method: "GET",
-                data: { usuarioId: $('#UserIdAdm').val() },
-                success: function (positions) {
-                    positions.forEach(pos => {
-                        const chartCard = $(`#${pos.GraficoId}`);
-                        $('#dashboard-container').append(chartCard);
-                    });
-                },
-                error: function () {
-                    console.log("Erro ao carregar posições dos gráficos.");
-                }
-            });
-        }
-
-        function enableSortable() {
-            $(".sortable").sortable({
-                handle: ".card-header",
-                update: function () {
-                    saveChartPositions();
-                }
-            });
+            return chartConfigs[id] || null;
         }
 
         // Função para criar configurações de gráficos
@@ -1352,16 +1181,388 @@
             };
         }
 
-        // Funções para gerar cores de fundo e borda
+        // Função para adicionar relatório personalizado e salvar a chave no localStorage
+        async function addCustomReport() {
+            const reportType = $('#reportType').val();
+            const periodDays = $('#reportPeriod').val();
+            const reportKey = `${reportType}-${periodDays}`; // Chave única para cada relatório personalizado
+
+            try {
+                const data = await $.ajax({
+                    url: `/Dashboard/GetCustomReportData?reportType=${reportType}&periodDays=${periodDays}`,
+                    method: "GET"
+                });
+
+                console.log("Dados do relatório personalizado:", data);
+
+                const chartConfig = {
+                    title: getReportTitle(reportType),
+                    config: createChartConfig('bar', Object.values(data), getReportTitle(reportType), Object.keys(data))
+                };
+
+                const chartId = `${reportType}CustomChart${Date.now()}`;
+                renderChart(chartConfig, chartId);
+
+                // Salva a chave do relatório no localStorage
+                saveReportKeyToLocalStorage(reportKey);
+
+                $('#addReportModal').modal('hide');
+            } catch (error) {
+                console.error("Erro ao adicionar relatório personalizado:", error);
+                alert("Erro ao adicionar relatório. Por favor, tente novamente.");
+            }
+        }
+
+        // Função para salvar uma chave de relatório no localStorage
+        function saveReportKeyToLocalStorage(reportKey) {
+            let reportKeys = JSON.parse(localStorage.getItem('customReports')) || [];
+            if (!reportKeys.includes(reportKey)) {
+                reportKeys.push(reportKey);
+                localStorage.setItem('customReports', JSON.stringify(reportKeys));
+            }
+        }
+
+        // Função para carregar relatórios personalizados do localStorage ao iniciar o dashboard
+        async function loadCustomReportsFromLocalStorage() {
+            const reportKeys = JSON.parse(localStorage.getItem('customReports')) || [];
+            for (const reportKey of reportKeys) {
+                const [reportType, periodDays] = reportKey.split('-');
+                try {
+                    const data = await $.ajax({
+                        url: `/Dashboard/GetCustomReportData?reportType=${reportType}&periodDays=${periodDays}`,
+                        method: "GET"
+                    });
+
+                    const chartConfig = {
+                        title: getReportTitle(reportType),
+                        config: createChartConfig('bar', Object.values(data), getReportTitle(reportType), Object.keys(data))
+                    };
+
+                    const chartId = `${reportType}CustomChart${Date.now()}`;
+                    renderChart(chartConfig, chartId);
+                } catch (error) {
+                    console.error(`Erro ao carregar relatório ${reportType}:`, error);
+                }
+            }
+        }
+
+
+        // Função auxiliar para obter o título do relatório
+        function getReportTitle(reportType) {
+            const titles = {
+                "agendamentosPorStatus": "Agendamentos por Status",
+                "servicosMaisSolicitados": "Serviços Mais Solicitados",
+                "lucroPorFormaPagamento": "Lucro por Forma de Pagamento",
+                "atendimentosPorBarbeiro": "Atendimentos por Barbeiro",
+                "clientesFrequentes": "Clientes Frequentes",
+                "pagamentosPorStatus": "Pagamentos por Status",
+                "servicosPorPreco": "Serviços por Faixa de Preço",
+                "lucroPorPeriodo": "Lucro Diário/Semanal/Mensal",
+                "tempoMedioPorServico": "Tempo Médio por Tipo de Serviço",
+                "agendamentosCancelados": "Agendamentos Cancelados"
+            };
+            return titles[reportType] || "Relatório Personalizado";
+        }
+
+        // Função auxiliar para gerar cores de fundo
         function generateBackgroundColors(count) {
             const colors = ['rgba(255, 99, 132, 0.5)', 'rgba(54, 162, 235, 0.5)', 'rgba(255, 206, 86, 0.5)', 'rgba(75, 192, 192, 0.5)'];
             return Array.from({ length: count }, (_, i) => colors[i % colors.length]);
         }
 
+        // Função auxiliar para gerar cores de borda
         function generateBorderColors(count) {
             const colors = ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)', 'rgba(75, 192, 192, 1)'];
             return Array.from({ length: count }, (_, i) => colors[i % colors.length]);
         }
+
+
+        // Função para inicializar todos os gráficos no dashboard
+        function initializeDashboardCharts(data) {
+            window.dashboardData = data; // Armazena os dados globalmente para uso em restoreInitialPositions
+            const chartConfigs = [
+                { id: 'lucroSemanaChart', data: data.lucroDaSemana, type: 'line', title: 'Lucro da Semana', labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'] },
+                { id: 'lucroMesChart', data: data.lucroDoMes, type: 'line', title: 'Lucro do Mês', labels: ['Semana 1', 'Semana 2'] },
+                { id: 'agendamentosSemanaChart', data: data.agendamentosPorSemana, type: 'bar', title: 'Agendamentos', labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'] },
+                { id: 'servicosMaisSolicitadosChart', data: Object.values(data.servicosMaisSolicitados), type: 'pie', title: 'Serviços Mais Solicitados', labels: Object.keys(data.servicosMaisSolicitados) },
+                { id: 'lucroPorBarbeiroChart', data: Object.values(data.lucroPorBarbeiro), type: 'bar', title: 'Lucro por Barbeiro', labels: Object.keys(data.lucroPorBarbeiro) },
+                { id: 'atendimentosPorBarbeiroChart', data: Object.values(data.atendimentosPorBarbeiro), type: 'doughnut', title: 'Atendimentos por Barbeiro', labels: Object.keys(data.atendimentosPorBarbeiro) },
+            ];
+
+            chartConfigs.forEach(config => {
+                if (config.data && config.data.length > 0) {
+                    renderChart({ title: config.title, config: createChartConfig(config.type, config.data, config.title, config.labels) }, config.id);
+                }
+            });
+        }
+
+
+
+        // Inicialização do Dashboard ao carregar o documento
+        $(document).ready(function () {
+            $('#addReportButton').on('click', addCustomReport);
+            initializeDashboard();
+        });
+
+    }
+
+
+    if ($('#servicoPage').length > 0) {
+        // Função para aplicar máscara de moeda no campo de preço
+        function aplicarMascaraPreco(input) {
+            input.on('input', function () {
+                let valor = $(this).val().replace(/\D/g, ''); // Remove todos os caracteres não numéricos
+                valor = (valor / 100).toFixed(2) + ''; // Divide por 100 e fixa duas casas decimais
+                valor = valor.replace(".", ","); // Substitui ponto por vírgula
+                $(this).val(valor); // Atualiza o valor do campo com a formatação correta
+            });
+        }
+
+        // Função para converter o valor de preço formatado para decimal antes de enviar para o backend
+        function converterPrecoParaDecimal(precoFormatado) {
+            return parseFloat(precoFormatado.replace(/\./g, '').replace(',', '.')); // Remove pontos e substitui vírgula por ponto
+        }
+
+        // Função para exibir o spinner de carregamento
+        function mostrarLoading() {
+            $('#loadingSpinnerServico').show();
+        }
+
+        // Função para ocultar o spinner de carregamento
+        function ocultarLoading() {
+            $('#loadingSpinnerServico').hide();
+        }
+
+        // Ação para o botão "Adicionar Serviço"
+        $('#btnAdicionarServico').on('click', function () {
+            $('#adicionarNome').val('');
+            $('#adicionarPreco').val('');
+            $('#adicionarDuracao').val('');
+            $('#adicionarModal').modal('show');
+        });
+
+        // Submissão do formulário de adição via AJAX
+        $('#formAdicionarServico').on('submit', function (e) {
+            e.preventDefault();
+            mostrarLoading();
+
+            const formData = {
+                Nome: $('#adicionarNome').val(),
+                Preco: converterPrecoParaDecimal($('#adicionarPreco').val()), // Converte o preço formatado para decimal
+                Duracao: $('#adicionarDuracao').val()
+            };
+
+            $.ajax({
+                url: '/Servico/Create',
+                type: 'POST',
+                data: formData,
+                success: function (response) {
+                    $('#adicionarModal').modal('hide');
+                    showToast(response.message, response.success ? 'success' : 'danger');
+                    if (response.success) {
+                        setTimeout(() => location.reload(), 1500); // Atualiza a página após 1.5 segundos
+                    }
+                },
+                error: function () {
+                    showToast('Erro ao adicionar o serviço.', 'danger');
+                },
+                complete: function () {
+                    ocultarLoading();
+                }
+            });
+        });
+
+        // Ação para o botão de editar
+        $(document).on('click', '.btnEditar', function () {
+            const servicoId = $(this).data('id');
+            mostrarLoading();
+
+            $.get(`/Servico/Details/${servicoId}`, function (data) {
+                $('#editarServicoId').val(data.servicoId);
+                $('#editarNome').val(data.nome);
+                $('#editarPreco').val(data.preco.toFixed(2).replace('.', ',')); // Aplica a formatação no valor recebido
+                $('#editarDuracao').val(data.duracao);
+                $('#editarModal').modal('show');
+            }).always(function () {
+                ocultarLoading();
+            });
+        });
+
+        // Submissão do formulário de edição via AJAX
+        $('#formEditarServico').on('submit', function (e) {
+            e.preventDefault();
+            mostrarLoading();
+
+            const formData = {
+                ServicoId: $('#editarServicoId').val(),
+                Nome: $('#editarNome').val(),
+                Preco: converterPrecoParaDecimal($('#editarPreco').val()), // Converte o preço formatado para decimal
+                Duracao: $('#editarDuracao').val()
+            };
+
+            $.ajax({
+                url: `/Servico/Edit/${formData.ServicoId}`,
+                type: 'POST',
+                data: formData,
+                success: function (response) {
+                    $('#editarModal').modal('hide');
+                    showToast(response.message, response.success ? 'success' : 'danger');
+                    if (response.success) {
+                        setTimeout(() => location.reload(), 1500); // Atualiza a página após 1.5 segundos
+                    }
+                },
+                error: function () {
+                    showToast('Erro ao editar o serviço.', 'danger');
+                },
+                complete: function () {
+                    ocultarLoading();
+                }
+            });
+        });
+
+        // Ação para o botão de excluir
+        $(document).on('click', '.btnExcluir', function () {
+            const servicoId = $(this).data('id');
+            const servicoNome = $(this).closest('tr').find('td:first').text();
+            $('#excluirServicoNome').text(servicoNome);
+            $('#btnConfirmarExcluir').data('id', servicoId);
+            $('#excluirModal').modal('show');
+        });
+
+        // Confirmação de exclusão
+        $('#btnConfirmarExcluir').on('click', function () {
+            const servicoId = $(this).data('id');
+            mostrarLoading();
+
+            $.ajax({
+                url: '/Servico/DeleteConfirmed',
+                type: 'POST',
+                data: { id: servicoId },
+                success: function (response) {
+                    $('#excluirModal').modal('hide');
+                    showToast(response.message, response.success ? 'success' : 'danger');
+                    if (response.success) {
+                        setTimeout(() => location.reload(), 1500); // Atualiza a página após 1.5 segundos
+                    }
+                },
+                error: function () {
+                    showToast('Erro ao excluir o serviço.', 'danger');
+                },
+                complete: function () {
+                    ocultarLoading();
+                }
+            });
+        });
+    }
+
+
+    if ($('#pagamentoPage').length > 0) {
+
+        // Função para exibir o spinner de carregamento
+        function mostrarLoading() {
+            $('#loadingSpinnerPagamento').show();
+        }
+
+        // Função para ocultar o spinner de carregamento
+        function ocultarLoading() {
+            $('#loadingSpinnerPagamento').hide();
+        }
+
+        // Ação para o botão "Ver Detalhes"
+        // Ação para o botão "Ver Detalhes"
+        $('.btnDetalhes').on('click', function () {
+            const pagamentoId = $(this).data('id');
+            mostrarLoading();
+
+            // Solicita os detalhes do pagamento via AJAX
+            $.get(`/Pagamento/Detalhes/${pagamentoId}`, function (data) {
+                console.log(data);
+                $('#detalhesModalBody').html(`
+            <p><strong>Cliente:</strong> ${data.nomeCliente}</p>
+            <p><strong>Valor Pago:</strong> R$ ${data.valorPago ? data.valorPago.toFixed(2).replace('.', ',') : 'N/A'}</p>
+            <p><strong>Status:</strong> ${data.statusPagamento}</p>
+            <p><strong>Data do Pagamento:</strong> ${data.dataPagamento}</p>
+        `);
+                $('#detalhesModal').modal('show');
+            }).fail(function () {
+                showToast('Erro ao carregar os detalhes do pagamento.', 'danger');
+            }).always(function () {
+                ocultarLoading();
+            });
+        });
+
+
+        // Ação para o botão de solicitar reembolso
+        $('.btnReembolso').on('click', function () {
+            const pagamentoId = $(this).data('id');
+            $('#reembolsoPagamentoId').text(pagamentoId);
+            $('#btnConfirmarReembolso').data('id', pagamentoId);
+            $('#reembolsoModal').modal('show');
+        });
+
+        // Confirmação de reembolso via AJAX
+        $('#btnConfirmarReembolso').on('click', function () {
+            const pagamentoId = $(this).data('id');
+            const valorReembolso = $('#inputValorReembolso').val() || null; // valor opcional para reembolso parcial
+            mostrarLoading();
+
+            $.ajax({
+                url: '/api/payment/refund',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    PaymentId: pagamentoId,
+                    Amount: valorReembolso ? parseInt(valorReembolso * 100) : null // converte para centavos, caso haja um valor
+                }),
+                success: function (response) {
+                    $('#reembolsoModal').modal('hide');
+                    showToast(response.refundStatus === "succeeded" ? 'Reembolso processado com sucesso.' : 'Reembolso não foi processado.', response.refundStatus === "succeeded" ? 'success' : 'danger');
+                    if (response.refundStatus === "succeeded") {
+                        setTimeout(() => location.reload(), 1500); // Atualiza a página após 1.5 segundos
+                    }
+                },
+                error: function () {
+                    showToast('Erro ao solicitar reembolso.', 'danger');
+                },
+                complete: function () {
+                    ocultarLoading();
+                }
+            });
+        });
+
+        // Ação para o botão de exclusão
+        $('.btnExcluir').on('click', function () {
+            const pagamentoId = $(this).data('id');
+            const pagamentoNome = $(this).closest('.pagamento-card').find('p:first').text() || $(this).closest('tr').find('td:first').text();
+            $('#excluirPagamentoNome').text(pagamentoNome);
+            $('#btnConfirmarExcluir').data('id', pagamentoId);
+            $('#excluirModal').modal('show');
+        });
+
+        // Confirmação de exclusão via AJAX
+        $('#btnConfirmarExcluir').on('click', function () {
+            const pagamentoId = $(this).data('id');
+            mostrarLoading();
+
+            $.ajax({
+                url: '/Pagamento/DeleteConfirmed',
+                type: 'POST',
+                data: { id: pagamentoId },
+                success: function (response) {
+                    $('#excluirModal').modal('hide');
+                    showToast(response.message, response.success ? 'success' : 'danger');
+                    if (response.success) {
+                        setTimeout(() => location.reload(), 1500); // Atualiza a página após 1.5 segundos
+                    }
+                },
+                error: function () {
+                    showToast('Erro ao excluir o pagamento.', 'danger');
+                },
+                complete: function () {
+                    ocultarLoading();
+                }
+            });
+        });
     }
 
 

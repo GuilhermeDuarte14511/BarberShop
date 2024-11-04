@@ -2,6 +2,7 @@
 using BarberShop.Domain.Interfaces;
 using BarberShop.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -19,41 +20,88 @@ namespace BarberShop.Infrastructure.Repositories
 
         public async Task<Servico> AddAsync(Servico entity)
         {
-            await _context.Servicos.AddAsync(entity);
-            await _context.SaveChangesAsync();
-            return entity;
+            try
+            {
+                await _context.Servicos.AddAsync(entity);
+                await _context.SaveChangesAsync();
+                return entity;
+            }
+            catch (Exception ex)
+            {
+                // Rethrow the exception to be caught by the controller layer
+                throw new Exception("Erro ao adicionar o serviço", ex);
+            }
         }
 
         public async Task DeleteAsync(int id)
         {
-            var servico = await _context.Servicos.FindAsync(id);
-            if (servico != null)
+            try
             {
-                _context.Servicos.Remove(servico);
-                await _context.SaveChangesAsync();
+                var servico = await _context.Servicos.FindAsync(id);
+                if (servico != null)
+                {
+                    _context.Servicos.Remove(servico);
+                    await _context.SaveChangesAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                // Rethrow the exception to be caught by the controller layer
+                throw new Exception($"Erro ao excluir o serviço com Id {id}", ex);
             }
         }
 
         public async Task<IEnumerable<Servico>> GetAllAsync()
         {
-            return await _context.Servicos.ToListAsync();
+            try
+            {
+                return await _context.Servicos.ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                // Rethrow the exception to be caught by the controller layer
+                throw new Exception("Erro ao obter a lista de serviços", ex);
+            }
         }
 
         public async Task<Servico> GetByIdAsync(int id)
         {
-            return await _context.Servicos.FindAsync(id);
+            try
+            {
+                return await _context.Servicos.FindAsync(id);
+            }
+            catch (Exception ex)
+            {
+                // Rethrow the exception to be caught by the controller layer
+                throw new Exception($"Erro ao obter o serviço com Id {id}", ex);
+            }
         }
 
         public async Task UpdateAsync(Servico entity)
         {
-            _context.Servicos.Update(entity);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.Servicos.Update(entity);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                // Rethrow the exception to be caught by the controller layer
+                throw new Exception("Erro ao atualizar o serviço", ex);
+            }
         }
 
-        // Implementação do método para buscar múltiplos serviços por uma lista de IDs
         public async Task<IEnumerable<Servico>> ObterServicosPorIdsAsync(IEnumerable<int> servicoIds)
         {
-            return await _context.Servicos.Where(s => servicoIds.Contains(s.ServicoId)).ToListAsync();
+            try
+            {
+                return await _context.Servicos.Where(s => servicoIds.Contains(s.ServicoId)).ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                // Rethrow the exception to be caught by the controller layer
+                throw new Exception("Erro ao obter os serviços por IDs", ex);
+            }
         }
     }
 }

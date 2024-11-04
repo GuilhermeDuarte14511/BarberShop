@@ -543,9 +543,137 @@ body {
     height: 100%;
 }
 
-#footerActions {
-    box-shadow: 0px -2px 10px rgba(0, 0, 0, 0.1);
+#dashboardFooterActions {
+    background-color: #2b2b2b !important; /* Fundo escuro do footer */
+    color: #ecf0f1; /* Cor do texto clara */
+    border-top: 1px solid #343a40; /* Linha sutil de separação */
+    padding: 15px; /* Maior espaçamento para conforto visual */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px; /* Espaçamento entre os botões */
+    z-index: 1050; /* Para garantir que o footer fique sobre os demais elementos */
 }
+
+/* Estilos para os novos botões */
+.btn-save {
+    background-color: #27ae60; /* Verde para Salvar */
+    color: #ffffff;
+    border: none;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+    .btn-save:hover {
+        background-color: #229954;
+    }
+
+.btn-cancel {
+    background-color: #e74c3c; /* Vermelho para Cancelar */
+    color: #ffffff;
+    border: none;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+    .btn-cancel:hover {
+        background-color: #c0392b;
+    }
+
+
+/* Estilos para os cards de barbeiros em telas menores */
+.barbeiro-card {
+    background-color: #2b2b2b;
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    padding: 15px;
+    margin-bottom: 1rem;
+}
+
+    .barbeiro-card .card-title {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #f39c12;
+    }
+
+    .barbeiro-card .card-text {
+        font-size: 1rem;
+        color: #ecf0f1;
+    }
+
+    .barbeiro-card .actions .btn {
+        width: 48%;
+    }
+
+    .barbeiro-card .btn-warning {
+        background-color: #e74c3c;
+        border-color: #e74c3c;
+    }
+
+        .barbeiro-card .btn-warning:hover {
+            background-color: #c0392b;
+            border-color: #c0392b;
+        }
+
+    .barbeiro-card .btn-danger {
+        background-color: #e74c3c;
+        border-color: #e74c3c;
+    }
+
+        .barbeiro-card .btn-danger:hover {
+            background-color: #c0392b;
+            border-color: #c0392b;
+        }
+
+/* Estilos para os cards de serviços em telas menores */
+.servico-card {
+    background-color: #2b2b2b;
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    padding: 15px;
+    margin-bottom: 1rem;
+}
+
+    .servico-card .card-title {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #f39c12;
+    }
+
+    .servico-card .card-text {
+        font-size: 1rem;
+        color: #ecf0f1;
+    }
+
+    .servico-card .actions .btn {
+        width: 48%;
+    }
+
+    .servico-card .btn-warning {
+        background-color: #e74c3c;
+        border-color: #e74c3c;
+    }
+
+        .servico-card .btn-warning:hover {
+            background-color: #c0392b;
+            border-color: #c0392b;
+        }
+
+    .servico-card .btn-danger {
+        background-color: #e74c3c;
+        border-color: #e74c3c;
+    }
+
+        .servico-card .btn-danger:hover {
+            background-color: #c0392b;
+            border-color: #c0392b;
+        }
+
+
+
+
 
 /* Responsivo para Dispositivos Móveis */
 @media (max-width: 768px) {
@@ -556,10 +684,44 @@ body {
         max-width: 100%;
     }
 
+    .barbeiro-card {
+        margin-bottom: 1rem;
+        padding: 1.5rem;
+    }
+
+        .barbeiro-card .card-title {
+            font-size: 1.2rem;
+        }
+
+        .barbeiro-card .card-text {
+            font-size: 1rem;
+        }
+
+        .barbeiro-card .actions .btn {
+            font-size: 0.9rem;
+        }
+
     /* Ajuste de altura dos gráficos em mobile */
     .card-body canvas {
         height: 250px !important;
     }
+
+    .servico-card {
+        margin-bottom: 1rem;
+        padding: 1.5rem;
+    }
+
+        .servico-card .card-title {
+            font-size: 1.2rem;
+        }
+
+        .servico-card .card-text {
+            font-size: 1rem;
+        }
+
+        .servico-card .actions .btn {
+            font-size: 0.9rem;
+        }
 }
 
 /* Responsivo para Desktops */

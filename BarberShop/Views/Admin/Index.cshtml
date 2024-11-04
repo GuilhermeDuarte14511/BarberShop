@@ -10,15 +10,11 @@
             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addReportModal">
                 Adicionar Relatório
             </button>
-            <!-- Botão oculto inicialmente para salvar posições -->
-            <button class="btn btn-success d-none" id="savePositionsButton">
-                Salvar Posições
-            </button>
         </div>
     </div>
     <p class="text-center">Esse é o painel principal do sistema administrativo da barbearia.</p>
 
-    <div id="dashboard-container" class="row mt-4 g-4 sortable">
+    <div id="dashboard-container" class="row mt-4 g-4">
         <!-- Agendamentos da Semana -->
         <div class="col-lg-4 col-md-6 col-12 dashboard-card" id="agendamentosSemanaChartCard">
             <div class="card">
@@ -135,20 +131,3 @@
         </div>
     </div>
 </div>
-
-<!-- Footer fixo com botões de ação -->
-<div id="footerActions" class="fixed-bottom bg-light p-3 d-none text-center">
-    <button class="btn btn-success me-2" onclick="saveChartPositions()">Salvar Posições</button>
-    <button class="btn btn-danger" onclick="cancelPositionChanges()">Cancelar</button>
-</div>
-
-<!-- Bloco de Script para Definir Dados dos Gráficos -->
-<script>
-    const agendamentosPorSemanaData = @Html.Raw(Json.Serialize(ViewBag.AgendamentosPorSemana));
-    const servicosMaisSolicitadosData = @Html.Raw(Json.Serialize(ViewBag.ServicosMaisSolicitados));
-        const lucroPorBarbeiroData = @Html.Raw(Json.Serialize(ViewBag.LucroPorBarbeiro));
-        const atendimentosPorBarbeiroData = @Html.Raw(Json.Serialize(ViewBag.AtendimentosPorBarbeiro));
-        const lucroDaSemanaData = @Html.Raw(Json.Serialize(ViewBag.LucroDaSemana));
-        const lucroDoMesData = @Html.Raw(Json.Serialize(ViewBag.LucroDoMes));
-        const tempoMedioPorServicoData = @Html.Raw(Json.Serialize(ViewBag.TempoMedioPorServico));
-</script>

@@ -1,33 +1,33 @@
-﻿@model IEnumerable<BarberShop.Domain.Entities.Barbeiro>
+﻿@model IEnumerable<BarberShop.Domain.Entities.Servico>
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<div id="barbeiroPage" class="container-fluid">
-    <h2 class="text-center">Gerenciar Barbeiros</h2>
-    <button class="btn btn-success mb-3" id="btnAdicionarBarbeiro">Adicionar Barbeiro</button>
+<div id="servicoPage" class="container-fluid">
+    <h2 class="text-center">Gerenciar Serviços</h2>
+    <button class="btn btn-success mb-3" id="btnAdicionarServico">Adicionar Serviço</button>
 
     <!-- Tabela exibida em telas maiores -->
     <div class="table-responsive d-none d-md-block">
-        <table class="table table-dark table-striped" id="tabelaBarbeiros">
+        <table class="table table-dark table-striped" id="tabelaServicos">
             <thead>
                 <tr>
                     <th>Nome</th>
-                    <th>Email</th>
-                    <th>Telefone</th>
+                    <th>Preço</th>
+                    <th>Duração</th>
                     <th>Ações</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var barbeiro in Model)
+                @foreach (var servico in Model)
                 {
-                    <tr data-id="@barbeiro.BarbeiroId">
-                        <td>@barbeiro.Nome</td>
-                        <td>@barbeiro.Email</td>
-                        <td>@barbeiro.Telefone</td>
+                    <tr data-id="@servico.ServicoId">
+                        <td>@servico.Nome</td>
+                        <td>@servico.Preco.ToString("N2")</td> <!-- Formatação ajustada -->
+                        <td>@servico.Duracao</td>
                         <td>
-                            <button class="btn btn-warning btn-sm btnEditar" data-id="@barbeiro.BarbeiroId">Editar</button>
-                            <button class="btn btn-danger btn-sm btnExcluir" data-id="@barbeiro.BarbeiroId">Excluir</button>
+                            <button class="btn btn-warning btn-sm btnEditar" data-id="@servico.ServicoId">Editar</button>
+                            <button class="btn btn-danger btn-sm btnExcluir" data-id="@servico.ServicoId">Excluir</button>
                         </td>
                     </tr>
                 }
@@ -36,18 +36,16 @@
     </div>
 
     <!-- Estrutura de cartões exibida em telas menores -->
-    <div class="barbeiros-list d-md-none">
-        @foreach (var barbeiro in Model)
+    <div class="servicos-list d-md-none">
+        @foreach (var servico in Model)
         {
-            <div class="card bg-dark text-light mb-3 barbeiro-card" data-id="@barbeiro.BarbeiroId">
-                <div class="card-body">
-                    <h5 class="card-title">@barbeiro.Nome</h5>
-                    <p class="card-text"><strong>Email:</strong> @barbeiro.Email</p>
-                    <p class="card-text"><strong>Telefone:</strong> @barbeiro.Telefone</p>
-                    <div class="actions d-flex justify-content-between mt-3">
-                        <button class="btn btn-warning btn-sm btnEditar" data-id="@barbeiro.BarbeiroId">Editar</button>
-                        <button class="btn btn-danger btn-sm btnExcluir" data-id="@barbeiro.BarbeiroId">Excluir</button>
-                    </div>
+            <div class="servico-card" data-id="@servico.ServicoId">
+                <p><strong>Nome:</strong> @servico.Nome</p>
+                <p><strong>Preço:</strong> @servico.Preco.ToString("N2")</p> <!-- Formatação ajustada -->
+                <p><strong>Duração:</strong> @servico.Duracao</p>
+                <div class="actions">
+                    <button class="btn btn-warning btn-sm btnEditar" data-id="@servico.ServicoId">Editar</button>
+                    <button class="btn btn-danger btn-sm btnExcluir" data-id="@servico.ServicoId">Excluir</button>
                 </div>
             </div>
         }
@@ -58,9 +56,9 @@
     <div class="modal fade" id="adicionarModal" tabindex="-1" aria-labelledby="adicionarModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <form id="formAdicionarBarbeiro">
+                <form id="formAdicionarServico">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="adicionarModalLabel">Adicionar Barbeiro</h5>
+                        <h5 class="modal-title" id="adicionarModalLabel">Adicionar Serviço</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
@@ -69,12 +67,12 @@
                             <input type="text" class="form-control" id="adicionarNome" name="Nome" required />
                         </div>
                         <div class="form-group">
-                            <label for="Email">Email</label>
-                            <input type="email" class="form-control" id="adicionarEmail" name="Email" />
+                            <label for="Preco">Preço</label>
+                            <input type="text" class="form-control" id="adicionarPreco" name="Preco" required />
                         </div>
                         <div class="form-group">
-                            <label for="Telefone">Telefone</label>
-                            <input type="text" class="form-control" id="adicionarTelefone" name="Telefone" required />
+                            <label for="Duracao">Duração (minutos)</label>
+                            <input type="number" class="form-control" id="adicionarDuracao" name="Duracao" required />
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -90,24 +88,25 @@
     <div class="modal fade" id="editarModal" tabindex="-1" aria-labelledby="editarModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <form id="formEditarBarbeiro">
+                <form id="formEditarServico">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="editarModalLabel">Editar Barbeiro</h5>
+                        <h5 class="modal-title" id="editarModalLabel">Editar Serviço</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <input type="hidden" id="editarBarbeiroId" name="BarbeiroId" />
+                        <input type="hidden" id="editarServicoId" name="ServicoId" />
                         <div class="form-group">
                             <label for="Nome">Nome</label>
                             <input type="text" class="form-control" id="editarNome" name="Nome" required />
                         </div>
                         <div class="form-group">
-                            <label for="Email">Email</label>
-                            <input type="email" class="form-control" id="editarEmail" name="Email" />
+                            <label for="Preco">Preço</label>
+                            <input type="text" class="form-control" id="editarPreco" name="Preco" required />
                         </div>
+
                         <div class="form-group">
-                            <label for="Telefone">Telefone</label>
-                            <input type="text" class="form-control" id="editarTelefone" name="Telefone" required />
+                            <label for="Duracao">Duração (minutos)</label>
+                            <input type="number" class="form-control" id="editarDuracao" name="Duracao" required />
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -119,24 +118,16 @@
         </div>
     </div>
 
-    <!-- Spinner de carregamento (inicialmente oculto) -->
-    <div id="loadingSpinner" class="text-center mt-3" style="display:none; z-index: 1000;">
-        <div class="spinner-border text-danger" role="status">
-            <span class="sr-only">Carregando...</span>
-        </div>
-        <p class="mt-2 text-light">Carregando...</p>
-    </div>
-
     <!-- Modal para Exclusão -->
     <div class="modal fade" id="excluirModal" tabindex="-1" aria-labelledby="excluirModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="excluirModalLabel">Excluir Barbeiro</h5>
+                    <h5 class="modal-title" id="excluirModalLabel">Excluir Serviço</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    Você tem certeza que deseja excluir o barbeiro <strong id="excluirBarbeiroNome"></strong>?
+                    Você tem certeza que deseja excluir o serviço <strong id="excluirServicoNome"></strong>?
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Não</button>
@@ -144,6 +135,14 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Spinner de carregamento (inicialmente oculto) -->
+    <div id="loadingSpinnerServico" class="text-center mt-3" style="display:none; z-index: 1000;">
+        <div class="spinner-border text-danger" role="status">
+            <span class="sr-only">Carregando...</span>
+        </div>
+        <p class="mt-2 text-light">Carregando...</p>
     </div>
 
     <!-- Modal de Notificação -->

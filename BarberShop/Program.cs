@@ -69,6 +69,8 @@ builder.Services.AddScoped<IRepository<AgendamentoServico>, AgendamentoServicoRe
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>(); // Repositório para usuário
 builder.Services.AddScoped<IDashboardRepository, DashboardRepository>(); // Repositório para Dashboard
 builder.Services.AddScoped<IRelatorioPersonalizadoRepository, RelatorioPersonalizadoRepository>(); // Repositório para Dashboard
+builder.Services.AddScoped<IPagamentoRepository, PagamentoRepository>();
+
 
 // Registrar serviços da camada de aplicação
 builder.Services.AddScoped<IClienteService, ClienteService>();
