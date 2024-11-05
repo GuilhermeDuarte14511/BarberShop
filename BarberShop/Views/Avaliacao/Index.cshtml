@@ -2,7 +2,7 @@
 
 <div id="avaliacaoPage" class="avaliacao-container">
     <h2>Avaliação do Atendimento</h2>
-    <p>Você foi atendido no dia <strong>@Model.DataHora.ToString("dd/MM/yyyy HH:mm")</strong> pelo barbeiro <strong>@Model.Barbeiro.Nome</strong> para fazer <strong>@Model.AgendamentoServicos.FirstOrDefault()?.Servico.Nome</strong></p>
+    <p>Você foi atendido no dia <strong>@Model.DataHora.ToString("dd/MM/yyyy HH:mm")</strong> pelo barbeiro <strong>@Model.Barbeiro.Nome</strong> para fazer <strong>@String.Join(", ", Model.AgendamentoServicos.Select(s => s.Servico.Nome))</strong></p>
     <p>Deixe-nos uma avaliação pelo seu atendimento:</p>
 
     <!-- Exibir serviços, se houver -->
