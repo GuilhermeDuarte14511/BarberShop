@@ -1,0 +1,40 @@
+﻿@model BarberShop.Domain.Entities.Agendamento
+
+<div id="avaliacaoPage" class="avaliacao-container">
+    <h2>Avaliação do Atendimento</h2>
+    <p>Você foi atendido no dia <strong>@Model.DataHora.ToString("dd/MM/yyyy HH:mm")</strong> pelo barbeiro <strong>@Model.Barbeiro.Nome</strong> para fazer <strong>@Model.AgendamentoServicos.FirstOrDefault()?.Servico.Nome</strong></p>
+    <p>Deixe-nos uma avaliação pelo seu atendimento:</p>
+
+    <!-- Exibir serviços, se houver -->
+    <p><strong>Serviços:</strong> @String.Join(", ", Model.AgendamentoServicos.Select(s => s.Servico.Nome))</p>
+
+    <!-- Estrelas de Avaliação com SVG -->
+    <div id="avaliacaoEstrelas" class="avaliacao-estrelas">
+        <svg class="avaliacao-estrela" data-value="1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
+        <svg class="avaliacao-estrela" data-value="2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
+        <svg class="avaliacao-estrela" data-value="3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
+        <svg class="avaliacao-estrela" data-value="4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
+        <svg class="avaliacao-estrela" data-value="5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
+    </div>
+
+    <div id="avaliacaoObservacaoContainer" class="avaliacao-observacao-container hidden">
+        <textarea id="avaliacaoObservacao" placeholder="Deixe sua observação (opcional)"></textarea>
+    </div>
+
+    <button id="avaliacaoEnviarBtn" class="btn btn-primary">Enviar Avaliação</button>
+
+    <div id="avaliacaoMensagemAgradecimento" class="avaliacao-mensagem-agradecimento alert alert-success" style="display:none;">
+        <div class="avaliacao-checkmark">
+            <div class="avaliacao-checkmark-circle"></div>
+            <div class="avaliacao-checkmark-stem"></div>
+            <div class="avaliacao-checkmark-kick"></div>
+        </div>
+        Obrigado pela sua avaliação!
+    </div>
+
+    <div id="avaliacaoLoadingSpinner" style="display: none;">
+        <div class="spinner-border" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>
+</div>

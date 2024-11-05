@@ -19,4 +19,12 @@
     <ProjectReference Include="..\BarberShop.Infrastructure\BarberShop.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EditorConfigFiles Remove="D:\Portifólios\BarberShopOficial\BarberShop.Application\DTOs\.editorconfig" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="D:\Portifólios\BarberShopOficial\BarberShop.Application\DTOs\.editorconfig" />
+  </ItemGroup>
+
 </Project>

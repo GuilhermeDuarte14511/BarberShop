@@ -69,6 +69,18 @@ namespace BarberShop.Infrastructure.Repositories
                                               .ToListAsync();
         }
 
+        public async Task<Agendamento> GetDataAvaliacaoAsync(int agendamentoId)
+        {
+            return await _context.Agendamentos
+                .Include(a => a.Cliente)
+                .Include(a => a.Barbeiro)
+                .Include(a => a.AgendamentoServicos)
+                    .ThenInclude(asg => asg.Servico) // Inclui os serviços
+                .Include(a => a.Avaliacoes) // Inclui as avaliações
+                .FirstOrDefaultAsync(a => a.AgendamentoId == agendamentoId);
+        }
+
+
         public async Task<IEnumerable<Agendamento>> GetByClienteIdWithServicosAsync(int clienteId)
         {
             try

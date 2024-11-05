@@ -1566,6 +1566,75 @@
     }
 
 
+    if ($('#avaliacaoPage').length > 0) {
+        console.log('Página de avaliação carregada.');
+
+        // Função para exibir o spinner de carregamento
+        function mostrarLoading() {
+            $('#avaliacaoLoadingSpinner').show();
+            console.log('Spinner de carregamento exibido.');
+        }
+
+        // Função para ocultar o spinner de carregamento
+        function ocultarLoading() {
+            $('#avaliacaoLoadingSpinner').hide();
+            console.log('Spinner de carregamento ocultado.');
+        }
+
+        // Ação para marcar estrelas ao passar o mouse
+        $('#avaliacaoEstrelas .avaliacao-estrela').on('mouseenter', function () {
+            $(this).prevAll().addBack().addClass('hover');
+            console.log('Mouse entrou em uma estrela:', $(this).data('value'));
+        }).on('mouseleave', function () {
+            $('#avaliacaoEstrelas .avaliacao-estrela').removeClass('hover');
+            console.log('Mouse saiu das estrelas.');
+        });
+
+        // Ação para clicar nas estrelas para avaliação
+        $('#avaliacaoEstrelas .avaliacao-estrela').on('click', function () {
+            const nota = $(this).data('value');
+            console.log('Estrela clicada com valor:', nota);
+            $('#avaliacaoEstrelas .avaliacao-estrela').removeClass('selecionada');
+            $(this).prevAll().addBack().addClass('selecionada');
+
+            // Exibir o campo de observação
+            $('#avaliacaoObservacaoContainer').addClass('visible').css({ 'opacity': 1, 'max-height': '150px' });
+            console.log('Campo de observação exibido.');
+        });
+
+        // Ação para enviar a avaliação
+        $('#avaliacaoEnviarBtn').on('click', function () {
+            const observacao = $('#avaliacaoObservacao').val();
+            const nota = $('#avaliacaoEstrelas .avaliacao-estrela.selecionada').length;
+
+            console.log('Tentando enviar avaliação com nota:', nota);
+            if (nota > 0) {
+                mostrarLoading();
+
+                // Envio fake da avaliação
+                setTimeout(function () {
+                    $('#avaliacaoMensagemAgradecimento').fadeIn();
+                    console.log('Mensagem de agradecimento exibida.');
+                    $('#avaliacaoObservacao').val('');
+                    $('#avaliacaoEstrelas .avaliacao-estrela').removeClass('selecionada');
+                    $('#avaliacaoObservacaoContainer').removeClass('visible').css({ 'opacity': 0, 'max-height': 0 });
+
+                    setTimeout(function () {
+                        $('#avaliacaoMensagemAgradecimento').fadeOut();
+                        console.log('Mensagem de agradecimento ocultada.');
+                    }, 3000);
+                }, 1000);
+
+                ocultarLoading();
+            } else {
+                alert('Por favor, selecione uma avaliação.');
+                console.log('Nenhuma estrela selecionada. Avaliação não enviada.');
+            }
+        });
+    }
+
+
+
 
 
 });

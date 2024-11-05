@@ -672,7 +672,136 @@ body {
         }
 
 
+/* Estilo das estrelas e animações */
+#avaliacaoEstrelas {
+    display: flex;
+    justify-content: center; /* Centraliza as estrelas */
+    cursor: pointer;
+    margin-bottom: 20px;
+}
 
+    #avaliacaoEstrelas .avaliacao-estrela {
+        width: 40px;
+        height: 40px;
+        fill: #ccc; /* Inicialmente apagadas (cinza) */
+        transition: fill 0.2s, transform 0.2s;
+    }
+
+        #avaliacaoEstrelas .avaliacao-estrela.hover,
+        #avaliacaoEstrelas .avaliacao-estrela.selecionada {
+            fill: #ffd700; /* Cor amarela ao passar o mouse e selecionar */
+        }
+
+        #avaliacaoEstrelas .avaliacao-estrela:hover {
+            transform: scale(1.1);
+        }
+
+/* Estilo do container e da observação */
+.avaliacao-container {
+    background-color: #2b2b2b;
+    color: #ecf0f1;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    max-width: 600px;
+    margin: auto;
+    text-align: center;
+}
+
+#avaliacaoObservacaoContainer {
+    margin-top: 10px;
+    opacity: 0; /* Inicialmente invisível */
+    max-height: 0; /* Inicialmente sem altura */
+    transition: opacity 0.4s ease, max-height 0.4s ease; /* Animação suave */
+}
+
+    #avaliacaoObservacaoContainer.visible {
+        opacity: 1; /* Visível */
+        max-height: 150px; /* Altura para o campo de observação */
+    }
+
+    #avaliacaoObservacaoContainer textarea {
+        width: 100%; /* Largura completa do contêiner */
+        max-width: 100%; /* Evita que ultrapasse o contêiner */
+        height: 100px; /* Altura maior para o campo de observação */
+        padding: 10px;
+        border-radius: 5px;
+        resize: none;
+        font-size: 1em;
+    }
+
+/* Mensagem de agradecimento */
+.avaliacao-mensagem-agradecimento {
+    display: none;
+    margin-top: 15px;
+    color: #28a745;
+    font-weight: bold;
+    font-size: 1.2em;
+}
+
+/* Animação do checkmark */
+.avaliacao-checkmark {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: inline-block;
+    position: relative;
+    margin-right: 8px;
+}
+
+.avaliacao-checkmark-circle {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background-color: #28a745;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.avaliacao-checkmark-stem {
+    position: absolute;
+    width: 3px;
+    height: 12px;
+    background-color: white;
+    top: 7px;
+    left: 14px;
+    transform: rotate(45deg);
+    transform-origin: bottom;
+    animation: checkmark-stem 0.3s ease forwards 0.2s;
+}
+
+.avaliacao-checkmark-kick {
+    position: absolute;
+    width: 3px;
+    height: 6px;
+    background-color: white;
+    top: 14px;
+    left: 10px;
+    transform: rotate(-45deg);
+    transform-origin: bottom;
+    animation: checkmark-kick 0.3s ease forwards 0.2s;
+}
+
+@keyframes checkmark-stem {
+    0% {
+        height: 0;
+    }
+
+    100% {
+        height: 12px;
+    }
+}
+
+@keyframes checkmark-kick {
+    0% {
+        height: 0;
+    }
+
+    100% {
+        height: 6px;
+    }
+}
 
 
 /* Responsivo para Dispositivos Móveis */

@@ -20,5 +20,8 @@ namespace BarberShop.Domain.Entities
         public ICollection<AgendamentoServico> AgendamentoServicos { get; set; }
 
         public Pagamento Pagamento { get; set; }
+
+        public ICollection<Avaliacao> Avaliacoes { get; set; }
+
     }
 }

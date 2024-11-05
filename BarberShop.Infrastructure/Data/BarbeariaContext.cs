@@ -19,10 +19,11 @@ namespace BarberShop.Infrastructure.Data
         public DbSet<Log> Logs { get; set; }
         public DbSet<Pagamento> Pagamentos { get; set; }
         public DbSet<Usuario> Usuarios { get; set; }
-        public DbSet<RelatorioPersonalizado> RelatoriosPersonalizados { get; set; } // Novo DbSet para RelatorioPersonalizado
-
+        public DbSet<RelatorioPersonalizado> RelatoriosPersonalizados { get; set; }
         public DbSet<GraficoPosicao> GraficoPosicao { get; set; }
 
+        // Novo DbSet para Avaliacao
+        public DbSet<Avaliacao> Avaliacao { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -55,7 +56,7 @@ namespace BarberShop.Infrastructure.Data
             // Configuração para RelatorioPersonalizado
             modelBuilder.Entity<RelatorioPersonalizado>()
                 .HasOne(r => r.Usuario)
-                .WithMany(u => u.RelatoriosPersonalizados) // Assumindo que a propriedade de navegação foi adicionada em Usuario
+                .WithMany(u => u.RelatoriosPersonalizados)
                 .HasForeignKey(r => r.UsuarioId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
