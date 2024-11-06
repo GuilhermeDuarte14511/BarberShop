@@ -6,6 +6,45 @@
 <div id="pagamentoPage" class="container-fluid">
     <h2 class="text-center">Gerenciar Pagamentos</h2>
 
+    <!-- Botão para abrir o modal de Inserir Pagamento -->
+    <div class="text-end mb-3">
+        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#inserirPagamentoModal">
+            Inserir Pagamento
+        </button>
+    </div>
+
+    <!-- Modal para Inserir Pagamento -->
+    <div class="modal fade" id="inserirPagamentoModal" tabindex="-1" aria-labelledby="inserirPagamentoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="inserirPagamentoModalLabel">Inserir Pagamento Manual</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Seleção de data início e data fim -->
+                    <div class="mb-3">
+                        <label for="dataInicio" class="form-label">Data de Início:</label>
+                        <input type="date" id="dataInicio" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="dataFim" class="form-label">Data de Fim (opcional):</label>
+                        <input type="date" id="dataFim" class="form-control" />
+                    </div>
+                    <button id="buscarAgendamentosBtn" class="btn btn-primary mb-3">Buscar Agendamentos</button>
+
+                    <!-- Lista de Agendamentos do Período -->
+                    <div id="agendamentosContainer">
+                        <p class="text-muted">Selecione uma data de início (e data de fim opcional) e clique em "Buscar Agendamentos" para visualizar os agendamentos.</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Tabela exibida em telas maiores -->
     <div class="table-responsive d-none d-md-block">
         <table class="table table-dark table-striped" id="tabelaPagamentos">
@@ -21,8 +60,10 @@
             <tbody>
                 @foreach (var pagamento in Model)
                 {
-                    <tr data-id="@pagamento.PagamentoId">
-                        <td>@pagamento.Cliente?.Nome</td> <!-- Exibe o nome do cliente -->
+                    <tr data-id="@pagamento.PagamentoId"
+                        data-nome="@pagamento.Cliente?.Nome"
+                        data-valor="@pagamento.ValorPago">
+                        <td>@pagamento.Cliente?.Nome</td>
                         <td>@(pagamento.ValorPago.HasValue ? pagamento.ValorPago.Value.ToString("C") : "")</td>
                         <td>@pagamento.StatusPagamento.ToString()</td>
                         <td>@(pagamento.DataPagamento.HasValue ? pagamento.DataPagamento.Value.ToString("dd/MM/yyyy") : "")</td>
@@ -30,7 +71,12 @@
                             <button class="btn btn-primary btn-sm btnDetalhes" data-id="@pagamento.PagamentoId">Ver</button>
                             @if (pagamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.Aprovado)
                             {
-                                <button class="btn btn-danger btn-sm btnReembolso" data-id="@pagamento.PagamentoId">Reembolso</button>
+                                <button class="btn btn-danger btn-sm btnReembolso"
+                                        data-payment-id="@pagamento.PaymentId"
+                                        data-nome="@pagamento.Cliente?.Nome"
+                                        data-valor="@pagamento.ValorPago">
+                                    Reembolso
+                                </button>
                             }
                         </td>
                     </tr>
@@ -44,7 +90,7 @@
         @foreach (var pagamento in Model)
         {
             <div class="pagamento-card p-3 mb-3 border rounded" data-id="@pagamento.PagamentoId">
-                <p><strong>Cliente:</strong> @pagamento.Cliente?.Nome</p> <!-- Exibe o nome do cliente -->
+                <p><strong>Cliente:</strong> @pagamento.Cliente?.Nome</p>
                 <p><strong>Valor Pago:</strong> @(pagamento.ValorPago.HasValue ? pagamento.ValorPago.Value.ToString("C") : "N/A")</p>
                 <p><strong>Status:</strong> @pagamento.StatusPagamento.ToString()</p>
                 <p><strong>Data do Pagamento:</strong> @(pagamento.DataPagamento.HasValue ? pagamento.DataPagamento.Value.ToString("dd/MM/yyyy") : "N/A")</p>
@@ -52,7 +98,12 @@
                     <button class="btn btn-primary btn-sm btnDetalhes" data-id="@pagamento.PagamentoId">Ver</button>
                     @if (pagamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.Aprovado)
                     {
-                        <button class="btn btn-danger btn-sm btnReembolso" data-id="@pagamento.PagamentoId">Reembolso</button>
+                        <button class="btn btn-danger btn-sm btnReembolso"
+                                data-payment-id="@pagamento.PaymentId"
+                                data-nome="@pagamento.Cliente?.Nome"
+                                data-valor="@pagamento.ValorPago">
+                            Reembolso
+                        </button>
                     }
                 </div>
             </div>
@@ -86,7 +137,9 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    Você tem certeza que deseja solicitar o reembolso para o pagamento <strong id="reembolsoPagamentoId"></strong>?
+                    <p id="reembolsoMensagem">Você tem certeza que deseja solicitar o reembolso para o pagamento <strong id="reembolsoPagamentoId"></strong>?</p>
+                    <input type="hidden" id="hiddenReembolsoPaymentId" value="" /> <!-- Campo oculto para o PaymentId -->
+                    <input type="hidden" id="hiddenPagamentoId" value="" /> <!-- Campo oculto para o PagamentoId -->
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -94,14 +147,6 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- Spinner de carregamento (inicialmente oculto) -->
-    <div id="loadingSpinnerPagamento" class="text-center mt-3" style="display:none; z-index: 1000;">
-        <div class="spinner-border text-danger" role="status">
-            <span class="sr-only">Carregando...</span>
-        </div>
-        <p class="mt-2 text-light">Carregando...</p>
     </div>
 
     <!-- Modal de Notificação -->
@@ -120,5 +165,13 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Spinner de carregamento -->
+    <div id="loadingSpinnerPagamento" class="text-center mt-3" style="display:none; z-index: 1000;">
+        <div class="spinner-border text-danger" role="status">
+            <span class="sr-only">Carregando...</span>
+        </div>
+        <p class="mt-2 text-light">Carregando...</p>
     </div>
 </div>

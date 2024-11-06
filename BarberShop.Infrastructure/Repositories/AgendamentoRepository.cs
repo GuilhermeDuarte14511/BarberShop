@@ -266,5 +266,19 @@ namespace BarberShop.Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
+        public async Task<IEnumerable<Agendamento>> GetAgendamentosPorPeriodoAsync(DateTime dataInicio, DateTime dataFim)
+        {
+            return await _context.Agendamentos
+                .Where(agendamento => agendamento.DataHora.Date >= dataInicio.Date && agendamento.DataHora.Date <= dataFim.Date)
+                .Include(agendamento => agendamento.Cliente)
+                .Include(agendamento => agendamento.Barbeiro) // Inclui o barbeiro, caso seja necessário para a exibição de informações
+                .Include(agendamento => agendamento.AgendamentoServicos) // Inclui os serviços do agendamento
+                    .ThenInclude(agendamentoServico => agendamentoServico.Servico) // Inclui detalhes de cada serviço
+                .ToListAsync();
+        }
+
+
+
+
     }
 }

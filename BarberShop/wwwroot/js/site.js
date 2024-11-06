@@ -1458,112 +1458,175 @@
 
     if ($('#pagamentoPage').length > 0) {
 
-        // Função para exibir o spinner de carregamento
-        function mostrarLoading() {
-            $('#loadingSpinnerPagamento').show();
-        }
-
-        // Função para ocultar o spinner de carregamento
-        function ocultarLoading() {
-            $('#loadingSpinnerPagamento').hide();
-        }
-
-        // Ação para o botão "Ver Detalhes"
-        // Ação para o botão "Ver Detalhes"
-        $('.btnDetalhes').on('click', function () {
-            const pagamentoId = $(this).data('id');
-            mostrarLoading();
-
-            // Solicita os detalhes do pagamento via AJAX
-            $.get(`/Pagamento/Detalhes/${pagamentoId}`, function (data) {
-                console.log(data);
-                $('#detalhesModalBody').html(`
-            <p><strong>Cliente:</strong> ${data.nomeCliente}</p>
-            <p><strong>Valor Pago:</strong> R$ ${data.valorPago ? data.valorPago.toFixed(2).replace('.', ',') : 'N/A'}</p>
-            <p><strong>Status:</strong> ${data.statusPagamento}</p>
-            <p><strong>Data do Pagamento:</strong> ${data.dataPagamento}</p>
-        `);
-                $('#detalhesModal').modal('show');
-            }).fail(function () {
-                showToast('Erro ao carregar os detalhes do pagamento.', 'danger');
-            }).always(function () {
-                ocultarLoading();
-            });
-        });
-
-
-        // Ação para o botão de solicitar reembolso
-        $('.btnReembolso').on('click', function () {
-            const pagamentoId = $(this).data('id');
-            $('#reembolsoPagamentoId').text(pagamentoId);
-            $('#btnConfirmarReembolso').data('id', pagamentoId);
-            $('#reembolsoModal').modal('show');
-        });
-
-        // Confirmação de reembolso via AJAX
-        $('#btnConfirmarReembolso').on('click', function () {
-            const pagamentoId = $(this).data('id');
-            const valorReembolso = $('#inputValorReembolso').val() || null; // valor opcional para reembolso parcial
-            mostrarLoading();
-
-            $.ajax({
-                url: '/api/payment/refund',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({
-                    PaymentId: pagamentoId,
-                    Amount: valorReembolso ? parseInt(valorReembolso * 100) : null // converte para centavos, caso haja um valor
-                }),
-                success: function (response) {
-                    $('#reembolsoModal').modal('hide');
-                    showToast(response.refundStatus === "succeeded" ? 'Reembolso processado com sucesso.' : 'Reembolso não foi processado.', response.refundStatus === "succeeded" ? 'success' : 'danger');
-                    if (response.refundStatus === "succeeded") {
-                        setTimeout(() => location.reload(), 1500); // Atualiza a página após 1.5 segundos
-                    }
-                },
-                error: function () {
-                    showToast('Erro ao solicitar reembolso.', 'danger');
-                },
-                complete: function () {
-                    ocultarLoading();
-                }
-            });
-        });
-
-        // Ação para o botão de exclusão
-        $('.btnExcluir').on('click', function () {
-            const pagamentoId = $(this).data('id');
-            const pagamentoNome = $(this).closest('.pagamento-card').find('p:first').text() || $(this).closest('tr').find('td:first').text();
-            $('#excluirPagamentoNome').text(pagamentoNome);
-            $('#btnConfirmarExcluir').data('id', pagamentoId);
-            $('#excluirModal').modal('show');
-        });
-
-        // Confirmação de exclusão via AJAX
-        $('#btnConfirmarExcluir').on('click', function () {
-            const pagamentoId = $(this).data('id');
-            mostrarLoading();
-
-            $.ajax({
-                url: '/Pagamento/DeleteConfirmed',
-                type: 'POST',
-                data: { id: pagamentoId },
-                success: function (response) {
-                    $('#excluirModal').modal('hide');
-                    showToast(response.message, response.success ? 'success' : 'danger');
-                    if (response.success) {
-                        setTimeout(() => location.reload(), 1500); // Atualiza a página após 1.5 segundos
-                    }
-                },
-                error: function () {
-                    showToast('Erro ao excluir o pagamento.', 'danger');
-                },
-                complete: function () {
-                    ocultarLoading();
-                }
-            });
-        });
+    function mostrarLoading() {
+        $('#loadingSpinnerPagamento').show();
     }
+
+    function ocultarLoading() {
+        $('#loadingSpinnerPagamento').hide();
+    }
+
+    // Ação para buscar agendamentos e exibir no modal de Inserir Pagamento
+    $('#buscarAgendamentosBtn').on('click', function () {
+        const dataInicio = $('#dataInicio').val();
+        const dataFim = $('#dataFim').val();
+
+        console.log("Data de Início:", dataInicio);
+        console.log("Data de Fim:", dataFim);
+
+        if (!dataInicio) {
+            alert('Por favor, selecione uma data de início.');
+            return;
+        }
+
+        mostrarLoading();
+
+        $.ajax({
+            url: '/Agendamento/ObterAgendamentosPorData', // Endpoint para buscar agendamentos com serviços e valores
+            type: 'GET',
+            data: { dataInicio: dataInicio, dataFim: dataFim },
+            success: function (agendamentos) {
+                $('#agendamentosContainer').html('');
+                if (agendamentos.length > 0) {
+                    agendamentos.forEach(agendamento => {
+                        let servicosHTML = '';
+                        let valorTotal = agendamento.precoTotal;
+
+                        // Adiciona cada serviço ao HTML e calcula o valor total
+                        agendamento.servicos.forEach(servico => {
+                            servicosHTML += `<li>${servico.nome} - R$ ${servico.preco.toFixed(2)}</li>`;
+                        });
+
+                        $('#agendamentosContainer').append(`
+                            <div class="d-flex flex-column border p-3 mb-3">
+                                <p><strong>Cliente:</strong> ${agendamento.cliente.nome}</p>
+                                <p><strong>Barbeiro:</strong> ${agendamento.barbeiroNome}</p>
+                                <p><strong>Horário:</strong> ${new Date(agendamento.dataHora).toLocaleTimeString()}</p>
+                                <p><strong>Serviços:</strong></p>
+                                <ul>${servicosHTML}</ul>
+                                <p><strong>Valor Total:</strong> R$ ${valorTotal.toFixed(2)}</p>
+                                <button class="btn btn-success btnInserirPagamento" data-agendamento-id="${agendamento.agendamentoId}" data-valor-total="${valorTotal.toFixed(2)}">
+                                    Inserir Pagamento
+                                </button>
+                            </div>
+                        `);
+                    });
+
+                    // Ação para inserir pagamento manualmente
+                    $('.btnInserirPagamento').on('click', function () {
+                        const agendamentoId = $(this).data('agendamento-id');
+                        const valorTotal = $(this).data('valor-total');
+
+                        mostrarLoading();
+                        $.ajax({
+                            url: '/Pagamento/Inserir',  // Endpoint para inserir pagamento
+                            type: 'POST',
+                            data: JSON.stringify({ agendamentoId: agendamentoId, valorPago: valorTotal }),
+                            contentType: 'application/json',
+                            success: function (response) {
+                                alert(response.message);
+                                if (response.success) {
+                                    location.reload();
+                                }
+                            },
+                            error: function () {
+                                alert('Erro ao inserir pagamento.');
+                            },
+                            complete: function () {
+                                ocultarLoading();
+                            }
+                        });
+                    });
+                } else {
+                    $('#agendamentosContainer').html('<p>Nenhum agendamento encontrado para esta data.</p>');
+                }
+            },
+            error: function () {
+                alert('Erro ao buscar agendamentos.');
+                console.error("Erro ao buscar agendamentos.");
+            },
+            complete: function () {
+                ocultarLoading();
+            }
+        });
+    });
+
+    // Ação para o botão "Ver Detalhes"
+    $('.btnDetalhes').on('click', function () {
+        const pagamentoId = $(this).data('id');
+        mostrarLoading();
+
+        $.get(`/Pagamento/Detalhes/${pagamentoId}`, function (data) {
+            console.log("Detalhes do pagamento:", data);
+            const valorPago = data.valorPago ? parseFloat(data.valorPago).toFixed(2).replace('.', ',') : 'N/A';
+            $('#detalhesModalBody').html(`
+                <p><strong>Cliente:</strong> ${data.nomeCliente}</p>
+                <p><strong>Valor Pago:</strong> R$ ${valorPago}</p>
+                <p><strong>Status:</strong> ${data.statusPagamento}</p>
+                <p><strong>Data do Pagamento:</strong> ${data.dataPagamento}</p>
+            `);
+            $('#detalhesModal').modal('show');
+        }).fail(function () {
+            showToast('Erro ao carregar os detalhes do pagamento.', 'danger');
+        }).always(function () {
+            ocultarLoading();
+        });
+    });
+
+    // Ação para o botão de solicitar reembolso
+    $('.btnReembolso').on('click', function () {
+        const pagamentoId = $(this).data('id');
+        const paymentId = $(this).data('payment-id');
+        const nomeCliente = $(this).data('nome');
+        const valorPago = $(this).data('valor');
+
+        $('#reembolsoPagamentoId').text(`${nomeCliente} no valor de R$ ${valorPago}`);
+        $('#hiddenReembolsoPaymentId').val(paymentId);
+        $('#btnConfirmarReembolso').data('id', pagamentoId);
+        $('#reembolsoModal').modal('show');
+    });
+
+    // Confirmação de reembolso via AJAX
+    $('#btnConfirmarReembolso').on('click', function () {
+        const pagamentoId = $(this).data('id');
+        const paymentId = $('#hiddenReembolsoPaymentId').val();
+        mostrarLoading();
+
+        $.ajax({
+            url: '/api/payment/refund',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ PaymentId: paymentId }),
+            success: function (response) {
+                $('#reembolsoModal').modal('hide');
+                showToast('Reembolso processado com sucesso.', 'success');
+                $.ajax({
+                    url: `/Pagamento/SolicitarReembolso/${pagamentoId}`,
+                    type: 'POST',
+                    success: function() {
+                        setTimeout(() => location.reload(), 1500);
+                    }
+                });
+            },
+            error: function () {
+                showToast('Erro ao solicitar reembolso.', 'danger');
+            },
+            complete: function () {
+                ocultarLoading();
+            }
+        });
+    });
+
+    // Ação para o botão de exclusão
+    $('.btnExcluir').on('click', function () {
+        const pagamentoId = $(this).data('id');
+        $('#excluirPagamentoNome').text(pagamentoId);
+        $('#btnConfirmarExcluir').data('id', pagamentoId);
+        $('#excluirModal').modal('show');
+    });
+}
+
+
 
 
     if ($('#avaliacaoPage').length > 0) {

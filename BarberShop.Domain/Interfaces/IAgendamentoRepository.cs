@@ -15,4 +15,7 @@ public interface IAgendamentoRepository : IRepository<Agendamento>
 
     Task<Agendamento> GetDataAvaliacaoAsync(int agendamentoId); // Adicione esta linha
 
+    Task<IEnumerable<Agendamento>> GetAgendamentosPorPeriodoAsync(DateTime dataInicio, DateTime dataFim);
+
+
 }

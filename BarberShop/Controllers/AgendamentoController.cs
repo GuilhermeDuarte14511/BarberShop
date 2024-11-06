@@ -347,6 +347,88 @@ namespace BarberShopMVC.Controllers
             }
         }
 
+        public async Task<IActionResult> ObterAgendamentosPorData(DateTime dataInicio, DateTime? dataFim = null)
+        {
+            try
+            {
+                // Obtém os agendamentos dentro do período especificado
+                var agendamentos = await _agendamentoRepository.GetAgendamentosPorPeriodoAsync(dataInicio, dataFim ?? DateTime.Now);
+
+                // Mapeia os agendamentos para o DTO AgendamentoDto
+                var agendamentosDTO = agendamentos.Select(a => new AgendamentoDto
+                {
+                    AgendamentoId = a.AgendamentoId,
+                    DataHora = a.DataHora,
+                    Status = a.Status,
+                    DuracaoTotal = a.DuracaoTotal,
+                    FormaPagamento = a.FormaPagamento,
+                    PrecoTotal = a.AgendamentoServicos.Sum(agendamentoServico => (decimal)agendamentoServico.Servico.Preco), // Conversão explícita para decimal
+                    Cliente = new ClienteDTO
+                    {
+                        Nome = a.Cliente.Nome,
+                        Email = a.Cliente.Email,
+                        Telefone = a.Cliente.Telefone
+                    },
+                    BarbeiroNome = a.Barbeiro.Nome,
+                    StatusPagamento = a.Pagamento?.StatusPagamento.ToString() ?? "Não Pago",
+                    Servicos = a.AgendamentoServicos.Select(agendamentoServico => new ServicoDTO
+                    {
+                        ServicoId = agendamentoServico.Servico.ServicoId,
+                        Nome = agendamentoServico.Servico.Nome,
+                        Preco = (decimal)agendamentoServico.Servico.Preco // Conversão explícita para decimal
+                    }).ToList()
+                }).ToList();
+
+                return Json(agendamentosDTO);
+            }
+            catch (Exception ex)
+            {
+                await LogAsync("ERROR", nameof(ObterAgendamentosPorData), $"Erro ao buscar agendamentos: {ex.Message}", $"Data Início: {dataInicio}, Data Fim: {dataFim}");
+                return Json(new { success = false, message = "Erro ao buscar agendamentos." });
+            }
+        }
+
+
+
+        [HttpPost]
+        public async Task<IActionResult> Inserir(int agendamentoId, decimal valorPago)
+        {
+            if (agendamentoId <= 0 || valorPago <= 0)
+            {
+                return BadRequest("AgendamentoId ou ValorPago inválido.");
+            }
+
+            try
+            {
+                // Obter o agendamento com base no agendamentoId
+                var agendamento = await _agendamentoRepository.GetByIdAsync(agendamentoId);
+                if (agendamento == null)
+                {
+                    return NotFound("Agendamento não encontrado.");
+                }
+
+                // Criar novo pagamento para o agendamento
+                var pagamento = new Pagamento
+                {
+                    AgendamentoId = agendamentoId,
+                    ClienteId = agendamento.ClienteId,
+                    ValorPago = valorPago,
+                    StatusPagamento = StatusPagamento.Aprovado,
+                    DataPagamento = DateTime.Now
+                };
+
+                // Salvar o pagamento no repositório
+                await _pagamentoRepository.AddAsync(pagamento);
+
+                await LogAsync("INFO", nameof(PagamentoController), "Pagamento manual inserido com sucesso", $"Agendamento ID: {agendamentoId}, Valor Pago: {valorPago}");
+                return Json(new { success = true, message = "Pagamento inserido com sucesso." });
+            }
+            catch (Exception ex)
+            {
+                await LogAsync("ERROR", nameof(PagamentoController), $"Erro ao inserir pagamento: {ex.Message}", $"Agendamento ID: {agendamentoId}");
+                return Json(new { success = false, message = "Erro ao inserir pagamento." });
+            }
+        }
 
 
     }
