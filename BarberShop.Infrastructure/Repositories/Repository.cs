@@ -46,6 +46,6 @@ public class Repository<T> : IRepository<T> where T : class
     // Implementação do SaveChangesAsync
     public async Task<int> SaveChangesAsync()
     {
-        return await _context.SaveChangesAsync();
+        return await _context.SaveChangesAsync(); // Retorna o número de entradas afetadas
     }
 }
