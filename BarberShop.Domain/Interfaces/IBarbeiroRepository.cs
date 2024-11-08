@@ -6,5 +6,7 @@ namespace BarberShop.Domain.Interfaces
     public interface IBarbeiroRepository : IRepository<Barbeiro>
     {
         Task<Barbeiro> GetByEmailOrPhoneAsync(string email, string telefone);
+        Task<IEnumerable<Barbeiro>> GetAllByBarbeariaIdAsync(int barbeariaId);
+
     }
 }

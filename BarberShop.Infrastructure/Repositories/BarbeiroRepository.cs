@@ -16,7 +16,6 @@ namespace BarberShop.Infrastructure.Repositories
             _context = context;
         }
 
-        // Corrigido: AddAsync agora adiciona um Barbeiro
         public async Task<Barbeiro> AddAsync(Barbeiro entity)
         {
             await _context.Barbeiros.AddAsync(entity);
@@ -54,6 +53,27 @@ namespace BarberShop.Infrastructure.Repositories
         {
             return await _context.Barbeiros
                 .FirstOrDefaultAsync(b => b.Email == email || b.Telefone == telefone);
+        }
+
+        public async Task<IEnumerable<Barbeiro>> GetByBarbeariaIdAsync(int barbeariaId)
+        {
+            return await _context.Barbeiros
+                .Where(b => b.BarbeariaId == barbeariaId)
+                .ToListAsync();
+        }
+
+        // Implementação de GetAllByBarbeariaIdAsync
+        public async Task<IEnumerable<Barbeiro>> GetAllByBarbeariaIdAsync(int barbeariaId)
+        {
+            return await _context.Barbeiros
+                .Where(b => b.BarbeariaId == barbeariaId)
+                .ToListAsync();
+        }
+
+        // Implementação do SaveChangesAsync
+        public async Task<int> SaveChangesAsync()
+        {
+            return await _context.SaveChangesAsync();
         }
     }
 }

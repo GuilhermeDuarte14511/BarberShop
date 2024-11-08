@@ -129,7 +129,7 @@ namespace BarberShopMVC.Controllers
             }
         }
 
-        public async Task<IActionResult> EscolherBarbeiro(int duracaoTotal, string servicoIds)
+        public async Task<IActionResult> EscolherBarbeiro(int duracaoTotal, string servicoIds, string barbeariaUrl)
         {
             if (duracaoTotal <= 0)
             {
@@ -138,9 +138,17 @@ namespace BarberShopMVC.Controllers
 
             try
             {
-                var barbeiros = await _barbeiroService.ObterTodosBarbeirosAsync();
+                int? barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
+                if (!barbeariaId.HasValue)
+                {
+                    return RedirectToAction("BarbeariaNaoEncontrada", "Erro");
+                }
+
+                var barbeiros = await _barbeiroService.ObterBarbeirosPorBarbeariaIdAsync(barbeariaId.Value);
                 ViewData["DuracaoTotal"] = duracaoTotal;
                 ViewData["ServicoIds"] = servicoIds;
+                ViewData["BarbeariaUrl"] = barbeariaUrl;
+                ViewData["BarbeariaId"] = barbeariaId; // Adiciona o barbeariaId ao ViewData
                 return View("EscolherBarbeiro", barbeiros);
             }
             catch (Exception ex)
@@ -149,5 +157,6 @@ namespace BarberShopMVC.Controllers
                 return StatusCode(500, "Erro ao carregar os barbeiros.");
             }
         }
+
     }
 }

@@ -34,6 +34,13 @@ namespace BarberShop.Application.Services
             return await _barbeiroRepository.GetByEmailOrPhoneAsync(email, telefone);
         }
 
+        // Novo método para obter barbeiros por barbeariaId
+        public async Task<IEnumerable<Barbeiro>> ObterBarbeirosPorBarbeariaIdAsync(int barbeariaId)
+        {
+            return await _barbeiroRepository.GetAllByBarbeariaIdAsync(barbeariaId);
+        }
+
+
         public async Task<IEnumerable<DateTime>> ObterHorariosDisponiveisAsync(int barbeiroId, int? duracaoTotal)
         {
             if (!duracaoTotal.HasValue)

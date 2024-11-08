@@ -395,10 +395,7 @@
         var duracaoTotal = 0;
 
         window.adicionarServico = function (id, nome, preco, duracao, element) {
-            // Substitui vírgula por ponto no preço antes de converter para número
             preco = preco.replace(',', '.');
-            console.log("Adicionando serviço:", nome, "Preço:", preco, "Duração:", duracao);
-
             var index = servicosSelecionados.findIndex(servico => servico.id === id);
 
             if (index === -1) {
@@ -406,11 +403,7 @@
                 valorTotal += parseFloat(preco);
                 duracaoTotal += parseInt(duracao);
                 $(element).prop('disabled', true);
-
-                console.log("Serviço adicionado:", servicosSelecionados);
-                console.log("Novo valor total (adicionado):", valorTotal);
             }
-
             atualizarListaServicosSelecionados();
         };
 
@@ -418,10 +411,6 @@
             valorTotal -= parseFloat(servicosSelecionados[index].preco.toString().replace(',', '.'));
             duracaoTotal -= parseInt(servicosSelecionados[index].duracao);
             servicosSelecionados.splice(index, 1);
-
-            console.log("Serviço removido:", servicosSelecionados);
-            console.log("Novo valor total (removido):", valorTotal);
-
             $('#servico-' + id).prop('disabled', false);
             atualizarListaServicosSelecionados();
         };
@@ -429,7 +418,6 @@
         function atualizarListaServicosSelecionados() {
             var lista = $('#servicosSelecionados');
             lista.empty();
-
             servicosSelecionados.forEach(function (servico, index) {
                 lista.append(
                     `<li class="list-group-item d-flex justify-content-between align-items-center">
@@ -438,9 +426,7 @@
                 </li>`
                 );
             });
-
             $('#valorTotal').text(valorTotal.toFixed(2));
-            console.log("Atualizando valor total exibido:", valorTotal.toFixed(2));
         }
 
         window.confirmarServico = function () {
@@ -450,15 +436,13 @@
             }
 
             var servicoIds = servicosSelecionados.map(s => s.id);
-
-            console.log("Serviços selecionados para confirmação:", servicosSelecionados);
-            console.log("Valor total para confirmação:", valorTotal);
-
             $('#loadingSpinner').fadeIn();
-
             sessionStorage.setItem('servicosSelecionados', JSON.stringify(servicosSelecionados));
 
-            window.location.href = `/Barbeiro/EscolherBarbeiro?duracaoTotal=${duracaoTotal}&servicoIds=${servicoIds.join(',')}`;
+            var barbeariaUrl = $('#barbeariaUrl').val();
+            var barbeariaId = $('#barbeariaId').val();
+
+            window.location.href = `/${barbeariaUrl}/Barbeiro/EscolherBarbeiro?duracaoTotal=${duracaoTotal}&servicoIds=${servicoIds.join(',')}&barbeariaId=${barbeariaId}`;
         };
 
         var servicosArmazenados = JSON.parse(sessionStorage.getItem('servicosSelecionados')) || [];
@@ -468,7 +452,6 @@
             duracaoTotal += parseInt(servico.duracao);
             $('#servico-' + servico.id).prop('disabled', true);
         });
-
         atualizarListaServicosSelecionados();
     }
 
@@ -497,10 +480,13 @@
 
         function carregarHorariosDropdown(barbeiroId, duracaoTotal) {
             $('#loadingSpinner').fadeIn();
-            console.log(`Carregando horários para o barbeiro ID: ${barbeiroId}, duração: ${duracaoTotal}`);
+            const barbeariaUrl = $('#barbeariaUrl').val();
+            const barbeariaId = $('#barbeariaId').val();
+
+            console.log(`Carregando horários para o barbeiro ID: ${barbeiroId}, duração: ${duracaoTotal}, barbeariaId: ${barbeariaId}, barbeariaUrl: ${barbeariaUrl}`);
 
             $.ajax({
-                url: '/Agendamento/ObterHorariosDisponiveis',
+                url: `/${barbeariaUrl}/Agendamento/ObterHorariosDisponiveis`,
                 data: {
                     barbeiroId: barbeiroId,
                     duracaoTotal: duracaoTotal
@@ -530,6 +516,7 @@
             });
         }
 
+
         // Evento para capturar o valor selecionado do dropdown
         $('#horariosDisponiveis').on('change', function () {
             var horarioUTC = $(this).val();
@@ -546,10 +533,14 @@
 
                 sessionStorage.removeItem('servicosSelecionados');
 
-                // Usa o valor ajustado em `horarioSelecionado` diretamente na URL
-                window.location.href = `/Agendamento/ResumoAgendamento?barbeiroId=${selectedBarbeiroId}&dataHora=${encodeURIComponent(horarioSelecionado)}&servicoIds=${selectedServicoIds}`;
+                const barbeariaUrl = $('#barbeariaUrl').val(); // Obtém o barbeariaUrl
+                const barbeariaId = $('#barbeariaId').val();   // Obtém o barbeariaId
+
+                // Usa o valor ajustado em `horarioSelecionado` diretamente na URL com `barbeariaUrl` e `barbeariaId`
+                window.location.href = `/${barbeariaUrl}/Agendamento/ResumoAgendamento?barbeiroId=${selectedBarbeiroId}&dataHora=${encodeURIComponent(horarioSelecionado)}&servicoIds=${selectedServicoIds}&barbeariaId=${barbeariaId}`;
             }
         });
+
 
         $('#voltarBtn').on('click', function () {
             window.location.href = '/Cliente/SolicitarServico';
@@ -625,13 +616,17 @@
             const barbeiroId = $('#resumoAgendamentoPage').data('barbeiro-id');
             const dataHora = $('#resumoAgendamentoPage').data('data-hora');
             const servicoIds = $('#resumoAgendamentoPage').data('servico-ids');
+            const barbeariaId = $('#barbeariaId').val(); // Obtendo o barbeariaId
+            const barbeariaUrl = $('#barbeariaUrl').val(); // Obtendo o barbeariaUrl
 
             try {
-                const response = await $.post('/Agendamento/ConfirmarAgendamento', {
+                const response = await $.post(`/${barbeariaUrl}/Agendamento/ConfirmarAgendamento`, { // Incluindo barbeariaUrl na URL
                     barbeiroId,
                     dataHora,
                     servicoIds,
-                    formaPagamento: selectedPaymentMethod
+                    formaPagamento: selectedPaymentMethod,
+                    barbeariaId,  // Incluindo barbeariaId no payload
+                    barbeariaUrl  // Incluindo barbeariaUrl no payload
                 });
 
                 if (response.success) {
@@ -722,11 +717,16 @@
         });
 
         async function atualizarStatusPagamento(agendamentoId, statusPagamento, paymentId) {
+            const barbeariaId = $('#barbeariaId').val(); // Obtendo o barbeariaId
+            const barbeariaUrl = $('#barbeariaUrl').val(); // Obtendo o barbeariaUrl
+
             try {
-                const response = await $.post('/Agendamento/AtualizarStatusPagamento', {
+                const response = await $.post(`/${barbeariaUrl}/Agendamento/AtualizarStatusPagamento`, { // Incluindo barbeariaUrl na URL
                     agendamentoId,
                     statusPagamento,
-                    paymentId
+                    paymentId,
+                    barbeariaId, // Incluindo barbeariaId no payload
+                    barbeariaUrl // Incluindo barbeariaUrl no payload
                 });
 
                 if (response.success) {
@@ -744,6 +744,7 @@
                 $('#errorModal').modal('show');
             }
         }
+
 
         function redirecionarParaMenu() {
             $('#successModal').on('hidden.bs.modal', function () {

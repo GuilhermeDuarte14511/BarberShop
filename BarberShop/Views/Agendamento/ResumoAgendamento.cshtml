@@ -65,6 +65,10 @@
             <input type="hidden" name="clienteEmail" value="@ViewData["ClienteEmail"]" />
             <input type="hidden" name="stripe-publishable-key" value="@ViewData["StripePublishableKey"]" />
 
+            <!-- Inputs ocultos para barbeariaUrl e barbeariaId -->
+            <input type="hidden" id="barbeariaUrl" value="@Model.BarbeariaUrl" />
+            <input type="hidden" id="barbeariaId" value="@Model.BarbeariaId" />
+
             <!-- Botões de controle adicionais -->
             <div class="button-container">
                 <button id="confirmarAgendamentoBtn" class="btn btn-danger" style="display: none;">Finalizar Agendamento</button>

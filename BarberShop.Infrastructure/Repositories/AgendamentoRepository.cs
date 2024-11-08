@@ -80,33 +80,41 @@ namespace BarberShop.Infrastructure.Repositories
                 .FirstOrDefaultAsync(a => a.AgendamentoId == agendamentoId);
         }
 
-
-        public async Task<IEnumerable<Agendamento>> GetByClienteIdWithServicosAsync(int clienteId)
+        // Implementação de GetAgendamentosPorBarbeariaAsync
+        public async Task<IEnumerable<Agendamento>> GetAgendamentosPorBarbeariaAsync(int barbeariaId)
         {
-            try
-            {
-                return await _context.Agendamentos
-                    .Where(a => a.ClienteId == clienteId)
-                    .Include(a => a.Cliente)
-                    .Include(a => a.Barbeiro)
-                    .Include(a => a.Pagamento) // Inclui o pagamento associado
-                    .Include(a => a.AgendamentoServicos) // Inclui AgendamentoServicos
-                        .ThenInclude(ags => ags.Servico) // Inclui o serviço relacionado
-                    .ToListAsync();
-            }
-            catch (InvalidCastException ex)
-            {
-                // Log detalhado para ajudar no diagnóstico
-                Console.WriteLine($"Erro ao converter tipos: {ex.Message}");
-                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
-                throw;
-            }
+            return await _context.Agendamentos
+                .Where(a => a.BarbeariaId == barbeariaId)
+                .Include(a => a.Cliente)
+                .Include(a => a.Barbeiro)
+                .Include(a => a.AgendamentoServicos)
+                    .ThenInclude(asg => asg.Servico)
+                .ToListAsync();
+        }
+
+        public async Task<Agendamento> GetByIdAndBarbeariaIdAsync(int id, int barbeariaId)
+        {
+            return await _context.Agendamentos
+                .Include(a => a.Cliente)
+                .Include(a => a.Barbeiro)
+                .Include(a => a.AgendamentoServicos)
+                    .ThenInclude(asg => asg.Servico)
+                .FirstOrDefaultAsync(a => a.AgendamentoId == id && a.BarbeariaId == barbeariaId);
         }
 
 
-
-
-
+        // Implementação de GetByClienteIdWithServicosAsync com clienteId e barbeariaId
+        public async Task<IEnumerable<Agendamento>> GetByClienteIdWithServicosAsync(int clienteId, int? barbeariaId)
+        {
+            return await _context.Agendamentos
+                .Where(a => a.ClienteId == clienteId && a.BarbeariaId == barbeariaId)
+                .Include(a => a.Cliente)
+                .Include(a => a.Barbeiro)
+                .Include(a => a.Pagamento)
+                .Include(a => a.AgendamentoServicos)
+                    .ThenInclude(ags => ags.Servico)
+                .ToListAsync();
+        }
 
         // Método para verificar a disponibilidade de horário específico
         public async Task<bool> VerificarDisponibilidadeHorarioAsync(int barbeiroId, DateTime dataHora, int duracao)
@@ -130,34 +138,32 @@ namespace BarberShop.Infrastructure.Repositories
             return disponibilidade;
         }
 
-        public async Task<IEnumerable<DateTime>> GetAvailableSlotsAsync(int barbeiroId, DateTime dataVisualizacao, int duracaoTotal)
+        public async Task<IEnumerable<DateTime>> GetAvailableSlotsAsync(int barbeariaId, int barbeiroId, DateTime dataVisualizacao, int duracaoTotal, Dictionary<DayOfWeek, (TimeSpan abertura, TimeSpan fechamento)> horarioFuncionamento)
         {
             var horariosDisponiveis = new List<DateTime>();
 
             // Define o fuso horário de Brasília
             TimeZoneInfo brasiliaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time");
 
-            // Ajusta a data de início para o horário de abertura (9:00) no horário de Brasília ou a hora atual, caso seja depois das 9:00
+            // Define o início e o fim do horário de exibição baseado no horário da barbearia
             DateTime dataInicio = dataVisualizacao.Date.AddHours(9);
             dataInicio = TimeZoneInfo.ConvertTime(dataInicio, brasiliaTimeZone);
-            dataInicio = dataInicio.AddHours(3); // Ajuste para o horário de Brasília
+            dataInicio = dataInicio.AddHours(3);
 
             if (DateTime.Now > dataInicio)
                 dataInicio = DateTime.Now;
 
-            // Define o final da janela de exibição (7 dias a partir de dataInicio)
             DateTime dataFim = dataInicio.AddDays(7).Date.AddHours(18);
 
             for (DateTime dataAtual = dataInicio; dataAtual <= dataFim; dataAtual = dataAtual.AddDays(1).Date.AddHours(9))
             {
-                if (dataAtual.DayOfWeek == DayOfWeek.Sunday)
-                    continue; // Pula os domingos
+                if (!horarioFuncionamento.TryGetValue(dataAtual.DayOfWeek, out var funcionamentoDia))
+                    continue;
 
-                DateTime horarioAbertura = dataAtual;
-                DateTime horarioFechamento = dataAtual.Date.AddHours(18);
+                DateTime horarioAbertura = dataAtual.Date.Add(funcionamentoDia.abertura);
+                DateTime horarioFechamento = dataAtual.Date.Add(funcionamentoDia.fechamento);
                 DateTime horarioAtual = horarioAbertura;
 
-                // Buscar agendamentos do barbeiro no dia atual
                 var agendamentosDoDia = await _context.Agendamentos
                     .Where(a => a.BarbeiroId == barbeiroId && a.DataHora.Date == dataAtual.Date)
                     .OrderBy(a => a.DataHora)
@@ -178,12 +184,10 @@ namespace BarberShop.Infrastructure.Repositories
                     }
 
                     horarioAtual = fimAgendamento;
-
                     if (horarioAtual >= horarioFechamento)
                         break;
                 }
 
-                // Preenche o restante do dia com horários disponíveis até o fechamento
                 while (horarioAtual.AddMinutes(duracaoTotal) <= horarioFechamento)
                 {
                     if (horarioAtual >= DateTime.Now)
@@ -196,6 +200,7 @@ namespace BarberShop.Infrastructure.Repositories
 
             return horariosDisponiveis;
         }
+
 
 
         // Implementação do método ObterAgendamentosPorBarbeiroIdAsync
@@ -277,6 +282,10 @@ namespace BarberShop.Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        public async Task<int> SaveChangesAsync()
+        {
+            return await _context.SaveChangesAsync();
+        }
 
 
 

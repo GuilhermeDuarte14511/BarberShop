@@ -2,9 +2,7 @@
 using BarberShop.Domain.Interfaces;
 using BarberShop.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace BarberShop.Infrastructure.Repositories
@@ -18,12 +16,10 @@ namespace BarberShop.Infrastructure.Repositories
             _context = context;
         }
 
-        // Método para adicionar um novo cliente
         public async Task<Cliente> AddAsync(Cliente entity)
         {
             await _context.Clientes.AddAsync(entity);
-            await _context.SaveChangesAsync();
-            return entity;
+            return entity; // Não chama SaveChangesAsync aqui
         }
 
         public async Task DeleteAsync(int id)
@@ -32,7 +28,7 @@ namespace BarberShop.Infrastructure.Repositories
             if (cliente != null)
             {
                 _context.Clientes.Remove(cliente);
-                await _context.SaveChangesAsync();
+                // Não chama SaveChangesAsync aqui
             }
         }
 
@@ -41,25 +37,36 @@ namespace BarberShop.Infrastructure.Repositories
             return await _context.Clientes.ToListAsync();
         }
 
-        public async Task<Cliente> GetByEmailOrPhoneAsync(string email, string phone, int barbeariaId)
+        public async Task<IEnumerable<Cliente>> GetAllByBarbeariaIdAsync(int barbeariaId)
         {
             return await _context.Clientes
-                .FirstOrDefaultAsync(c => (c.Email == email || c.Telefone == phone) && c.BarbeariaId == barbeariaId);
+                .Where(c => c.BarbeariaId == barbeariaId)
+                .ToListAsync();
         }
-
 
         public async Task<Cliente> GetByIdAsync(int id)
         {
             return await _context.Clientes.FindAsync(id);
         }
 
+        public async Task<Cliente> GetByIdAndBarbeariaIdAsync(int clienteId, int barbeariaId)
+        {
+            return await _context.Clientes
+                .FirstOrDefaultAsync(c => c.ClienteId == clienteId && c.BarbeariaId == barbeariaId);
+        }
+
+        public async Task<Cliente> GetByEmailOrPhoneAsync(string email, string phone, int barbeariaId)
+        {
+            return await _context.Clientes
+                .FirstOrDefaultAsync(c => (c.Email == email || c.Telefone == phone) && c.BarbeariaId == barbeariaId);
+        }
+
         public async Task UpdateAsync(Cliente entity)
         {
             _context.Clientes.Update(entity);
-            await _context.SaveChangesAsync();
+            // Não chama SaveChangesAsync aqui
         }
 
-        // Novo método para atualizar apenas o código de verificação e a data de expiração
         public async Task UpdateCodigoVerificacaoAsync(int clienteId, string codigoVerificacao, DateTime? expiracao)
         {
             var cliente = await _context.Clientes.FindAsync(clienteId);
@@ -73,6 +80,12 @@ namespace BarberShop.Infrastructure.Repositories
 
                 await _context.SaveChangesAsync();
             }
+        }
+
+        // Implementação do SaveChangesAsync
+        public async Task<int> SaveChangesAsync()
+        {
+            return await _context.SaveChangesAsync();
         }
     }
 }

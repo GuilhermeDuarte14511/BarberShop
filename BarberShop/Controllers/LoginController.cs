@@ -40,6 +40,8 @@ namespace BarberShopMVC.Controllers
             if (barbearia != null)
             {
                 HttpContext.Session.SetInt32("BarbeariaId", barbearia.BarbeariaId); // Armazena o Id da barbearia na sessão
+                HttpContext.Session.SetString("BarbeariaUrl", barbeariaUrl); // Armazena a URL da barbearia na sessão
+
                 ViewData["BarbeariaNome"] = barbearia.Nome;
 
                 if (barbearia.Logo != null)
@@ -131,9 +133,11 @@ namespace BarberShopMVC.Controllers
             string emailInput = isEmail ? inputFieldLogin : null;
             string phoneInput = isEmail ? null : inputFieldLogin;
 
-            // Obtém o barbeariaId da sessão
+            // Obtém o barbeariaId e a barbeariaUrl da sessão
             int? barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
-            if (!barbeariaId.HasValue)
+            string barbeariaUrl = HttpContext.Session.GetString("BarbeariaUrl");
+
+            if (!barbeariaId.HasValue || string.IsNullOrEmpty(barbeariaUrl))
             {
                 return Json(new { success = false, message = "Erro ao identificar a barbearia." });
             }
@@ -147,7 +151,8 @@ namespace BarberShopMVC.Controllers
                     var claimsPrincipal = _autenticacaoService.AutenticarCliente(cliente);
                     await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal);
 
-                    return Json(new { success = true, redirectUrl = Url.Action("MenuPrincipal", "Cliente") });
+                    // Redireciona para o MenuPrincipal incluindo o barbeariaUrl
+                    return Json(new { success = true, redirectUrl = Url.Action("MenuPrincipal", "Cliente", new { barbeariaUrl }) });
                 }
                 else
                 {
@@ -159,6 +164,7 @@ namespace BarberShopMVC.Controllers
                 return Json(new { success = false, message = "Cliente não encontrado. Revise a informação e tente novamente." });
             }
         }
+
 
 
         [HttpPost]

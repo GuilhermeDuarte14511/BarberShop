@@ -1,5 +1,4 @@
 ﻿using BarberShop.Application.DTOs;
-using BarberShop.Application.Interfaces;
 using BarberShop.Application.Services;
 using BarberShop.Domain.Entities;
 using BarberShop.Domain.Interfaces;
@@ -22,61 +21,72 @@ namespace BarberShopMVC.Controllers
             _servicoRepository = servicoRepository;
         }
 
-        public IActionResult MenuPrincipal()
+        public IActionResult MenuPrincipal(string barbeariaUrl)
         {
+            // Verifica se o valor está na sessão, caso não tenha sido passado como parâmetro
+            if (string.IsNullOrEmpty(barbeariaUrl))
+            {
+                barbeariaUrl = HttpContext.Session.GetString("BarbeariaUrl") ?? "NomeBarbearia";
+            }
+            else
+            {
+                // Salva a URL na sessão para acessos futuros
+                HttpContext.Session.SetString("BarbeariaUrl", barbeariaUrl);
+            }
+
+            ViewData["BarbeariaUrl"] = barbeariaUrl;
             return View();
         }
 
-        public async Task<IActionResult> SolicitarServico()
-        {
-            var servicos = await _servicoRepository.GetAllAsync();
-            return View("SolicitarServico", servicos);
-        }
 
-        // Exibe todos os clientes
-        public async Task<IActionResult> Index()
+
+        public async Task<IActionResult> Index(string barbeariaUrl)
         {
-            var clientes = await _clienteService.ObterTodosClientesAsync();
+            ViewData["BarbeariaUrl"] = barbeariaUrl;
+            int barbeariaId = int.Parse(HttpContext.Session.GetString("BarbeariaId") ?? "0");
+            var clientes = await _clienteService.ObterTodosClientesAsync(barbeariaId);
             return View(clientes);
         }
 
-        // Exibe detalhes de um cliente específico
-        public async Task<IActionResult> Details(int id)
+        public async Task<IActionResult> Details(int id, string barbeariaUrl)
         {
-            var cliente = await _clienteService.ObterClientePorIdAsync(id);
+            ViewData["BarbeariaUrl"] = barbeariaUrl;
+            int barbeariaId = int.Parse(HttpContext.Session.GetString("BarbeariaId") ?? "0");
+            var cliente = await _clienteService.ObterClientePorIdAsync(id, barbeariaId);
             if (cliente == null) return NotFound();
             return View(cliente);
         }
 
-        // Exibe a view de criação de cliente
-        public IActionResult Create()
+        public IActionResult Create(string barbeariaUrl)
         {
+            ViewData["BarbeariaUrl"] = barbeariaUrl;
             return View();
         }
 
-        // Cria um novo cliente
         [HttpPost]
-        public async Task<IActionResult> Create(ClienteDTO clienteDto)
+        public async Task<IActionResult> Create(ClienteDTO clienteDto, string barbeariaUrl)
         {
+            ViewData["BarbeariaUrl"] = barbeariaUrl;
             if (ModelState.IsValid)
             {
                 var cliente = new Cliente
                 {
                     Nome = clienteDto.Nome,
                     Email = clienteDto.Email,
-                    Telefone = clienteDto.Telefone,
+                    Telefone = clienteDto.Telefone
                 };
-
-                await _clienteService.AdicionarClienteAsync(cliente);
-                return RedirectToAction(nameof(Index));
+                int barbeariaId = int.Parse(HttpContext.Session.GetString("BarbeariaId") ?? "0");
+                await _clienteService.AdicionarClienteAsync(cliente, barbeariaId);
+                return RedirectToAction(nameof(Index), new { barbeariaUrl });
             }
             return View(clienteDto);
         }
 
-        // Exibe a view de edição de cliente
-        public async Task<IActionResult> Edit(int id)
+        public async Task<IActionResult> Edit(int id, string barbeariaUrl)
         {
-            var cliente = await _clienteService.ObterClientePorIdAsync(id);
+            ViewData["BarbeariaUrl"] = barbeariaUrl;
+            int barbeariaId = int.Parse(HttpContext.Session.GetString("BarbeariaId") ?? "0");
+            var cliente = await _clienteService.ObterClientePorIdAsync(id, barbeariaId);
             if (cliente == null) return NotFound();
 
             var clienteDto = new ClienteDTO
@@ -90,10 +100,10 @@ namespace BarberShopMVC.Controllers
             return View(clienteDto);
         }
 
-        // Atualiza um cliente existente
         [HttpPost]
-        public async Task<IActionResult> Edit(int id, ClienteDTO clienteDto)
+        public async Task<IActionResult> Edit(int id, ClienteDTO clienteDto, string barbeariaUrl)
         {
+            ViewData["BarbeariaUrl"] = barbeariaUrl;
             if (id != clienteDto.ClienteId) return BadRequest();
 
             if (ModelState.IsValid)
@@ -105,27 +115,43 @@ namespace BarberShopMVC.Controllers
                     Email = clienteDto.Email,
                     Telefone = clienteDto.Telefone,
                 };
-
-                await _clienteService.AtualizarClienteAsync(cliente);
-                return RedirectToAction(nameof(Index));
+                int barbeariaId = int.Parse(HttpContext.Session.GetString("BarbeariaId") ?? "0");
+                await _clienteService.AtualizarClienteAsync(cliente, barbeariaId);
+                return RedirectToAction(nameof(Index), new { barbeariaUrl });
             }
             return View(clienteDto);
         }
 
-        // Exibe a view de exclusão de cliente
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(int id, string barbeariaUrl)
         {
-            var cliente = await _clienteService.ObterClientePorIdAsync(id);
+            ViewData["BarbeariaUrl"] = barbeariaUrl;
+            int barbeariaId = int.Parse(HttpContext.Session.GetString("BarbeariaId") ?? "0");
+            var cliente = await _clienteService.ObterClientePorIdAsync(id, barbeariaId);
             if (cliente == null) return NotFound();
             return View(cliente);
         }
 
-        // Exclui um cliente
         [HttpPost, ActionName("Delete")]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public async Task<IActionResult> DeleteConfirmed(int id, string barbeariaUrl)
         {
-            await _clienteService.DeletarClienteAsync(id);
-            return RedirectToAction(nameof(Index));
+            int barbeariaId = int.Parse(HttpContext.Session.GetString("BarbeariaId") ?? "0");
+            await _clienteService.DeletarClienteAsync(id, barbeariaId);
+            return RedirectToAction(nameof(Index), new { barbeariaUrl });
+        }
+
+        public async Task<IActionResult> SolicitarServico(string barbeariaUrl)
+        {
+            ViewData["BarbeariaUrl"] = barbeariaUrl;
+            int? barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
+
+            if (barbeariaId == null)
+            {
+                return RedirectToAction("BarbeariaNaoEncontrada", "Erro");
+            }
+
+            ViewData["BarbeariaId"] = barbeariaId; // Passa o barbeariaId para a ViewData
+            var servicos = await _servicoRepository.ObterServicosPorBarbeariaIdAsync(barbeariaId.Value);
+            return View("SolicitarServico", servicos);
         }
     }
 }

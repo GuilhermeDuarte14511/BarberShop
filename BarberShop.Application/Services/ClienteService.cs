@@ -16,58 +16,49 @@ namespace BarberShop.Application.Services
             _agendamentoRepository = agendamentoRepository;
         }
 
-        public async Task<IEnumerable<Agendamento>> ObterHistoricoAgendamentosAsync(int clienteId)
+        public async Task<IEnumerable<Agendamento>> ObterHistoricoAgendamentosAsync(int clienteId, int? barbeariaId)
         {
-            // Busca o histórico de agendamentos do cliente
-            var agendamentos = await _agendamentoRepository.GetByClienteIdWithServicosAsync(clienteId) as IEnumerable<Agendamento>;
-
-            // Verifique se a conversão foi bem-sucedida
-            if (agendamentos == null)
-            {
-                throw new InvalidCastException("O resultado de GetByClienteIdWithServicosAsync não pôde ser convertido para IEnumerable<Agendamento>.");
-            }
-
-            // Ordenar os agendamentos do mais recente para o mais antigo
-            return agendamentos.OrderByDescending(a => a.AgendamentoId);
+            return await _agendamentoRepository.GetByClienteIdWithServicosAsync(clienteId, barbeariaId);
         }
 
-
-
-        public async Task<IEnumerable<Cliente>> ObterTodosClientesAsync()
+        public async Task<IEnumerable<Cliente>> ObterTodosClientesAsync(int barbeariaId)
         {
-            // Busca todos os clientes
-            return await _clienteRepository.GetAllAsync();
+            return await _clienteRepository.GetAllByBarbeariaIdAsync(barbeariaId);
         }
 
-        public async Task<Cliente> ObterClientePorIdAsync(int clienteId)
+        public async Task<Cliente> ObterClientePorIdAsync(int clienteId, int barbeariaId)
         {
-            // Busca um cliente pelo ID
-            return await _clienteRepository.GetByIdAsync(clienteId);
+            return await _clienteRepository.GetByIdAndBarbeariaIdAsync(clienteId, barbeariaId);
         }
 
-        public async Task AdicionarClienteAsync(Cliente cliente)
+        public async Task AdicionarClienteAsync(Cliente cliente, int barbeariaId)
         {
-            // Adiciona um novo cliente
+            cliente.BarbeariaId = barbeariaId;
             await _clienteRepository.AddAsync(cliente);
         }
 
-        public async Task AtualizarClienteAsync(Cliente cliente)
+        public async Task AtualizarClienteAsync(Cliente cliente, int barbeariaId)
         {
-            // Atualiza um cliente existente
-            await _clienteRepository.UpdateAsync(cliente);
+            var clienteExistente = await _clienteRepository.GetByIdAndBarbeariaIdAsync(cliente.ClienteId, barbeariaId);
+            if (clienteExistente != null)
+            {
+                cliente.BarbeariaId = barbeariaId;
+                await _clienteRepository.UpdateAsync(cliente);
+            }
         }
 
-        public async Task DeletarClienteAsync(int clienteId)
+        public async Task DeletarClienteAsync(int clienteId, int barbeariaId)
         {
-            // Deleta um cliente
-            await _clienteRepository.DeleteAsync(clienteId);
+            var clienteExistente = await _clienteRepository.GetByIdAndBarbeariaIdAsync(clienteId, barbeariaId);
+            if (clienteExistente != null)
+            {
+                await _clienteRepository.DeleteAsync(clienteId);
+            }
         }
 
         public async Task<Cliente> ObterClientePorEmailOuTelefoneAsync(string email, string telefone, int barbeariaId)
         {
-            // Busca um cliente por email ou telefone e barbeariaId
             return await _clienteRepository.GetByEmailOrPhoneAsync(email, telefone, barbeariaId);
         }
-
     }
 }
