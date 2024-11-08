@@ -37,14 +37,14 @@ builder.Services.AddScoped<IPagamentoRepository, PagamentoRepository>();
 
 // Obter a chave SendGridApiKey dinamicamente com base no ambiente
 string sendGridApiKey = builder.Environment.IsDevelopment()
-    ? builder.Configuration["SendGridApiKey"]  // Obtém dos secrets em Development
-    : Environment.GetEnvironmentVariable("SendGridApiKey"); // Obtém da variável de ambiente na Azure
+    ? builder.Configuration["SendGridApiKey"]
+    : Environment.GetEnvironmentVariable("SendGridApiKey");
 
 // Configurar o serviço de Email com SendGrid usando a chave configurada
 builder.Services.AddScoped<IEmailService, EmailService>(provider =>
 {
-    var logService = provider.GetRequiredService<ILogService>(); // Obtém a instância de ILogService
-    return new EmailService(sendGridApiKey, logService); // Passa sendGridApiKey e logService para o construtor
+    var logService = provider.GetRequiredService<ILogService>();
+    return new EmailService(sendGridApiKey, logService);
 });
 
 // Obter a PublishableKey do Stripe e definir para a ViewData na aplicação
@@ -54,42 +54,42 @@ builder.Services.AddSingleton(provider =>
     return configuration["Stripe:PublishableKey"];
 });
 
-// Serviço RabbitMQ (Comentado porque você não irá usar agora)
-/*
-builder.Services.AddSingleton<IRabbitMQService, RabbitMQService>(provider =>
-    new RabbitMQService(builder.Configuration["SendGridApiKey"], provider));
-*/
-
 // Registrar repositórios
 builder.Services.AddScoped<IClienteRepository, ClienteRepository>();
 builder.Services.AddScoped<IBarbeiroRepository, BarbeiroRepository>();
 builder.Services.AddScoped<IServicoRepository, ServicoRepository>();
 builder.Services.AddScoped<IAgendamentoRepository, AgendamentoRepository>();
 builder.Services.AddScoped<IRepository<AgendamentoServico>, AgendamentoServicoRepository>();
-builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>(); // Repositório para usuário
-builder.Services.AddScoped<IDashboardRepository, DashboardRepository>(); // Repositório para Dashboard
-builder.Services.AddScoped<IRelatorioPersonalizadoRepository, RelatorioPersonalizadoRepository>(); // Repositório para Dashboard
+builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
+builder.Services.AddScoped<IRelatorioPersonalizadoRepository, RelatorioPersonalizadoRepository>();
 builder.Services.AddScoped<IPagamentoRepository, PagamentoRepository>();
-builder.Services.AddScoped<IAvaliacaoRepository, AvaliacaoRepository>(); // Registrar o AvaliacaoRepository
-
+builder.Services.AddScoped<IAvaliacaoRepository, AvaliacaoRepository>();
+builder.Services.AddScoped<IBarbeariaRepository, BarbeariaRepository>(); // Repositório de Barbearia
 
 // Registrar serviços da camada de aplicação
 builder.Services.AddScoped<IClienteService, ClienteService>();
 builder.Services.AddScoped<IAgendamentoService, AgendamentoService>();
 builder.Services.AddScoped<IBarbeiroService, BarbeiroService>();
-
-// Registrar o AutenticacaoService
 builder.Services.AddScoped<AutenticacaoService>();
 
 // Configurar autenticação com cookies
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
-        options.LoginPath = "/Login/Login";   // Define o caminho da página de login
-        options.LogoutPath = "/Login/Logout"; // Define o caminho da página de logout
-        options.ExpireTimeSpan = TimeSpan.FromMinutes(60); // Tempo de expiração da sessão (opcional)
-        options.SlidingExpiration = true; // Expiração deslizante (opcional)
+        options.LoginPath = "/Login/Login";
+        options.LogoutPath = "/Login/Logout";
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
+        options.SlidingExpiration = true;
     });
+
+// Configurar sessões
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30); // Tempo de expiração da sessão
+    options.Cookie.HttpOnly = true; // Acesso apenas via HTTP
+    options.Cookie.IsEssential = true; // Necessário para o funcionamento da aplicação
+});
 
 // Adicionar serviços MVC e configurar o Swagger
 builder.Services.AddControllersWithViews();
@@ -97,24 +97,6 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
-
-app.Use(async (context, next) =>
-{
-    // Verifica se a URL contém "admin" e não é exatamente "/Login/AdminLogin"
-    if (context.Request.Host.Host.Contains("admin", StringComparison.OrdinalIgnoreCase) &&
-        !context.Request.Path.Equals("/Login/AdminLogin", StringComparison.OrdinalIgnoreCase))
-    {
-        // Se o usuário não estiver autenticado ou não for admin, redireciona para /Login/AdminLogin
-        if (!context.User.Identity.IsAuthenticated || !context.User.IsInRole("Admin"))
-        {
-            context.Response.Redirect("/Login/AdminLogin");
-            return;
-        }
-    }
-
-    await next();
-});
-
 
 // Configurar pipeline de processamento de requisições HTTP
 if (!app.Environment.IsDevelopment())
@@ -128,7 +110,7 @@ app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "BarberShop API V1");
-    c.RoutePrefix = "swagger"; // Acesso em /swagger
+    c.RoutePrefix = "swagger";
 });
 
 app.UseHttpsRedirection();
@@ -136,24 +118,18 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-// Middleware de autenticação e autorização
+// Middleware de autenticação, autorização e sessões
+app.UseSession(); // Habilita o uso de sessões
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Mapeamento de Rotas
+// Mapeamento de Rotas para incluir `UrlSlug`
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Login}/{action=Login}/{id?}");
+    pattern: "{barbeariaUrl}/{controller=Login}/{action=Login}/{id?}");
 
 app.MapControllerRoute(
-    name: "adminLogin",
-    pattern: "Admin/Login",
-    defaults: new { controller = "Login", action = "AdminLogin" });
-
-// Inicializa o consumidor RabbitMQ ao iniciar o aplicativo (Comentado)
-/*
-var rabbitMQService = app.Services.GetRequiredService<IRabbitMQService>();
-Task.Run(() => rabbitMQService.IniciarConsumo());
-*/
+    name: "admin",
+    pattern: "{barbeariaUrl}/Admin/{controller=Admin}/{action=Dashboard}/{id?}");
 
 app.Run();

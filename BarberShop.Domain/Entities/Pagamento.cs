@@ -13,8 +13,9 @@ namespace BarberShop.Domain.Entities
         public DateTime? DataPagamento { get; set; }
 
         public Agendamento Agendamento { get; set; }
+        public Cliente Cliente { get; set; }
 
-        // Propriedade de navegação para Cliente
-        public Cliente Cliente { get; set; } // Adicionada para permitir acesso ao nome do cliente
+        public int BarbeariaId { get; set; }
+        public Barbearia Barbearia { get; set; }
     }
 }

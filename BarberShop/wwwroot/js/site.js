@@ -4,148 +4,143 @@
 
     // Função para exibir Toasts
     function showToast(message, type = 'info') {
+        console.log("showToast chamado com mensagem:", message); // Log inicial para chamada
         const toastHtml = `
-        <div class="toast align-items-center text-white bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="d-flex">
-                <div class="toast-body">${message}</div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-        </div>`;
+    <div class="toast align-items-center text-white bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body">${message}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>`;
 
         $('#toastContainer').append(toastHtml);
         const toastElement = $('#toastContainer .toast').last();
         const toastInstance = new bootstrap.Toast(toastElement[0], { delay: 5000 });
-        toastInstance.show();
 
-        // Fecha automaticamente após 5 segundos se o usuário não fechar manualmente
-        setTimeout(() => {
-            toastInstance.hide();
-        }, 5000);
+
+        toastInstance.show();
 
         // Remove o toast do DOM após ele ser ocultado
         toastElement.on('hidden.bs.toast', function () {
             $(this).remove();
         });
     }
+
     // Variáveis globais
+    var emailDomains = ["gmail.com", "yahoo.com.br", "outlook.com", "hotmail.com"];
 
-    var countdownInterval;
-    var countdownTime = 30; // Tempo em segundos
-
+    // Função para validar email
     function isValidEmail(email) {
         var regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return regex.test(email);
     }
 
+    // Função para validar telefone
     function isValidPhone(phone) {
         var regex = /^\(\d{2}\)\s\d{5}-\d{4}$/;
         return regex.test(phone);
     }
 
-    var emailDomains = ["gmail.com", "yahoo.com.br", "outlook.com", "hotmail.com"];
+    // Autocomplete e máscara de telefone
+    $('#inputFieldLogin').on('input', function () {
+        var inputValue = $(this).val();
 
-    // Lógica do login
-    if ($('#loginPage').length > 0) {
-        $('#phoneInput').on('input', function () {
-            if ($(this).val().length > 0) {
-                $('#emailInputContainer').slideUp();
-            } else {
-                $('#emailInputContainer').slideDown();
-            }
-
-            var inputValue = $(this).val().replace(/\D/g, '');
-            if (inputValue.length === 11) {
-                var phoneNumber = inputValue.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-                $(this).val(phoneNumber);
-            }
-        });
-
-        $('#emailInput').on('input', function () {
-            if ($(this).val().length > 0) {
-                $('#phoneInputContainer').slideUp();
-            } else {
-                $('#phoneInputContainer').slideDown();
-            }
-
-            var inputValue = $(this).val();
+        if (/^[a-zA-Z0-9._%+-]+@?$/.test(inputValue)) { // Checa se é email
             if (inputValue.includes('@') && inputValue.indexOf('@') === inputValue.length - 1) {
                 var dropdownHtml = '';
                 emailDomains.forEach(function (domain) {
                     dropdownHtml += '<div class="autocomplete-suggestion">' + inputValue + domain + '</div>';
                 });
-                $('#emailAutocomplete').html(dropdownHtml).fadeIn();
+                $('#emailAutocompleteLogin').html(dropdownHtml).fadeIn();
+                console.log("Sugestões de email exibidas:", dropdownHtml); // Log para verificar sugestões de email
             } else {
-                $('#emailAutocomplete').fadeOut();
+                $('#emailAutocompleteLogin').fadeOut();
             }
-        });
-
-        $(document).on('click', '.autocomplete-suggestion', function () {
-            $('#emailInput').val($(this).text());
-            $('#emailAutocomplete').fadeOut();
-        });
-
-        // Submissão do formulário de login via AJAX
-        $('#loginForm').on('submit', function (e) {
-            e.preventDefault();
-
-            var phoneValue = $('#phoneInput').val().trim();
-            var emailValue = $('#emailInput').val().trim();
-
-            if ((!isValidEmail(emailValue) && emailValue.length > 0) && (!isValidPhone(phoneValue) && phoneValue.length > 0)) {
-                showToast('Email ou telefone inválido.', 'danger');
-                return;
-            }
-
-            $('#loadingSpinner').fadeIn();
-            $('button[type="submit"]').prop('disabled', true);
-            var formData = $(this).serialize();
-
-            $.ajax({
-                type: 'POST',
-                url: '/Login/Login',
-                data: formData,
-                success: function (data) {
-                    $('#loadingSpinner').fadeOut();
-                    if (data.success) {
-                        $('#clienteIdField').remove();
-                        $('<input>').attr({
-                            type: 'hidden',
-                            id: 'clienteIdField',
-                            name: 'clienteId',
-                            value: data.clienteId
-                        }).appendTo('#verificationForm');
-                        $('button[type="submit"]').prop('disabled', false);
-                        $('#verificationModal').modal('show');
-                        startCountdown();
-                    } else {
-                        $('button[type="submit"]').prop('disabled', false);
-                        showToast(data.message, 'danger');
-                    }
-                },
-                error: function () {
-                    $('#loadingSpinner').fadeOut();
-                    $('button[type="submit"]').prop('disabled', false);
-                    showToast('Ocorreu um erro. Por favor, tente novamente.', 'danger');
-                }
-            });
-        });
-    }
-
-
-
-
-
-    // Funções exclusivas para o modal de cadastro
-    $('#registerPhoneInput').on('input', function () {
-        var inputValue = $(this).val().replace(/\D/g, '');
-        if (inputValue.length === 11) {
-            var phoneNumber = inputValue.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-            $(this).val(phoneNumber);
+        } else if (/^\d+$/.test(inputValue)) { // Checa se é telefone
+            $(this).val(inputValue.replace(/^(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3'));
+            $('#emailAutocompleteLogin').fadeOut();
+        } else {
+            $('#emailAutocompleteLogin').fadeOut();
         }
     });
 
+    $(document).on('click', '.autocomplete-suggestion', function () {
+        $('#inputFieldLogin').val($(this).text());
+        $('#emailAutocompleteLogin').fadeOut();
+    });
+
+    // Alternar visibilidade da senha no login
+    $('#toggleLoginPassword').on('click', function () {
+        var passwordInput = $('#passwordInputLogin');
+        var icon = $('#toggleLoginPassword i');
+
+        if (passwordInput.attr("type") === "password") {
+            passwordInput.attr("type", "text");
+            icon.removeClass("fa-eye").addClass("fa-eye-slash");
+        } else {
+            passwordInput.attr("type", "password");
+            icon.removeClass("fa-eye-slash").addClass("fa-eye");
+        }
+    });
+
+    // Submissão do formulário de login via AJAX
+    $('#loginForm').on('submit', function (e) {
+        e.preventDefault();
+
+        var inputValue = $('#inputFieldLogin').val().trim();
+        var passwordValue = $('#passwordInputLogin').val().trim();
+
+        // Verifica se os campos estão preenchidos corretamente
+        if (!inputValue || !passwordValue) {
+            showToast('Por favor, insira um telefone, email e senha válidos.', 'danger');
+            return;
+        }
+
+        $('#loadingSpinner').fadeIn(); // Mostra o spinner de tela cheia
+        $('#submitButtonLogin').prop('disabled', true);
+        var formData = $(this).serialize();
+
+        $.ajax({
+            type: 'POST',
+            url: '/Login/Login',
+            data: formData,
+            success: function (data) {
+                $('#loadingSpinner').fadeOut(); // Esconde o spinner
+                $('#submitButtonLogin').prop('disabled', false);
+                console.log("Resposta recebida do servidor:", data); // Log para verificar a resposta do servidor
+
+                if (data.success) {
+                    window.location.href = data.redirectUrl;
+                } else {
+                    showToast(data.message, 'danger');
+                }
+            },
+            error: function () {
+                $('#loadingSpinner').fadeOut(); // Esconde o spinner
+                $('#submitButtonLogin').prop('disabled', false);
+                showToast('Ocorreu um erro. Por favor, tente novamente.', 'danger');
+            }
+        });
+    });
+
+
+
+
+
+
+    // Função para aplicar máscara no número de telefone em tempo real
+    $('#registerPhoneInput').on('input', function () {
+        var inputValue = $(this).val().replace(/\D/g, ''); // Remove todos os caracteres não numéricos
+        if (inputValue.length > 0) {
+            inputValue = inputValue.replace(/^(\d{2})(\d{5})(\d{0,4}).*/, '($1) $2-$3');
+        }
+        $(this).val(inputValue);
+    });
+
+    // Função para verificar se o input é um e-mail e sugerir autocompletar
     $('#registerEmailInput').on('input', function () {
         var inputValue = $(this).val();
+
         if (inputValue.includes('@') && inputValue.indexOf('@') === inputValue.length - 1) {
             var dropdownHtml = '';
             emailDomains.forEach(function (domain) {
@@ -162,21 +157,118 @@
         $('#registerEmailAutocomplete').fadeOut();
     });
 
-    // Submissão do formulário de cadastro via AJAX com validação
-    $('#registerForm').on('submit', function (e) {
-        e.preventDefault();
+    // Função de validação de senha
+    $('#registerPasswordInput').on('input', function () {
+        var password = $(this).val();
+        var lengthRequirement = password.length >= 8;
+        var uppercaseRequirement = /[A-Z]/.test(password);
+        var lowercaseRequirement = /[a-z]/.test(password);
+        var numberRequirement = /\d/.test(password);
+        var specialRequirement = /[!@#$%^&*]/.test(password);
 
+        $('#lengthRequirement').toggleClass('text-success', lengthRequirement).toggleClass('text-danger', !lengthRequirement);
+        $('#uppercaseRequirement').toggleClass('text-success', uppercaseRequirement).toggleClass('text-danger', !uppercaseRequirement);
+        $('#lowercaseRequirement').toggleClass('text-success', lowercaseRequirement).toggleClass('text-danger', !lowercaseRequirement);
+        $('#numberRequirement').toggleClass('text-success', numberRequirement).toggleClass('text-danger', !numberRequirement);
+        $('#specialRequirement').toggleClass('text-success', specialRequirement).toggleClass('text-danger', !specialRequirement);
+
+        checkFormValidity();
+    });
+
+    // Função para alternar a visibilidade da senha
+    function togglePasswordVisibility(inputId, toggleIconId) {
+        var input = $(inputId);
+        var icon = $(toggleIconId);
+        if (input.attr("type") === "password") {
+            input.attr("type", "text");
+            icon.removeClass("fa-eye").addClass("fa-eye-slash");
+        } else {
+            input.attr("type", "password");
+            icon.removeClass("fa-eye-slash").addClass("fa-eye");
+        }
+    }
+
+    // Alternar visibilidade para campo de senha principal
+    $('#toggleRegisterPassword').on('click', function () {
+        togglePasswordVisibility('#registerPasswordInput', '#toggleRegisterPassword i');
+    });
+
+    // Alternar visibilidade para campo de confirmação de senha
+    $('#toggleConfirmPassword').on('click', function () {
+        togglePasswordVisibility('#confirmPasswordInput', '#toggleConfirmPassword i');
+    });
+
+    // Função para verificar se as senhas coincidem
+    function checkPasswordMatch() {
+        var password = $('#registerPasswordInput').val();
+        var confirmPassword = $('#confirmPasswordInput').val();
+
+        if (password !== confirmPassword) {
+            $('#passwordMatchError').show();
+            $('#confirmPasswordInput').addClass('is-invalid').removeClass('is-valid');
+            $('#checkIcon').hide(); // Esconder o ícone de "check" se não coincidir
+        } else {
+            $('#passwordMatchError').hide();
+            $('#confirmPasswordInput').removeClass('is-invalid').addClass('is-valid');
+            $('#checkIcon').show(); // Mostrar o ícone de "check" se coincidir
+        }
+        checkFormValidity();
+    }
+
+    // Verificação em tempo real para confirmar senha
+    $('#confirmPasswordInput').on('input', checkPasswordMatch);
+
+    // Função para verificar a validade do formulário
+    function checkFormValidity() {
         var name = $('#nameInput').val().trim();
         var email = $('#registerEmailInput').val().trim();
         var phone = $('#registerPhoneInput').val().trim();
+        var password = $('#registerPasswordInput').val();
+        var confirmPassword = $('#confirmPasswordInput').val();
 
-        if (name === "" || !isValidEmail(email) || !isValidPhone(phone)) {
+        var isPasswordValid = password.length >= 8 &&
+            /[A-Z]/.test(password) &&
+            /[a-z]/.test(password) &&
+            /\d/.test(password) &&
+            /[!@#$%^&*]/.test(password);
+
+        var isFormValid = name !== "" && email !== "" && phone !== "" &&
+            isPasswordValid && password === confirmPassword;
+
+        $('#registerForm button[type="submit"]').prop('disabled', !isFormValid);
+    }
+
+    // Desabilitar o botão de cadastrar inicialmente
+    $('#registerForm button[type="submit"]').prop('disabled', true);
+
+    // Mostrar toast de erro
+    //function showToast(message, type) {
+    //    $('#registerErrorMessage').text(message).fadeIn();
+    //    setTimeout(function () {
+    //        $('#registerErrorMessage').fadeOut();
+    //    }, 3000);
+    //}
+
+    // Validação do formulário de cadastro
+    // Adiciona console logs para verificar valores antes de enviar o formulário
+    $('#registerForm').on('submit', function (e) {
+        e.preventDefault();
+
+        var isFormValid = !$('#registerForm button[type="submit"]').prop('disabled');
+
+        if (!isFormValid) {
             showToast("Por favor, preencha todos os campos corretamente.", 'danger');
             return;
         }
 
         $('#loadingSpinner').fadeIn();
         var formData = $(this).serialize();
+
+        // Exibe os valores dos campos no console
+        console.log("Nome:", $('#nameInput').val());
+        console.log("Email:", $('#registerEmailInput').val());
+        console.log("Telefone:", $('#registerPhoneInput').val());
+        console.log("Senha:", $('#registerPasswordInput').val());
 
         $.ajax({
             type: 'POST',
@@ -185,16 +277,8 @@
             success: function (data) {
                 $('#loadingSpinner').fadeOut();
                 if (data.success) {
-                    $('#clienteIdField').remove();
-                    $('<input>').attr({
-                        type: 'hidden',
-                        id: 'clienteIdField',
-                        name: 'clienteId',
-                        value: data.clienteId
-                    }).appendTo('#verificationForm');
                     $('#registerModal').modal('hide');
-                    $('#verificationModal').modal('show');
-                    startCountdown();
+                    window.location.href = data.redirectUrl; // Redireciona diretamente para a URL fornecida
                 } else {
                     showToast(data.message, 'danger');
                 }
@@ -206,7 +290,10 @@
         });
     });
 
-    // Submissão do formulário de verificação de código via AJAX
+
+    // Verificar a validade do formulário a cada mudança nos inputs
+    $('#nameInput, #registerEmailInput, #registerPhoneInput, #registerPasswordInput, #confirmPasswordInput').on('input', checkFormValidity);
+
     $('#verificationForm').on('submit', function (e) {
         e.preventDefault();
         var clienteId = $('#clienteIdField').val();

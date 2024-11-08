@@ -41,10 +41,12 @@ namespace BarberShop.Infrastructure.Repositories
             return await _context.Clientes.ToListAsync();
         }
 
-        public async Task<Cliente> GetByEmailOrPhoneAsync(string emailOrPhone)
+        public async Task<Cliente> GetByEmailOrPhoneAsync(string email, string phone, int barbeariaId)
         {
-            return await _context.Clientes.FirstOrDefaultAsync(c => c.Email == emailOrPhone || c.Telefone == emailOrPhone);
+            return await _context.Clientes
+                .FirstOrDefaultAsync(c => (c.Email == email || c.Telefone == phone) && c.BarbeariaId == barbeariaId);
         }
+
 
         public async Task<Cliente> GetByIdAsync(int id)
         {

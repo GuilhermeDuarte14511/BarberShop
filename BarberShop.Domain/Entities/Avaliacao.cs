@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BarberShop.Domain.Entities
 {
@@ -12,7 +8,10 @@ namespace BarberShop.Domain.Entities
         public int AgendamentoId { get; set; }
         public string Observacao { get; set; }
         public int Nota { get; set; }
+
+        public int BarbeariaId { get; set; }
+        public Barbearia Barbearia { get; set; }
+
         public Agendamento Agendamento { get; set; }
     }
-
 }

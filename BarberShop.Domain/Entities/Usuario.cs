@@ -14,11 +14,12 @@ namespace BarberShop.Domain.Entities
         public DateTime DataCriacao { get; set; } = DateTime.Now;
         public int Status { get; set; } = 1; // 1 para ativo, 0 para inativo
 
-        // Novas propriedades para código de validação
         public string CodigoValidacao { get; set; }
         public DateTime? CodigoValidacaoExpiracao { get; set; }
 
-        // Propriedade de navegação para RelatoriosPersonalizados
+        public int BarbeariaId { get; set; }
+        public Barbearia Barbearia { get; set; }
+
         public ICollection<RelatorioPersonalizado> RelatoriosPersonalizados { get; set; } = new List<RelatorioPersonalizado>();
     }
 }

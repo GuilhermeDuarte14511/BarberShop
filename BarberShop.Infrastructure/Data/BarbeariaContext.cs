@@ -21,9 +21,10 @@ namespace BarberShop.Infrastructure.Data
         public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<RelatorioPersonalizado> RelatoriosPersonalizados { get; set; }
         public DbSet<GraficoPosicao> GraficoPosicao { get; set; }
-
-        // Novo DbSet para Avaliacao
         public DbSet<Avaliacao> Avaliacao { get; set; }
+
+        // Novo DbSet para Barbearia
+        public DbSet<Barbearia> Barbearias { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -59,6 +60,30 @@ namespace BarberShop.Infrastructure.Data
                 .WithMany(u => u.RelatoriosPersonalizados)
                 .HasForeignKey(r => r.UsuarioId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Configuração para Barbearia e seus relacionamentos
+            modelBuilder.Entity<Barbearia>()
+                .HasMany(b => b.Barbeiros)
+                .WithOne()
+                .HasForeignKey(b => b.BarbeiroId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Barbearia>()
+                .HasMany(b => b.Servicos)
+                .WithOne()
+                .HasForeignKey(s => s.ServicoId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Barbearia>()
+                .HasMany(b => b.Agendamentos)
+                .WithOne()
+                .HasForeignKey(a => a.AgendamentoId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Configuração para UrlSlug ser único na entidade Barbearia
+            modelBuilder.Entity<Barbearia>()
+                .HasIndex(b => b.UrlSlug)
+                .IsUnique();
         }
     }
 }

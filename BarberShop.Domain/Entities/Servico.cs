@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace BarberShop.Domain.Entities
 {
@@ -13,7 +9,9 @@ namespace BarberShop.Domain.Entities
         public float Preco { get; set; }
         public int Duracao { get; set; } // Em minutos
 
-        public ICollection<AgendamentoServico> AgendamentoServicos { get; set; } // Relacionamento com AgendamentoServico
+        public int BarbeariaId { get; set; }
+        public Barbearia Barbearia { get; set; }
 
+        public ICollection<AgendamentoServico> AgendamentoServicos { get; set; }
     }
 }

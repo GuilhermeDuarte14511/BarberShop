@@ -10,6 +10,20 @@ body {
     overflow-x: hidden;
 }
 
+/* Ícone de "check" alinhado à esquerda */
+.check-icon {
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* Remover o ícone de check automático do lado direito */
+.form-control.is-valid, .was-validated .form-control:valid {
+    border-color: #198754;
+    padding-right: 0; /* Remover o espaço extra no lado direito */
+    background-image: none; /* Remover o ícone de check automático */
+}
+
 /* Container principal da página de solicitação de serviço */
 #solicitarServicoPage .containe {
     padding: 2rem;

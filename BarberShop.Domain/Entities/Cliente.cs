@@ -8,8 +8,12 @@ namespace BarberShop.Domain.Entities
         public string Nome { get; set; }
         public string Email { get; set; }
         public string Telefone { get; set; }
+        public string? Senha { get; set; }
         public string? CodigoValidacao { get; set; }
         public DateTime? CodigoValidacaoExpiracao { get; set; }
         public string Role { get; set; }
+
+        public int BarbeariaId { get; set; }
+        public Barbearia Barbearia { get; set; }
     }
 }

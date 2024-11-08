@@ -17,11 +17,12 @@ namespace BarberShop.Domain.Entities
 
         public int BarbeiroId { get; set; }
         public Barbeiro Barbeiro { get; set; }
+
+        public int BarbeariaId { get; set; }
+        public Barbearia Barbearia { get; set; }
+
         public ICollection<AgendamentoServico> AgendamentoServicos { get; set; }
-
         public Pagamento Pagamento { get; set; }
-
         public ICollection<Avaliacao> Avaliacoes { get; set; }
-
     }
 }

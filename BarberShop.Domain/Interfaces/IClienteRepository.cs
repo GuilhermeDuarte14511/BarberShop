@@ -1,12 +1,8 @@
 ﻿using BarberShop.Domain.Entities;
-using System;
-using System.Threading.Tasks;
+using BarberShop.Domain.Interfaces;
 
-namespace BarberShop.Domain.Interfaces
+public interface IClienteRepository : IRepository<Cliente>
 {
-    public interface IClienteRepository : IRepository<Cliente>
-    {
-        Task<Cliente> GetByEmailOrPhoneAsync(string emailOrPhone);
-        Task UpdateCodigoVerificacaoAsync(int clienteId, string codigoVerificacao, DateTime? expiracao);
-    }
+    Task<Cliente> GetByEmailOrPhoneAsync(string email, string telefone, int barbeariaId);
+    Task UpdateCodigoVerificacaoAsync(int clienteId, string codigoVerificacao, DateTime? expiracao);
 }

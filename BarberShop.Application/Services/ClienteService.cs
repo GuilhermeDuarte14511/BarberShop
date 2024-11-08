@@ -63,10 +63,11 @@ namespace BarberShop.Application.Services
             await _clienteRepository.DeleteAsync(clienteId);
         }
 
-        public async Task<Cliente> ObterClientePorEmailOuTelefoneAsync(string emailOuTelefone)
+        public async Task<Cliente> ObterClientePorEmailOuTelefoneAsync(string email, string telefone, int barbeariaId)
         {
-            // Busca um cliente por email ou telefone
-            return await _clienteRepository.GetByEmailOrPhoneAsync(emailOuTelefone);
+            // Busca um cliente por email ou telefone e barbeariaId
+            return await _clienteRepository.GetByEmailOrPhoneAsync(email, telefone, barbeariaId);
         }
+
     }
 }

@@ -12,6 +12,6 @@ namespace BarberShop.Application.Services
         Task AdicionarClienteAsync(Cliente cliente);
         Task AtualizarClienteAsync(Cliente cliente);
         Task DeletarClienteAsync(int clienteId);
-        Task<Cliente> ObterClientePorEmailOuTelefoneAsync(string emailOuTelefone);
+        Task<Cliente> ObterClientePorEmailOuTelefoneAsync(string email, string telefone, int barbeariaId);
     }
 }

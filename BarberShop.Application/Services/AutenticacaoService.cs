@@ -26,17 +26,22 @@ namespace BarberShop.Application.Services
             return new ClaimsPrincipal(claimsIdentity);
         }
 
-        public bool VerifyPassword(string senha, string senhaHash)
+        public string HashPassword(string senha)
         {
             using var sha256 = SHA256.Create();
-            var hashBytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(senha));
+            var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(senha));
             var hashedPassword = new StringBuilder();
             foreach (var b in hashBytes)
             {
                 hashedPassword.Append(b.ToString("x2"));
             }
-            return hashedPassword.ToString() == senhaHash;
+            return hashedPassword.ToString();
         }
 
+        public bool VerifyPassword(string senha, string senhaHash)
+        {
+            var hashedPassword = HashPassword(senha);
+            return hashedPassword == senhaHash;
+        }
     }
 }
