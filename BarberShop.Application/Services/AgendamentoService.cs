@@ -93,53 +93,53 @@ namespace BarberShop.Application.Services
             return horarioPorDia;
         }
 
-        public async Task<int> CriarAgendamentoAsync(int barbeariaId, int barbeiroId, DateTime dataHora, int clienteId, List<int> servicoIds, string formaPagamento, decimal precoTotal)
-        {
-            try
+            public async Task<int> CriarAgendamentoAsync(int barbeariaId, int barbeiroId, DateTime dataHora, int clienteId, List<int> servicoIds, string formaPagamento, decimal precoTotal)
             {
-                var servicos = await _servicoRepository.ObterServicosPorIdsAsync(servicoIds);
-                var duracaoTotal = servicos.Sum(s => s.Duracao);
-
-                var novoAgendamento = new Agendamento
+                try
                 {
-                    BarbeariaId = barbeariaId,
-                    BarbeiroId = barbeiroId,
-                    ClienteId = clienteId,
-                    DataHora = dataHora,
-                    DuracaoTotal = duracaoTotal,
-                    FormaPagamento = formaPagamento,
-                    PrecoTotal = precoTotal,
-                    AgendamentoServicos = servicos.Select(s => new AgendamentoServico { ServicoId = s.ServicoId }).ToList()
-                };
+                    var servicos = await _servicoRepository.ObterServicosPorIdsAsync(servicoIds);
+                    var duracaoTotal = servicos.Sum(s => s.Duracao);
 
-                // Adiciona o agendamento no contexto, mas não salva ainda
-                var agendamento = await _agendamentoRepository.AddAsync(novoAgendamento);
+                    var novoAgendamento = new Agendamento
+                    {
+                        BarbeariaId = barbeariaId,
+                        BarbeiroId = barbeiroId,
+                        ClienteId = clienteId,
+                        DataHora = dataHora,
+                        DuracaoTotal = duracaoTotal,
+                        FormaPagamento = formaPagamento,
+                        PrecoTotal = precoTotal,
+                        AgendamentoServicos = servicos.Select(s => new AgendamentoServico { ServicoId = s.ServicoId }).ToList()
+                    };
 
-                // Salva as mudanças no contexto para garantir que o ID do agendamento seja gerado
-                await _agendamentoRepository.SaveChangesAsync();
+                    // Adiciona o agendamento no contexto, mas não salva ainda
+                    var agendamento = await _agendamentoRepository.AddAsync(novoAgendamento);
 
-                var pagamento = new Pagamento
+                    // Salva as mudanças no contexto para garantir que o ID do agendamento seja gerado
+                    await _agendamentoRepository.SaveChangesAsync();
+
+                    var pagamento = new Pagamento
+                    {
+                        AgendamentoId = agendamento.AgendamentoId, // Agora temos certeza de que o ID está disponível
+                        ClienteId = clienteId,
+                        BarbeariaId = barbeariaId,
+                        ValorPago = precoTotal,
+                        StatusPagamento = StatusPagamento.Pendente
+                    };
+
+                    // Adiciona o pagamento no contexto, mas não salva ainda
+                    await _pagamentoRepository.AddAsync(pagamento);
+
+                    // Salva as mudanças no contexto para persistir o pagamento
+                    await _pagamentoRepository.SaveChangesAsync();
+
+                    return agendamento.AgendamentoId;
+                }
+                catch (Exception ex)
                 {
-                    AgendamentoId = agendamento.AgendamentoId, // Agora temos certeza de que o ID está disponível
-                    ClienteId = clienteId,
-                    BarbeariaId = barbeariaId,
-                    ValorPago = precoTotal,
-                    StatusPagamento = StatusPagamento.Pendente
-                };
-
-                // Adiciona o pagamento no contexto, mas não salva ainda
-                await _pagamentoRepository.AddAsync(pagamento);
-
-                // Salva as mudanças no contexto para persistir o pagamento
-                await _pagamentoRepository.SaveChangesAsync();
-
-                return agendamento.AgendamentoId;
+                    throw new Exception("Erro ao criar o agendamento.", ex);
+                }
             }
-            catch (Exception ex)
-            {
-                throw new Exception("Erro ao criar o agendamento.", ex);
-            }
-        }
 
 
 

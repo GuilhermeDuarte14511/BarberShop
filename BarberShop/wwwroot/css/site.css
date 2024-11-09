@@ -817,6 +817,118 @@ body {
     }
 }
 
+/* Estilos específicos para a página de erro "Barbearia Não Encontrada" */
+#erro-barbearia-nao-encontrada-body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #1c1c1c;
+    color: #ecf0f1;
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+    overflow: hidden;
+}
+
+#erro-barbearia-container {
+    text-align: center;
+    animation: erro-fadeIn 0.8s ease-in-out;
+}
+
+#erro-barbearia-icone {
+    font-size: 3em;
+    color: #e74c3c;
+    animation: erro-rotate-smooth 4s linear infinite;
+    display: inline-block;
+}
+
+#erro-barbearia-codigo {
+    font-size: 2.5em;
+    color: #e74c3c;
+    animation: erro-bounce-subtle 0.6s infinite alternate;
+    margin-top: 5px;
+}
+
+#erro-barbearia-mensagem {
+    font-size: 1.1em;
+    margin-top: 10px;
+    color: #bdc3c7;
+}
+
+#erro-barbearia-piada-container {
+    display: none; /* Oculta o container da piada */
+}
+
+
+#erro-barbearia-piada {
+    opacity: 1;
+    position: absolute;
+    width: 100%;
+    text-align: center;
+}
+
+
+#erro-barbearia-botao-voltar {
+    margin-top: 20px;
+    padding: 8px 16px;
+    background-color: #e74c3c;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+    #erro-barbearia-botao-voltar:hover {
+        background-color: #c0392b;
+    }
+
+/* Animações */
+@keyframes erro-bounce-subtle {
+    0% {
+        transform: translateY(0);
+    }
+
+    100% {
+        transform: translateY(-5px);
+    }
+}
+
+@keyframes erro-rotate-smooth {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes erro-fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes piada-fade {
+    0% {
+        opacity: 0;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+
 
 /* Responsivo para Dispositivos Móveis */
 @media (max-width: 768px) {

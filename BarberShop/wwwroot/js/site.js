@@ -1785,6 +1785,44 @@
     }
 
 
+    var pageErro = document.getElementById('erro-barbearia-container');
+
+    if (pageErro) {
+        const piadas = [
+            "Parece que esta barbearia fez a barba... e sumiu!",
+            "Essa barbearia deve estar se escondendo atrás do espelho.",
+            "Ops! Essa barbearia foi dar um 'tapa no visual' e desapareceu.",
+            "Acho que essa barbearia foi fazer uma escova progressiva... para bem longe!",
+            "Talvez a barbearia esteja ocupada fazendo a barba do Pé Grande."
+        ];
+
+        const mensagemContainer = document.getElementById("erro-barbearia-mensagem");
+        let piadaIndex = 0;
+
+        function alternarMensagem() {
+            console.log("Mudando mensagem em 3...2...1...");
+            mensagemContainer.style.opacity = 0; // Esconde a mensagem atual
+            setTimeout(() => {
+                if (piadaIndex % 2 === 0) {
+                    mensagemContainer.textContent = "Ops! Essa barbearia foi tão bem barbeada que desapareceu!";
+                } else {
+                    mensagemContainer.textContent = piadas[Math.floor(piadaIndex / 2)];
+                }
+                mensagemContainer.style.opacity = 1; // Mostra a nova mensagem
+                piadaIndex = (piadaIndex + 1) % (piadas.length * 2); // Alterna entre mensagem e piada
+            }, 500); // Tempo de transição entre mensagens
+        }
+
+        alternarMensagem(); // Exibe a primeira mensagem imediatamente
+        setInterval(alternarMensagem, 5000); // Troca de mensagem a cada 5 segundos
+    }
+
+
+
+    
+
+
+
 
 
 

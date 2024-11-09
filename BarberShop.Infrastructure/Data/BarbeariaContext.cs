@@ -22,34 +22,31 @@ namespace BarberShop.Infrastructure.Data
         public DbSet<RelatorioPersonalizado> RelatoriosPersonalizados { get; set; }
         public DbSet<GraficoPosicao> GraficoPosicao { get; set; }
         public DbSet<Avaliacao> Avaliacao { get; set; }
-
-        // Novo DbSet para Barbearia
         public DbSet<Barbearia> Barbearias { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Definir chave composta para a entidade AgendamentoServico
+            // Configuração de chave composta para AgendamentoServico
             modelBuilder.Entity<AgendamentoServico>()
                 .HasKey(agendamentoServico => new { agendamentoServico.AgendamentoId, agendamentoServico.ServicoId });
 
-            // Configura o relacionamento um-para-um entre Agendamento e Pagamento
+            // Configuração do relacionamento um-para-um entre Agendamento e Pagamento
             modelBuilder.Entity<Agendamento>()
                 .HasOne(a => a.Pagamento)
                 .WithOne(p => p.Agendamento)
                 .HasForeignKey<Pagamento>(p => p.AgendamentoId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Configuração do tipo de coluna para ValorPago em Pagamento
+            // Configuração para coluna ValorPago em Pagamento
             modelBuilder.Entity<Pagamento>()
                 .Property(p => p.ValorPago)
                 .HasColumnType("decimal(18,2)");
 
-            // Configuração para a entidade Usuario
+            // Configuração para Usuario
             modelBuilder.Entity<Usuario>()
                 .Property(u => u.Email)
                 .HasMaxLength(255)
                 .IsRequired();
-
             modelBuilder.Entity<Usuario>()
                 .HasIndex(u => u.Email)
                 .IsUnique();
@@ -61,26 +58,39 @@ namespace BarberShop.Infrastructure.Data
                 .HasForeignKey(r => r.UsuarioId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Configuração para Barbearia e seus relacionamentos
+            // Configuração para relacionamentos de Barbearia
             modelBuilder.Entity<Barbearia>()
                 .HasMany(b => b.Barbeiros)
-                .WithOne()
-                .HasForeignKey(b => b.BarbeiroId)
+                .WithOne(b => b.Barbearia)
+                .HasForeignKey(b => b.BarbeariaId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Barbearia>()
                 .HasMany(b => b.Servicos)
-                .WithOne()
-                .HasForeignKey(s => s.ServicoId)
+                .WithOne(s => s.Barbearia)
+                .HasForeignKey(s => s.BarbeariaId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Barbearia>()
                 .HasMany(b => b.Agendamentos)
-                .WithOne()
-                .HasForeignKey(a => a.AgendamentoId)
+                .WithOne(a => a.Barbearia)
+                .HasForeignKey(a => a.BarbeariaId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Configuração para UrlSlug ser único na entidade Barbearia
+            // Configuração para a propriedade BarbeariaId em Cliente e Pagamento
+            modelBuilder.Entity<Cliente>()
+                .HasOne(c => c.Barbearia)
+                .WithMany()
+                .HasForeignKey(c => c.BarbeariaId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Pagamento>()
+                .HasOne(p => p.Barbearia)
+                .WithMany()
+                .HasForeignKey(p => p.BarbeariaId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Configuração para a propriedade UrlSlug ser única em Barbearia
             modelBuilder.Entity<Barbearia>()
                 .HasIndex(b => b.UrlSlug)
                 .IsUnique();
