@@ -5,7 +5,6 @@ using BarberShop.Domain.Interfaces;
 using BarberShop.Infrastructure.Data;
 using BarberShop.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Stripe;
 using System.Security.Claims;
@@ -129,7 +128,9 @@ app.MapControllerRoute(
     pattern: "{barbeariaUrl}/{controller=Login}/{action=Login}/{id?}");
 
 app.MapControllerRoute(
-    name: "admin",
-    pattern: "{barbeariaUrl}/Admin/{controller=Admin}/{action=Dashboard}/{id?}");
+    name: "adminLogin",
+    pattern: "{barbeariaUrl}/admin",
+    defaults: new { controller = "Login", action = "AdminLogin" }
+);
 
 app.Run();

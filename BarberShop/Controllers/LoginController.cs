@@ -58,22 +58,30 @@ namespace BarberShopMVC.Controllers
         }
 
 
-
-
-        // Exibe a página de login administrativo
         [HttpGet]
-        public IActionResult AdminLogin()
+        public async Task<IActionResult> AdminLogin(string barbeariaUrl)
         {
-            if (HttpContext.Items["BarbeariaAtual"] is Barbearia barbearia)
+            var barbearia = await _barbeariaRepository.GetByUrlSlugAsync(barbeariaUrl);
+
+            if (barbearia != null)
             {
+                HttpContext.Session.SetInt32("BarbeariaId", barbearia.BarbeariaId);
+                HttpContext.Session.SetString("BarbeariaUrl", barbeariaUrl);
+
                 ViewData["BarbeariaNome"] = barbearia.Nome;
-                return View();
+                if (barbearia.Logo != null)
+                {
+                    ViewData["BarbeariaLogo"] = "data:image/png;base64," + Convert.ToBase64String(barbearia.Logo);
+                }
+
+                return View("AdminLogin");
             }
             else
             {
                 return RedirectToAction("BarbeariaNaoEncontrada", "Erro");
             }
         }
+
 
         // Processa o login administrativo
         [HttpPost]

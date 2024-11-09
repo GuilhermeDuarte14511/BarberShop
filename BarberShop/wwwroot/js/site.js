@@ -1785,7 +1785,7 @@
     }
 
 
-    var pageErro = document.getElementById('erro-barbearia-container');
+    const pageErro = document.getElementById('erro-barbearia-container');
 
     if (pageErro) {
         const piadas = [
@@ -1793,14 +1793,17 @@
             "Essa barbearia deve estar se escondendo atrás do espelho.",
             "Ops! Essa barbearia foi dar um 'tapa no visual' e desapareceu.",
             "Acho que essa barbearia foi fazer uma escova progressiva... para bem longe!",
-            "Talvez a barbearia esteja ocupada fazendo a barba do Pé Grande."
+            "Talvez a barbearia esteja ocupada fazendo a barba do Pé Grande.",
+            "Essa barbearia foi cortar os laços com a internet!",
+            "Parece que a barbearia saiu para comprar mais gel fixador e se perdeu no caminho.",
+            "Ela foi tão longe no estilo que virou lenda urbana!",
+            "Será que a barbearia foi chamada para um serviço secreto de corte de cabelo?"
         ];
 
         const mensagemContainer = document.getElementById("erro-barbearia-mensagem");
         let piadaIndex = 0;
 
         function alternarMensagem() {
-            console.log("Mudando mensagem em 3...2...1...");
             mensagemContainer.style.opacity = 0; // Esconde a mensagem atual
             setTimeout(() => {
                 if (piadaIndex % 2 === 0) {
