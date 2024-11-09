@@ -215,12 +215,15 @@ namespace BarberShopMVC.Controllers
 
             await _clienteRepository.AddAsync(cliente);
 
+            // Salva as alterações no banco
+            await _clienteRepository.SaveChangesAsync();
+
             var claims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, cliente.ClienteId.ToString()),
-        new Claim(ClaimTypes.Name, cliente.Nome),
-        new Claim(ClaimTypes.Role, cliente.Role)
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, cliente.ClienteId.ToString()),
+                new Claim(ClaimTypes.Name, cliente.Nome),
+                new Claim(ClaimTypes.Role, cliente.Role)
+            };
 
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
@@ -232,6 +235,7 @@ namespace BarberShopMVC.Controllers
 
             return Json(new { success = true, redirectUrl });
         }
+
 
 
         [HttpPost]
