@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using BarberShop.Domain.Entities;
 using BarberShop.Domain.Interfaces;
 using BarberShop.Infrastructure.Data;
@@ -18,6 +20,13 @@ namespace BarberShop.Infrastructure.Repositories
         public async Task<Barbearia> GetByUrlSlugAsync(string urlSlug)
         {
             return await _context.Barbearias.FirstOrDefaultAsync(b => b.UrlSlug == urlSlug);
+        }
+
+        public async Task<IEnumerable<Barbearia>> ObterTodasAtivasAsync()
+        {
+            return await _context.Barbearias
+                .Where(b => b.Status == true) // Filtrar apenas barbearias ativas
+                .ToListAsync();
         }
     }
 }

@@ -810,19 +810,6 @@
     }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
     if ($('#barbeiroPage').length > 0) {
         // Função para aplicar máscara de telefone
         function aplicarMascaraTelefone(input) {
@@ -1025,6 +1012,7 @@
 
             const email = $('#adminEmailInputAdm').val().trim();
             const senha = $('#adminPasswordInputAdm').val().trim();
+            const barbeariaUrl = $('#adminLoginFormAdm input[name="barbeariaUrl"]').val(); // Obtendo a URL da barbearia
 
             if (!validarEmailAdm(email)) {
                 showToast('Por favor, insira um e-mail válido.', 'danger');
@@ -1042,7 +1030,7 @@
             const formData = $(this).serialize();
             $.ajax({
                 type: 'POST',
-                url: '/Login/AdminLogin',
+                url: `/${barbeariaUrl}/Login/AdminLogin`, // URL com a barbeariaUrl
                 data: formData,
                 success: function (data) {
                     $('#adminFullScreenSpinnerAdm').fadeOut(); // Esconde o spinner após sucesso
@@ -1072,10 +1060,11 @@
             console.log("Solicitação de reenvio de código.");
 
             const usuarioId = $('#usuarioIdFieldAdm').val();
+            const barbeariaUrl = $('#adminLoginFormAdm input[name="barbeariaUrl"]').val(); // Obtendo a URL da barbearia
 
             $.ajax({
                 type: 'GET',
-                url: `/Login/ReenviarCodigoAdm?usuarioId=${usuarioId}`,
+                url: `/${barbeariaUrl}/Login/ReenviarCodigoAdm?usuarioId=${usuarioId}`,
                 success: function (data) {
                     if (data.success) {
                         showToast("Código de verificação reenviado!", 'info');
@@ -1101,9 +1090,11 @@
             $('#VerifyCodeAdm').prop('disabled', true);
 
             const dadosVerificacao = $(this).serialize();
+            const barbeariaUrl = $('#adminLoginFormAdm input[name="barbeariaUrl"]').val(); // Obtendo a URL da barbearia
+
             $.ajax({
                 type: 'POST',
-                url: '/Login/VerificarAdminCodigo',
+                url: `/${barbeariaUrl}/Login/VerificarAdminCodigo`, // URL com a barbeariaUrl
                 data: dadosVerificacao,
                 success: function (data) {
                     $('#verifySpinnerAdm').hide();
@@ -1127,7 +1118,6 @@
             });
         });
     }
-
 
 
 
@@ -1546,46 +1536,46 @@
 
     if ($('#pagamentoPage').length > 0) {
 
-    function mostrarLoading() {
-        $('#loadingSpinnerPagamento').show();
-    }
-
-    function ocultarLoading() {
-        $('#loadingSpinnerPagamento').hide();
-    }
-
-    // Ação para buscar agendamentos e exibir no modal de Inserir Pagamento
-    $('#buscarAgendamentosBtn').on('click', function () {
-        const dataInicio = $('#dataInicio').val();
-        const dataFim = $('#dataFim').val();
-
-        console.log("Data de Início:", dataInicio);
-        console.log("Data de Fim:", dataFim);
-
-        if (!dataInicio) {
-            alert('Por favor, selecione uma data de início.');
-            return;
+        function mostrarLoading() {
+            $('#loadingSpinnerPagamento').show();
         }
 
-        mostrarLoading();
+        function ocultarLoading() {
+            $('#loadingSpinnerPagamento').hide();
+        }
 
-        $.ajax({
-            url: '/Agendamento/ObterAgendamentosPorData', // Endpoint para buscar agendamentos com serviços e valores
-            type: 'GET',
-            data: { dataInicio: dataInicio, dataFim: dataFim },
-            success: function (agendamentos) {
-                $('#agendamentosContainer').html('');
-                if (agendamentos.length > 0) {
-                    agendamentos.forEach(agendamento => {
-                        let servicosHTML = '';
-                        let valorTotal = agendamento.precoTotal;
+        // Ação para buscar agendamentos e exibir no modal de Inserir Pagamento
+        $('#buscarAgendamentosBtn').on('click', function () {
+            const dataInicio = $('#dataInicio').val();
+            const dataFim = $('#dataFim').val();
 
-                        // Adiciona cada serviço ao HTML e calcula o valor total
-                        agendamento.servicos.forEach(servico => {
-                            servicosHTML += `<li>${servico.nome} - R$ ${servico.preco.toFixed(2)}</li>`;
-                        });
+            console.log("Data de Início:", dataInicio);
+            console.log("Data de Fim:", dataFim);
 
-                        $('#agendamentosContainer').append(`
+            if (!dataInicio) {
+                alert('Por favor, selecione uma data de início.');
+                return;
+            }
+
+            mostrarLoading();
+
+            $.ajax({
+                url: '/Agendamento/ObterAgendamentosPorData', // Endpoint para buscar agendamentos com serviços e valores
+                type: 'GET',
+                data: { dataInicio: dataInicio, dataFim: dataFim },
+                success: function (agendamentos) {
+                    $('#agendamentosContainer').html('');
+                    if (agendamentos.length > 0) {
+                        agendamentos.forEach(agendamento => {
+                            let servicosHTML = '';
+                            let valorTotal = agendamento.precoTotal;
+
+                            // Adiciona cada serviço ao HTML e calcula o valor total
+                            agendamento.servicos.forEach(servico => {
+                                servicosHTML += `<li>${servico.nome} - R$ ${servico.preco.toFixed(2)}</li>`;
+                            });
+
+                            $('#agendamentosContainer').append(`
                             <div class="d-flex flex-column border p-3 mb-3">
                                 <p><strong>Cliente:</strong> ${agendamento.cliente.nome}</p>
                                 <p><strong>Barbeiro:</strong> ${agendamento.barbeiroNome}</p>
@@ -1598,121 +1588,121 @@
                                 </button>
                             </div>
                         `);
-                    });
-
-                    // Ação para inserir pagamento manualmente
-                    $('.btnInserirPagamento').on('click', function () {
-                        const agendamentoId = $(this).data('agendamento-id');
-                        const valorTotal = $(this).data('valor-total');
-
-                        mostrarLoading();
-                        $.ajax({
-                            url: '/Pagamento/Inserir',  // Endpoint para inserir pagamento
-                            type: 'POST',
-                            data: JSON.stringify({ agendamentoId: agendamentoId, valorPago: valorTotal }),
-                            contentType: 'application/json',
-                            success: function (response) {
-                                alert(response.message);
-                                if (response.success) {
-                                    location.reload();
-                                }
-                            },
-                            error: function () {
-                                alert('Erro ao inserir pagamento.');
-                            },
-                            complete: function () {
-                                ocultarLoading();
-                            }
                         });
-                    });
-                } else {
-                    $('#agendamentosContainer').html('<p>Nenhum agendamento encontrado para esta data.</p>');
+
+                        // Ação para inserir pagamento manualmente
+                        $('.btnInserirPagamento').on('click', function () {
+                            const agendamentoId = $(this).data('agendamento-id');
+                            const valorTotal = $(this).data('valor-total');
+
+                            mostrarLoading();
+                            $.ajax({
+                                url: '/Pagamento/Inserir',  // Endpoint para inserir pagamento
+                                type: 'POST',
+                                data: JSON.stringify({ agendamentoId: agendamentoId, valorPago: valorTotal }),
+                                contentType: 'application/json',
+                                success: function (response) {
+                                    alert(response.message);
+                                    if (response.success) {
+                                        location.reload();
+                                    }
+                                },
+                                error: function () {
+                                    alert('Erro ao inserir pagamento.');
+                                },
+                                complete: function () {
+                                    ocultarLoading();
+                                }
+                            });
+                        });
+                    } else {
+                        $('#agendamentosContainer').html('<p>Nenhum agendamento encontrado para esta data.</p>');
+                    }
+                },
+                error: function () {
+                    alert('Erro ao buscar agendamentos.');
+                    console.error("Erro ao buscar agendamentos.");
+                },
+                complete: function () {
+                    ocultarLoading();
                 }
-            },
-            error: function () {
-                alert('Erro ao buscar agendamentos.');
-                console.error("Erro ao buscar agendamentos.");
-            },
-            complete: function () {
-                ocultarLoading();
-            }
+            });
         });
-    });
 
-    // Ação para o botão "Ver Detalhes"
-    $('.btnDetalhes').on('click', function () {
-        const pagamentoId = $(this).data('id');
-        mostrarLoading();
+        // Ação para o botão "Ver Detalhes"
+        $('.btnDetalhes').on('click', function () {
+            const pagamentoId = $(this).data('id');
+            mostrarLoading();
 
-        $.get(`/Pagamento/Detalhes/${pagamentoId}`, function (data) {
-            console.log("Detalhes do pagamento:", data);
-            const valorPago = data.valorPago ? parseFloat(data.valorPago).toFixed(2).replace('.', ',') : 'N/A';
-            $('#detalhesModalBody').html(`
+            $.get(`/Pagamento/Detalhes/${pagamentoId}`, function (data) {
+                console.log("Detalhes do pagamento:", data);
+                const valorPago = data.valorPago ? parseFloat(data.valorPago).toFixed(2).replace('.', ',') : 'N/A';
+                $('#detalhesModalBody').html(`
                 <p><strong>Cliente:</strong> ${data.nomeCliente}</p>
                 <p><strong>Valor Pago:</strong> R$ ${valorPago}</p>
                 <p><strong>Status:</strong> ${data.statusPagamento}</p>
                 <p><strong>Data do Pagamento:</strong> ${data.dataPagamento}</p>
             `);
-            $('#detalhesModal').modal('show');
-        }).fail(function () {
-            showToast('Erro ao carregar os detalhes do pagamento.', 'danger');
-        }).always(function () {
-            ocultarLoading();
-        });
-    });
-
-    // Ação para o botão de solicitar reembolso
-    $('.btnReembolso').on('click', function () {
-        const pagamentoId = $(this).data('id');
-        const paymentId = $(this).data('payment-id');
-        const nomeCliente = $(this).data('nome');
-        const valorPago = $(this).data('valor');
-
-        $('#reembolsoPagamentoId').text(`${nomeCliente} no valor de R$ ${valorPago}`);
-        $('#hiddenReembolsoPaymentId').val(paymentId);
-        $('#btnConfirmarReembolso').data('id', pagamentoId);
-        $('#reembolsoModal').modal('show');
-    });
-
-    // Confirmação de reembolso via AJAX
-    $('#btnConfirmarReembolso').on('click', function () {
-        const pagamentoId = $(this).data('id');
-        const paymentId = $('#hiddenReembolsoPaymentId').val();
-        mostrarLoading();
-
-        $.ajax({
-            url: '/api/payment/refund',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({ PaymentId: paymentId }),
-            success: function (response) {
-                $('#reembolsoModal').modal('hide');
-                showToast('Reembolso processado com sucesso.', 'success');
-                $.ajax({
-                    url: `/Pagamento/SolicitarReembolso/${pagamentoId}`,
-                    type: 'POST',
-                    success: function() {
-                        setTimeout(() => location.reload(), 1500);
-                    }
-                });
-            },
-            error: function () {
-                showToast('Erro ao solicitar reembolso.', 'danger');
-            },
-            complete: function () {
+                $('#detalhesModal').modal('show');
+            }).fail(function () {
+                showToast('Erro ao carregar os detalhes do pagamento.', 'danger');
+            }).always(function () {
                 ocultarLoading();
-            }
+            });
         });
-    });
 
-    // Ação para o botão de exclusão
-    $('.btnExcluir').on('click', function () {
-        const pagamentoId = $(this).data('id');
-        $('#excluirPagamentoNome').text(pagamentoId);
-        $('#btnConfirmarExcluir').data('id', pagamentoId);
-        $('#excluirModal').modal('show');
-    });
-}
+        // Ação para o botão de solicitar reembolso
+        $('.btnReembolso').on('click', function () {
+            const pagamentoId = $(this).data('id');
+            const paymentId = $(this).data('payment-id');
+            const nomeCliente = $(this).data('nome');
+            const valorPago = $(this).data('valor');
+
+            $('#reembolsoPagamentoId').text(`${nomeCliente} no valor de R$ ${valorPago}`);
+            $('#hiddenReembolsoPaymentId').val(paymentId);
+            $('#btnConfirmarReembolso').data('id', pagamentoId);
+            $('#reembolsoModal').modal('show');
+        });
+
+        // Confirmação de reembolso via AJAX
+        $('#btnConfirmarReembolso').on('click', function () {
+            const pagamentoId = $(this).data('id');
+            const paymentId = $('#hiddenReembolsoPaymentId').val();
+            mostrarLoading();
+
+            $.ajax({
+                url: '/api/payment/refund',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ PaymentId: paymentId }),
+                success: function (response) {
+                    $('#reembolsoModal').modal('hide');
+                    showToast('Reembolso processado com sucesso.', 'success');
+                    $.ajax({
+                        url: `/Pagamento/SolicitarReembolso/${pagamentoId}`,
+                        type: 'POST',
+                        success: function () {
+                            setTimeout(() => location.reload(), 1500);
+                        }
+                    });
+                },
+                error: function () {
+                    showToast('Erro ao solicitar reembolso.', 'danger');
+                },
+                complete: function () {
+                    ocultarLoading();
+                }
+            });
+        });
+
+        // Ação para o botão de exclusão
+        $('.btnExcluir').on('click', function () {
+            const pagamentoId = $(this).data('id');
+            $('#excluirPagamentoNome').text(pagamentoId);
+            $('#btnConfirmarExcluir').data('id', pagamentoId);
+            $('#excluirModal').modal('show');
+        });
+    }
 
 
 
@@ -1822,7 +1812,7 @@
 
 
 
-    
+
 
 
 

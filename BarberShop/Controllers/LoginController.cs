@@ -69,6 +69,7 @@ namespace BarberShopMVC.Controllers
                 HttpContext.Session.SetString("BarbeariaUrl", barbeariaUrl);
 
                 ViewData["BarbeariaNome"] = barbearia.Nome;
+                ViewData["BarbeariaUrl"] = barbeariaUrl;
                 if (barbearia.Logo != null)
                 {
                     ViewData["BarbeariaLogo"] = "data:image/png;base64," + Convert.ToBase64String(barbearia.Logo);
@@ -126,8 +127,13 @@ namespace BarberShopMVC.Controllers
             var authProperties = new AuthenticationProperties { IsPersistent = true };
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal, authProperties);
 
-            return Json(new { success = true, redirectUrl = Url.Action("Index", "Admin") });
+            // Recupera a URL da barbearia da sessão
+            var barbeariaUrl = HttpContext.Session.GetString("BarbeariaUrl");
+
+            // Redireciona para o dashboard com a URL da barbearia
+            return Json(new { success = true, redirectUrl = Url.Action("Index", "Admin", new { barbeariaUrl }) });
         }
+
 
         [HttpPost]
         public async Task<IActionResult> Login(string inputFieldLogin, string passwordInputLogin)

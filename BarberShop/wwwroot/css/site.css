@@ -903,6 +903,81 @@ body {
 }
 
 
+/* Container principal com animação */
+    .barbearias-list-container {
+        animation: fadeInContainer 1s ease-in-out;
+    }
+
+    /* Estilo dos cards compactos */
+    .barbearia-card {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: fadeInCard 0.6s ease-out forwards;
+        transition: transform 0.3s;
+        padding: 10px;
+    }
+
+    /* Animação sequencial para cada card */
+    .barbearia-card:nth-child(1) { animation-delay: 0.2s; }
+    .barbearia-card:nth-child(2) { animation-delay: 0.4s; }
+    .barbearia-card:nth-child(3) { animation-delay: 0.6s; }
+
+    /* Efeito de hover para levantar o card */
+    .barbearia-card:hover {
+        transform: translateY(-8px);
+    }
+
+    /* Tamanho reduzido da logo */
+    .barbearia-logo {
+        max-width: 80px;
+        max-height: 80px;
+        transition: transform 0.2s;
+    }
+
+    /* Vibração da logo ao passar o mouse */
+    .barbearia-logo:hover {
+        animation: vibrate 0.3s linear 1;
+    }
+
+    /* Título e ícones em vermelho */
+    .barbearia-title, .barbearia-descricao, .barbearia-icon {
+        color: #e74c3c;
+    }
+
+    /* Botão */
+    .barbearia-btn {
+        background-color: #e74c3c;
+        border-color: #e74c3c;
+        color: #ffffff;
+    }
+
+    .barbearia-btn:hover {
+        background-color: #c0392b;
+        border-color: #c0392b;
+    }
+
+    /* Animações */
+    @keyframes fadeInContainer {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes fadeInCard {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Animação de vibração */
+    @keyframes vibrate {
+        0% { transform: translate(0); }
+        20% { transform: translate(-2px, 2px); }
+        40% { transform: translate(2px, -2px); }
+        60% { transform: translate(-2px, -2px); }
+        80% { transform: translate(2px, 2px); }
+        100% { transform: translate(0); }
+    }
+
+
 
 /* Responsivo para Dispositivos Móveis */
 @media (max-width: 768px) {

@@ -38,7 +38,7 @@ namespace BarberShop.Domain.Entities
         // Data de criação
         public DateTime DataCriacao { get; set; }
 
-        public byte[] Logo { get; set; } // Nova propriedade para armazenar o logo em formato Base64
+        public byte[]? Logo { get; set; } // Nova propriedade para armazenar o logo em formato Base64
 
 
         public Barbearia()

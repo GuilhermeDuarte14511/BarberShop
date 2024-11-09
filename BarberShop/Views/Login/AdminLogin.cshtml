@@ -1,6 +1,7 @@
 ﻿@{
     ViewData["Title"] = "Admin Login";
     var barbeariaLogo = ViewData["BarbeariaLogo"] as string;
+    var barbeariaUrl = ViewData["BarbeariaUrl"] as string;
 }
 
 <div id="adminLoginPageAdm" class="container-fluid d-flex justify-content-center align-items-center vh-100">
@@ -23,7 +24,9 @@
                 }
 
                 <h3 class="text-center text-danger mb-4">Login Administrativo</h3>
-                <form id="adminLoginFormAdm" method="post" action="/Login/AdminLogin">
+                <form id="adminLoginFormAdm" method="post" action="/@barbeariaUrl/Admin/AdminLogin">
+                    <input type="hidden" name="barbeariaUrl" value="@barbeariaUrl" /> <!-- Campo oculto com a URL da barbearia -->
+
                     <div class="form-group mb-4">
                         <input type="email" id="adminEmailInputAdm" name="email" class="form-control text-center" placeholder="E-mail" required>
                     </div>

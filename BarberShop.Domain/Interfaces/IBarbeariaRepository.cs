@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using BarberShop.Domain.Entities;
 
 namespace BarberShop.Domain.Interfaces
@@ -6,5 +7,6 @@ namespace BarberShop.Domain.Interfaces
     public interface IBarbeariaRepository : IRepository<Barbearia>
     {
         Task<Barbearia> GetByUrlSlugAsync(string urlSlug);
+        Task<IEnumerable<Barbearia>> ObterTodasAtivasAsync();
     }
 }
