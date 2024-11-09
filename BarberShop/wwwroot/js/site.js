@@ -1,6 +1,34 @@
 ﻿$(document).ready(function () {
 
 
+    // Verifica se a div "pagineInicialIndex" está presente no DOM
+    const paginaInicialIndex = document.getElementById("pagineInicialIndex");
+
+    if (paginaInicialIndex) {
+        // Coloque o script específico para essa página aqui
+        console.log("Div 'pagineInicialIndex' detectada - script ativado.");
+
+        // Exemplo de lógica específica
+        // Pode incluir a lógica de busca ao vivo, animações, etc.
+
+        const searchBar = document.getElementById("searchBarbearia");
+        const barbeariaCards = document.querySelectorAll(".barbearia-card-container");
+
+        // Ativa a funcionalidade de busca ao vivo se o campo de busca estiver presente
+        if (searchBar && barbeariaCards.length > 0) {
+            searchBar.addEventListener("input", function () {
+                const query = this.value.toLowerCase();
+                barbeariaCards.forEach(card => {
+                    const name = card.getAttribute("data-name");
+                    if (name.includes(query)) {
+                        card.style.display = "block";
+                    } else {
+                        card.style.display = "none";
+                    }
+                });
+            });
+        }
+    }
 
     // Função para exibir Toasts
     function showToast(message, type = 'info') {
