@@ -3,7 +3,9 @@ using BarberShop.Application.Services;
 using BarberShop.Domain.Entities;
 using BarberShop.Domain.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 
 namespace BarberShopMVC.Controllers
 {
@@ -23,7 +25,13 @@ namespace BarberShopMVC.Controllers
         {
             try
             {
-                var barbeiros = await _barbeiroRepository.GetAllAsync();
+                int? barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
+                if (!barbeariaId.HasValue)
+                {
+                    return RedirectToAction("BarbeariaNaoEncontrada", "Erro");
+                }
+
+                var barbeiros = await _barbeiroService.ObterBarbeirosPorBarbeariaIdAsync(barbeariaId.Value);
                 return View(barbeiros);
             }
             catch (Exception ex)
@@ -63,6 +71,15 @@ namespace BarberShopMVC.Controllers
         {
             try
             {
+                int? barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
+                if (!barbeariaId.HasValue)
+                {
+                    return BadRequest(new { success = false, message = "Barbearia não encontrada na sessão." });
+                }
+
+                // Associa o barbeiro à barbearia
+                barbeiro.BarbeariaId = barbeariaId.Value;
+
                 var barbeiroExistente = await _barbeiroRepository.GetByEmailOrPhoneAsync(barbeiro.Email, barbeiro.Telefone);
 
                 if (barbeiroExistente != null)
@@ -148,7 +165,7 @@ namespace BarberShopMVC.Controllers
                 ViewData["DuracaoTotal"] = duracaoTotal;
                 ViewData["ServicoIds"] = servicoIds;
                 ViewData["BarbeariaUrl"] = barbeariaUrl;
-                ViewData["BarbeariaId"] = barbeariaId; // Adiciona o barbeariaId ao ViewData
+                ViewData["BarbeariaId"] = barbeariaId;
                 return View("EscolherBarbeiro", barbeiros);
             }
             catch (Exception ex)
@@ -157,6 +174,5 @@ namespace BarberShopMVC.Controllers
                 return StatusCode(500, "Erro ao carregar os barbeiros.");
             }
         }
-
     }
 }

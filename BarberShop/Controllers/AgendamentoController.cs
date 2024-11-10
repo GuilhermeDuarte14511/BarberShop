@@ -373,8 +373,15 @@ namespace BarberShopMVC.Controllers
         {
             try
             {
-                // Obtém os agendamentos dentro do período especificado
-                var agendamentos = await _agendamentoRepository.GetAgendamentosPorPeriodoAsync(dataInicio, dataFim ?? DateTime.Now);
+                // Recupera o barbeariaId da sessão
+                int? barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
+                if (!barbeariaId.HasValue)
+                {
+                    return BadRequest(new { success = false, message = "Barbearia não encontrada na sessão." });
+                }
+
+                // Obtém os agendamentos da barbearia dentro do período especificado
+                var agendamentos = await _agendamentoRepository.GetAgendamentosPorPeriodoAsync(barbeariaId.Value, dataInicio, dataFim ?? DateTime.Now);
 
                 // Mapeia os agendamentos para o DTO AgendamentoDto
                 var agendamentosDTO = agendamentos.Select(a => new AgendamentoDto
@@ -409,6 +416,7 @@ namespace BarberShopMVC.Controllers
                 return Json(new { success = false, message = "Erro ao buscar agendamentos." });
             }
         }
+
 
 
 

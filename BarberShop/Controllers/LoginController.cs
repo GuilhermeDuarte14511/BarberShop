@@ -35,6 +35,20 @@ namespace BarberShopMVC.Controllers
 
         public async Task<IActionResult> Login(string barbeariaUrl)
         {
+            // Verifica se o usuário já está autenticado
+            if (User.Identity.IsAuthenticated)
+            {
+                // Obtém a URL da barbearia armazenada na sessão
+                var barbeariaUrlSession = HttpContext.Session.GetString("BarbeariaUrl");
+
+                // Redireciona para a tela inicial se a URL da barbearia na sessão corresponder à URL acessada
+                if (!string.IsNullOrEmpty(barbeariaUrlSession) && barbeariaUrlSession == barbeariaUrl)
+                {
+                    return RedirectToAction("MenuPrincipal", "Cliente", new { barbeariaUrl });
+                }
+            }
+
+            // Carrega os dados da barbearia para o caso de o usuário ainda não estar autenticado
             var barbearia = await _barbeariaRepository.GetByUrlSlugAsync(barbeariaUrl);
 
             if (barbearia != null)
@@ -58,9 +72,24 @@ namespace BarberShopMVC.Controllers
         }
 
 
+
         [HttpGet]
         public async Task<IActionResult> AdminLogin(string barbeariaUrl)
         {
+            // Verifica se o usuário já está autenticado e possui o papel de administrador
+            if (User.Identity.IsAuthenticated && User.IsInRole("Admin"))
+            {
+                // Obtém a URL da barbearia armazenada na sessão
+                var barbeariaUrlSession = HttpContext.Session.GetString("BarbeariaUrl");
+
+                // Redireciona para a tela inicial administrativa se a URL da barbearia na sessão corresponder à URL acessada
+                if (!string.IsNullOrEmpty(barbeariaUrlSession) && barbeariaUrlSession == barbeariaUrl)
+                {
+                    return RedirectToAction("Index", "Admin", new { barbeariaUrl });
+                }
+            }
+
+            // Carrega os dados da barbearia caso o usuário não esteja autenticado
             var barbearia = await _barbeariaRepository.GetByUrlSlugAsync(barbeariaUrl);
 
             if (barbearia != null)
@@ -124,7 +153,12 @@ namespace BarberShopMVC.Controllers
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
 
-            var authProperties = new AuthenticationProperties { IsPersistent = true };
+            // Defina um tempo de expiração de 8 horas para o administrador
+            var authProperties = new AuthenticationProperties
+            {
+                IsPersistent = true,
+                ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8) // Duração específica para o administrador
+            };
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal, authProperties);
 
             // Recupera a URL da barbearia da sessão
@@ -133,6 +167,7 @@ namespace BarberShopMVC.Controllers
             // Redireciona para o dashboard com a URL da barbearia
             return Json(new { success = true, redirectUrl = Url.Action("Index", "Admin", new { barbeariaUrl }) });
         }
+
 
 
         [HttpPost]

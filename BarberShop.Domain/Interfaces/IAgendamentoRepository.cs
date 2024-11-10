@@ -15,7 +15,7 @@ namespace BarberShop.Domain.Interfaces
         Task AtualizarStatusPagamentoAsync(int agendamentoId, StatusPagamento statusPagamento, string paymentId = null);
         Task<bool> VerificarDisponibilidadeHorarioAsync(int barbeiroId, DateTime dataHora, int duracao);
         Task<Agendamento> GetDataAvaliacaoAsync(int agendamentoId);
-        Task<IEnumerable<Agendamento>> GetAgendamentosPorPeriodoAsync(DateTime dataInicio, DateTime dataFim);
+        Task<IEnumerable<Agendamento>> GetAgendamentosPorPeriodoAsync(int barbeariaId, DateTime dataInicio, DateTime dataFim);
         Task<IEnumerable<Agendamento>> GetAgendamentosPorBarbeariaAsync(int barbeariaId);
         Task<Agendamento> GetByIdAndBarbeariaIdAsync(int id, int barbeariaId);
 

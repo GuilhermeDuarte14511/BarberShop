@@ -1,3 +1,4 @@
+using BarberShop.Application.Interfaces;
 using BarberShop.Application.Services;
 using BarberShop.Application.Settings;
 using BarberShop.Domain.Entities;
@@ -70,6 +71,7 @@ builder.Services.AddScoped<IBarbeariaRepository, BarbeariaRepository>(); // Repo
 builder.Services.AddScoped<IClienteService, ClienteService>();
 builder.Services.AddScoped<IAgendamentoService, AgendamentoService>();
 builder.Services.AddScoped<IBarbeiroService, BarbeiroService>();
+builder.Services.AddScoped<IServicoService, ServicoService>(); // Adicione esta linha
 builder.Services.AddScoped<AutenticacaoService>();
 
 // Configurar autenticação com cookies
@@ -122,6 +124,9 @@ app.UseSession(); // Habilita o uso de sessões
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Configurar redirecionamento para erros de status 404
+app.UseStatusCodePagesWithReExecute("/Erro/BarbeariaNaoEncontrada");
+
 // Mapeamento de Rotas para incluir `UrlSlug`
 app.MapControllerRoute(
     name: "default",
@@ -136,6 +141,5 @@ app.MapControllerRoute(
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
-
 
 app.Run();

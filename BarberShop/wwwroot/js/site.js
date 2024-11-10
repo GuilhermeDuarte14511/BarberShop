@@ -1200,28 +1200,36 @@
         function displayDefaultLayout() {
             console.log("Exibindo layout padrão - Nenhum dado encontrado.");
             $('#dashboard-container').html(`
-        <div class="text-center my-5">
-            <h4>Nenhum dado disponível</h4>
-            <p>Adicione alguns registros para visualizar os gráficos.</p>
-        </div>
-    `);
+            <div class="text-center my-5">
+                <h4>Nenhum dado disponível</h4>
+                <p>Adicione alguns registros para visualizar os gráficos.</p>
+            </div>
+        `);
         }
 
-        // Função para renderizar o gráfico com a configuração fornecida
+        // Função para renderizar o gráfico com a configuração fornecida e adicionar o menu de exportação
         function renderChart(config, chartId) {
             try {
                 $('#dashboard-container').append(`
-            <div class="col-lg-4 col-md-6 col-12 dashboard-card" id="${chartId}Card">
-                <div class="card">
-                    <div class="card-header text-center">
-                        <h5>${config.title || "Gráfico"}</h5>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="${chartId}Canvas"></canvas>
+                <div class="col-lg-4 col-md-6 col-12 dashboard-card" id="${chartId}Card">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5>${config.title || "Gráfico"}</h5>
+                            <div class="dropdown">
+                                <button class="btn btn-light btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-three-dots"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item export-to-excel" href="#" data-chart="${chartId}">Exportar para Excel</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="${chartId}Canvas"></canvas>
+                        </div>
                     </div>
                 </div>
-            </div>
-        `);
+            `);
                 initializeChart(`${chartId}Canvas`, config.config); // Usar um ID único para o canvas
             } catch (error) {
                 console.error(`Erro ao renderizar o gráfico ${chartId}:`, error);
@@ -1244,9 +1252,38 @@
             }
         }
 
+        // Função para exportar o gráfico para Excel
+        function exportChartToExcel(chartId) {
+            const chart = Chart.getChart(`${chartId}Canvas`);
+            if (!chart) {
+                console.error("Gráfico não encontrado:", chartId);
+                return;
+            }
+
+            const data = chart.data.labels.map((label, index) => ({
+                Label: label,
+                Valor: chart.data.datasets[0].data[index]
+            }));
+
+            // Converte os dados para uma planilha Excel
+            const worksheet = XLSX.utils.json_to_sheet(data);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Dados do Gráfico");
+
+            // Inicia o download do arquivo Excel
+            XLSX.writeFile(workbook, `${chartId}.xlsx`);
+        }
+
+        // Evento para exportar o gráfico ao clicar no item do menu
+        $(document).on("click", ".export-to-excel", function (e) {
+            e.preventDefault();
+            const chartId = $(this).data("chart");
+            exportChartToExcel(chartId);
+        });
+
         // Função para obter a configuração do gráfico pelo ID
         function getChartConfigById(id) {
-            const data = window.dashboardData; // Supondo que os dados estejam carregados em uma variável global
+            const data = window.dashboardData;
             const chartConfigs = {
                 lucroSemanaChart: createChartConfig('line', data.lucroDaSemana, 'Lucro da Semana', ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']),
                 lucroMesChart: createChartConfig('line', data.lucroDoMes, 'Lucro do Mês', ['Semana 1', 'Semana 2']),
@@ -1352,7 +1389,6 @@
             }
         }
 
-
         // Função auxiliar para obter o título do relatório
         function getReportTitle(reportType) {
             const titles = {
@@ -1382,7 +1418,6 @@
             return Array.from({ length: count }, (_, i) => colors[i % colors.length]);
         }
 
-
         // Função para inicializar todos os gráficos no dashboard
         function initializeDashboardCharts(data) {
             window.dashboardData = data; // Armazena os dados globalmente para uso em restoreInitialPositions
@@ -1402,44 +1437,44 @@
             });
         }
 
-
-
         // Inicialização do Dashboard ao carregar o documento
         $(document).ready(function () {
             $('#addReportButton').on('click', addCustomReport);
             initializeDashboard();
         });
-
     }
 
 
+
     if ($('#servicoPage').length > 0) {
-        // Função para aplicar máscara de moeda no campo de preço
         function aplicarMascaraPreco(input) {
             input.on('input', function () {
-                let valor = $(this).val().replace(/\D/g, ''); // Remove todos os caracteres não numéricos
-                valor = (valor / 100).toFixed(2) + ''; // Divide por 100 e fixa duas casas decimais
-                valor = valor.replace(".", ","); // Substitui ponto por vírgula
-                $(this).val(valor); // Atualiza o valor do campo com a formatação correta
+                let valor = $(this).val().replace(/\D/g, '');
+                valor = (valor / 100).toFixed(2) + '';
+                valor = valor.replace(".", ",");
+                $(this).val(valor);
+                console.log("Valor com máscara de moeda aplicado:", valor);
             });
         }
 
-        // Função para converter o valor de preço formatado para decimal antes de enviar para o backend
-        function converterPrecoParaDecimal(precoFormatado) {
-            return parseFloat(precoFormatado.replace(/\./g, '').replace(',', '.')); // Remove pontos e substitui vírgula por ponto
+        aplicarMascaraPreco($('#adicionarPreco'));
+        aplicarMascaraPreco($('#editarPreco'));
+
+        function converterPrecoParaFloat(precoFormatado) {
+            console.log("Valor formatado antes da conversão:", precoFormatado);
+            const valorFloat = parseFloat(precoFormatado.replace(/\./g, '').replace(',', '.'));
+            console.log("Valor convertido para float:", valorFloat);
+            return valorFloat;
         }
 
-        // Função para exibir o spinner de carregamento
         function mostrarLoading() {
             $('#loadingSpinnerServico').show();
         }
 
-        // Função para ocultar o spinner de carregamento
         function ocultarLoading() {
             $('#loadingSpinnerServico').hide();
         }
 
-        // Ação para o botão "Adicionar Serviço"
         $('#btnAdicionarServico').on('click', function () {
             $('#adicionarNome').val('');
             $('#adicionarPreco').val('');
@@ -1447,26 +1482,30 @@
             $('#adicionarModal').modal('show');
         });
 
-        // Submissão do formulário de adição via AJAX
         $('#formAdicionarServico').on('submit', function (e) {
             e.preventDefault();
             mostrarLoading();
 
+            const precoFormatado = $('#adicionarPreco').val();
+            const precoFloat = converterPrecoParaFloat(precoFormatado);
+            console.log("Preço enviado ao backend (float):", precoFloat);
+
             const formData = {
                 Nome: $('#adicionarNome').val(),
-                Preco: converterPrecoParaDecimal($('#adicionarPreco').val()), // Converte o preço formatado para decimal
+                Preco: precoFloat,
                 Duracao: $('#adicionarDuracao').val()
             };
 
             $.ajax({
                 url: '/Servico/Create',
                 type: 'POST',
-                data: formData,
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
                 success: function (response) {
                     $('#adicionarModal').modal('hide');
                     showToast(response.message, response.success ? 'success' : 'danger');
                     if (response.success) {
-                        setTimeout(() => location.reload(), 1500); // Atualiza a página após 1.5 segundos
+                        setTimeout(() => location.reload(), 1500);
                     }
                 },
                 error: function () {
@@ -1478,7 +1517,6 @@
             });
         });
 
-        // Ação para o botão de editar
         $(document).on('click', '.btnEditar', function () {
             const servicoId = $(this).data('id');
             mostrarLoading();
@@ -1486,7 +1524,7 @@
             $.get(`/Servico/Details/${servicoId}`, function (data) {
                 $('#editarServicoId').val(data.servicoId);
                 $('#editarNome').val(data.nome);
-                $('#editarPreco').val(data.preco.toFixed(2).replace('.', ',')); // Aplica a formatação no valor recebido
+                $('#editarPreco').val(data.preco.toFixed(2).replace('.', ','));
                 $('#editarDuracao').val(data.duracao);
                 $('#editarModal').modal('show');
             }).always(function () {
@@ -1494,27 +1532,31 @@
             });
         });
 
-        // Submissão do formulário de edição via AJAX
         $('#formEditarServico').on('submit', function (e) {
             e.preventDefault();
             mostrarLoading();
 
+            const precoFormatado = $('#editarPreco').val();
+            const precoFloat = converterPrecoParaFloat(precoFormatado);
+            console.log("Preço atualizado enviado ao backend (float):", precoFloat);
+
             const formData = {
                 ServicoId: $('#editarServicoId').val(),
                 Nome: $('#editarNome').val(),
-                Preco: converterPrecoParaDecimal($('#editarPreco').val()), // Converte o preço formatado para decimal
+                Preco: precoFloat,
                 Duracao: $('#editarDuracao').val()
             };
 
             $.ajax({
                 url: `/Servico/Edit/${formData.ServicoId}`,
                 type: 'POST',
-                data: formData,
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
                 success: function (response) {
                     $('#editarModal').modal('hide');
                     showToast(response.message, response.success ? 'success' : 'danger');
                     if (response.success) {
-                        setTimeout(() => location.reload(), 1500); // Atualiza a página após 1.5 segundos
+                        setTimeout(() => location.reload(), 1500);
                     }
                 },
                 error: function () {
@@ -1526,7 +1568,6 @@
             });
         });
 
-        // Ação para o botão de excluir
         $(document).on('click', '.btnExcluir', function () {
             const servicoId = $(this).data('id');
             const servicoNome = $(this).closest('tr').find('td:first').text();
@@ -1535,7 +1576,6 @@
             $('#excluirModal').modal('show');
         });
 
-        // Confirmação de exclusão
         $('#btnConfirmarExcluir').on('click', function () {
             const servicoId = $(this).data('id');
             mostrarLoading();
@@ -1548,7 +1588,7 @@
                     $('#excluirModal').modal('hide');
                     showToast(response.message, response.success ? 'success' : 'danger');
                     if (response.success) {
-                        setTimeout(() => location.reload(), 1500); // Atualiza a página após 1.5 segundos
+                        setTimeout(() => location.reload(), 1500);
                     }
                 },
                 error: function () {
@@ -1560,6 +1600,8 @@
             });
         });
     }
+
+
 
 
     if ($('#pagamentoPage').length > 0) {

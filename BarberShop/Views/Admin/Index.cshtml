@@ -18,8 +18,16 @@
         <!-- Agendamentos da Semana -->
         <div class="col-lg-4 col-md-6 col-12 dashboard-card" id="agendamentosSemanaChartCard">
             <div class="card">
-                <div class="card-header text-center">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <h5>Agendamentos da Semana</h5>
+                    <div class="dropdown">
+                        <button class="btn btn-light btn-sm" type="button" id="agendamentosSemanaOptions" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-three-dots"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="agendamentosSemanaOptions">
+                            <li><a class="dropdown-item export-to-excel" href="#" data-chart="agendamentosSemanaChart">Exportar para Excel</a></li>
+                        </ul>
+                    </div>
                 </div>
                 <div class="card-body">
                     <canvas id="agendamentosSemanaChart"></canvas>
@@ -30,8 +38,16 @@
         <!-- Serviços Mais Solicitados -->
         <div class="col-lg-4 col-md-6 col-12 dashboard-card" id="servicosMaisSolicitadosChartCard">
             <div class="card">
-                <div class="card-header text-center">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <h5>Serviços Mais Solicitados</h5>
+                    <div class="dropdown">
+                        <button class="btn btn-light btn-sm" type="button" id="servicosMaisSolicitadosOptions" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-three-dots"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="servicosMaisSolicitadosOptions">
+                            <li><a class="dropdown-item export-to-excel" href="#" data-chart="servicosMaisSolicitadosChart">Exportar para Excel</a></li>
+                        </ul>
+                    </div>
                 </div>
                 <div class="card-body">
                     <canvas id="servicosMaisSolicitadosChart"></canvas>
@@ -42,8 +58,16 @@
         <!-- Lucro por Barbeiro -->
         <div class="col-lg-4 col-md-6 col-12 dashboard-card" id="lucroPorBarbeiroChartCard">
             <div class="card">
-                <div class="card-header text-center">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <h5>Lucro por Barbeiro</h5>
+                    <div class="dropdown">
+                        <button class="btn btn-light btn-sm" type="button" id="lucroPorBarbeiroOptions" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-three-dots"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="lucroPorBarbeiroOptions">
+                            <li><a class="dropdown-item export-to-excel" href="#" data-chart="lucroPorBarbeiroChart">Exportar para Excel</a></li>
+                        </ul>
+                    </div>
                 </div>
                 <div class="card-body">
                     <canvas id="lucroPorBarbeiroChart"></canvas>
@@ -54,8 +78,16 @@
         <!-- Atendimentos por Barbeiro -->
         <div class="col-lg-4 col-md-6 col-12 dashboard-card" id="atendimentosPorBarbeiroChartCard">
             <div class="card">
-                <div class="card-header text-center">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <h5>Atendimentos por Barbeiro</h5>
+                    <div class="dropdown">
+                        <button class="btn btn-light btn-sm" type="button" id="atendimentosPorBarbeiroOptions" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-three-dots"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="atendimentosPorBarbeiroOptions">
+                            <li><a class="dropdown-item export-to-excel" href="#" data-chart="atendimentosPorBarbeiroChart">Exportar para Excel</a></li>
+                        </ul>
+                    </div>
                 </div>
                 <div class="card-body">
                     <canvas id="atendimentosPorBarbeiroChart"></canvas>
@@ -66,8 +98,16 @@
         <!-- Lucro da Semana -->
         <div class="col-lg-6 col-md-6 col-12 dashboard-card" id="lucroSemanaChartCard">
             <div class="card">
-                <div class="card-header text-center">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <h5>Lucro da Semana</h5>
+                    <div class="dropdown">
+                        <button class="btn btn-light btn-sm" type="button" id="lucroSemanaOptions" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-three-dots"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="lucroSemanaOptions">
+                            <li><a class="dropdown-item export-to-excel" href="#" data-chart="lucroSemanaChart">Exportar para Excel</a></li>
+                        </ul>
+                    </div>
                 </div>
                 <div class="card-body">
                     <canvas id="lucroSemanaChart"></canvas>
@@ -78,8 +118,16 @@
         <!-- Lucro do Mês -->
         <div class="col-lg-6 col-md-6 col-12 dashboard-card" id="lucroMesChartCard">
             <div class="card">
-                <div class="card-header text-center">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <h5>Lucro do Mês</h5>
+                    <div class="dropdown">
+                        <button class="btn btn-light btn-sm" type="button" id="lucroMesOptions" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-three-dots"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="lucroMesOptions">
+                            <li><a class="dropdown-item export-to-excel" href="#" data-chart="lucroMesChart">Exportar para Excel</a></li>
+                        </ul>
+                    </div>
                 </div>
                 <div class="card-body">
                     <canvas id="lucroMesChart"></canvas>
