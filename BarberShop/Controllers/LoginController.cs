@@ -16,14 +16,14 @@ namespace BarberShopMVC.Controllers
         private readonly IClienteRepository _clienteRepository;
         private readonly IUsuarioRepository _usuarioRepository;
         private readonly IEmailService _emailService;
-        private readonly AutenticacaoService _autenticacaoService;
+        private readonly IAutenticacaoService _autenticacaoService;
         private readonly IBarbeariaRepository _barbeariaRepository;
 
         public LoginController(
             IClienteRepository clienteRepository,
             IUsuarioRepository usuarioRepository,
             IEmailService emailService,
-            AutenticacaoService autenticacaoService,
+            IAutenticacaoService autenticacaoService,
             IBarbeariaRepository barbeariaRepository)
         {
             _clienteRepository = clienteRepository;
@@ -35,11 +35,27 @@ namespace BarberShopMVC.Controllers
 
         public async Task<IActionResult> Login(string barbeariaUrl)
         {
+            // Verifica se o usuário já está autenticado
+            if (User.Identity.IsAuthenticated)
+            {
+                // Obtém a URL da barbearia armazenada na sessão
+                var barbeariaUrlSession = HttpContext.Session.GetString("BarbeariaUrl");
+
+                // Redireciona para a tela inicial se a URL da barbearia na sessão corresponder à URL acessada
+                if (!string.IsNullOrEmpty(barbeariaUrlSession) && barbeariaUrlSession == barbeariaUrl)
+                {
+                    return RedirectToAction("MenuPrincipal", "Cliente", new { barbeariaUrl });
+                }
+            }
+
+            // Carrega os dados da barbearia para o caso de o usuário ainda não estar autenticado
             var barbearia = await _barbeariaRepository.GetByUrlSlugAsync(barbeariaUrl);
 
             if (barbearia != null)
             {
                 HttpContext.Session.SetInt32("BarbeariaId", barbearia.BarbeariaId); // Armazena o Id da barbearia na sessão
+                HttpContext.Session.SetString("BarbeariaUrl", barbeariaUrl); // Armazena a URL da barbearia na sessão
+
                 ViewData["BarbeariaNome"] = barbearia.Nome;
 
                 if (barbearia.Logo != null)
@@ -57,15 +73,38 @@ namespace BarberShopMVC.Controllers
 
 
 
-
-        // Exibe a página de login administrativo
         [HttpGet]
-        public IActionResult AdminLogin()
+        public async Task<IActionResult> AdminLogin(string barbeariaUrl)
         {
-            if (HttpContext.Items["BarbeariaAtual"] is Barbearia barbearia)
+            // Verifica se o usuário já está autenticado e possui o papel de administrador
+            if (User.Identity.IsAuthenticated && User.IsInRole("Admin"))
             {
+                // Obtém a URL da barbearia armazenada na sessão
+                var barbeariaUrlSession = HttpContext.Session.GetString("BarbeariaUrl");
+
+                // Redireciona para a tela inicial administrativa se a URL da barbearia na sessão corresponder à URL acessada
+                if (!string.IsNullOrEmpty(barbeariaUrlSession) && barbeariaUrlSession == barbeariaUrl)
+                {
+                    return RedirectToAction("Index", "Admin", new { barbeariaUrl });
+                }
+            }
+
+            // Carrega os dados da barbearia caso o usuário não esteja autenticado
+            var barbearia = await _barbeariaRepository.GetByUrlSlugAsync(barbeariaUrl);
+
+            if (barbearia != null)
+            {
+                HttpContext.Session.SetInt32("BarbeariaId", barbearia.BarbeariaId);
+                HttpContext.Session.SetString("BarbeariaUrl", barbeariaUrl);
+
                 ViewData["BarbeariaNome"] = barbearia.Nome;
-                return View();
+                ViewData["BarbeariaUrl"] = barbeariaUrl;
+                if (barbearia.Logo != null)
+                {
+                    ViewData["BarbeariaLogo"] = "data:image/png;base64," + Convert.ToBase64String(barbearia.Logo);
+                }
+
+                return View("AdminLogin");
             }
             else
             {
@@ -73,7 +112,7 @@ namespace BarberShopMVC.Controllers
             }
         }
 
-        // Processa o login administrativo
+
         [HttpPost]
         public async Task<IActionResult> AdminLogin(string email, string password)
         {
@@ -84,11 +123,19 @@ namespace BarberShopMVC.Controllers
                 return Json(new { success = false, message = "Credenciais inválidas ou usuário não é administrador." });
             }
 
+            var barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
+            if (!barbeariaId.HasValue)
+            {
+                return Json(new { success = false, message = "Erro ao identificar a barbearia." });
+            }
+
+            var barbearia = await _barbeariaRepository.GetByIdAsync(barbeariaId.Value);
+
             string codigoVerificacao = GerarCodigoVerificacao();
             usuario.CodigoValidacao = codigoVerificacao;
             usuario.CodigoValidacaoExpiracao = DateTime.UtcNow.AddMinutes(5);
             await _usuarioRepository.UpdateCodigoVerificacaoAsync(usuario.UsuarioId, codigoVerificacao, usuario.CodigoValidacaoExpiracao);
-            await _emailService.EnviarEmailCodigoVerificacaoAsync(usuario.Email, usuario.Nome, codigoVerificacao);
+            await _emailService.EnviarEmailCodigoVerificacaoAsync(usuario.Email, usuario.Nome, codigoVerificacao, barbearia?.Nome);
 
             return Json(new { success = true, usuarioId = usuario.UsuarioId });
         }
@@ -113,11 +160,22 @@ namespace BarberShopMVC.Controllers
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
 
-            var authProperties = new AuthenticationProperties { IsPersistent = true };
+            // Defina um tempo de expiração de 8 horas para o administrador
+            var authProperties = new AuthenticationProperties
+            {
+                IsPersistent = true,
+                ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8) // Duração específica para o administrador
+            };
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal, authProperties);
 
-            return Json(new { success = true, redirectUrl = Url.Action("Index", "Admin") });
+            // Recupera a URL da barbearia da sessão
+            var barbeariaUrl = HttpContext.Session.GetString("BarbeariaUrl");
+
+            // Redireciona para o dashboard com a URL da barbearia
+            return Json(new { success = true, redirectUrl = Url.Action("Index", "Admin", new { barbeariaUrl }) });
         }
+
+
 
         [HttpPost]
         public async Task<IActionResult> Login(string inputFieldLogin, string passwordInputLogin)
@@ -131,9 +189,11 @@ namespace BarberShopMVC.Controllers
             string emailInput = isEmail ? inputFieldLogin : null;
             string phoneInput = isEmail ? null : inputFieldLogin;
 
-            // Obtém o barbeariaId da sessão
+            // Obtém o barbeariaId e a barbeariaUrl da sessão
             int? barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
-            if (!barbeariaId.HasValue)
+            string barbeariaUrl = HttpContext.Session.GetString("BarbeariaUrl");
+
+            if (!barbeariaId.HasValue || string.IsNullOrEmpty(barbeariaUrl))
             {
                 return Json(new { success = false, message = "Erro ao identificar a barbearia." });
             }
@@ -147,7 +207,8 @@ namespace BarberShopMVC.Controllers
                     var claimsPrincipal = _autenticacaoService.AutenticarCliente(cliente);
                     await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal);
 
-                    return Json(new { success = true, redirectUrl = Url.Action("MenuPrincipal", "Cliente") });
+                    // Redireciona para o MenuPrincipal incluindo o barbeariaUrl
+                    return Json(new { success = true, redirectUrl = Url.Action("MenuPrincipal", "Cliente", new { barbeariaUrl }) });
                 }
                 else
                 {
@@ -159,6 +220,7 @@ namespace BarberShopMVC.Controllers
                 return Json(new { success = false, message = "Cliente não encontrado. Revise a informação e tente novamente." });
             }
         }
+
 
 
         [HttpPost]
@@ -195,12 +257,15 @@ namespace BarberShopMVC.Controllers
 
             await _clienteRepository.AddAsync(cliente);
 
+            // Salva as alterações no banco
+            await _clienteRepository.SaveChangesAsync();
+
             var claims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, cliente.ClienteId.ToString()),
-        new Claim(ClaimTypes.Name, cliente.Nome),
-        new Claim(ClaimTypes.Role, cliente.Role)
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, cliente.ClienteId.ToString()),
+                new Claim(ClaimTypes.Name, cliente.Nome),
+                new Claim(ClaimTypes.Role, cliente.Role)
+            };
 
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
@@ -212,6 +277,7 @@ namespace BarberShopMVC.Controllers
 
             return Json(new { success = true, redirectUrl });
         }
+
 
 
         [HttpPost]
@@ -254,14 +320,24 @@ namespace BarberShopMVC.Controllers
                 return Json(new { success = false, message = "Cliente não encontrado." });
             }
 
+            int? barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
+            if (!barbeariaId.HasValue)
+            {
+                return Json(new { success = false, message = "Erro ao identificar a barbearia." });
+            }
+
+            var barbearia = await _barbeariaRepository.GetByIdAsync(barbeariaId.Value);
+
             string codigoVerificacao = GerarCodigoVerificacao();
             cliente.CodigoValidacao = codigoVerificacao;
             cliente.CodigoValidacaoExpiracao = DateTime.UtcNow.AddMinutes(5);
             await _clienteRepository.UpdateAsync(cliente);
-            await _emailService.EnviarEmailCodigoVerificacaoAsync(cliente.Email, cliente.Nome, codigoVerificacao);
+
+            await _emailService.EnviarEmailCodigoVerificacaoAsync(cliente.Email, cliente.Nome, codigoVerificacao, barbearia?.Nome);
 
             return Json(new { success = true });
         }
+
 
         [HttpGet]
         public async Task<IActionResult> ReenviarCodigoAdm(int usuarioId)
@@ -273,12 +349,19 @@ namespace BarberShopMVC.Controllers
                 return Json(new { success = false, message = "Usuário administrador não encontrado." });
             }
 
+            var barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
+            if (!barbeariaId.HasValue)
+            {
+                return Json(new { success = false, message = "Erro ao identificar a barbearia." });
+            }
+
+            var barbearia = await _barbeariaRepository.GetByIdAsync(barbeariaId.Value);
+
             string codigoVerificacao = GerarCodigoVerificacao();
             usuario.CodigoValidacao = codigoVerificacao;
             usuario.CodigoValidacaoExpiracao = DateTime.UtcNow.AddMinutes(5);
-
             await _usuarioRepository.UpdateCodigoVerificacaoAsync(usuario.UsuarioId, codigoVerificacao, usuario.CodigoValidacaoExpiracao);
-            await _emailService.EnviarEmailCodigoVerificacaoAsync(usuario.Email, usuario.Nome, codigoVerificacao);
+            await _emailService.EnviarEmailCodigoVerificacaoAsync(usuario.Email, usuario.Nome, codigoVerificacao, barbearia?.Nome);
 
             return Json(new { success = true, message = "Novo código de verificação enviado para o email." });
         }

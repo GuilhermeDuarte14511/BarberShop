@@ -1,8 +1,16 @@
 ﻿using BarberShop.Domain.Entities;
-using BarberShop.Domain.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
-public interface IClienteRepository : IRepository<Cliente>
+namespace BarberShop.Domain.Interfaces
 {
-    Task<Cliente> GetByEmailOrPhoneAsync(string email, string telefone, int barbeariaId);
-    Task UpdateCodigoVerificacaoAsync(int clienteId, string codigoVerificacao, DateTime? expiracao);
+    public interface IClienteRepository : IRepository<Cliente>
+    {
+        Task<Cliente> GetByIdAndBarbeariaIdAsync(int clienteId, int barbeariaId);
+        Task<IEnumerable<Cliente>> GetAllByBarbeariaIdAsync(int barbeariaId);
+        Task<Cliente> GetByEmailOrPhoneAsync(string email, string phone, int barbeariaId);
+        Task UpdateCodigoVerificacaoAsync(int clienteId, string codigoVerificacao, DateTime? expiracao);
+
+    }
 }

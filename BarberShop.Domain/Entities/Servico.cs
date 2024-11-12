@@ -9,7 +9,7 @@ namespace BarberShop.Domain.Entities
         public float Preco { get; set; }
         public int Duracao { get; set; } // Em minutos
 
-        public int BarbeariaId { get; set; }
+        public int? BarbeariaId { get; set; }
         public Barbearia Barbearia { get; set; }
 
         public ICollection<AgendamentoServico> AgendamentoServicos { get; set; }

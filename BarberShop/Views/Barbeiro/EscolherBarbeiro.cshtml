@@ -4,6 +4,10 @@
     ViewData["Title"] = "Escolher Barbeiro";
 }
 
+<!-- Inputs Hidden para armazenar barbeariaUrl e barbeariaId -->
+<input type="hidden" id="barbeariaUrl" value="@ViewData["BarbeariaUrl"]" />
+<input type="hidden" id="barbeariaId" value="@ViewData["BarbeariaId"]" />
+
 <div id="escolherBarbeiroPage" class="container mt-5"
      data-servico-ids="@ViewData["ServicoIds"]"
      data-duracao-total="@ViewData["DuracaoTotal"]">

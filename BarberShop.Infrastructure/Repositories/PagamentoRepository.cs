@@ -31,7 +31,7 @@ namespace BarberShop.Infrastructure.Repositories
                         PagamentoId = p.PagamentoId,
                         AgendamentoId = p.AgendamentoId,
                         ClienteId = p.Agendamento.Cliente.ClienteId,
-                        Cliente = new Cliente // Projeção para incluir o nome do cliente
+                        Cliente = new Cliente
                         {
                             ClienteId = p.Agendamento.Cliente.ClienteId,
                             Nome = p.Agendamento.Cliente.Nome
@@ -49,6 +49,37 @@ namespace BarberShop.Infrastructure.Repositories
             }
         }
 
+        public async Task<IEnumerable<Pagamento>> GetAllPagamentosByBarbeariaIdAsync(int barbeariaId)
+        {
+            try
+            {
+                return await _context.Pagamentos
+                    .Where(p => p.Agendamento.BarbeariaId == barbeariaId)
+                    .Include(p => p.Agendamento)
+                    .ThenInclude(a => a.Cliente)
+                    .OrderByDescending(p => p.PagamentoId)
+                    .Select(p => new Pagamento
+                    {
+                        PagamentoId = p.PagamentoId,
+                        AgendamentoId = p.AgendamentoId,
+                        ClienteId = p.Agendamento.Cliente.ClienteId,
+                        Cliente = new Cliente
+                        {
+                            ClienteId = p.Agendamento.Cliente.ClienteId,
+                            Nome = p.Agendamento.Cliente.Nome
+                        },
+                        ValorPago = p.ValorPago,
+                        StatusPagamento = p.StatusPagamento,
+                        PaymentId = p.PaymentId ?? string.Empty,
+                        DataPagamento = p.DataPagamento
+                    })
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao recuperar pagamentos para a barbearia com ID {barbeariaId}.", ex);
+            }
+        }
 
         public override async Task<Pagamento> GetByIdAsync(int id)
         {
@@ -59,20 +90,13 @@ namespace BarberShop.Infrastructure.Repositories
                     .ThenInclude(a => a.Cliente)
                     .FirstOrDefaultAsync(p => p.PagamentoId == id);
 
-                // Verifica se o pagamento, agendamento e cliente não são nulos
                 if (pagamento != null)
                 {
                     if (pagamento.Agendamento == null)
-                    {
-                        // Lidar com caso onde o Agendamento é nulo
-                        pagamento.Agendamento = new Agendamento(); // ou qualquer lógica que você desejar
-                    }
+                        pagamento.Agendamento = new Agendamento();
 
                     if (pagamento.Agendamento.Cliente == null)
-                    {
-                        // Lidar com caso onde o Cliente é nulo
-                        pagamento.Agendamento.Cliente = new Cliente(); // ou qualquer lógica que você desejar
-                    }
+                        pagamento.Agendamento.Cliente = new Cliente();
                 }
 
                 return pagamento;

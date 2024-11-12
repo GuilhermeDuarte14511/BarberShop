@@ -1,6 +1,34 @@
 ﻿$(document).ready(function () {
 
 
+    // Verifica se a div "pagineInicialIndex" está presente no DOM
+    const paginaInicialIndex = document.getElementById("pagineInicialIndex");
+
+    if (paginaInicialIndex) {
+        // Coloque o script específico para essa página aqui
+        console.log("Div 'pagineInicialIndex' detectada - script ativado.");
+
+        // Exemplo de lógica específica
+        // Pode incluir a lógica de busca ao vivo, animações, etc.
+
+        const searchBar = document.getElementById("searchBarbearia");
+        const barbeariaCards = document.querySelectorAll(".barbearia-card-container");
+
+        // Ativa a funcionalidade de busca ao vivo se o campo de busca estiver presente
+        if (searchBar && barbeariaCards.length > 0) {
+            searchBar.addEventListener("input", function () {
+                const query = this.value.toLowerCase();
+                barbeariaCards.forEach(card => {
+                    const name = card.getAttribute("data-name");
+                    if (name.includes(query)) {
+                        card.style.display = "block";
+                    } else {
+                        card.style.display = "none";
+                    }
+                });
+            });
+        }
+    }
 
     // Função para exibir Toasts
     function showToast(message, type = 'info') {
@@ -395,10 +423,7 @@
         var duracaoTotal = 0;
 
         window.adicionarServico = function (id, nome, preco, duracao, element) {
-            // Substitui vírgula por ponto no preço antes de converter para número
             preco = preco.replace(',', '.');
-            console.log("Adicionando serviço:", nome, "Preço:", preco, "Duração:", duracao);
-
             var index = servicosSelecionados.findIndex(servico => servico.id === id);
 
             if (index === -1) {
@@ -406,11 +431,7 @@
                 valorTotal += parseFloat(preco);
                 duracaoTotal += parseInt(duracao);
                 $(element).prop('disabled', true);
-
-                console.log("Serviço adicionado:", servicosSelecionados);
-                console.log("Novo valor total (adicionado):", valorTotal);
             }
-
             atualizarListaServicosSelecionados();
         };
 
@@ -418,10 +439,6 @@
             valorTotal -= parseFloat(servicosSelecionados[index].preco.toString().replace(',', '.'));
             duracaoTotal -= parseInt(servicosSelecionados[index].duracao);
             servicosSelecionados.splice(index, 1);
-
-            console.log("Serviço removido:", servicosSelecionados);
-            console.log("Novo valor total (removido):", valorTotal);
-
             $('#servico-' + id).prop('disabled', false);
             atualizarListaServicosSelecionados();
         };
@@ -429,7 +446,6 @@
         function atualizarListaServicosSelecionados() {
             var lista = $('#servicosSelecionados');
             lista.empty();
-
             servicosSelecionados.forEach(function (servico, index) {
                 lista.append(
                     `<li class="list-group-item d-flex justify-content-between align-items-center">
@@ -438,9 +454,7 @@
                 </li>`
                 );
             });
-
             $('#valorTotal').text(valorTotal.toFixed(2));
-            console.log("Atualizando valor total exibido:", valorTotal.toFixed(2));
         }
 
         window.confirmarServico = function () {
@@ -450,15 +464,13 @@
             }
 
             var servicoIds = servicosSelecionados.map(s => s.id);
-
-            console.log("Serviços selecionados para confirmação:", servicosSelecionados);
-            console.log("Valor total para confirmação:", valorTotal);
-
             $('#loadingSpinner').fadeIn();
-
             sessionStorage.setItem('servicosSelecionados', JSON.stringify(servicosSelecionados));
 
-            window.location.href = `/Barbeiro/EscolherBarbeiro?duracaoTotal=${duracaoTotal}&servicoIds=${servicoIds.join(',')}`;
+            var barbeariaUrl = $('#barbeariaUrl').val();
+            var barbeariaId = $('#barbeariaId').val();
+
+            window.location.href = `/${barbeariaUrl}/Barbeiro/EscolherBarbeiro?duracaoTotal=${duracaoTotal}&servicoIds=${servicoIds.join(',')}&barbeariaId=${barbeariaId}`;
         };
 
         var servicosArmazenados = JSON.parse(sessionStorage.getItem('servicosSelecionados')) || [];
@@ -468,7 +480,6 @@
             duracaoTotal += parseInt(servico.duracao);
             $('#servico-' + servico.id).prop('disabled', true);
         });
-
         atualizarListaServicosSelecionados();
     }
 
@@ -497,10 +508,13 @@
 
         function carregarHorariosDropdown(barbeiroId, duracaoTotal) {
             $('#loadingSpinner').fadeIn();
-            console.log(`Carregando horários para o barbeiro ID: ${barbeiroId}, duração: ${duracaoTotal}`);
+            const barbeariaUrl = $('#barbeariaUrl').val();
+            const barbeariaId = $('#barbeariaId').val();
+
+            console.log(`Carregando horários para o barbeiro ID: ${barbeiroId}, duração: ${duracaoTotal}, barbeariaId: ${barbeariaId}, barbeariaUrl: ${barbeariaUrl}`);
 
             $.ajax({
-                url: '/Agendamento/ObterHorariosDisponiveis',
+                url: `/${barbeariaUrl}/Agendamento/ObterHorariosDisponiveis`,
                 data: {
                     barbeiroId: barbeiroId,
                     duracaoTotal: duracaoTotal
@@ -530,6 +544,7 @@
             });
         }
 
+
         // Evento para capturar o valor selecionado do dropdown
         $('#horariosDisponiveis').on('change', function () {
             var horarioUTC = $(this).val();
@@ -546,10 +561,14 @@
 
                 sessionStorage.removeItem('servicosSelecionados');
 
-                // Usa o valor ajustado em `horarioSelecionado` diretamente na URL
-                window.location.href = `/Agendamento/ResumoAgendamento?barbeiroId=${selectedBarbeiroId}&dataHora=${encodeURIComponent(horarioSelecionado)}&servicoIds=${selectedServicoIds}`;
+                const barbeariaUrl = $('#barbeariaUrl').val(); // Obtém o barbeariaUrl
+                const barbeariaId = $('#barbeariaId').val();   // Obtém o barbeariaId
+
+                // Usa o valor ajustado em `horarioSelecionado` diretamente na URL com `barbeariaUrl` e `barbeariaId`
+                window.location.href = `/${barbeariaUrl}/Agendamento/ResumoAgendamento?barbeiroId=${selectedBarbeiroId}&dataHora=${encodeURIComponent(horarioSelecionado)}&servicoIds=${selectedServicoIds}&barbeariaId=${barbeariaId}`;
             }
         });
+
 
         $('#voltarBtn').on('click', function () {
             window.location.href = '/Cliente/SolicitarServico';
@@ -625,13 +644,17 @@
             const barbeiroId = $('#resumoAgendamentoPage').data('barbeiro-id');
             const dataHora = $('#resumoAgendamentoPage').data('data-hora');
             const servicoIds = $('#resumoAgendamentoPage').data('servico-ids');
+            const barbeariaId = $('#barbeariaId').val(); // Obtendo o barbeariaId
+            const barbeariaUrl = $('#barbeariaUrl').val(); // Obtendo o barbeariaUrl
 
             try {
-                const response = await $.post('/Agendamento/ConfirmarAgendamento', {
+                const response = await $.post(`/${barbeariaUrl}/Agendamento/ConfirmarAgendamento`, { // Incluindo barbeariaUrl na URL
                     barbeiroId,
                     dataHora,
                     servicoIds,
-                    formaPagamento: selectedPaymentMethod
+                    formaPagamento: selectedPaymentMethod,
+                    barbeariaId,  // Incluindo barbeariaId no payload
+                    barbeariaUrl  // Incluindo barbeariaUrl no payload
                 });
 
                 if (response.success) {
@@ -722,11 +745,16 @@
         });
 
         async function atualizarStatusPagamento(agendamentoId, statusPagamento, paymentId) {
+            const barbeariaId = $('#barbeariaId').val(); // Obtendo o barbeariaId
+            const barbeariaUrl = $('#barbeariaUrl').val(); // Obtendo o barbeariaUrl
+
             try {
-                const response = await $.post('/Agendamento/AtualizarStatusPagamento', {
+                const response = await $.post(`/${barbeariaUrl}/Agendamento/AtualizarStatusPagamento`, { // Incluindo barbeariaUrl na URL
                     agendamentoId,
                     statusPagamento,
-                    paymentId
+                    paymentId,
+                    barbeariaId, // Incluindo barbeariaId no payload
+                    barbeariaUrl // Incluindo barbeariaUrl no payload
                 });
 
                 if (response.success) {
@@ -744,6 +772,7 @@
                 $('#errorModal').modal('show');
             }
         }
+
 
         function redirecionarParaMenu() {
             $('#successModal').on('hidden.bs.modal', function () {
@@ -807,19 +836,6 @@
             $('#errorModal').modal('hide');
         });
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
     if ($('#barbeiroPage').length > 0) {
@@ -1024,6 +1040,7 @@
 
             const email = $('#adminEmailInputAdm').val().trim();
             const senha = $('#adminPasswordInputAdm').val().trim();
+            const barbeariaUrl = $('#adminLoginFormAdm input[name="barbeariaUrl"]').val(); // Obtendo a URL da barbearia
 
             if (!validarEmailAdm(email)) {
                 showToast('Por favor, insira um e-mail válido.', 'danger');
@@ -1041,7 +1058,7 @@
             const formData = $(this).serialize();
             $.ajax({
                 type: 'POST',
-                url: '/Login/AdminLogin',
+                url: `/${barbeariaUrl}/Login/AdminLogin`, // URL com a barbeariaUrl
                 data: formData,
                 success: function (data) {
                     $('#adminFullScreenSpinnerAdm').fadeOut(); // Esconde o spinner após sucesso
@@ -1071,10 +1088,11 @@
             console.log("Solicitação de reenvio de código.");
 
             const usuarioId = $('#usuarioIdFieldAdm').val();
+            const barbeariaUrl = $('#adminLoginFormAdm input[name="barbeariaUrl"]').val(); // Obtendo a URL da barbearia
 
             $.ajax({
                 type: 'GET',
-                url: `/Login/ReenviarCodigoAdm?usuarioId=${usuarioId}`,
+                url: `/${barbeariaUrl}/Login/ReenviarCodigoAdm?usuarioId=${usuarioId}`,
                 success: function (data) {
                     if (data.success) {
                         showToast("Código de verificação reenviado!", 'info');
@@ -1100,9 +1118,11 @@
             $('#VerifyCodeAdm').prop('disabled', true);
 
             const dadosVerificacao = $(this).serialize();
+            const barbeariaUrl = $('#adminLoginFormAdm input[name="barbeariaUrl"]').val(); // Obtendo a URL da barbearia
+
             $.ajax({
                 type: 'POST',
-                url: '/Login/VerificarAdminCodigo',
+                url: `/${barbeariaUrl}/Login/VerificarAdminCodigo`, // URL com a barbeariaUrl
                 data: dadosVerificacao,
                 success: function (data) {
                     $('#verifySpinnerAdm').hide();
@@ -1126,7 +1146,6 @@
             });
         });
     }
-
 
 
 
@@ -1181,28 +1200,36 @@
         function displayDefaultLayout() {
             console.log("Exibindo layout padrão - Nenhum dado encontrado.");
             $('#dashboard-container').html(`
-        <div class="text-center my-5">
-            <h4>Nenhum dado disponível</h4>
-            <p>Adicione alguns registros para visualizar os gráficos.</p>
-        </div>
-    `);
+            <div class="text-center my-5">
+                <h4>Nenhum dado disponível</h4>
+                <p>Adicione alguns registros para visualizar os gráficos.</p>
+            </div>
+        `);
         }
 
-        // Função para renderizar o gráfico com a configuração fornecida
+        // Função para renderizar o gráfico com a configuração fornecida e adicionar o menu de exportação
         function renderChart(config, chartId) {
             try {
                 $('#dashboard-container').append(`
-            <div class="col-lg-4 col-md-6 col-12 dashboard-card" id="${chartId}Card">
-                <div class="card">
-                    <div class="card-header text-center">
-                        <h5>${config.title || "Gráfico"}</h5>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="${chartId}Canvas"></canvas>
+                <div class="col-lg-4 col-md-6 col-12 dashboard-card" id="${chartId}Card">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5>${config.title || "Gráfico"}</h5>
+                            <div class="dropdown">
+                                <button class="btn btn-light btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-three-dots"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item export-to-excel" href="#" data-chart="${chartId}">Exportar para Excel</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="${chartId}Canvas"></canvas>
+                        </div>
                     </div>
                 </div>
-            </div>
-        `);
+            `);
                 initializeChart(`${chartId}Canvas`, config.config); // Usar um ID único para o canvas
             } catch (error) {
                 console.error(`Erro ao renderizar o gráfico ${chartId}:`, error);
@@ -1225,9 +1252,38 @@
             }
         }
 
+        // Função para exportar o gráfico para Excel
+        function exportChartToExcel(chartId) {
+            const chart = Chart.getChart(`${chartId}Canvas`);
+            if (!chart) {
+                console.error("Gráfico não encontrado:", chartId);
+                return;
+            }
+
+            const data = chart.data.labels.map((label, index) => ({
+                Label: label,
+                Valor: chart.data.datasets[0].data[index]
+            }));
+
+            // Converte os dados para uma planilha Excel
+            const worksheet = XLSX.utils.json_to_sheet(data);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Dados do Gráfico");
+
+            // Inicia o download do arquivo Excel
+            XLSX.writeFile(workbook, `${chartId}.xlsx`);
+        }
+
+        // Evento para exportar o gráfico ao clicar no item do menu
+        $(document).on("click", ".export-to-excel", function (e) {
+            e.preventDefault();
+            const chartId = $(this).data("chart");
+            exportChartToExcel(chartId);
+        });
+
         // Função para obter a configuração do gráfico pelo ID
         function getChartConfigById(id) {
-            const data = window.dashboardData; // Supondo que os dados estejam carregados em uma variável global
+            const data = window.dashboardData;
             const chartConfigs = {
                 lucroSemanaChart: createChartConfig('line', data.lucroDaSemana, 'Lucro da Semana', ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']),
                 lucroMesChart: createChartConfig('line', data.lucroDoMes, 'Lucro do Mês', ['Semana 1', 'Semana 2']),
@@ -1333,7 +1389,6 @@
             }
         }
 
-
         // Função auxiliar para obter o título do relatório
         function getReportTitle(reportType) {
             const titles = {
@@ -1363,7 +1418,6 @@
             return Array.from({ length: count }, (_, i) => colors[i % colors.length]);
         }
 
-
         // Função para inicializar todos os gráficos no dashboard
         function initializeDashboardCharts(data) {
             window.dashboardData = data; // Armazena os dados globalmente para uso em restoreInitialPositions
@@ -1383,44 +1437,44 @@
             });
         }
 
-
-
         // Inicialização do Dashboard ao carregar o documento
         $(document).ready(function () {
             $('#addReportButton').on('click', addCustomReport);
             initializeDashboard();
         });
-
     }
 
 
+
     if ($('#servicoPage').length > 0) {
-        // Função para aplicar máscara de moeda no campo de preço
         function aplicarMascaraPreco(input) {
             input.on('input', function () {
-                let valor = $(this).val().replace(/\D/g, ''); // Remove todos os caracteres não numéricos
-                valor = (valor / 100).toFixed(2) + ''; // Divide por 100 e fixa duas casas decimais
-                valor = valor.replace(".", ","); // Substitui ponto por vírgula
-                $(this).val(valor); // Atualiza o valor do campo com a formatação correta
+                let valor = $(this).val().replace(/\D/g, '');
+                valor = (valor / 100).toFixed(2) + '';
+                valor = valor.replace(".", ",");
+                $(this).val(valor);
+                console.log("Valor com máscara de moeda aplicado:", valor);
             });
         }
 
-        // Função para converter o valor de preço formatado para decimal antes de enviar para o backend
-        function converterPrecoParaDecimal(precoFormatado) {
-            return parseFloat(precoFormatado.replace(/\./g, '').replace(',', '.')); // Remove pontos e substitui vírgula por ponto
+        aplicarMascaraPreco($('#adicionarPreco'));
+        aplicarMascaraPreco($('#editarPreco'));
+
+        function converterPrecoParaFloat(precoFormatado) {
+            console.log("Valor formatado antes da conversão:", precoFormatado);
+            const valorFloat = parseFloat(precoFormatado.replace(/\./g, '').replace(',', '.'));
+            console.log("Valor convertido para float:", valorFloat);
+            return valorFloat;
         }
 
-        // Função para exibir o spinner de carregamento
         function mostrarLoading() {
             $('#loadingSpinnerServico').show();
         }
 
-        // Função para ocultar o spinner de carregamento
         function ocultarLoading() {
             $('#loadingSpinnerServico').hide();
         }
 
-        // Ação para o botão "Adicionar Serviço"
         $('#btnAdicionarServico').on('click', function () {
             $('#adicionarNome').val('');
             $('#adicionarPreco').val('');
@@ -1428,26 +1482,30 @@
             $('#adicionarModal').modal('show');
         });
 
-        // Submissão do formulário de adição via AJAX
         $('#formAdicionarServico').on('submit', function (e) {
             e.preventDefault();
             mostrarLoading();
 
+            const precoFormatado = $('#adicionarPreco').val();
+            const precoFloat = converterPrecoParaFloat(precoFormatado);
+            console.log("Preço enviado ao backend (float):", precoFloat);
+
             const formData = {
                 Nome: $('#adicionarNome').val(),
-                Preco: converterPrecoParaDecimal($('#adicionarPreco').val()), // Converte o preço formatado para decimal
+                Preco: precoFloat,
                 Duracao: $('#adicionarDuracao').val()
             };
 
             $.ajax({
                 url: '/Servico/Create',
                 type: 'POST',
-                data: formData,
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
                 success: function (response) {
                     $('#adicionarModal').modal('hide');
                     showToast(response.message, response.success ? 'success' : 'danger');
                     if (response.success) {
-                        setTimeout(() => location.reload(), 1500); // Atualiza a página após 1.5 segundos
+                        setTimeout(() => location.reload(), 1500);
                     }
                 },
                 error: function () {
@@ -1459,7 +1517,6 @@
             });
         });
 
-        // Ação para o botão de editar
         $(document).on('click', '.btnEditar', function () {
             const servicoId = $(this).data('id');
             mostrarLoading();
@@ -1467,7 +1524,7 @@
             $.get(`/Servico/Details/${servicoId}`, function (data) {
                 $('#editarServicoId').val(data.servicoId);
                 $('#editarNome').val(data.nome);
-                $('#editarPreco').val(data.preco.toFixed(2).replace('.', ',')); // Aplica a formatação no valor recebido
+                $('#editarPreco').val(data.preco.toFixed(2).replace('.', ','));
                 $('#editarDuracao').val(data.duracao);
                 $('#editarModal').modal('show');
             }).always(function () {
@@ -1475,27 +1532,31 @@
             });
         });
 
-        // Submissão do formulário de edição via AJAX
         $('#formEditarServico').on('submit', function (e) {
             e.preventDefault();
             mostrarLoading();
 
+            const precoFormatado = $('#editarPreco').val();
+            const precoFloat = converterPrecoParaFloat(precoFormatado);
+            console.log("Preço atualizado enviado ao backend (float):", precoFloat);
+
             const formData = {
                 ServicoId: $('#editarServicoId').val(),
                 Nome: $('#editarNome').val(),
-                Preco: converterPrecoParaDecimal($('#editarPreco').val()), // Converte o preço formatado para decimal
+                Preco: precoFloat,
                 Duracao: $('#editarDuracao').val()
             };
 
             $.ajax({
                 url: `/Servico/Edit/${formData.ServicoId}`,
                 type: 'POST',
-                data: formData,
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
                 success: function (response) {
                     $('#editarModal').modal('hide');
                     showToast(response.message, response.success ? 'success' : 'danger');
                     if (response.success) {
-                        setTimeout(() => location.reload(), 1500); // Atualiza a página após 1.5 segundos
+                        setTimeout(() => location.reload(), 1500);
                     }
                 },
                 error: function () {
@@ -1507,7 +1568,6 @@
             });
         });
 
-        // Ação para o botão de excluir
         $(document).on('click', '.btnExcluir', function () {
             const servicoId = $(this).data('id');
             const servicoNome = $(this).closest('tr').find('td:first').text();
@@ -1516,7 +1576,6 @@
             $('#excluirModal').modal('show');
         });
 
-        // Confirmação de exclusão
         $('#btnConfirmarExcluir').on('click', function () {
             const servicoId = $(this).data('id');
             mostrarLoading();
@@ -1529,7 +1588,7 @@
                     $('#excluirModal').modal('hide');
                     showToast(response.message, response.success ? 'success' : 'danger');
                     if (response.success) {
-                        setTimeout(() => location.reload(), 1500); // Atualiza a página após 1.5 segundos
+                        setTimeout(() => location.reload(), 1500);
                     }
                 },
                 error: function () {
@@ -1543,48 +1602,50 @@
     }
 
 
+
+
     if ($('#pagamentoPage').length > 0) {
 
-    function mostrarLoading() {
-        $('#loadingSpinnerPagamento').show();
-    }
-
-    function ocultarLoading() {
-        $('#loadingSpinnerPagamento').hide();
-    }
-
-    // Ação para buscar agendamentos e exibir no modal de Inserir Pagamento
-    $('#buscarAgendamentosBtn').on('click', function () {
-        const dataInicio = $('#dataInicio').val();
-        const dataFim = $('#dataFim').val();
-
-        console.log("Data de Início:", dataInicio);
-        console.log("Data de Fim:", dataFim);
-
-        if (!dataInicio) {
-            alert('Por favor, selecione uma data de início.');
-            return;
+        function mostrarLoading() {
+            $('#loadingSpinnerPagamento').show();
         }
 
-        mostrarLoading();
+        function ocultarLoading() {
+            $('#loadingSpinnerPagamento').hide();
+        }
 
-        $.ajax({
-            url: '/Agendamento/ObterAgendamentosPorData', // Endpoint para buscar agendamentos com serviços e valores
-            type: 'GET',
-            data: { dataInicio: dataInicio, dataFim: dataFim },
-            success: function (agendamentos) {
-                $('#agendamentosContainer').html('');
-                if (agendamentos.length > 0) {
-                    agendamentos.forEach(agendamento => {
-                        let servicosHTML = '';
-                        let valorTotal = agendamento.precoTotal;
+        // Ação para buscar agendamentos e exibir no modal de Inserir Pagamento
+        $('#buscarAgendamentosBtn').on('click', function () {
+            const dataInicio = $('#dataInicio').val();
+            const dataFim = $('#dataFim').val();
 
-                        // Adiciona cada serviço ao HTML e calcula o valor total
-                        agendamento.servicos.forEach(servico => {
-                            servicosHTML += `<li>${servico.nome} - R$ ${servico.preco.toFixed(2)}</li>`;
-                        });
+            console.log("Data de Início:", dataInicio);
+            console.log("Data de Fim:", dataFim);
 
-                        $('#agendamentosContainer').append(`
+            if (!dataInicio) {
+                alert('Por favor, selecione uma data de início.');
+                return;
+            }
+
+            mostrarLoading();
+
+            $.ajax({
+                url: '/Agendamento/ObterAgendamentosPorData', // Endpoint para buscar agendamentos com serviços e valores
+                type: 'GET',
+                data: { dataInicio: dataInicio, dataFim: dataFim },
+                success: function (agendamentos) {
+                    $('#agendamentosContainer').html('');
+                    if (agendamentos.length > 0) {
+                        agendamentos.forEach(agendamento => {
+                            let servicosHTML = '';
+                            let valorTotal = agendamento.precoTotal;
+
+                            // Adiciona cada serviço ao HTML e calcula o valor total
+                            agendamento.servicos.forEach(servico => {
+                                servicosHTML += `<li>${servico.nome} - R$ ${servico.preco.toFixed(2)}</li>`;
+                            });
+
+                            $('#agendamentosContainer').append(`
                             <div class="d-flex flex-column border p-3 mb-3">
                                 <p><strong>Cliente:</strong> ${agendamento.cliente.nome}</p>
                                 <p><strong>Barbeiro:</strong> ${agendamento.barbeiroNome}</p>
@@ -1597,121 +1658,121 @@
                                 </button>
                             </div>
                         `);
-                    });
-
-                    // Ação para inserir pagamento manualmente
-                    $('.btnInserirPagamento').on('click', function () {
-                        const agendamentoId = $(this).data('agendamento-id');
-                        const valorTotal = $(this).data('valor-total');
-
-                        mostrarLoading();
-                        $.ajax({
-                            url: '/Pagamento/Inserir',  // Endpoint para inserir pagamento
-                            type: 'POST',
-                            data: JSON.stringify({ agendamentoId: agendamentoId, valorPago: valorTotal }),
-                            contentType: 'application/json',
-                            success: function (response) {
-                                alert(response.message);
-                                if (response.success) {
-                                    location.reload();
-                                }
-                            },
-                            error: function () {
-                                alert('Erro ao inserir pagamento.');
-                            },
-                            complete: function () {
-                                ocultarLoading();
-                            }
                         });
-                    });
-                } else {
-                    $('#agendamentosContainer').html('<p>Nenhum agendamento encontrado para esta data.</p>');
+
+                        // Ação para inserir pagamento manualmente
+                        $('.btnInserirPagamento').on('click', function () {
+                            const agendamentoId = $(this).data('agendamento-id');
+                            const valorTotal = $(this).data('valor-total');
+
+                            mostrarLoading();
+                            $.ajax({
+                                url: '/Pagamento/Inserir',  // Endpoint para inserir pagamento
+                                type: 'POST',
+                                data: JSON.stringify({ agendamentoId: agendamentoId, valorPago: valorTotal }),
+                                contentType: 'application/json',
+                                success: function (response) {
+                                    alert(response.message);
+                                    if (response.success) {
+                                        location.reload();
+                                    }
+                                },
+                                error: function () {
+                                    alert('Erro ao inserir pagamento.');
+                                },
+                                complete: function () {
+                                    ocultarLoading();
+                                }
+                            });
+                        });
+                    } else {
+                        $('#agendamentosContainer').html('<p>Nenhum agendamento encontrado para esta data.</p>');
+                    }
+                },
+                error: function () {
+                    alert('Erro ao buscar agendamentos.');
+                    console.error("Erro ao buscar agendamentos.");
+                },
+                complete: function () {
+                    ocultarLoading();
                 }
-            },
-            error: function () {
-                alert('Erro ao buscar agendamentos.');
-                console.error("Erro ao buscar agendamentos.");
-            },
-            complete: function () {
-                ocultarLoading();
-            }
+            });
         });
-    });
 
-    // Ação para o botão "Ver Detalhes"
-    $('.btnDetalhes').on('click', function () {
-        const pagamentoId = $(this).data('id');
-        mostrarLoading();
+        // Ação para o botão "Ver Detalhes"
+        $('.btnDetalhes').on('click', function () {
+            const pagamentoId = $(this).data('id');
+            mostrarLoading();
 
-        $.get(`/Pagamento/Detalhes/${pagamentoId}`, function (data) {
-            console.log("Detalhes do pagamento:", data);
-            const valorPago = data.valorPago ? parseFloat(data.valorPago).toFixed(2).replace('.', ',') : 'N/A';
-            $('#detalhesModalBody').html(`
+            $.get(`/Pagamento/Detalhes/${pagamentoId}`, function (data) {
+                console.log("Detalhes do pagamento:", data);
+                const valorPago = data.valorPago ? parseFloat(data.valorPago).toFixed(2).replace('.', ',') : 'N/A';
+                $('#detalhesModalBody').html(`
                 <p><strong>Cliente:</strong> ${data.nomeCliente}</p>
                 <p><strong>Valor Pago:</strong> R$ ${valorPago}</p>
                 <p><strong>Status:</strong> ${data.statusPagamento}</p>
                 <p><strong>Data do Pagamento:</strong> ${data.dataPagamento}</p>
             `);
-            $('#detalhesModal').modal('show');
-        }).fail(function () {
-            showToast('Erro ao carregar os detalhes do pagamento.', 'danger');
-        }).always(function () {
-            ocultarLoading();
-        });
-    });
-
-    // Ação para o botão de solicitar reembolso
-    $('.btnReembolso').on('click', function () {
-        const pagamentoId = $(this).data('id');
-        const paymentId = $(this).data('payment-id');
-        const nomeCliente = $(this).data('nome');
-        const valorPago = $(this).data('valor');
-
-        $('#reembolsoPagamentoId').text(`${nomeCliente} no valor de R$ ${valorPago}`);
-        $('#hiddenReembolsoPaymentId').val(paymentId);
-        $('#btnConfirmarReembolso').data('id', pagamentoId);
-        $('#reembolsoModal').modal('show');
-    });
-
-    // Confirmação de reembolso via AJAX
-    $('#btnConfirmarReembolso').on('click', function () {
-        const pagamentoId = $(this).data('id');
-        const paymentId = $('#hiddenReembolsoPaymentId').val();
-        mostrarLoading();
-
-        $.ajax({
-            url: '/api/payment/refund',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({ PaymentId: paymentId }),
-            success: function (response) {
-                $('#reembolsoModal').modal('hide');
-                showToast('Reembolso processado com sucesso.', 'success');
-                $.ajax({
-                    url: `/Pagamento/SolicitarReembolso/${pagamentoId}`,
-                    type: 'POST',
-                    success: function() {
-                        setTimeout(() => location.reload(), 1500);
-                    }
-                });
-            },
-            error: function () {
-                showToast('Erro ao solicitar reembolso.', 'danger');
-            },
-            complete: function () {
+                $('#detalhesModal').modal('show');
+            }).fail(function () {
+                showToast('Erro ao carregar os detalhes do pagamento.', 'danger');
+            }).always(function () {
                 ocultarLoading();
-            }
+            });
         });
-    });
 
-    // Ação para o botão de exclusão
-    $('.btnExcluir').on('click', function () {
-        const pagamentoId = $(this).data('id');
-        $('#excluirPagamentoNome').text(pagamentoId);
-        $('#btnConfirmarExcluir').data('id', pagamentoId);
-        $('#excluirModal').modal('show');
-    });
-}
+        // Ação para o botão de solicitar reembolso
+        $('.btnReembolso').on('click', function () {
+            const pagamentoId = $(this).data('id');
+            const paymentId = $(this).data('payment-id');
+            const nomeCliente = $(this).data('nome');
+            const valorPago = $(this).data('valor');
+
+            $('#reembolsoPagamentoId').text(`${nomeCliente} no valor de R$ ${valorPago}`);
+            $('#hiddenReembolsoPaymentId').val(paymentId);
+            $('#btnConfirmarReembolso').data('id', pagamentoId);
+            $('#reembolsoModal').modal('show');
+        });
+
+        // Confirmação de reembolso via AJAX
+        $('#btnConfirmarReembolso').on('click', function () {
+            const pagamentoId = $(this).data('id');
+            const paymentId = $('#hiddenReembolsoPaymentId').val();
+            mostrarLoading();
+
+            $.ajax({
+                url: '/api/payment/refund',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ PaymentId: paymentId }),
+                success: function (response) {
+                    $('#reembolsoModal').modal('hide');
+                    showToast('Reembolso processado com sucesso.', 'success');
+                    $.ajax({
+                        url: `/Pagamento/SolicitarReembolso/${pagamentoId}`,
+                        type: 'POST',
+                        success: function () {
+                            setTimeout(() => location.reload(), 1500);
+                        }
+                    });
+                },
+                error: function () {
+                    showToast('Erro ao solicitar reembolso.', 'danger');
+                },
+                complete: function () {
+                    ocultarLoading();
+                }
+            });
+        });
+
+        // Ação para o botão de exclusão
+        $('.btnExcluir').on('click', function () {
+            const pagamentoId = $(this).data('id');
+            $('#excluirPagamentoNome').text(pagamentoId);
+            $('#btnConfirmarExcluir').data('id', pagamentoId);
+            $('#excluirModal').modal('show');
+        });
+    }
 
 
 
@@ -1782,6 +1843,47 @@
             }
         });
     }
+
+
+    const pageErro = document.getElementById('erro-barbearia-container');
+
+    if (pageErro) {
+        const piadas = [
+            "Parece que esta barbearia fez a barba... e sumiu!",
+            "Essa barbearia deve estar se escondendo atrás do espelho.",
+            "Ops! Essa barbearia foi dar um 'tapa no visual' e desapareceu.",
+            "Acho que essa barbearia foi fazer uma escova progressiva... para bem longe!",
+            "Talvez a barbearia esteja ocupada fazendo a barba do Pé Grande.",
+            "Essa barbearia foi cortar os laços com a internet!",
+            "Parece que a barbearia saiu para comprar mais gel fixador e se perdeu no caminho.",
+            "Ela foi tão longe no estilo que virou lenda urbana!",
+            "Será que a barbearia foi chamada para um serviço secreto de corte de cabelo?"
+        ];
+
+        const mensagemContainer = document.getElementById("erro-barbearia-mensagem");
+        let piadaIndex = 0;
+
+        function alternarMensagem() {
+            mensagemContainer.style.opacity = 0; // Esconde a mensagem atual
+            setTimeout(() => {
+                if (piadaIndex % 2 === 0) {
+                    mensagemContainer.textContent = "Ops! Essa barbearia foi tão bem barbeada que desapareceu!";
+                } else {
+                    mensagemContainer.textContent = piadas[Math.floor(piadaIndex / 2)];
+                }
+                mensagemContainer.style.opacity = 1; // Mostra a nova mensagem
+                piadaIndex = (piadaIndex + 1) % (piadas.length * 2); // Alterna entre mensagem e piada
+            }, 500); // Tempo de transição entre mensagens
+        }
+
+        alternarMensagem(); // Exibe a primeira mensagem imediatamente
+        setInterval(alternarMensagem, 5000); // Troca de mensagem a cada 5 segundos
+    }
+
+
+
+
+
 
 
 

@@ -1,8 +1,13 @@
 ﻿using BarberShop.Application.Settings;
+using BarberShop.Domain.Entities;
+using BarberShop.Domain.Interfaces;
+using BarberShop.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Stripe;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace BarberShop.Application.Services
@@ -11,10 +16,14 @@ namespace BarberShop.Application.Services
     {
         private readonly StripeSettings _stripeSettings;
         private readonly ILogService _logService;
+        private readonly IPaymentRepository _paymentRepository;
+        private readonly BarbeariaContext _context; // Injete o contexto do banco de dados
 
-        public PaymentService(IOptions<StripeSettings> stripeOptions, ILogService logService)
+        public PaymentService(IOptions<StripeSettings> stripeOptions, BarbeariaContext context, IPaymentRepository paymentRepository, ILogService logService)
         {
             _stripeSettings = stripeOptions.Value;
+            _context = context;
+            _paymentRepository = paymentRepository;
             _logService = logService;
             StripeConfiguration.ApiKey = _stripeSettings.SecretKey;
         }
@@ -168,5 +177,130 @@ namespace BarberShop.Application.Services
                 throw new Exception("Não foi possível processar o reembolso.");
             }
         }
+
+        public async Task<List<PlanoAssinaturaSistema>> SincronizarPlanosComStripe()
+        {
+            var service = new ProductService();
+            var products = await service.ListAsync(new ProductListOptions
+            {
+                Active = true,
+                Limit = 100
+            });
+
+            var planosAtualizados = new List<PlanoAssinaturaSistema>();
+
+            foreach (var product in products)
+            {
+                var priceService = new PriceService();
+                var prices = await priceService.ListAsync(new PriceListOptions
+                {
+                    Product = product.Id,
+                    Limit = 1
+                });
+
+                if (prices.Data.Count > 0)
+                {
+                    var price = prices.Data[0];
+
+                    // Encontre o plano com base no `IdProdutoStripe`, pois `PlanoId` é gerado pelo banco.
+                    var planoExistente = await _context.PlanoAssinaturaSistema
+                        .FirstOrDefaultAsync(plano => plano.IdProdutoStripe == product.Id);
+
+                    if (planoExistente == null)
+                    {
+                        var novoPlano = new PlanoAssinaturaSistema
+                        {
+                            Nome = product.Name,
+                            Descricao = product.Description,
+                            IdProdutoStripe = product.Id, // Armazena o ID do Stripe
+                            Valor = (decimal)(price.UnitAmount / 100.0), // Converte de centavos para unidade monetária
+                            Periodicidade = price.Recurring.Interval
+                        };
+
+                        _context.PlanoAssinaturaSistema.Add(novoPlano);
+                        planosAtualizados.Add(novoPlano);
+                    }
+                    else
+                    {
+                        // Atualiza o plano existente
+                        planoExistente.Nome = product.Name;
+                        planoExistente.Descricao = product.Description;
+                        planoExistente.IdProdutoStripe = product.Id;
+                        planoExistente.Valor = (decimal)(price.UnitAmount / 100.0);
+                        planoExistente.Periodicidade = price.Recurring.Interval;
+
+                        planosAtualizados.Add(planoExistente);
+                    }
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            // Remove planos que não estão mais no Stripe
+            var idsPlanosAtuais = new HashSet<string>(products.Select(p => p.Id));
+            var planosParaRemover = _context.PlanoAssinaturaSistema
+                .Where(plano => !idsPlanosAtuais.Contains(plano.IdProdutoStripe));
+
+            _context.PlanoAssinaturaSistema.RemoveRange(planosParaRemover);
+            await _context.SaveChangesAsync();
+
+            return planosAtualizados;
+        }
+
+        public async Task<string> StartSubscription(string planId, string priceId, string clienteNome, string clienteEmail)
+        {
+            // Criação do cliente no Stripe
+            var customerOptions = new CustomerCreateOptions
+            {
+                Name = clienteNome,
+                Email = clienteEmail,
+            };
+            var customerService = new CustomerService();
+            var customer = await customerService.CreateAsync(customerOptions);
+
+            // Criação da assinatura no Stripe com `PriceId`
+            var subscriptionOptions = new SubscriptionCreateOptions
+            {
+                Customer = customer.Id,
+                Items = new List<SubscriptionItemOptions>
+                {
+                    new SubscriptionItemOptions
+                    {
+                        Price = priceId // Usando o PriceId aqui em vez do PlanId
+                    }
+                },
+                PaymentBehavior = "default_incomplete", // Gera client_secret se precisar confirmação
+                Expand = new List<string> { "latest_invoice.payment_intent" } // Expande para obter o client_secret
+            };
+
+            var subscriptionService = new SubscriptionService();
+            var subscription = await subscriptionService.CreateAsync(subscriptionOptions);
+
+            // Pega o client_secret para confirmação de pagamento inicial, se necessário
+            var clientSecret = subscription.LatestInvoice?.PaymentIntent?.ClientSecret;
+
+            // Retorna o ID da assinatura e o client_secret se disponível
+            return clientSecret ?? subscription.Id;
+        }
+
+        public async Task SavePayment(PaymentDetails paymentDetails)
+        {
+            var pagamento = new PagamentoAssinatura
+            {
+                ClienteId = paymentDetails.ClienteId,
+                NomeCliente = paymentDetails.NomeCliente,
+                EmailCliente = paymentDetails.EmailCliente,
+                TelefoneCliente = paymentDetails.TelefoneCliente,
+                ValorPago = paymentDetails.ValorPago,
+                PaymentId = paymentDetails.PaymentId,
+                StatusPagamento = paymentDetails.StatusPagamento,
+                DataPagamento = paymentDetails.DataPagamento,
+                BarbeariaId = paymentDetails.BarbeariaId
+            };
+
+            await _paymentRepository.AddAsync(pagamento);
+            await _paymentRepository.SaveChangesAsync();
+        }
+
     }
 }

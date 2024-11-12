@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using BarberShop.Domain.Entities;
 
 namespace BarberShop.Domain.Interfaces
@@ -8,5 +7,6 @@ namespace BarberShop.Domain.Interfaces
     {
         Task<Usuario> GetByEmailAsync(string email);
         Task UpdateCodigoVerificacaoAsync(int usuarioId, string codigoVerificacao, DateTime? expiracao);
+        Task DeleteAsync(Usuario usuario); 
     }
 }

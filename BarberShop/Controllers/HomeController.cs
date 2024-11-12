@@ -1,32 +1,24 @@
-using BarberShop.Models;
 using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
+using BarberShop.Domain.Interfaces;
+using System.Threading.Tasks;
 
-namespace BarberShopMVC.Controllers
+namespace BarberShop.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
+        private readonly IBarbeariaRepository _barbeariaRepository;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(IBarbeariaRepository barbeariaRepository)
         {
-            _logger = logger;
+            _barbeariaRepository = barbeariaRepository;
         }
 
-        public IActionResult Index()
+        // Ação para exibir a lista de barbearias
+        public async Task<IActionResult> Index()
         {
-            return View();
-        }
-
-        public IActionResult Privacy()
-        {
-            return View();
-        }
-
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            // Obtém todas as barbearias ativas
+            var barbearias = await _barbeariaRepository.ObterTodasAtivasAsync();
+            return View(barbearias);
         }
     }
 }

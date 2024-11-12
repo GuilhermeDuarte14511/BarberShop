@@ -19,14 +19,14 @@ namespace BarberShop.Application.Services
         }
 
         public async Task EnviarEmailAgendamentoAsync(string destinatarioEmail, string destinatarioNome, string assunto, string conteudo, string barbeiroNome, DateTime dataHoraInicio,
-            DateTime dataHoraFim, decimal total, string formaPagamento, string googleCalendarLink = null)
+            DateTime dataHoraFim, decimal total, string formaPagamento, string nomeBarbearia, string googleCalendarLink = null)
         {
             try
             {
                 await _logService.SaveLogAsync("EmailService", $"Iniciando envio de email de agendamento para {destinatarioEmail}", "INFO", _sendGridApiKey);
 
                 var client = new SendGridClient(_sendGridApiKey);
-                var from = new EmailAddress("barbershoperbrasil@outlook.com", "Barbearia CG DREAMS");
+                var from = new EmailAddress("barbershoperbrasil@outlook.com", nomeBarbearia);
                 var to = new EmailAddress(destinatarioEmail, destinatarioNome);
 
                 string htmlContent = $@"
@@ -109,10 +109,10 @@ namespace BarberShop.Application.Services
                             </p>";
                 }
 
-                htmlContent += @"
-                            <p>Obrigado por escolher a Barbearia CG DREAMS!</p>
+                htmlContent += $@"
+                            <p>Obrigado por escolher a {nomeBarbearia}!</p>
                             <div class='footer'>
-                                <p>&copy; " + DateTime.Now.Year + @" Barbearia CG DREAMS. Todos os direitos reservados.</p>
+                                <p>&copy; {DateTime.Now.Year} {nomeBarbearia}. Todos os direitos reservados.</p>
                             </div>
                         </div>
                     </body>
@@ -136,14 +136,14 @@ namespace BarberShop.Application.Services
             }
         }
 
-        public async Task EnviarEmailNotificacaoBarbeiroAsync(string barbeiroEmail, string barbeiroNome, string clienteNome, List<string> servicos, DateTime dataHoraInicio, DateTime dataHoraFim, decimal total, string formaPagamento)
+        public async Task EnviarEmailNotificacaoBarbeiroAsync(string barbeiroEmail, string barbeiroNome, string clienteNome, List<string> servicos, DateTime dataHoraInicio, DateTime dataHoraFim, decimal total, string formaPagamento, string nomeBarbearia)
         {
             try
             {
                 await _logService.SaveLogAsync("EmailService", $"Iniciando envio de email de notificação para {barbeiroEmail}", "INFO", _sendGridApiKey);
 
                 var client = new SendGridClient(_sendGridApiKey);
-                var from = new EmailAddress("barbershoperbrasil@outlook.com", "Barbearia CG DREAMS");
+                var from = new EmailAddress("barbershoperbrasil@outlook.com", nomeBarbearia);
                 var to = new EmailAddress(barbeiroEmail, barbeiroNome);
 
                 string htmlContent = $@"
@@ -212,12 +212,12 @@ namespace BarberShop.Application.Services
                     htmlContent += $"<li>{servico}</li>";
                 }
 
-                htmlContent += @"
+                htmlContent += $@"
                                     </ul>
                                 </div>
                                 <p>Por favor, prepare-se para o atendimento.</p>
                                 <div class='footer'>
-                                    <p>&copy; " + DateTime.Now.Year + @" Barbearia CG DREAMS. Todos os direitos reservados.</p>
+                                    <p>&copy; {DateTime.Now.Year} {nomeBarbearia}. Todos os direitos reservados.</p>
                                 </div>
                             </div>
                         </body>
@@ -242,14 +242,14 @@ namespace BarberShop.Application.Services
             }
         }
 
-        public async Task EnviarEmailCodigoVerificacaoAsync(string destinatarioEmail, string destinatarioNome, string codigoVerificacao)
+        public async Task EnviarEmailCodigoVerificacaoAsync(string destinatarioEmail, string destinatarioNome, string codigoVerificacao, string nomeBarbearia)
         {
             try
             {
                 await _logService.SaveLogAsync("EmailService", $"Iniciando envio de email de verificação para {destinatarioEmail}", "INFO", _sendGridApiKey);
 
                 var client = new SendGridClient(_sendGridApiKey);
-                var from = new EmailAddress("barbershoperbrasil@outlook.com", "Barbearia CG DREAMS");
+                var from = new EmailAddress("barbershoperbrasil@outlook.com", nomeBarbearia);
                 var to = new EmailAddress(destinatarioEmail, destinatarioNome);
                 var assunto = "Seu Código de Verificação";
                 var conteudo = $"Olá, {destinatarioNome}!\n\nSeu código de verificação é: {codigoVerificacao}\n\nEste código expira em 5 minutos.";
@@ -313,7 +313,7 @@ namespace BarberShop.Application.Services
                         <p>Este código expira em <strong>5 minutos</strong>.</p>
                         <p>Se você não solicitou este código, por favor ignore este email.</p>
                         <div class='footer'>
-                            <p>&copy; " + DateTime.Now.Year + @" Barbearia CG DREAMS. Todos os direitos reservados.</p>
+                            <p>&copy; {DateTime.Now.Year} {nomeBarbearia}. Todos os direitos reservados.</p>
                         </div>
                     </div>
                 </body>
@@ -346,6 +346,96 @@ namespace BarberShop.Application.Services
             string dataFimFormatada = dataFim.ToString("yyyyMMddTHHmmssZ");
 
             return $"https://www.google.com/calendar/render?action=TEMPLATE&text={Uri.EscapeDataString(titulo)}&dates={dataInicioFormatada}/{dataFimFormatada}&details={Uri.EscapeDataString(descricao)}&location={Uri.EscapeDataString(local)}";
+        }
+
+        public async Task EnviarEmailFalhaCadastroAsync(string destinatarioEmail, string destinatarioNome, string nomeBarbearia)
+        {
+            try
+            {
+                await _logService.SaveLogAsync("EmailService", $"Iniciando envio de e-mail de falha de cadastro para {destinatarioEmail}", "INFO", _sendGridApiKey);
+
+                var client = new SendGridClient(_sendGridApiKey);
+                var from = new EmailAddress("barbershoperbrasil@outlook.com", nomeBarbearia);
+                var to = new EmailAddress(destinatarioEmail, destinatarioNome);
+                var assunto = "Falha no Cadastro - Assistência Necessária";
+                var conteudo = $"Olá, {destinatarioNome}!\n\nOcorreu um problema ao concluir o seu cadastro, mas não se preocupe! Nossa equipe está pronta para ajudar você.";
+
+                string htmlContent = $@"
+                        <html>
+                        <head>
+                            <style>
+                                body {{
+                                    font-family: 'Arial', sans-serif;
+                                    background-color: #2c2f33;
+                                    margin: 0;
+                                    padding: 0;
+                                }}
+                                .container {{
+                                    background-color: #23272a;
+                                    color: #ffffff;
+                                    max-width: 600px;
+                                    margin: 20px auto;
+                                    border-radius: 10px;
+                                    padding: 20px;
+                                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                                }}
+                                h1 {{
+                                    font-size: 24px;
+                                    color: #e74c3c;
+                                    text-align: center;
+                                    border-bottom: 2px solid #e74c3c;
+                                    padding-bottom: 10px;
+                                    margin-bottom: 20px;
+                                }}
+                                p {{
+                                    font-size: 16px;
+                                    line-height: 1.6;
+                                    color: #ffffff;
+                                }}
+                                .contact {{
+                                    font-weight: bold;
+                                    color: #99aab5;
+                                }}
+                                .footer {{
+                                    text-align: center;
+                                    margin-top: 20px;
+                                    font-size: 12px;
+                                    color: #99aab5;
+                                }}
+                            </style>
+                        </head>
+                        <body>
+                            <div class='container'>
+                                <h1>Assistência no Cadastro</h1>
+                                <p>Olá, <strong>{destinatarioNome}</strong>,</p>
+                                <p>Ocorreu um problema ao processar o seu cadastro. Nossa equipe está à disposição para resolver isso o mais rápido possível.</p>
+                                <p>Por favor, entre em contato conosco pelos canais abaixo para que possamos ajudá-lo:</p>
+                                <p class='contact'>WhatsApp: (XX) XXXXX-XXXX<br>
+                                E-mail: suporte@cgdreams.com</p>
+                                <p>Agradecemos pela sua paciência e estamos ansiosos para atendê-lo.</p>
+                                <div class='footer'>
+                                    <p>&copy; {DateTime.Now.Year} {nomeBarbearia}. Todos os direitos reservados.</p>
+                                </div>
+                            </div>
+                        </body>
+                        </html>";
+
+                var msg = MailHelper.CreateSingleEmail(from, to, assunto, conteudo, htmlContent);
+                var response = await client.SendEmailAsync(msg);
+
+                if (response.StatusCode != System.Net.HttpStatusCode.OK && response.StatusCode != System.Net.HttpStatusCode.Accepted)
+                {
+                    await _logService.SaveLogAsync("EmailService", $"Falha ao enviar o e-mail de falha de cadastro, status code: {response.StatusCode}", "ERROR", _sendGridApiKey);
+                    throw new Exception($"Falha ao enviar o e-mail de falha de cadastro, status code: {response.StatusCode}");
+                }
+
+                await _logService.SaveLogAsync("EmailService", $"E-mail de falha de cadastro enviado com sucesso para: {destinatarioEmail}", "INFO", _sendGridApiKey);
+            }
+            catch (Exception ex)
+            {
+                await _logService.SaveLogAsync("EmailService", $"Erro ao enviar e-mail de falha de cadastro para {destinatarioEmail}: {ex.Message}", "ERROR", _sendGridApiKey);
+                throw;
+            }
         }
     }
 }

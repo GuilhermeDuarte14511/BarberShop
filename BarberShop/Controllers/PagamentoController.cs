@@ -10,18 +10,26 @@ namespace BarberShopMVC.Controllers
     public class PagamentoController : BaseController
     {
         private readonly IPagamentoRepository _pagamentoRepository;
+        private readonly ILogService _logService;
 
         public PagamentoController(IPagamentoRepository pagamentoRepository, ILogService logService)
             : base(logService)
         {
             _pagamentoRepository = pagamentoRepository;
+            _logService = logService;
         }
 
         public async Task<IActionResult> Index()
         {
             try
             {
-                var pagamentos = await _pagamentoRepository.GetAllAsync();
+                int? barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
+                if (!barbeariaId.HasValue)
+                {
+                    return BadRequest(new { success = false, message = "Barbearia não encontrada na sessão." });
+                }
+
+                var pagamentos = await _pagamentoRepository.GetAllPagamentosByBarbeariaIdAsync(barbeariaId.Value);
                 return View(pagamentos);
             }
             catch (Exception ex)
@@ -44,7 +52,7 @@ namespace BarberShopMVC.Controllers
                 var detalhes = new
                 {
                     pagamento.PagamentoId,
-                    NomeCliente = pagamento.Agendamento?.Cliente?.Nome ?? "N/A", // Nome do cliente, ou "N/A" se não existir
+                    NomeCliente = pagamento.Agendamento?.Cliente?.Nome ?? "N/A",
                     pagamento.ValorPago,
                     pagamento.StatusPagamento,
                     DataPagamento = pagamento.DataPagamento.HasValue ? pagamento.DataPagamento.Value.ToString("dd/MM/yyyy") : "N/A"
@@ -54,11 +62,10 @@ namespace BarberShopMVC.Controllers
             }
             catch (Exception ex)
             {
-                // Lida com o erro de forma apropriada
+                await LogAsync("ERROR", nameof(PagamentoController), "Erro ao carregar detalhes do pagamento", ex.Message, id.ToString());
                 return Json(new { success = false, message = "Erro ao carregar detalhes.", error = ex.Message });
             }
         }
-
 
         public async Task<IActionResult> SolicitarReembolso(int id)
         {
@@ -77,7 +84,6 @@ namespace BarberShopMVC.Controllers
                     return BadRequest("O pagamento não está elegível para reembolso.");
                 }
 
-                // Atualizar o status para Reembolsado
                 pagamento.StatusPagamento = StatusPagamento.Reembolsado;
                 await _pagamentoRepository.UpdateAsync(pagamento);
 
@@ -90,6 +96,5 @@ namespace BarberShopMVC.Controllers
                 return View("Error", "Ocorreu um erro ao solicitar o reembolso.");
             }
         }
-
     }
 }

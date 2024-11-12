@@ -23,12 +23,10 @@ namespace BarberShop.Infrastructure.Repositories
             try
             {
                 await _context.Servicos.AddAsync(entity);
-                await _context.SaveChangesAsync();
-                return entity;
+                return entity; // Não salva aqui, pois será feito no SaveChangesAsync
             }
             catch (Exception ex)
             {
-                // Rethrow the exception to be caught by the controller layer
                 throw new Exception("Erro ao adicionar o serviço", ex);
             }
         }
@@ -41,12 +39,10 @@ namespace BarberShop.Infrastructure.Repositories
                 if (servico != null)
                 {
                     _context.Servicos.Remove(servico);
-                    await _context.SaveChangesAsync();
                 }
             }
             catch (Exception ex)
             {
-                // Rethrow the exception to be caught by the controller layer
                 throw new Exception($"Erro ao excluir o serviço com Id {id}", ex);
             }
         }
@@ -59,7 +55,6 @@ namespace BarberShop.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
-                // Rethrow the exception to be caught by the controller layer
                 throw new Exception("Erro ao obter a lista de serviços", ex);
             }
         }
@@ -72,7 +67,6 @@ namespace BarberShop.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
-                // Rethrow the exception to be caught by the controller layer
                 throw new Exception($"Erro ao obter o serviço com Id {id}", ex);
             }
         }
@@ -82,11 +76,9 @@ namespace BarberShop.Infrastructure.Repositories
             try
             {
                 _context.Servicos.Update(entity);
-                await _context.SaveChangesAsync();
             }
             catch (Exception ex)
             {
-                // Rethrow the exception to be caught by the controller layer
                 throw new Exception("Erro ao atualizar o serviço", ex);
             }
         }
@@ -99,9 +91,21 @@ namespace BarberShop.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
-                // Rethrow the exception to be caught by the controller layer
                 throw new Exception("Erro ao obter os serviços por IDs", ex);
             }
+        }
+
+        public async Task<IEnumerable<Servico>> ObterServicosPorBarbeariaIdAsync(int barbeariaId)
+        {
+            return await _context.Servicos
+                .Where(s => s.BarbeariaId == barbeariaId)
+                .ToListAsync();
+        }
+
+        // Implementação do SaveChangesAsync
+        public async Task<int> SaveChangesAsync()
+        {
+            return await _context.SaveChangesAsync();
         }
     }
 }

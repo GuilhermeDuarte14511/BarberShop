@@ -1,7 +1,11 @@
-﻿using BarberShop.Application.Services;
+﻿using BarberShop.Application.DTOs;
+using BarberShop.Application.Services;
+using BarberShop.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
+using Stripe;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace BarberShop.API.Controllers
@@ -11,15 +15,17 @@ namespace BarberShop.API.Controllers
     public class PaymentController : ControllerBase
     {
         private readonly IPaymentService _paymentService;
+        private readonly IPlanoAssinaturaService _planoAssinaturaService;
 
-        public PaymentController(IPaymentService paymentService)
+        public PaymentController(IPaymentService paymentService, IPlanoAssinaturaService planoAssinaturaService)
         {
             _paymentService = paymentService;
+            _planoAssinaturaService = planoAssinaturaService;
         }
 
         // Endpoint para criar um PaymentIntent
         [HttpPost("create-payment-intent")]
-        public async Task<IActionResult> CreatePaymentIntent([FromBody] PaymentIntentRequest request)
+        public async Task<IActionResult> CreatePaymentIntent([FromBody] PaymentIntentRequestDTO request)
         {
             try
             {
@@ -34,7 +40,7 @@ namespace BarberShop.API.Controllers
 
         // Endpoint para processar pagamento com cartão de crédito
         [HttpPost("process-credit-card")]
-        public async Task<IActionResult> ProcessCreditCardPayment([FromBody] CreditCardPaymentRequest request)
+        public async Task<IActionResult> ProcessCreditCardPayment([FromBody] CreditCardPaymentRequestDTO request)
         {
             try
             {
@@ -49,7 +55,7 @@ namespace BarberShop.API.Controllers
 
         // Endpoint para processar pagamento via PIX
         [HttpPost("process-pix")]
-        public async Task<IActionResult> ProcessPixPayment([FromBody] PixPaymentRequest request)
+        public async Task<IActionResult> ProcessPixPayment([FromBody] PixPaymentRequestDTO request)
         {
             try
             {
@@ -76,36 +82,90 @@ namespace BarberShop.API.Controllers
                 return BadRequest(new { error = ex.Message });
             }
         }
-    }
 
-    // Modelo de requisição para criar um PaymentIntent
-    public class PaymentIntentRequest
-    {
-        public decimal Amount { get; set; }
-        public List<string> PaymentMethods { get; set; } = new List<string> { "card" }; // Default to "card"
-        public string Currency { get; set; } = "brl";
-    }
+        // Endpoint para sincronizar os planos de assinatura do Stripe com o banco de dados
+        [HttpPost("sync-planos")]
+        public async Task<IActionResult> SincronizarPlanos()
+        {
+            try
+            {
+                List<PlanoAssinaturaSistema> planosAtualizados = await _planoAssinaturaService.SincronizarPlanosComStripe();
+                return Ok(planosAtualizados);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
 
-    // Modelo de requisição para pagamento com cartão de crédito
-    public class CreditCardPaymentRequest
-    {
-        public decimal Amount { get; set; }
-        public string ClienteNome { get; set; }
-        public string ClienteEmail { get; set; }
-    }
+        // Endpoint para listar os planos de assinatura do sistema
+        [HttpGet("planos")]
+        public async Task<IActionResult> GetPlanos()
+        {
+            try
+            {
+                var planos = await _planoAssinaturaService.GetAllPlanosAsync();
+                var planosDto = planos.Select(plano => new
+                {
+                    PlanoId = plano.PlanoId,
+                    IdProdutoStripe = plano.IdProdutoStripe,
+                    Nome = plano.Nome,
+                    Descricao = plano.Descricao,
+                    Valor = plano.Valor,
+                    Periodicidade = plano.Periodicidade,
+                    PriceId = plano.PriceId
+                }).ToList();
 
-    // Modelo de requisição para pagamento via PIX
-    public class PixPaymentRequest
-    {
-        public decimal Amount { get; set; }
-        public string ClienteNome { get; set; }
-        public string ClienteEmail { get; set; }
-    }
+                return Ok(planosDto);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
 
-    // Modelo de requisição para reembolso
-    public class RefundRequest
-    {
-        public string PaymentId { get; set; }
-        public long? Amount { get; set; } // Valor opcional para reembolso parcial em centavos
+        [HttpPost("start-subscription")]
+        public async Task<IActionResult> StartSubscription([FromBody] StartSubscriptionRequestDTO request)
+        {
+            try
+            {
+                var subscriptionId = await _paymentService.StartSubscription(request.PlanId, request.PriceId, request.ClienteNome, request.ClienteEmail);
+                return Ok(new { subscriptionId });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        [HttpPost("save-payment")]
+        public async Task<IActionResult> SavePayment([FromBody] SavePaymentRequestDTO request)
+        {
+            try
+            {
+                var paymentDetails = new PaymentDetails
+                {
+                    ClienteId = request.ClienteId,
+                    NomeCliente = request.NomeCliente,
+                    EmailCliente = request.EmailCliente,
+                    TelefoneCliente = request.TelefoneCliente,
+                    ValorPago = request.ValorPago,
+                    PaymentId = request.PaymentId,
+                    StatusPagamento = request.StatusPagamento,
+                    DataPagamento = DateTime.UtcNow,
+                    BarbeariaId = request.BarbeariaId
+                };
+
+                await _paymentService.SavePayment(paymentDetails);
+                return Ok(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+
+
     }
 }

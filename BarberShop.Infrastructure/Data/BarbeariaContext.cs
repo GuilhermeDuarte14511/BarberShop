@@ -1,5 +1,6 @@
 ﻿using BarberShop.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace BarberShop.Infrastructure.Data
 {
@@ -10,7 +11,7 @@ namespace BarberShop.Infrastructure.Data
         {
         }
 
-        // DbSets para as entidades
+        // DbSets para as entidades existentes
         public DbSet<Cliente> Clientes { get; set; }
         public DbSet<Barbeiro> Barbeiros { get; set; }
         public DbSet<Servico> Servicos { get; set; }
@@ -22,29 +23,53 @@ namespace BarberShop.Infrastructure.Data
         public DbSet<RelatorioPersonalizado> RelatoriosPersonalizados { get; set; }
         public DbSet<GraficoPosicao> GraficoPosicao { get; set; }
         public DbSet<Avaliacao> Avaliacao { get; set; }
-
-        // Novo DbSet para Barbearia
         public DbSet<Barbearia> Barbearias { get; set; }
+
+        // DbSets para as novas entidades
+        public DbSet<PlanoAssinaturaSistema> PlanoAssinaturaSistema { get; set; }
+        public DbSet<PlanoAssinaturaBarbearia> PlanoAssinaturaBarbearias { get; set; }
+        public DbSet<PlanoBeneficio> PlanoBeneficios { get; set; }
+        public DbSet<PagamentoAssinatura> PagamentosAssinaturasSite { get; set; } // Novo DbSet para PagamentoAssinatura
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Definir chave composta para a entidade AgendamentoServico
+            base.OnModelCreating(modelBuilder);
+
+            // Configuração de chave primária para PlanoAssinaturaBarbearia
+            modelBuilder.Entity<PlanoAssinaturaBarbearia>()
+                .HasKey(p => p.PlanoBarbeariaId);
+
+            // Configuração de chave primária para PlanoAssinaturaSistema
+            modelBuilder.Entity<PlanoAssinaturaSistema>()
+                .HasKey(p => p.PlanoId);
+
+            // Configuração de chave primária para PagamentoAssinatura
+            modelBuilder.Entity<PagamentoAssinatura>()
+                .HasKey(p => p.AssinaturaId);
+
+            // Configuração para PagamentoAssinatura
+            modelBuilder.Entity<PagamentoAssinatura>()
+                .Property(p => p.ValorPago)
+                .HasColumnType("decimal(18,2)");
+
+            modelBuilder.Entity<PagamentoAssinatura>()
+                .Property(p => p.DataPagamento)
+                .IsRequired();
+
+            // Outras configurações já existentes
             modelBuilder.Entity<AgendamentoServico>()
                 .HasKey(agendamentoServico => new { agendamentoServico.AgendamentoId, agendamentoServico.ServicoId });
 
-            // Configura o relacionamento um-para-um entre Agendamento e Pagamento
             modelBuilder.Entity<Agendamento>()
                 .HasOne(a => a.Pagamento)
                 .WithOne(p => p.Agendamento)
                 .HasForeignKey<Pagamento>(p => p.AgendamentoId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Configuração do tipo de coluna para ValorPago em Pagamento
             modelBuilder.Entity<Pagamento>()
                 .Property(p => p.ValorPago)
                 .HasColumnType("decimal(18,2)");
 
-            // Configuração para a entidade Usuario
             modelBuilder.Entity<Usuario>()
                 .Property(u => u.Email)
                 .HasMaxLength(255)
@@ -54,36 +79,63 @@ namespace BarberShop.Infrastructure.Data
                 .HasIndex(u => u.Email)
                 .IsUnique();
 
-            // Configuração para RelatorioPersonalizado
             modelBuilder.Entity<RelatorioPersonalizado>()
                 .HasOne(r => r.Usuario)
                 .WithMany(u => u.RelatoriosPersonalizados)
                 .HasForeignKey(r => r.UsuarioId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Configuração para Barbearia e seus relacionamentos
             modelBuilder.Entity<Barbearia>()
                 .HasMany(b => b.Barbeiros)
-                .WithOne()
-                .HasForeignKey(b => b.BarbeiroId)
+                .WithOne(b => b.Barbearia)
+                .HasForeignKey(b => b.BarbeariaId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Barbearia>()
                 .HasMany(b => b.Servicos)
-                .WithOne()
-                .HasForeignKey(s => s.ServicoId)
+                .WithOne(s => s.Barbearia)
+                .HasForeignKey(s => s.BarbeariaId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Barbearia>()
                 .HasMany(b => b.Agendamentos)
-                .WithOne()
-                .HasForeignKey(a => a.AgendamentoId)
+                .WithOne(a => a.Barbearia)
+                .HasForeignKey(a => a.BarbeariaId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Configuração para UrlSlug ser único na entidade Barbearia
+            modelBuilder.Entity<Cliente>()
+                .HasOne(c => c.Barbearia)
+                .WithMany()
+                .HasForeignKey(c => c.BarbeariaId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Pagamento>()
+                .HasOne(p => p.Barbearia)
+                .WithMany()
+                .HasForeignKey(p => p.BarbeariaId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<Barbearia>()
                 .HasIndex(b => b.UrlSlug)
                 .IsUnique();
+
+            modelBuilder.Entity<PlanoAssinaturaBarbearia>()
+                .HasOne(p => p.Barbearia)
+                .WithMany(b => b.PlanosAssinaturaBarbearias)
+                .HasForeignKey(p => p.BarbeariaId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<PlanoBeneficio>()
+                .HasOne(p => p.PlanoAssinaturaBarbearia)
+                .WithMany()
+                .HasForeignKey(p => p.PlanoBarbeariaId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PlanoBeneficio>()
+                .HasOne(p => p.Servico)
+                .WithMany()
+                .HasForeignKey(p => p.ServicoId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

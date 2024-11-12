@@ -3,6 +3,8 @@ using BarberShop.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
@@ -20,10 +22,26 @@ namespace BarberShopMVC.Controllers
             _relatorioPersonalizadoRepository = relatorioPersonalizadoRepository;
         }
 
-        // Dashboard Principal
         public async Task<IActionResult> Index()
         {
+            // Recupera o ID do cliente a partir do token de autenticação
+            var clienteId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            ViewData["UserId"] = clienteId;
+
+            // Recupera o ID e URL da barbearia da sessão
+            var barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
+            var barbeariaUrl = HttpContext.Session.GetString("BarbeariaUrl");
+
+            if (barbeariaId == null)
+            {
+                return RedirectToAction("BarbeariaNaoEncontrada", "Erro");
+            }
+
+            // Adiciona ao ViewData para uso na view
+            ViewData["BarbeariaId"] = barbeariaId;
+            ViewData["BarbeariaUrl"] = barbeariaUrl;
             ViewData["Title"] = "Dashboard Administrativo";
+
             return View();
         }
 
@@ -31,15 +49,20 @@ namespace BarberShopMVC.Controllers
         [HttpGet]
         public async Task<IActionResult> GetDashboardData()
         {
-            var clienteId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
-            ViewData["UserId"] = clienteId;
+            // Recupera o ID e URL da barbearia da sessão
+            var barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
 
-            var agendamentosPorSemana = await _dashboardRepository.GetAgendamentosPorSemanaAsync();
-            var servicosMaisSolicitados = await _dashboardRepository.GetServicosMaisSolicitadosAsync();
-            var lucroPorBarbeiro = await _dashboardRepository.GetLucroPorBarbeiroAsync();
-            var atendimentosPorBarbeiro = await _dashboardRepository.GetAtendimentosPorBarbeiroAsync();
-            var lucroDaSemana = await _dashboardRepository.GetLucroDaSemanaAsync();
-            var lucroDoMes = await _dashboardRepository.GetLucroDoMesAsync();
+            if (barbeariaId == null)
+            {
+                return BadRequest(new { message = "ID da barbearia não encontrado na sessão." });
+            }
+
+            var agendamentosPorSemana = await _dashboardRepository.GetAgendamentosPorSemanaAsync(barbeariaId.Value);
+            var servicosMaisSolicitados = await _dashboardRepository.GetServicosMaisSolicitadosAsync(barbeariaId.Value);
+            var lucroPorBarbeiro = await _dashboardRepository.GetLucroPorBarbeiroAsync(barbeariaId.Value);
+            var atendimentosPorBarbeiro = await _dashboardRepository.GetAtendimentosPorBarbeiroAsync(barbeariaId.Value);
+            var lucroDaSemana = await _dashboardRepository.GetLucroDaSemanaAsync(barbeariaId.Value);
+            var lucroDoMes = await _dashboardRepository.GetLucroDoMesAsync(barbeariaId.Value);
 
             return Json(new
             {
@@ -56,9 +79,17 @@ namespace BarberShopMVC.Controllers
         [HttpGet]
         public async Task<IActionResult> GetCustomReportData(string reportType, int periodDays)
         {
+            // Recupera o ID da barbearia da sessão
+            var barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
+
+            if (barbeariaId == null)
+            {
+                return BadRequest(new { message = "ID da barbearia não encontrado na sessão." });
+            }
+
             try
             {
-                var data = await _dashboardRepository.GetCustomReportDataAsync(reportType, periodDays);
+                var data = await _dashboardRepository.GetCustomReportDataAsync(barbeariaId.Value, reportType, periodDays);
                 return Json(data);
             }
             catch (ArgumentException ex)
@@ -96,7 +127,7 @@ namespace BarberShopMVC.Controllers
             return Json(reports);
         }
 
-
+        // Método para salvar as posições dos gráficos
         [HttpPost]
         public async Task<IActionResult> SaveChartPositions([FromBody] List<GraficoPosicao> posicoes)
         {
@@ -112,6 +143,7 @@ namespace BarberShopMVC.Controllers
             }
         }
 
+        // Método para obter as posições dos gráficos
         [HttpGet]
         public async Task<IActionResult> GetChartPositions()
         {
@@ -119,7 +151,5 @@ namespace BarberShopMVC.Controllers
             var posicoes = await _dashboardRepository.GetChartPositionsAsync(usuarioId);
             return Json(posicoes.Select(p => p.GraficoId));
         }
-
-
     }
 }

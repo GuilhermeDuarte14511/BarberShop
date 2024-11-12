@@ -17,6 +17,7 @@ namespace BarberShopMVC.Controllers
         private readonly IAgendamentoRepository _agendamentoRepository;
         private readonly IClienteRepository _clienteRepository;
         private readonly IBarbeiroRepository _barbeiroRepository;
+        private readonly IBarbeariaRepository _barbeariaRepository;
         private readonly IAgendamentoService _agendamentoService;
         private readonly IBarbeiroService _barbeiroService;
         private readonly IServicoRepository _servicoRepository;
@@ -32,6 +33,7 @@ namespace BarberShopMVC.Controllers
                 IBarbeiroRepository barbeiroRepository,
                 IAgendamentoService agendamentoService,
                 IBarbeiroService barbeiroService,
+                IBarbeariaRepository barbeariaRepository,
                 IServicoRepository servicoRepository,
                 IClienteService clienteService,
                 IEmailService emailService,
@@ -46,6 +48,7 @@ namespace BarberShopMVC.Controllers
             _barbeiroRepository = barbeiroRepository;
             _agendamentoService = agendamentoService;
             _barbeiroService = barbeiroService;
+            _barbeariaRepository = barbeariaRepository;
             _servicoRepository = servicoRepository;
             _clienteService = clienteService;
             _emailService = emailService;
@@ -57,8 +60,10 @@ namespace BarberShopMVC.Controllers
 
         public async Task<IActionResult> Index()
         {
-            await LogAsync("INFO", nameof(AgendamentoController), "Index accessed", "Listando agendamentos");
-            var agendamentos = await _agendamentoRepository.GetAllAsync();
+            var barbeariaId = int.Parse(HttpContext.Session.GetString("BarbeariaId") ?? "0");
+
+            await LogAsync("INFO", nameof(AgendamentoController), "Index accessed", $"Listando agendamentos da barbearia: {barbeariaId}");
+            var agendamentos = await _agendamentoRepository.GetAgendamentosPorBarbeariaAsync(barbeariaId);
             return View(agendamentos);
         }
 
@@ -85,10 +90,13 @@ namespace BarberShopMVC.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(Agendamento agendamento)
         {
+            var barbeariaId = int.Parse(HttpContext.Session.GetString("BarbeariaId") ?? "0");
+
             if (ModelState.IsValid)
             {
+                agendamento.BarbeariaId = barbeariaId; // Definindo o barbeariaId no agendamento
                 await _agendamentoRepository.AddAsync(agendamento);
-                await LogAsync("INFO", nameof(Create), "Agendamento criado com sucesso", $"ID do Agendamento: {agendamento.AgendamentoId}");
+                await LogAsync("INFO", nameof(Create), "Agendamento criado com sucesso", $"ID do Agendamento: {agendamento.AgendamentoId}, ID da Barbearia: {barbeariaId}");
                 return RedirectToAction(nameof(Index));
             }
             await LogAsync("WARNING", nameof(Create), "Erro de validação ao criar agendamento", "Dados do ModelState inválidos");
@@ -97,16 +105,18 @@ namespace BarberShopMVC.Controllers
 
         public async Task<IActionResult> Edit(int id)
         {
+            var barbeariaId = int.Parse(HttpContext.Session.GetString("BarbeariaId") ?? "0");
+
             await LogAsync("INFO", nameof(Edit), "Tela de edição de agendamento acessada", $"ID do Agendamento: {id}");
-            var agendamento = await _agendamentoRepository.GetByIdAsync(id);
+            var agendamento = await _agendamentoRepository.GetByIdAndBarbeariaIdAsync(id, barbeariaId);
             if (agendamento == null)
             {
                 await LogAsync("WARNING", nameof(Edit), "Agendamento não encontrado para edição", $"ID: {id}");
                 return NotFound();
             }
 
-            ViewBag.Clientes = _clienteRepository.GetAllAsync();
-            ViewBag.Barbeiros = _barbeiroRepository.GetAllAsync();
+            ViewBag.Clientes = await _clienteRepository.GetAllByBarbeariaIdAsync(barbeariaId);
+            ViewBag.Barbeiros = await _barbeiroRepository.GetAllByBarbeariaIdAsync(barbeariaId);
             return View(agendamento);
         }
 
@@ -153,11 +163,17 @@ namespace BarberShopMVC.Controllers
         public async Task<IActionResult> Historico()
         {
             var clienteId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
-            await LogAsync("INFO", nameof(Historico), "Acessado histórico de agendamentos do cliente", $"ID do Cliente: {clienteId}");
-            var agendamentos = await _clienteService.ObterHistoricoAgendamentosAsync(clienteId);
+
+            int? barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
+
+            await LogAsync("INFO", nameof(Historico), "Acessado histórico de agendamentos do cliente", $"ID do Cliente: {clienteId}, ID da Barbearia: {barbeariaId}");
+
+            var agendamentos = await _clienteService.ObterHistoricoAgendamentosAsync(clienteId, barbeariaId);
             return View("HistoricoAgendamentos", agendamentos);
         }
 
+
+        [HttpGet]
         public async Task<IActionResult> ObterHorariosDisponiveis(int barbeiroId, int duracaoTotal)
         {
             await LogAsync("INFO", nameof(ObterHorariosDisponiveis), "Solicitação de horários disponíveis", $"ID do Barbeiro: {barbeiroId}, Duração Total: {duracaoTotal}");
@@ -168,13 +184,21 @@ namespace BarberShopMVC.Controllers
                 return BadRequest("A duração dos serviços é inválida.");
             }
 
-            var horariosDisponiveis = await _agendamentoService.ObterHorariosDisponiveisAsync(barbeiroId, DateTime.Now, duracaoTotal);
+            // Recupera o barbeariaId da sessão para obter o horário de funcionamento
+            int? barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
+            if (!barbeariaId.HasValue)
+            {
+                return BadRequest("Erro ao identificar a barbearia.");
+            }
+
+            var horariosDisponiveis = await _agendamentoService.ObterHorariosDisponiveisAsync(barbeariaId.Value, barbeiroId, DateTime.Now, duracaoTotal);
             return Json(horariosDisponiveis);
         }
 
-        public async Task<IActionResult> ResumoAgendamento(int barbeiroId, DateTime dataHora, string servicoIds)
+
+        public async Task<IActionResult> ResumoAgendamento(int barbeiroId, DateTime dataHora, string servicoIds, string barbeariaUrl, int barbeariaId)
         {
-            await LogAsync("INFO", nameof(ResumoAgendamento), "Resumo de agendamento acessado", $"ID do Barbeiro: {barbeiroId}, DataHora: {dataHora}, Serviços: {servicoIds}");
+            await LogAsync("INFO", nameof(ResumoAgendamento), "Resumo de agendamento acessado", $"ID do Barbeiro: {barbeiroId}, DataHora: {dataHora}, Serviços: {servicoIds}, BarbeariaUrl: {barbeariaUrl}, BarbeariaId: {barbeariaId}");
 
             var barbeiro = await _barbeiroService.ObterBarbeiroPorIdAsync(barbeiroId);
             if (barbeiro == null)
@@ -202,7 +226,9 @@ namespace BarberShopMVC.Controllers
                     Preco = (decimal)s.Preco
                 }).ToList(),
                 PrecoTotal = (decimal)precoTotal,
-                FormaPagamento = ""
+                FormaPagamento = "",
+                BarbeariaUrl = barbeariaUrl,
+                BarbeariaId = barbeariaId
             };
 
             if (cliente != null)
@@ -215,18 +241,25 @@ namespace BarberShopMVC.Controllers
             ViewData["StripePublishableKey"] = Environment.GetEnvironmentVariable("Stripe__PublishableKey")
                                                ?? _configuration["Stripe:PublishableKey"];
 
-
             return View("ResumoAgendamento", resumoAgendamentoDTO);
         }
 
 
         [HttpPost]
-        public async Task<IActionResult> ConfirmarAgendamento(int barbeiroId, DateTime dataHora, string servicoIds, string formaPagamento)
+        public async Task<IActionResult> ConfirmarAgendamento(int barbeariaId, int barbeiroId, DateTime dataHora, string servicoIds, string formaPagamento)
         {
-            await LogAsync("INFO", nameof(ConfirmarAgendamento), "Iniciando confirmação do agendamento", $"ID do Barbeiro: {barbeiroId}, DataHora: {dataHora}, Serviços: {servicoIds}");
+            await LogAsync("INFO", nameof(ConfirmarAgendamento), "Iniciando confirmação do agendamento", $"ID da Barbearia: {barbeariaId}, ID do Barbeiro: {barbeiroId}, DataHora: {dataHora}, Serviços: {servicoIds}");
 
             try
             {
+                // Obtém a barbearia pelo ID
+                var barbearia = await _barbeariaRepository.GetByIdAsync(barbeariaId);
+                if (barbearia == null)
+                {
+                    await LogAsync("ERROR", nameof(ConfirmarAgendamento), "Barbearia não encontrada", $"ID da Barbearia: {barbeariaId}");
+                    return Json(new { success = false, message = "Barbearia não encontrada." });
+                }
+
                 var clienteId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
 
                 if (string.IsNullOrEmpty(servicoIds))
@@ -256,18 +289,18 @@ namespace BarberShopMVC.Controllers
                     return Json(new { success = false, message = "Erro ao obter informações do cliente ou barbeiro." });
                 }
 
-                // Criação do agendamento
+                // Criação do agendamento com barbeariaId
                 var agendamentoId = await _agendamentoService.CriarAgendamentoAsync(
-                    barbeiroId, dataHora, clienteId, servicoIdList, formaPagamento, (decimal)precoTotal);
+                    barbeariaId, barbeiroId, dataHora, clienteId, servicoIdList, formaPagamento, (decimal)precoTotal);
 
                 // Envio de e-mails após a criação do agendamento
                 var dataHoraFim = dataHora.AddMinutes(duracaoTotal);
-                var tituloEvento = "Agendamento na Barbearia CG DREAMS";
+                var tituloEvento = $"Agendamento na {barbearia.Nome}";
                 var descricaoEvento = $"Agendamento com o barbeiro {barbeiro.Nome} para os serviços: {string.Join(", ", servicos.Select(s => s.Nome))}";
-                var localEvento = "Endereço da Barbearia";
+                var localEvento = barbearia.Endereco;
                 var googleCalendarLink = _emailService.GerarLinkGoogleCalendar(tituloEvento, dataHora, dataHoraFim, descricaoEvento, localEvento);
 
-                var assuntoCliente = "Confirmação de Agendamento - Barbearia CG DREAMS";
+                var assuntoCliente = $"Confirmação de Agendamento - {barbearia.Nome}";
                 var conteudoCliente = "Seu agendamento foi confirmado com sucesso!";
                 await _emailService.EnviarEmailAgendamentoAsync(
                     cliente.Email,
@@ -279,11 +312,12 @@ namespace BarberShopMVC.Controllers
                     dataHoraFim,
                     (decimal)precoTotal,
                     formaPagamento,
+                    barbearia.Nome,
                     googleCalendarLink
                 );
                 await LogAsync("INFO", nameof(ConfirmarAgendamento), "Email de confirmação enviado ao cliente", $"Email do Cliente: {cliente.Email}");
 
-                var assuntoBarbeiro = "Novo Agendamento - Barbearia CG DREAMS";
+                var assuntoBarbeiro = $"Novo Agendamento - {barbearia.Nome}";
                 var servicoNomes = servicos.Select(s => s.Nome).ToList();
                 await _emailService.EnviarEmailNotificacaoBarbeiroAsync(
                     barbeiro.Email,
@@ -293,7 +327,8 @@ namespace BarberShopMVC.Controllers
                     dataHora,
                     dataHoraFim,
                     (decimal)precoTotal,
-                    formaPagamento
+                    formaPagamento,
+                    barbearia.Nome
                 );
                 await LogAsync("INFO", nameof(ConfirmarAgendamento), "Email de notificação enviado ao barbeiro", $"Email do Barbeiro: {barbeiro.Email}");
 
@@ -307,6 +342,7 @@ namespace BarberShopMVC.Controllers
                 return Json(new { success = false, message = "Ocorreu um erro ao confirmar o agendamento. Tente novamente." });
             }
         }
+
 
 
         [HttpPost]
@@ -351,8 +387,15 @@ namespace BarberShopMVC.Controllers
         {
             try
             {
-                // Obtém os agendamentos dentro do período especificado
-                var agendamentos = await _agendamentoRepository.GetAgendamentosPorPeriodoAsync(dataInicio, dataFim ?? DateTime.Now);
+                // Recupera o barbeariaId da sessão
+                int? barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
+                if (!barbeariaId.HasValue)
+                {
+                    return BadRequest(new { success = false, message = "Barbearia não encontrada na sessão." });
+                }
+
+                // Obtém os agendamentos da barbearia dentro do período especificado
+                var agendamentos = await _agendamentoRepository.GetAgendamentosPorPeriodoAsync(barbeariaId.Value, dataInicio, dataFim ?? DateTime.Now);
 
                 // Mapeia os agendamentos para o DTO AgendamentoDto
                 var agendamentosDTO = agendamentos.Select(a => new AgendamentoDto
@@ -387,6 +430,7 @@ namespace BarberShopMVC.Controllers
                 return Json(new { success = false, message = "Erro ao buscar agendamentos." });
             }
         }
+
 
 
 

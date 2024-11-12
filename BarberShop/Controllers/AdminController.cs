@@ -8,13 +8,23 @@ namespace BarberShopMVC.Controllers
     public class AdminController : Controller
     {
         // Dashboard Administrativo
-        public IActionResult Index()
+        public IActionResult Index(string barbeariaUrl)
         {
+            // Recupera o ID do cliente a partir do token de autenticação
             var clienteId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
             ViewData["UserId"] = clienteId;
-            ViewData["Title"] = "Dashboard Administrativo";           
+
+            // Recupera o ID e URL da barbearia da sessão
+            var barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
+
+            // Atualiza o ViewData com a URL da barbearia recebida como parâmetro
+            ViewData["BarbeariaId"] = barbeariaId;
+            ViewData["BarbeariaUrl"] = barbeariaUrl;
+            ViewData["Title"] = "Dashboard Administrativo";
+
             return View();
         }
+
 
         public IActionResult GerenciarBarbeiros()
         {

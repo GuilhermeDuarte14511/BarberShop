@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using BarberShop.Domain.Entities;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace BarberShop.Application.Services
@@ -46,5 +47,12 @@ namespace BarberShop.Application.Services
         /// <param name="amount">Valor do reembolso em centavos (opcional). Se null, o valor total será reembolsado.</param>
         /// <returns>Status do reembolso.</returns>
         Task<string> RefundPaymentAsync(string paymentId, long? amount = null);
+
+        Task<List<PlanoAssinaturaSistema>> SincronizarPlanosComStripe();
+
+        Task<string> StartSubscription(string planId, string priceId, string clienteNome, string clienteEmail);
+
+        Task SavePayment(PaymentDetails paymentDetails);
+
     }
 }

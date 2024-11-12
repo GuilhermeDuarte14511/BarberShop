@@ -1,3 +1,4 @@
+using BarberShop.Application.Interfaces;
 using BarberShop.Application.Services;
 using BarberShop.Application.Settings;
 using BarberShop.Domain.Entities;
@@ -5,7 +6,6 @@ using BarberShop.Domain.Interfaces;
 using BarberShop.Infrastructure.Data;
 using BarberShop.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Stripe;
 using System.Security.Claims;
@@ -34,6 +34,10 @@ builder.Services.AddScoped<ILogService, LogService>();
 
 // Registrar o PagamentoRepository
 builder.Services.AddScoped<IPagamentoRepository, PagamentoRepository>();
+
+// Registrar o serviço e repositório de planos de assinatura
+builder.Services.AddScoped<IPlanoAssinaturaService, PlanoAssinaturaService>();
+builder.Services.AddScoped<IPlanoAssinaturaRepository, PlanoAssinaturaRepository>();
 
 // Obter a chave SendGridApiKey dinamicamente com base no ambiente
 string sendGridApiKey = builder.Environment.IsDevelopment()
@@ -66,12 +70,17 @@ builder.Services.AddScoped<IRelatorioPersonalizadoRepository, RelatorioPersonali
 builder.Services.AddScoped<IPagamentoRepository, PagamentoRepository>();
 builder.Services.AddScoped<IAvaliacaoRepository, AvaliacaoRepository>();
 builder.Services.AddScoped<IBarbeariaRepository, BarbeariaRepository>(); // Repositório de Barbearia
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+
 
 // Registrar serviços da camada de aplicação
 builder.Services.AddScoped<IClienteService, ClienteService>();
 builder.Services.AddScoped<IAgendamentoService, AgendamentoService>();
 builder.Services.AddScoped<IBarbeiroService, BarbeiroService>();
-builder.Services.AddScoped<AutenticacaoService>();
+builder.Services.AddScoped<IServicoService, ServicoService>(); // Adicione esta linha
+builder.Services.AddScoped<IAutenticacaoService, AutenticacaoService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+
 
 // Configurar autenticação com cookies
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -123,13 +132,22 @@ app.UseSession(); // Habilita o uso de sessões
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Configurar redirecionamento para erros de status 404
+app.UseStatusCodePagesWithReExecute("/Erro/BarbeariaNaoEncontrada");
+
 // Mapeamento de Rotas para incluir `UrlSlug`
 app.MapControllerRoute(
     name: "default",
     pattern: "{barbeariaUrl}/{controller=Login}/{action=Login}/{id?}");
 
 app.MapControllerRoute(
-    name: "admin",
-    pattern: "{barbeariaUrl}/Admin/{controller=Admin}/{action=Dashboard}/{id?}");
+    name: "adminLogin",
+    pattern: "{barbeariaUrl}/admin",
+    defaults: new { controller = "Login", action = "AdminLogin" }
+);
+
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();

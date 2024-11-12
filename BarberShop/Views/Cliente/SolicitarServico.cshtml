@@ -2,6 +2,8 @@
 
 @{
     ViewData["Title"] = "Solicitar Novo Serviço";
+    var barbeariaUrl = ViewData["BarbeariaUrl"] as string ?? "NomeBarbearia";
+    int? barbeariaId = ViewData["BarbeariaId"] as int?;
 }
 
 <!-- Div com ID para identificação -->
@@ -51,6 +53,10 @@
             <button class="btn btn-secondary" onclick="history.back()">Voltar</button>
         </div>
     </div>
+
+    <!-- Campos ocultos para URL e ID da barbearia -->
+    <input type="hidden" id="barbeariaUrl" value="@barbeariaUrl" />
+    <input type="hidden" id="barbeariaId" value="@barbeariaId" />
 
     <!-- Spinner de carregamento (inicialmente oculto) -->
     <div id="loadingSpinner" class="text-center mt-3" style="display:none;">
