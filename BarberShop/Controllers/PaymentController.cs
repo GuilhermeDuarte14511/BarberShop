@@ -1,7 +1,9 @@
 ﻿using BarberShop.Application.Services;
+using BarberShop.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace BarberShop.API.Controllers
@@ -11,10 +13,12 @@ namespace BarberShop.API.Controllers
     public class PaymentController : ControllerBase
     {
         private readonly IPaymentService _paymentService;
+        private readonly IPlanoAssinaturaService _planoAssinaturaService;
 
-        public PaymentController(IPaymentService paymentService)
+        public PaymentController(IPaymentService paymentService, IPlanoAssinaturaService planoAssinaturaService)
         {
             _paymentService = paymentService;
+            _planoAssinaturaService = planoAssinaturaService;
         }
 
         // Endpoint para criar um PaymentIntent
@@ -70,6 +74,46 @@ namespace BarberShop.API.Controllers
             {
                 string refundStatus = await _paymentService.RefundPaymentAsync(request.PaymentId, request.Amount);
                 return Ok(new { refundStatus });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        // Endpoint para sincronizar os planos de assinatura do Stripe com o banco de dados
+        [HttpPost("sync-planos")]
+        public async Task<IActionResult> SincronizarPlanos()
+        {
+            try
+            {
+                List<PlanoAssinaturaSistema> planosAtualizados = await _planoAssinaturaService.SincronizarPlanosComStripe();
+                return Ok(planosAtualizados);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        // Endpoint para listar os planos de assinatura do sistema
+        [HttpGet("planos")]
+        public async Task<IActionResult> GetPlanos()
+        {
+            try
+            {
+                var planos = await _planoAssinaturaService.GetAllPlanosAsync();
+                var planosDto = planos.Select(plano => new
+                {
+                    PlanoId = plano.PlanoId,
+                    IdProdutoStripe = plano.IdProdutoStripe,
+                    Nome = plano.Nome,
+                    Descricao = plano.Descricao,
+                    Valor = plano.Valor,
+                    Periodicidade = plano.Periodicidade
+                }).ToList();
+
+                return Ok(planosDto);
             }
             catch (Exception ex)
             {

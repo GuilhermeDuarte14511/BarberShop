@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using BarberShop.Domain.Entities;
 using BarberShop.Domain.Interfaces;
 using BarberShop.Infrastructure.Data;
@@ -22,12 +21,6 @@ namespace BarberShop.Infrastructure.Repositories
                 .Where(u => u.Email == email)
                 .SingleOrDefaultAsync();
 
-            if (usuario != null)
-            {
-                usuario.CodigoValidacao = usuario.CodigoValidacao ?? string.Empty; // Se nulo, define como string vazia
-                usuario.CodigoValidacaoExpiracao = usuario.CodigoValidacaoExpiracao ?? DateTime.Now; // Se nulo, define como data atual
-            }
-
             return usuario;
         }
 
@@ -40,6 +33,12 @@ namespace BarberShop.Infrastructure.Repositories
                 usuario.CodigoValidacaoExpiracao = expiracao;
                 await _context.SaveChangesAsync();
             }
+        }
+
+        public async Task DeleteAsync(Usuario usuario)
+        {
+            _context.Usuarios.Remove(usuario);
+            await _context.SaveChangesAsync();
         }
     }
 }

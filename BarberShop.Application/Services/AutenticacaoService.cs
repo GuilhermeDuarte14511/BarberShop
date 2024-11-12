@@ -1,4 +1,5 @@
 ﻿using BarberShop.Domain.Entities;
+using BarberShop.Application.Interfaces;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -6,7 +7,7 @@ using System.Text;
 
 namespace BarberShop.Application.Services
 {
-    public class AutenticacaoService
+    public class AutenticacaoService : IAutenticacaoService
     {
         public ClaimsPrincipal AutenticarCliente(Cliente cliente)
         {

@@ -16,14 +16,14 @@ namespace BarberShopMVC.Controllers
         private readonly IClienteRepository _clienteRepository;
         private readonly IUsuarioRepository _usuarioRepository;
         private readonly IEmailService _emailService;
-        private readonly AutenticacaoService _autenticacaoService;
+        private readonly IAutenticacaoService _autenticacaoService;
         private readonly IBarbeariaRepository _barbeariaRepository;
 
         public LoginController(
             IClienteRepository clienteRepository,
             IUsuarioRepository usuarioRepository,
             IEmailService emailService,
-            AutenticacaoService autenticacaoService,
+            IAutenticacaoService autenticacaoService,
             IBarbeariaRepository barbeariaRepository)
         {
             _clienteRepository = clienteRepository;
@@ -113,7 +113,6 @@ namespace BarberShopMVC.Controllers
         }
 
 
-        // Processa o login administrativo
         [HttpPost]
         public async Task<IActionResult> AdminLogin(string email, string password)
         {
@@ -124,11 +123,19 @@ namespace BarberShopMVC.Controllers
                 return Json(new { success = false, message = "Credenciais inválidas ou usuário não é administrador." });
             }
 
+            var barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
+            if (!barbeariaId.HasValue)
+            {
+                return Json(new { success = false, message = "Erro ao identificar a barbearia." });
+            }
+
+            var barbearia = await _barbeariaRepository.GetByIdAsync(barbeariaId.Value);
+
             string codigoVerificacao = GerarCodigoVerificacao();
             usuario.CodigoValidacao = codigoVerificacao;
             usuario.CodigoValidacaoExpiracao = DateTime.UtcNow.AddMinutes(5);
             await _usuarioRepository.UpdateCodigoVerificacaoAsync(usuario.UsuarioId, codigoVerificacao, usuario.CodigoValidacaoExpiracao);
-            await _emailService.EnviarEmailCodigoVerificacaoAsync(usuario.Email, usuario.Nome, codigoVerificacao);
+            await _emailService.EnviarEmailCodigoVerificacaoAsync(usuario.Email, usuario.Nome, codigoVerificacao, barbearia?.Nome);
 
             return Json(new { success = true, usuarioId = usuario.UsuarioId });
         }
@@ -313,14 +320,24 @@ namespace BarberShopMVC.Controllers
                 return Json(new { success = false, message = "Cliente não encontrado." });
             }
 
+            int? barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
+            if (!barbeariaId.HasValue)
+            {
+                return Json(new { success = false, message = "Erro ao identificar a barbearia." });
+            }
+
+            var barbearia = await _barbeariaRepository.GetByIdAsync(barbeariaId.Value);
+
             string codigoVerificacao = GerarCodigoVerificacao();
             cliente.CodigoValidacao = codigoVerificacao;
             cliente.CodigoValidacaoExpiracao = DateTime.UtcNow.AddMinutes(5);
             await _clienteRepository.UpdateAsync(cliente);
-            await _emailService.EnviarEmailCodigoVerificacaoAsync(cliente.Email, cliente.Nome, codigoVerificacao);
+
+            await _emailService.EnviarEmailCodigoVerificacaoAsync(cliente.Email, cliente.Nome, codigoVerificacao, barbearia?.Nome);
 
             return Json(new { success = true });
         }
+
 
         [HttpGet]
         public async Task<IActionResult> ReenviarCodigoAdm(int usuarioId)
@@ -332,12 +349,19 @@ namespace BarberShopMVC.Controllers
                 return Json(new { success = false, message = "Usuário administrador não encontrado." });
             }
 
+            var barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
+            if (!barbeariaId.HasValue)
+            {
+                return Json(new { success = false, message = "Erro ao identificar a barbearia." });
+            }
+
+            var barbearia = await _barbeariaRepository.GetByIdAsync(barbeariaId.Value);
+
             string codigoVerificacao = GerarCodigoVerificacao();
             usuario.CodigoValidacao = codigoVerificacao;
             usuario.CodigoValidacaoExpiracao = DateTime.UtcNow.AddMinutes(5);
-
             await _usuarioRepository.UpdateCodigoVerificacaoAsync(usuario.UsuarioId, codigoVerificacao, usuario.CodigoValidacaoExpiracao);
-            await _emailService.EnviarEmailCodigoVerificacaoAsync(usuario.Email, usuario.Nome, codigoVerificacao);
+            await _emailService.EnviarEmailCodigoVerificacaoAsync(usuario.Email, usuario.Nome, codigoVerificacao, barbearia?.Nome);
 
             return Json(new { success = true, message = "Novo código de verificação enviado para o email." });
         }

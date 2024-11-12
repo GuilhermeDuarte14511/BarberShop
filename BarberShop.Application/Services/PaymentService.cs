@@ -1,8 +1,12 @@
 ﻿using BarberShop.Application.Settings;
+using BarberShop.Domain.Entities;
+using BarberShop.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Stripe;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace BarberShop.Application.Services
@@ -11,12 +15,16 @@ namespace BarberShop.Application.Services
     {
         private readonly StripeSettings _stripeSettings;
         private readonly ILogService _logService;
+        private readonly BarbeariaContext _context; // Injete o contexto do banco de dados
 
-        public PaymentService(IOptions<StripeSettings> stripeOptions, ILogService logService)
+
+        public PaymentService(IOptions<StripeSettings> stripeOptions, BarbeariaContext context, ILogService logService)
         {
             _stripeSettings = stripeOptions.Value;
+            _context = context;
             _logService = logService;
             StripeConfiguration.ApiKey = _stripeSettings.SecretKey;
+
         }
 
         public async Task<string> CreatePaymentIntent(decimal amount, List<string> paymentMethods, string currency = "brl")
@@ -168,5 +176,75 @@ namespace BarberShop.Application.Services
                 throw new Exception("Não foi possível processar o reembolso.");
             }
         }
+
+        public async Task<List<PlanoAssinaturaSistema>> SincronizarPlanosComStripe()
+        {
+            var service = new ProductService();
+            var products = await service.ListAsync(new ProductListOptions
+            {
+                Active = true,
+                Limit = 100
+            });
+
+            var planosAtualizados = new List<PlanoAssinaturaSistema>();
+
+            foreach (var product in products)
+            {
+                var priceService = new PriceService();
+                var prices = await priceService.ListAsync(new PriceListOptions
+                {
+                    Product = product.Id,
+                    Limit = 1
+                });
+
+                if (prices.Data.Count > 0)
+                {
+                    var price = prices.Data[0];
+
+                    // Encontre o plano com base no `IdProdutoStripe`, pois `PlanoId` é gerado pelo banco.
+                    var planoExistente = await _context.PlanoAssinaturaSistema
+                        .FirstOrDefaultAsync(plano => plano.IdProdutoStripe == product.Id);
+
+                    if (planoExistente == null)
+                    {
+                        var novoPlano = new PlanoAssinaturaSistema
+                        {
+                            Nome = product.Name,
+                            Descricao = product.Description,
+                            IdProdutoStripe = product.Id, // Armazena o ID do Stripe
+                            Valor = (decimal)(price.UnitAmount / 100.0), // Converte de centavos para unidade monetária
+                            Periodicidade = price.Recurring.Interval
+                        };
+
+                        _context.PlanoAssinaturaSistema.Add(novoPlano);
+                        planosAtualizados.Add(novoPlano);
+                    }
+                    else
+                    {
+                        // Atualiza o plano existente
+                        planoExistente.Nome = product.Name;
+                        planoExistente.Descricao = product.Description;
+                        planoExistente.IdProdutoStripe = product.Id;
+                        planoExistente.Valor = (decimal)(price.UnitAmount / 100.0);
+                        planoExistente.Periodicidade = price.Recurring.Interval;
+
+                        planosAtualizados.Add(planoExistente);
+                    }
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            // Remove planos que não estão mais no Stripe
+            var idsPlanosAtuais = new HashSet<string>(products.Select(p => p.Id));
+            var planosParaRemover = _context.PlanoAssinaturaSistema
+                .Where(plano => !idsPlanosAtuais.Contains(plano.IdProdutoStripe));
+
+            _context.PlanoAssinaturaSistema.RemoveRange(planosParaRemover);
+            await _context.SaveChangesAsync();
+
+            return planosAtualizados;
+        }
+
     }
 }

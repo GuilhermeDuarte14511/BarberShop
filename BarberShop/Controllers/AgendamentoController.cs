@@ -17,6 +17,7 @@ namespace BarberShopMVC.Controllers
         private readonly IAgendamentoRepository _agendamentoRepository;
         private readonly IClienteRepository _clienteRepository;
         private readonly IBarbeiroRepository _barbeiroRepository;
+        private readonly IBarbeariaRepository _barbeariaRepository;
         private readonly IAgendamentoService _agendamentoService;
         private readonly IBarbeiroService _barbeiroService;
         private readonly IServicoRepository _servicoRepository;
@@ -32,6 +33,7 @@ namespace BarberShopMVC.Controllers
                 IBarbeiroRepository barbeiroRepository,
                 IAgendamentoService agendamentoService,
                 IBarbeiroService barbeiroService,
+                IBarbeariaRepository barbeariaRepository,
                 IServicoRepository servicoRepository,
                 IClienteService clienteService,
                 IEmailService emailService,
@@ -46,6 +48,7 @@ namespace BarberShopMVC.Controllers
             _barbeiroRepository = barbeiroRepository;
             _agendamentoService = agendamentoService;
             _barbeiroService = barbeiroService;
+            _barbeariaRepository = barbeariaRepository;
             _servicoRepository = servicoRepository;
             _clienteService = clienteService;
             _emailService = emailService;
@@ -249,6 +252,14 @@ namespace BarberShopMVC.Controllers
 
             try
             {
+                // Obtém a barbearia pelo ID
+                var barbearia = await _barbeariaRepository.GetByIdAsync(barbeariaId);
+                if (barbearia == null)
+                {
+                    await LogAsync("ERROR", nameof(ConfirmarAgendamento), "Barbearia não encontrada", $"ID da Barbearia: {barbeariaId}");
+                    return Json(new { success = false, message = "Barbearia não encontrada." });
+                }
+
                 var clienteId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
 
                 if (string.IsNullOrEmpty(servicoIds))
@@ -284,12 +295,12 @@ namespace BarberShopMVC.Controllers
 
                 // Envio de e-mails após a criação do agendamento
                 var dataHoraFim = dataHora.AddMinutes(duracaoTotal);
-                var tituloEvento = "Agendamento na Barbearia CG DREAMS";
+                var tituloEvento = $"Agendamento na {barbearia.Nome}";
                 var descricaoEvento = $"Agendamento com o barbeiro {barbeiro.Nome} para os serviços: {string.Join(", ", servicos.Select(s => s.Nome))}";
-                var localEvento = "Endereço da Barbearia";
+                var localEvento = barbearia.Endereco;
                 var googleCalendarLink = _emailService.GerarLinkGoogleCalendar(tituloEvento, dataHora, dataHoraFim, descricaoEvento, localEvento);
 
-                var assuntoCliente = "Confirmação de Agendamento - Barbearia CG DREAMS";
+                var assuntoCliente = $"Confirmação de Agendamento - {barbearia.Nome}";
                 var conteudoCliente = "Seu agendamento foi confirmado com sucesso!";
                 await _emailService.EnviarEmailAgendamentoAsync(
                     cliente.Email,
@@ -301,11 +312,12 @@ namespace BarberShopMVC.Controllers
                     dataHoraFim,
                     (decimal)precoTotal,
                     formaPagamento,
+                    barbearia.Nome,
                     googleCalendarLink
                 );
                 await LogAsync("INFO", nameof(ConfirmarAgendamento), "Email de confirmação enviado ao cliente", $"Email do Cliente: {cliente.Email}");
 
-                var assuntoBarbeiro = "Novo Agendamento - Barbearia CG DREAMS";
+                var assuntoBarbeiro = $"Novo Agendamento - {barbearia.Nome}";
                 var servicoNomes = servicos.Select(s => s.Nome).ToList();
                 await _emailService.EnviarEmailNotificacaoBarbeiroAsync(
                     barbeiro.Email,
@@ -315,7 +327,8 @@ namespace BarberShopMVC.Controllers
                     dataHora,
                     dataHoraFim,
                     (decimal)precoTotal,
-                    formaPagamento
+                    formaPagamento,
+                    barbearia.Nome
                 );
                 await LogAsync("INFO", nameof(ConfirmarAgendamento), "Email de notificação enviado ao barbeiro", $"Email do Barbeiro: {barbeiro.Email}");
 
@@ -329,6 +342,7 @@ namespace BarberShopMVC.Controllers
                 return Json(new { success = false, message = "Ocorreu um erro ao confirmar o agendamento. Tente novamente." });
             }
         }
+
 
 
         [HttpPost]

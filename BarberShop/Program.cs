@@ -35,6 +35,10 @@ builder.Services.AddScoped<ILogService, LogService>();
 // Registrar o PagamentoRepository
 builder.Services.AddScoped<IPagamentoRepository, PagamentoRepository>();
 
+// Registrar o serviço e repositório de planos de assinatura
+builder.Services.AddScoped<IPlanoAssinaturaService, PlanoAssinaturaService>();
+builder.Services.AddScoped<IPlanoAssinaturaRepository, PlanoAssinaturaRepository>();
+
 // Obter a chave SendGridApiKey dinamicamente com base no ambiente
 string sendGridApiKey = builder.Environment.IsDevelopment()
     ? builder.Configuration["SendGridApiKey"]
@@ -72,7 +76,8 @@ builder.Services.AddScoped<IClienteService, ClienteService>();
 builder.Services.AddScoped<IAgendamentoService, AgendamentoService>();
 builder.Services.AddScoped<IBarbeiroService, BarbeiroService>();
 builder.Services.AddScoped<IServicoService, ServicoService>(); // Adicione esta linha
-builder.Services.AddScoped<AutenticacaoService>();
+builder.Services.AddScoped<IAutenticacaoService, AutenticacaoService>();
+
 
 // Configurar autenticação com cookies
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

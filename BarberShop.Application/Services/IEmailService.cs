@@ -13,6 +13,7 @@
             DateTime dataHoraFim,
             decimal total,
             string formaPagamento,
+            string nomeBarbearia,
             string googleCalendarLink = null);
 
         // Método para enviar email de notificação de agendamento para o barbeiro
@@ -24,13 +25,15 @@
             DateTime dataHoraInicio,
             DateTime dataHoraFim,
             decimal total,
-            string formaPagamento);
+            string formaPagamento,
+            string nomeBarbearia);
 
         // Método para enviar email de código de verificação
         Task EnviarEmailCodigoVerificacaoAsync(
             string destinatarioEmail,
             string destinatarioNome,
-            string codigoVerificacao);
+            string codigoVerificacao,
+            string nomeBarbearia);
 
         // Método para gerar link do Google Calendar
         string GerarLinkGoogleCalendar(
@@ -39,5 +42,11 @@
             DateTime dataFim,
             string descricao,
             string local);
+
+        // Método para enviar email de falha de cadastro
+        Task EnviarEmailFalhaCadastroAsync(
+            string destinatarioEmail,
+            string destinatarioNome,
+            string nomeBarbearia);
     }
 }
