@@ -11,5 +11,7 @@ namespace BarberShop.Application.DTOs
         public string PlanId { get; set; }
         public string ClienteNome { get; set; }
         public string ClienteEmail { get; set; }
+        public string PriceId { get; set; } // Nova propriedade
+
     }
 }

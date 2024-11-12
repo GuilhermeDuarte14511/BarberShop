@@ -14,7 +14,7 @@ namespace BarberShop.Domain.Entities
         public DateTime DataCriacao { get; set; } = DateTime.Now;
         public int Status { get; set; } = 1; // 1 para ativo, 0 para inativo
 
-        public string CodigoValidacao { get; set; }
+        public string? CodigoValidacao { get; set; }
         public DateTime? CodigoValidacaoExpiracao { get; set; }
 
         public int BarbeariaId { get; set; }

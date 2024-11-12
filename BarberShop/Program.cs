@@ -70,6 +70,8 @@ builder.Services.AddScoped<IRelatorioPersonalizadoRepository, RelatorioPersonali
 builder.Services.AddScoped<IPagamentoRepository, PagamentoRepository>();
 builder.Services.AddScoped<IAvaliacaoRepository, AvaliacaoRepository>();
 builder.Services.AddScoped<IBarbeariaRepository, BarbeariaRepository>(); // Repositório de Barbearia
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+
 
 // Registrar serviços da camada de aplicação
 builder.Services.AddScoped<IClienteService, ClienteService>();
@@ -77,6 +79,7 @@ builder.Services.AddScoped<IAgendamentoService, AgendamentoService>();
 builder.Services.AddScoped<IBarbeiroService, BarbeiroService>();
 builder.Services.AddScoped<IServicoService, ServicoService>(); // Adicione esta linha
 builder.Services.AddScoped<IAutenticacaoService, AutenticacaoService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
 
 
 // Configurar autenticação com cookies

@@ -88,6 +88,7 @@ namespace BarberShop.Controllers
                 return Ok(new
                 {
                     success = true,
+                    urlSlug = barbearia.UrlSlug,
                     message = "Cadastro realizado com sucesso.",
                     usuarioId = admin.UsuarioId,
                     barbeariaId = barbearia.BarbeariaId

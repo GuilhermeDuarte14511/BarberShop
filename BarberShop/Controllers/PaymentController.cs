@@ -129,7 +129,7 @@ namespace BarberShop.API.Controllers
         {
             try
             {
-                var subscriptionId = await _paymentService.StartSubscription(request.PlanId, request.ClienteNome, request.ClienteEmail);
+                var subscriptionId = await _paymentService.StartSubscription(request.PlanId, request.PriceId, request.ClienteNome, request.ClienteEmail);
                 return Ok(new { subscriptionId });
             }
             catch (Exception ex)
@@ -138,6 +138,34 @@ namespace BarberShop.API.Controllers
             }
         }
 
-        
+        [HttpPost("save-payment")]
+        public async Task<IActionResult> SavePayment([FromBody] SavePaymentRequestDTO request)
+        {
+            try
+            {
+                var paymentDetails = new PaymentDetails
+                {
+                    ClienteId = request.ClienteId,
+                    NomeCliente = request.NomeCliente,
+                    EmailCliente = request.EmailCliente,
+                    TelefoneCliente = request.TelefoneCliente,
+                    ValorPago = request.ValorPago,
+                    PaymentId = request.PaymentId,
+                    StatusPagamento = request.StatusPagamento,
+                    DataPagamento = DateTime.UtcNow,
+                    BarbeariaId = request.BarbeariaId
+                };
+
+                await _paymentService.SavePayment(paymentDetails);
+                return Ok(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+
+
     }
 }

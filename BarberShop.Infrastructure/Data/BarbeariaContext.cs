@@ -1,5 +1,6 @@
 ﻿using BarberShop.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace BarberShop.Infrastructure.Data
 {
@@ -28,6 +29,7 @@ namespace BarberShop.Infrastructure.Data
         public DbSet<PlanoAssinaturaSistema> PlanoAssinaturaSistema { get; set; }
         public DbSet<PlanoAssinaturaBarbearia> PlanoAssinaturaBarbearias { get; set; }
         public DbSet<PlanoBeneficio> PlanoBeneficios { get; set; }
+        public DbSet<PagamentoAssinatura> PagamentosAssinaturasSite { get; set; } // Novo DbSet para PagamentoAssinatura
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -37,9 +39,22 @@ namespace BarberShop.Infrastructure.Data
             modelBuilder.Entity<PlanoAssinaturaBarbearia>()
                 .HasKey(p => p.PlanoBarbeariaId);
 
-             // Configuração de chave primária para PlanoAssinaturaBarbearia
+            // Configuração de chave primária para PlanoAssinaturaSistema
             modelBuilder.Entity<PlanoAssinaturaSistema>()
                 .HasKey(p => p.PlanoId);
+
+            // Configuração de chave primária para PagamentoAssinatura
+            modelBuilder.Entity<PagamentoAssinatura>()
+                .HasKey(p => p.AssinaturaId);
+
+            // Configuração para PagamentoAssinatura
+            modelBuilder.Entity<PagamentoAssinatura>()
+                .Property(p => p.ValorPago)
+                .HasColumnType("decimal(18,2)");
+
+            modelBuilder.Entity<PagamentoAssinatura>()
+                .Property(p => p.DataPagamento)
+                .IsRequired();
 
             // Outras configurações já existentes
             modelBuilder.Entity<AgendamentoServico>()
@@ -122,6 +137,5 @@ namespace BarberShop.Infrastructure.Data
                 .HasForeignKey(p => p.ServicoId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
-
     }
 }

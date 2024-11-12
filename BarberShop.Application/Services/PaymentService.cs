@@ -1,5 +1,6 @@
 ﻿using BarberShop.Application.Settings;
 using BarberShop.Domain.Entities;
+using BarberShop.Domain.Interfaces;
 using BarberShop.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -15,16 +16,16 @@ namespace BarberShop.Application.Services
     {
         private readonly StripeSettings _stripeSettings;
         private readonly ILogService _logService;
+        private readonly IPaymentRepository _paymentRepository;
         private readonly BarbeariaContext _context; // Injete o contexto do banco de dados
 
-
-        public PaymentService(IOptions<StripeSettings> stripeOptions, BarbeariaContext context, ILogService logService)
+        public PaymentService(IOptions<StripeSettings> stripeOptions, BarbeariaContext context, IPaymentRepository paymentRepository, ILogService logService)
         {
             _stripeSettings = stripeOptions.Value;
             _context = context;
+            _paymentRepository = paymentRepository;
             _logService = logService;
             StripeConfiguration.ApiKey = _stripeSettings.SecretKey;
-
         }
 
         public async Task<string> CreatePaymentIntent(decimal amount, List<string> paymentMethods, string currency = "brl")
@@ -246,7 +247,7 @@ namespace BarberShop.Application.Services
             return planosAtualizados;
         }
 
-        public async Task<string> StartSubscription(string planId, string clienteNome, string clienteEmail)
+        public async Task<string> StartSubscription(string planId, string priceId, string clienteNome, string clienteEmail)
         {
             // Criação do cliente no Stripe
             var customerOptions = new CustomerCreateOptions
@@ -257,7 +258,7 @@ namespace BarberShop.Application.Services
             var customerService = new CustomerService();
             var customer = await customerService.CreateAsync(customerOptions);
 
-            // Criação da assinatura no Stripe
+            // Criação da assinatura no Stripe com `PriceId`
             var subscriptionOptions = new SubscriptionCreateOptions
             {
                 Customer = customer.Id,
@@ -265,7 +266,7 @@ namespace BarberShop.Application.Services
                 {
                     new SubscriptionItemOptions
                     {
-                        Price = planId // ID do plano/produto no Stripe
+                        Price = priceId // Usando o PriceId aqui em vez do PlanId
                     }
                 },
                 PaymentBehavior = "default_incomplete", // Gera client_secret se precisar confirmação
@@ -280,6 +281,25 @@ namespace BarberShop.Application.Services
 
             // Retorna o ID da assinatura e o client_secret se disponível
             return clientSecret ?? subscription.Id;
+        }
+
+        public async Task SavePayment(PaymentDetails paymentDetails)
+        {
+            var pagamento = new PagamentoAssinatura
+            {
+                ClienteId = paymentDetails.ClienteId,
+                NomeCliente = paymentDetails.NomeCliente,
+                EmailCliente = paymentDetails.EmailCliente,
+                TelefoneCliente = paymentDetails.TelefoneCliente,
+                ValorPago = paymentDetails.ValorPago,
+                PaymentId = paymentDetails.PaymentId,
+                StatusPagamento = paymentDetails.StatusPagamento,
+                DataPagamento = paymentDetails.DataPagamento,
+                BarbeariaId = paymentDetails.BarbeariaId
+            };
+
+            await _paymentRepository.AddAsync(pagamento);
+            await _paymentRepository.SaveChangesAsync();
         }
 
     }
