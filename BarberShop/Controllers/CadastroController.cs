@@ -101,7 +101,7 @@ namespace BarberShop.Controllers
         }
 
 
-
+        [NonAction]
         // Função para gerar o UrlSlug a partir do nome da barbearia
         public string GerarUrlSlug(string nomeBarbearia)
         {
