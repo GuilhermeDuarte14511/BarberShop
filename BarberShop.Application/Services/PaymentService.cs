@@ -246,5 +246,41 @@ namespace BarberShop.Application.Services
             return planosAtualizados;
         }
 
+        public async Task<string> StartSubscription(string planId, string clienteNome, string clienteEmail)
+        {
+            // Criação do cliente no Stripe
+            var customerOptions = new CustomerCreateOptions
+            {
+                Name = clienteNome,
+                Email = clienteEmail,
+            };
+            var customerService = new CustomerService();
+            var customer = await customerService.CreateAsync(customerOptions);
+
+            // Criação da assinatura no Stripe
+            var subscriptionOptions = new SubscriptionCreateOptions
+            {
+                Customer = customer.Id,
+                Items = new List<SubscriptionItemOptions>
+                {
+                    new SubscriptionItemOptions
+                    {
+                        Price = planId // ID do plano/produto no Stripe
+                    }
+                },
+                PaymentBehavior = "default_incomplete", // Gera client_secret se precisar confirmação
+                Expand = new List<string> { "latest_invoice.payment_intent" } // Expande para obter o client_secret
+            };
+
+            var subscriptionService = new SubscriptionService();
+            var subscription = await subscriptionService.CreateAsync(subscriptionOptions);
+
+            // Pega o client_secret para confirmação de pagamento inicial, se necessário
+            var clientSecret = subscription.LatestInvoice?.PaymentIntent?.ClientSecret;
+
+            // Retorna o ID da assinatura e o client_secret se disponível
+            return clientSecret ?? subscription.Id;
+        }
+
     }
 }

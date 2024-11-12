@@ -50,5 +50,8 @@ namespace BarberShop.Application.Services
 
         Task<List<PlanoAssinaturaSistema>> SincronizarPlanosComStripe();
 
+        Task<string> StartSubscription(string planId, string clienteNome, string clienteEmail);
+
+
     }
 }

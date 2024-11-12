@@ -1,6 +1,8 @@
-﻿using BarberShop.Application.Services;
+﻿using BarberShop.Application.DTOs;
+using BarberShop.Application.Services;
 using BarberShop.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
+using Stripe;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,7 +25,7 @@ namespace BarberShop.API.Controllers
 
         // Endpoint para criar um PaymentIntent
         [HttpPost("create-payment-intent")]
-        public async Task<IActionResult> CreatePaymentIntent([FromBody] PaymentIntentRequest request)
+        public async Task<IActionResult> CreatePaymentIntent([FromBody] PaymentIntentRequestDTO request)
         {
             try
             {
@@ -38,7 +40,7 @@ namespace BarberShop.API.Controllers
 
         // Endpoint para processar pagamento com cartão de crédito
         [HttpPost("process-credit-card")]
-        public async Task<IActionResult> ProcessCreditCardPayment([FromBody] CreditCardPaymentRequest request)
+        public async Task<IActionResult> ProcessCreditCardPayment([FromBody] CreditCardPaymentRequestDTO request)
         {
             try
             {
@@ -53,7 +55,7 @@ namespace BarberShop.API.Controllers
 
         // Endpoint para processar pagamento via PIX
         [HttpPost("process-pix")]
-        public async Task<IActionResult> ProcessPixPayment([FromBody] PixPaymentRequest request)
+        public async Task<IActionResult> ProcessPixPayment([FromBody] PixPaymentRequestDTO request)
         {
             try
             {
@@ -120,36 +122,21 @@ namespace BarberShop.API.Controllers
                 return BadRequest(new { error = ex.Message });
             }
         }
-    }
 
-    // Modelo de requisição para criar um PaymentIntent
-    public class PaymentIntentRequest
-    {
-        public decimal Amount { get; set; }
-        public List<string> PaymentMethods { get; set; } = new List<string> { "card" }; // Default to "card"
-        public string Currency { get; set; } = "brl";
-    }
+        [HttpPost("start-subscription")]
+        public async Task<IActionResult> StartSubscription([FromBody] StartSubscriptionRequestDTO request)
+        {
+            try
+            {
+                var subscriptionId = await _paymentService.StartSubscription(request.PlanId, request.ClienteNome, request.ClienteEmail);
+                return Ok(new { subscriptionId });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
 
-    // Modelo de requisição para pagamento com cartão de crédito
-    public class CreditCardPaymentRequest
-    {
-        public decimal Amount { get; set; }
-        public string ClienteNome { get; set; }
-        public string ClienteEmail { get; set; }
-    }
-
-    // Modelo de requisição para pagamento via PIX
-    public class PixPaymentRequest
-    {
-        public decimal Amount { get; set; }
-        public string ClienteNome { get; set; }
-        public string ClienteEmail { get; set; }
-    }
-
-    // Modelo de requisição para reembolso
-    public class RefundRequest
-    {
-        public string PaymentId { get; set; }
-        public long? Amount { get; set; } // Valor opcional para reembolso parcial em centavos
+        
     }
 }
