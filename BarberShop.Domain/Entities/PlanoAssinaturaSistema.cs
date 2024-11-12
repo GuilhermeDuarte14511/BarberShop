@@ -14,6 +14,7 @@ namespace BarberShop.Domain.Entities
         public string IdProdutoStripe { get; set; } // ID do plano na Stripe
         public decimal Valor { get; set; }
         public string Periodicidade { get; set; } // Ex.: "Mensal", "Anual"
+        public string PriceId { get; set; } // ID do preço na Stripe
 
 
     }

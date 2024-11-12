@@ -38,23 +38,17 @@ namespace BarberShop.Application.Services
                 var prices = await priceService.ListAsync(new PriceListOptions
                 {
                     Product = product.Id,
-                    Limit = 1
+                    Limit = 100 // Ajuste conforme necessário
                 });
 
-                if (prices.Data.Count > 0)
-                {
-                    var price = prices.Data[0];
+                // Filtrar apenas preços que estão ativos e possuem configuração de cobrança recorrente
+                var recurringPrice = prices.Data.FirstOrDefault(p => p.Active && p.Recurring != null);
 
-                    // Tratamento para o intervalo de cobrança
-                    string periodicidade = price.Recurring.Interval;
-                    if (periodicidade == "month")
-                    {
-                        periodicidade = "Mensal";
-                    }
-                    else if (periodicidade == "year")
-                    {
-                        periodicidade = "Anual";
-                    }
+                if (recurringPrice != null)
+                {
+                    // Obter informações de cobrança e definir periodicidade
+                    string periodicidade = recurringPrice.Recurring.Interval;
+                    periodicidade = periodicidade == "month" ? "Mensal" : periodicidade == "year" ? "Anual" : periodicidade;
 
                     // Buscar o plano existente no banco usando o IdProdutoStripe
                     var planoExistente = await _planoAssinaturaRepository.GetByStripeIdAsync(product.Id);
@@ -66,7 +60,8 @@ namespace BarberShop.Application.Services
                             Nome = product.Name,
                             Descricao = product.Description,
                             IdProdutoStripe = product.Id,
-                            Valor = (decimal)(price.UnitAmount / 100.0), // Converte de centavos para moeda
+                            PriceId = recurringPrice.Id, // Armazena o PriceId do preço recorrente ativo
+                            Valor = (decimal)(recurringPrice.UnitAmount / 100.0), // Converte de centavos para moeda
                             Periodicidade = periodicidade
                         };
 
@@ -79,7 +74,8 @@ namespace BarberShop.Application.Services
                         planoExistente.Nome = product.Name;
                         planoExistente.Descricao = product.Description;
                         planoExistente.IdProdutoStripe = product.Id;
-                        planoExistente.Valor = (decimal)(price.UnitAmount / 100.0);
+                        planoExistente.PriceId = recurringPrice.Id; // Atualiza o PriceId com o recorrente ativo
+                        planoExistente.Valor = (decimal)(recurringPrice.UnitAmount / 100.0);
                         planoExistente.Periodicidade = periodicidade;
 
                         await _planoAssinaturaRepository.UpdateAsync(planoExistente);
@@ -93,7 +89,6 @@ namespace BarberShop.Application.Services
 
             return planosAtualizados;
         }
-
 
     }
 }
