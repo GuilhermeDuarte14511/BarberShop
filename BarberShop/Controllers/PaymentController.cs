@@ -113,7 +113,7 @@ namespace BarberShop.API.Controllers
                     Descricao = plano.Descricao,
                     Valor = plano.Valor,
                     Periodicidade = plano.Periodicidade,
-                    PriceId = plano.Periodicidade
+                    PriceId = plano.PriceId
                 }).ToList();
 
                 return Ok(planosDto);
