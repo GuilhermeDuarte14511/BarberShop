@@ -139,103 +139,103 @@
 
     var redefinirSenhaAdminPage = document.getElementById('redefinirSenhaPageAdmin');
 
-    if (redefinirSenhaAdminPage) {
-        $('#novaSenhaRedefinirAdmin').on('input', function () {
-            const password = $(this).val();
-            const lengthRequirement = password.length >= 8;
-            const uppercaseRequirement = /[A-Z]/.test(password);
-            const lowercaseRequirement = /[a-z]/.test(password);
-            const numberRequirement = /\d/.test(password);
-            const specialRequirement = /[!@#$%^&*]/.test(password);
+if (redefinirSenhaAdminPage) {
+    $('#novaSenhaRedefinirAdmin').on('input', function () {
+        const password = $(this).val();
+        const lengthRequirement = password.length >= 8;
+        const uppercaseRequirement = /[A-Z]/.test(password);
+        const lowercaseRequirement = /[a-z]/.test(password);
+        const numberRequirement = /\d/.test(password);
+        const specialRequirement = /[!@#$%^&*]/.test(password);
 
-            $('#lengthRequirementRedefinirAdmin').toggleClass('text-success', lengthRequirement).toggleClass('text-danger', !lengthRequirement);
-            $('#uppercaseRequirementRedefinirAdmin').toggleClass('text-success', uppercaseRequirement).toggleClass('text-danger', !uppercaseRequirement);
-            $('#lowercaseRequirementRedefinirAdmin').toggleClass('text-success', lowercaseRequirement).toggleClass('text-danger', !lowercaseRequirement);
-            $('#numberRequirementRedefinirAdmin').toggleClass('text-success', numberRequirement).toggleClass('text-danger', !numberRequirement);
-            $('#specialRequirementRedefinirAdmin').toggleClass('text-success', specialRequirement).toggleClass('text-danger', !specialRequirement);
-        });
+        $('#lengthRequirementRedefinirAdmin').toggleClass('text-success', lengthRequirement).toggleClass('text-danger', !lengthRequirement);
+        $('#uppercaseRequirementRedefinirAdmin').toggleClass('text-success', uppercaseRequirement).toggleClass('text-danger', !uppercaseRequirement);
+        $('#lowercaseRequirementRedefinirAdmin').toggleClass('text-success', lowercaseRequirement).toggleClass('text-danger', !lowercaseRequirement);
+        $('#numberRequirementRedefinirAdmin').toggleClass('text-success', numberRequirement).toggleClass('text-danger', !numberRequirement);
+        $('#specialRequirementRedefinirAdmin').toggleClass('text-success', specialRequirement).toggleClass('text-danger', !specialRequirement);
+    });
 
-        // Toggle de visibilidade das senhas
-        $('#toggleNovaSenhaRedefinirAdmin').on('click', function () {
-            const passwordField = $('#novaSenhaRedefinirAdmin');
-            const type = passwordField.attr('type') === 'password' ? 'text' : 'password';
-            passwordField.attr('type', type);
-            $(this).find('i').toggleClass('fa-eye fa-eye-slash');
-        });
+    // Toggle de visibilidade das senhas
+    $('#toggleNovaSenhaRedefinirAdmin').on('click', function () {
+        const passwordField = $('#novaSenhaRedefinirAdmin');
+        const type = passwordField.attr('type') === 'password' ? 'text' : 'password';
+        passwordField.attr('type', type);
+        $(this).find('i').toggleClass('fa-eye fa-eye-slash');
+    });
 
-        $('#toggleConfirmarSenhaRedefinirAdmin').on('click', function () {
-            const confirmPasswordField = $('#confirmarSenhaRedefinirAdmin');
-            const type = confirmPasswordField.attr('type') === 'password' ? 'text' : 'password';
-            confirmPasswordField.attr('type', type);
-            $(this).find('i').toggleClass('fa-eye fa-eye-slash');
-        });
+    $('#toggleConfirmarSenhaRedefinirAdmin').on('click', function () {
+        const confirmPasswordField = $('#confirmarSenhaRedefinirAdmin');
+        const type = confirmPasswordField.attr('type') === 'password' ? 'text' : 'password';
+        confirmPasswordField.attr('type', type);
+        $(this).find('i').toggleClass('fa-eye fa-eye-slash');
+    });
 
-        // Função para verificar se as senhas coincidem
-        $('#confirmarSenhaRedefinirAdmin').on('input', function () {
-            const novaSenha = $('#novaSenhaRedefinirAdmin').val();
-            const confirmarSenha = $(this).val();
+    // Função para verificar se as senhas coincidem
+    $('#confirmarSenhaRedefinirAdmin').on('input', function () {
+        const novaSenha = $('#novaSenhaRedefinirAdmin').val();
+        const confirmarSenha = $(this).val();
 
-            // Verifica se as senhas coincidem
-            if (novaSenha !== confirmarSenha) {
-                $('#errorMessageRedefinirAdmin').text('As senhas não coincidem.').show();
+        // Verifica se as senhas coincidem
+        if (novaSenha !== confirmarSenha) {
+            $('#errorMessageRedefinirAdmin').text('As senhas não coincidem.').show();
+            $('#redefinirSenhaFormAdmin button[type="submit"]').prop('disabled', true); // Desabilita o botão
+        } else {
+            $('#errorMessageRedefinirAdmin').hide();
+            if (novaSenha.length >= 8 && /[A-Z]/.test(novaSenha) && /[a-z]/.test(novaSenha) && /\d/.test(novaSenha) && /[!@#$%^&*]/.test(novaSenha)) {
+                $('#redefinirSenhaFormAdmin button[type="submit"]').prop('disabled', false); // Habilita o botão
+            } else {
                 $('#redefinirSenhaFormAdmin button[type="submit"]').prop('disabled', true); // Desabilita o botão
-            } else {
-                $('#errorMessageRedefinirAdmin').hide();
-                if (novaSenha.length >= 8 && /[A-Z]/.test(novaSenha) && /[a-z]/.test(novaSenha) && /\d/.test(novaSenha) && /[!@#$%^&*]/.test(novaSenha)) {
-                    $('#redefinirSenhaFormAdmin button[type="submit"]').prop('disabled', false); // Habilita o botão
+            }
+        }
+    });
+
+    $('#redefinirSenhaFormAdmin').on('submit', function (e) {
+        e.preventDefault();
+
+        const usuarioId = $('#usuarioIdAdmin').val();
+        const token = $('#tokenAdmin').val();
+        const novaSenha = $('#novaSenhaRedefinirAdmin').val();
+        const confirmarSenha = $('#confirmarSenhaRedefinirAdmin').val();
+
+        // Verifica se as senhas coincidem
+        if (novaSenha !== confirmarSenha) {
+            $('#errorMessageRedefinirAdmin').text('As senhas não coincidem.').show();
+            return;
+        } else {
+            $('#errorMessageRedefinirAdmin').hide();
+        }
+
+        // Envia a nova senha para o servidor
+        $.ajax({
+            url: '/Login/RedefinirSenhaAdmin',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                clienteId: parseInt(usuarioId, 10), // Converte para número
+                token: token,
+                novaSenha: novaSenha
+            }),
+            success: function (data) {
+                if (data.success) {
+                    // Exibe o toast de sucesso com a mensagem de redirecionamento
+                    showToast('Senha redefinida com sucesso! Redirecionando para a tela inicial...', 'success');
+
+                    // Espera 5 segundos (tempo de exibição do toast) e depois redireciona para a URL fornecida pelo servidor
+                    setTimeout(function () {
+                        window.location.href = data.redirectUrl; // Redireciona para a URL correta da barbearia
+                    }, 5000); // Atraso de 5 segundos
                 } else {
-                    $('#redefinirSenhaFormAdmin button[type="submit"]').prop('disabled', true); // Desabilita o botão
+                    // Exibe o toast de erro
+                    showToast(data.message || 'Erro ao redefinir senha.', 'danger');
                 }
+            },
+            error: function () {
+                // Exibe o toast de erro caso haja erro no processamento
+                showToast('Erro ao processar a solicitação.', 'danger');
             }
         });
-
-        $('#redefinirSenhaFormAdmin').on('submit', function (e) {
-            e.preventDefault();
-
-            const usuarioId = $('#usuarioIdAdmin').val();
-            const token = $('#tokenAdmin').val();
-            const novaSenha = $('#novaSenhaRedefinirAdmin').val();
-            const confirmarSenha = $('#confirmarSenhaRedefinirAdmin').val();
-
-            // Verifica se as senhas coincidem
-            if (novaSenha !== confirmarSenha) {
-                $('#errorMessageRedefinirAdmin').text('As senhas não coincidem.').show();
-                return;
-            } else {
-                $('#errorMessageRedefinirAdmin').hide();
-            }
-
-            // Envia a nova senha para o servidor
-            $.ajax({
-                url: '/Login/RedefinirSenhaAdmin',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({
-                    clienteId: parseInt(usuarioId, 10), // Converte para número
-                    token: token,
-                    novaSenha: novaSenha
-                }),
-                success: function (data) {
-                    if (data.success) {
-                        // Exibe o toast de sucesso com a mensagem de redirecionamento
-                        showToast('Senha redefinida com sucesso! Redirecionando para a tela inicial...', 'success');
-
-                        // Espera 5 segundos (tempo de exibição do toast) e depois redireciona para a URL fornecida pelo servidor
-                        setTimeout(function () {
-                            window.location.href = data.redirectUrl; // Redireciona para a URL correta da barbearia
-                        }, 5000); // Atraso de 5 segundos
-                    } else {
-                        // Exibe o toast de erro
-                        showToast(data.message || 'Erro ao redefinir senha.', 'danger');
-                    }
-                },
-                error: function () {
-                    // Exibe o toast de erro caso haja erro no processamento
-                    showToast('Erro ao processar a solicitação.', 'danger');
-                }
-            });
-        });
-    }
+    });
+}
 
 
 
@@ -731,15 +731,21 @@
     }
 
 
+    // Carregar a localização em português para o Flatpickr
+    flatpickr.localize(flatpickr.l10ns.pt);
+
     // Lógica para a página de Escolher Barbeiro
     if ($('#escolherBarbeiroPage').length > 0) {
         var selectedBarbeiroId = null;
         var selectedDuracaoTotal = $('#escolherBarbeiroPage').data('duracao-total');
         var selectedServicoIds = $('#escolherBarbeiroPage').data('servico-ids');
-        var horarioSelecionado = null; // Variável para armazenar o horário selecionado
+        var selectedDate = null; // Armazena a data selecionada
+        var horarioSelecionado = null; // Armazena o horário selecionado
+        var horariosPorDia = {}; // Objeto para armazenar os horários disponíveis por dia
 
         console.log("Página de Escolher Barbeiro carregada");
 
+        // Evento de clique no botão de cada barbeiro
         $('.barbeiro-btn').on('click', function () {
             selectedBarbeiroId = $(this).data('barbeiro-id');
             console.log("Barbeiro selecionado com ID:", selectedBarbeiroId);
@@ -749,78 +755,126 @@
                 return;
             }
 
-            $('#calendarioModal').modal('show');
-            carregarHorariosDropdown(selectedBarbeiroId, selectedDuracaoTotal);
+            $('#calendarioModal').modal('show'); // Abre o modal do calendário
+            carregarDiasDisponiveis(); // Carrega os dias e horários disponíveis
         });
 
-        function carregarHorariosDropdown(barbeiroId, duracaoTotal) {
-            $('#loadingSpinner').fadeIn();
+        // Função para carregar os dias disponíveis e horários
+        function carregarDiasDisponiveis() {
             const barbeariaUrl = $('#barbeariaUrl').val();
-            const barbeariaId = $('#barbeariaId').val();
-
-            console.log(`Carregando horários para o barbeiro ID: ${barbeiroId}, duração: ${duracaoTotal}, barbeariaId: ${barbeariaId}, barbeariaUrl: ${barbeariaUrl}`);
 
             $.ajax({
                 url: `/${barbeariaUrl}/Agendamento/ObterHorariosDisponiveis`,
                 data: {
-                    barbeiroId: barbeiroId,
-                    duracaoTotal: duracaoTotal
+                    barbeiroId: selectedBarbeiroId,
+                    duracaoTotal: selectedDuracaoTotal
                 },
                 success: function (data) {
-                    console.log("Horários recebidos:", data);
-                    var select = $('#horariosDisponiveis');
-                    select.empty();
-                    select.append('<option value="">Escolha um horário...</option>');
+                    // Processa os horários recebidos e organiza por dia
+                    horariosPorDia = {}; // Limpa o objeto antes de preencher
 
                     data.forEach(function (horario) {
-                        var diaSemana = dayjs(horario).format('dddd');
-                        var dataFormatada = dayjs(horario).format('DD/MM/YYYY');
-                        var horarioFormatado = dayjs(horario).format('HH:mm') + ' - ' + dayjs(horario).add(duracaoTotal, 'minute').format('HH:mm');
+                        const dataHora = dayjs(horario);
+                        const dia = dataHora.format('YYYY-MM-DD');
+                        const horarioInicio = dataHora.format('HH:mm');
+                        const horarioFim = dataHora.add(selectedDuracaoTotal, 'minute').format('HH:mm');
 
-                        var optionText = `${diaSemana} (${dataFormatada}) - ${horarioFormatado}`;
-                        console.log(`Adicionando opção: ${optionText}, valor: ${horario}`);
-                        select.append(`<option value="${horario}">${optionText}</option>`);
+                        if (!horariosPorDia[dia]) {
+                            horariosPorDia[dia] = []; // Cria o array de horários para o dia
+                        }
+                        horariosPorDia[dia].push(`${horarioInicio} - ${horarioFim}`); // Adiciona o horário formatado ao dia
                     });
 
-                    $('#loadingSpinner').fadeOut();
+                    // Atualiza o calendário Flatpickr com os dias disponíveis
+                    configurarCalendario(Object.keys(horariosPorDia));
                 },
                 error: function () {
                     showToast('Erro ao carregar os horários.', "danger");
-                    $('#loadingSpinner').fadeOut();
+                }
+            });
+        }
+
+        function configurarCalendario(diasDisponiveis) {
+            flatpickr("#calendarioInput", {
+                inline: true,
+                dateFormat: "Y-m-d",
+                locale: "pt", // Define o calendário para o português
+                enable: diasDisponiveis, // Somente dias disponíveis são habilitados
+                disableMobile: true, // Garante que o Flatpickr customizado apareça em dispositivos móveis
+                onChange: function (selectedDates, dateStr, instance) {
+                    selectedDate = dateStr;
+                    $('#calendarioModal').modal('hide'); // Fecha o modal do calendário
+                    mostrarHorariosParaDia(selectedDate); // Mostra os horários para o dia selecionado
+                },
+                onDayCreate: function (dObj, dStr, fp, dayElem) {
+                    // Verifica se o dia está disponível
+                    const isAvailable = diasDisponiveis.includes(dayElem.dateObj.toISOString().split("T")[0]);
+                    if (!isAvailable) {
+                        // Se o dia não estiver disponível, adiciona evento de clique para mostrar o toast
+                        dayElem.classList.add("disabled");
+                        dayElem.addEventListener("click", function (e) {
+                            e.preventDefault();
+                            showToast("Data não disponível", "warning"); // Exibe o toast
+                        });
+                    }
                 }
             });
         }
 
 
-        // Evento para capturar o valor selecionado do dropdown
-        $('#horariosDisponiveis').on('change', function () {
-            var horarioUTC = $(this).val();
-            // Formata o horário para o formato brasileiro de 24 horas sem subtrair horas
-            horarioSelecionado = dayjs(horarioUTC).format('YYYY-MM-DD HH:mm');
-            console.log("Horário selecionado no formato 24 horas:", horarioSelecionado);
-        });
+        // Função para exibir os horários disponíveis para o dia selecionado
+        function mostrarHorariosParaDia(diaSelecionado) {
+            // Formata o título com a data no formato "Horários disponíveis em [dia] de [mês] de [ano]"
+            const dataFormatada = dayjs(diaSelecionado).format('DD [de] MMMM [de] YYYY');
+            $('#horariosModalLabel').text(`Horários disponíveis em ${dataFormatada}`);
 
-        $('#confirmarHorarioBtn').on('click', function () {
-            if (!horarioSelecionado) { // Usa a variável armazenada
-                showToast('Por favor, selecione um horário.', "warning");
+            $('#horariosContainer').empty(); // Limpa os horários anteriores
+
+            if (horariosPorDia[diaSelecionado]) {
+                horariosPorDia[diaSelecionado].forEach(function (horario) {
+                    // Cria um botão para cada horário disponível no formato "início - fim"
+                    let horarioBtn = `<button class="btn btn-outline-light m-1 horario-btn" data-horario="${horario}">${horario}</button>`;
+                    $('#horariosContainer').append(horarioBtn);
+                });
             } else {
-                $('#loadingSpinner').fadeIn();
-
-                sessionStorage.removeItem('servicosSelecionados');
-
-                const barbeariaUrl = $('#barbeariaUrl').val(); // Obtém o barbeariaUrl
-                const barbeariaId = $('#barbeariaId').val();   // Obtém o barbeariaId
-
-                // Usa o valor ajustado em `horarioSelecionado` diretamente na URL com `barbeariaUrl` e `barbeariaId`
-                window.location.href = `/${barbeariaUrl}/Agendamento/ResumoAgendamento?barbeiroId=${selectedBarbeiroId}&dataHora=${encodeURIComponent(horarioSelecionado)}&servicoIds=${selectedServicoIds}&barbeariaId=${barbeariaId}`;
+                $('#horariosContainer').append('<p class="text-light">Nenhum horário disponível para este dia.</p>');
             }
+
+            $('#horariosModal').modal('show'); // Abre o modal de horários
+        }
+
+        // Evento de clique para cada horário disponível
+        $(document).on('click', '.horario-btn', function () {
+            horarioSelecionado = $(this).data('horario');
+
+            if (!horarioSelecionado) {
+                showToast('Por favor, selecione um horário.', "warning");
+                return;
+            }
+
+            $('#loadingSpinner').fadeIn();
+
+            sessionStorage.removeItem('servicosSelecionados');
+
+            const barbeariaUrl = $('#barbeariaUrl').val(); // Obtém o barbeariaUrl
+            const barbeariaId = $('#barbeariaId').val();   // Obtém o barbeariaId
+
+            // Redireciona para a página de resumo com os dados selecionados
+            window.location.href = `/${barbeariaUrl}/Agendamento/ResumoAgendamento?barbeiroId=${selectedBarbeiroId}&dataHora=${encodeURIComponent(selectedDate + ' ' + horarioSelecionado.split(' - ')[0])}&servicoIds=${selectedServicoIds}&barbeariaId=${barbeariaId}`;
         });
 
+        // Evento para o botão "Voltar" no modal de horários
+        $(document).on('click', '#voltarParaCalendarioBtn', function () {
+            $('#horariosModal').modal('hide'); // Fecha o modal de horários
+            $('#calendarioModal').modal('show'); // Reabre o modal de calendário
+        });
 
         $('#voltarBtn').on('click', function () {
             window.location.href = '/Cliente/SolicitarServico';
         });
     }
+
+
 
     if ($('#resumoAgendamentoPage').length > 0) {
         let selectedPaymentMethod = null;

@@ -19,8 +19,7 @@
                 <div class="card bg-dark text-light">
                     <div class="card-body text-center">
                         <h5 class="card-title text-warning">@barbeiro.Nome</h5>
-                        <button class="btn btn-danger barbeiro-btn"
-                                data-barbeiro-id="@barbeiro.BarbeiroId">
+                        <button class="btn btn-danger barbeiro-btn" data-barbeiro-id="@barbeiro.BarbeiroId">
                             Escolher Horário
                         </button>
                     </div>
@@ -34,23 +33,39 @@
     </div>
 </div>
 
+<!-- Modal de Calendário -->
 <div class="modal fade" id="calendarioModal" tabindex="-1" aria-labelledby="calendarioModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <!-- modal-dialog-centered centraliza o modal verticalmente -->
         <div class="modal-content bg-dark text-light">
             <div class="modal-header">
-                <h5 class="modal-title text-danger" id="calendarioModalLabel">Escolha o Horário</h5>
+                <h5 class="modal-title text-danger" id="calendarioModalLabel">Selecione uma Data</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div id="dropdownHorarios">
-                    <label for="horariosDisponiveis">Selecione um horário:</label>
-                    <select id="horariosDisponiveis" class="form-select bg-dark text-light border-secondary">
-                        <option value="">Escolha um horário...</option>
-                    </select>
+                <!-- Flatpickr Calendar Input -->
+                <input type="text" id="calendarioInput" class="form-control bg-dark text-light" placeholder="Selecione um dia" readonly>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Horários -->
+<div class="modal fade" id="horariosModal" tabindex="-1" aria-labelledby="horariosModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <!-- modal-dialog-centered centraliza o modal verticalmente -->
+        <div class="modal-content bg-dark text-light">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger" id="horariosModalLabel">Horários Disponíveis</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="horariosContainer" class="d-flex flex-wrap gap-2">
+                    <!-- Horários disponíveis serão inseridos aqui dinamicamente -->
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-danger" id="confirmarHorarioBtn">Confirmar Horário</button>
+                <button type="button" class="btn btn-secondary" id="voltarParaCalendarioBtn">Voltar</button>
             </div>
         </div>
     </div>

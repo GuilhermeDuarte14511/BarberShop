@@ -991,6 +991,85 @@ body {
     .toggle-password-icon i {
         font-size: 1.2em; /* Tamanho do ícone */
     }
+/* Estilo para calendário Flatpickr em tema escuro */
+.flatpickr-calendar {
+    background-color: #2b2b2b; /* Cor de fundo do calendário */
+    color: #ffffff; /* Cor do texto */
+    border: 1px solid #444; /* Cor da borda */
+}
+
+.flatpickr-months .flatpickr-month {
+    color: #ffffff;
+    background-color: #333333;
+}
+
+.flatpickr-weekdays {
+    background-color: #333333;
+}
+
+.flatpickr-weekdaycontainer span,
+.flatpickr-weekday {
+    color: #ffffff !important; /* Define os dias da semana como branco */
+}
+
+.flatpickr-days .flatpickr-day {
+    color: #ffffff;
+    background-color: #2b2b2b;
+}
+
+    /* Estilo para dias desativados (apagados) */
+    .flatpickr-days .flatpickr-day.disabled,
+    .flatpickr-days .flatpickr-day.disabled:hover {
+        color: #666666 !important; /* Tom cinza para indicar que está desativado */
+        background-color: #1a1a1a !important; /* Fundo escuro */
+        cursor: not-allowed; /* Cursor de não permitido */
+        opacity: 0.5; /* Visual mais apagado */
+    }
+
+    .flatpickr-days .flatpickr-day:hover,
+    .flatpickr-days .flatpickr-day.today,
+    .flatpickr-days .flatpickr-day.selected {
+        background-color: #ff5e5e; /* Cor para o dia selecionado e o dia de hoje */
+        color: #ffffff;
+    }
+
+/* Estilo para o dropdown de seleção de mês e ano */
+.flatpickr-monthDropdown-months,
+.flatpickr-current-month .numInputWrapper,
+.flatpickr-current-month .flatpickr-monthDropdown-months {
+    background-color: #000000; /* Fundo preto */
+    color: #ffffff; /* Texto branco */
+    border: none;
+}
+
+    .flatpickr-current-month .flatpickr-monthDropdown-months .flatpickr-monthDropdown-month,
+    .flatpickr-current-month .numInputWrapper input {
+        background-color: #000000; /* Preto */
+        color: #ffffff;
+    }
+
+        /* Efeito hover para os seletores de mês e ano */
+        .flatpickr-current-month .flatpickr-monthDropdown-months .flatpickr-monthDropdown-month:hover,
+        .flatpickr-current-month .numInputWrapper input:hover {
+            background-color: #ff5e5e; /* Vermelho ao passar o mouse */
+            color: #ffffff;
+        }
+
+    /* Estilo para a seleção ativa */
+    .flatpickr-monthDropdown-months .flatpickr-monthDropdown-month.selected {
+        background-color: #ff5e5e; /* Vermelho para indicar seleção */
+        color: #ffffff;
+    }
+
+/* Estilo do input de data quando readonly */
+.flatpickr-input[readonly] {
+    background-color: #2b2b2b; /* Fundo do campo de input */
+    color: #ffffff;
+}
+
+
+
+
 
 
 /* Responsivo para Dispositivos Móveis */
