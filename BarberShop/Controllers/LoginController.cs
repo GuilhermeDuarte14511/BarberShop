@@ -433,6 +433,22 @@ namespace BarberShopMVC.Controllers
         }
 
         [HttpPost]
+        public async Task<IActionResult> LogoutAdmin()
+        {
+            try
+            {
+                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                await LogAsync("Info", "LogoutAdmin", "Administrador deslogado com sucesso.", null);
+                return RedirectToAction("AdminLogin", "Login"); // Redireciona para a página de login do admin
+            }
+            catch (Exception ex)
+            {
+                await LogAsync("Error", "LogoutAdmin", $"Erro ao deslogar administrador: {ex.Message}", null);
+                return RedirectToAction("Error", "Erro");
+            }
+        }
+
+        [HttpPost]
         public async Task<IActionResult> SolicitarRecuperacaoSenha([FromBody] string email)
         {
             try

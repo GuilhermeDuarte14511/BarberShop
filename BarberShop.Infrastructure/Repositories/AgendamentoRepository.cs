@@ -55,10 +55,15 @@ namespace BarberShop.Infrastructure.Repositories
         // Implementação do método GetByIdAsync
         public async Task<Agendamento> GetByIdAsync(int id)
         {
-            return await _context.Agendamentos.Include(a => a.Cliente)
-                                              .Include(a => a.Barbeiro)
-                                              .FirstOrDefaultAsync(a => a.AgendamentoId == id);
+            return await _context.Agendamentos
+                .Include(a => a.Cliente)
+                .Include(a => a.Barbeiro)
+                .Include(a => a.AgendamentoServicos)
+                    .ThenInclude(asg => asg.Servico)
+                .Include(a => a.Pagamento) // Inclui o pagamento do agendamento
+                .FirstOrDefaultAsync(a => a.AgendamentoId == id);
         }
+
 
         // Implementação do método GetByClienteIdAsync
         public async Task<IEnumerable<Agendamento>> GetByClienteIdAsync(int clienteId)
@@ -89,8 +94,10 @@ namespace BarberShop.Infrastructure.Repositories
                 .Include(a => a.Barbeiro)
                 .Include(a => a.AgendamentoServicos)
                     .ThenInclude(asg => asg.Servico)
+                .Include(a => a.Pagamento) // Inclui o pagamento do agendamento
                 .ToListAsync();
         }
+
 
         public async Task<Agendamento> GetByIdAndBarbeariaIdAsync(int id, int barbeariaId)
         {

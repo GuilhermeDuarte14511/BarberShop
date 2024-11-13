@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Linq;
 using System.Security.Claims;
+using System.Text.Json.Serialization;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace BarberShopMVC.Controllers
@@ -60,12 +62,13 @@ namespace BarberShopMVC.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var barbeariaId = int.Parse(HttpContext.Session.GetString("BarbeariaId") ?? "0");
+            var barbeariaId = HttpContext.Session.GetInt32("BarbeariaId") ?? 0;
 
             await LogAsync("INFO", nameof(AgendamentoController), "Index accessed", $"Listando agendamentos da barbearia: {barbeariaId}");
             var agendamentos = await _agendamentoRepository.GetAgendamentosPorBarbeariaAsync(barbeariaId);
             return View(agendamentos);
         }
+
 
         public async Task<IActionResult> Details(int id)
         {
@@ -76,8 +79,15 @@ namespace BarberShopMVC.Controllers
                 await LogAsync("WARNING", nameof(Details), "Agendamento não encontrado", $"ID: {id}");
                 return NotFound();
             }
-            return View(agendamento);
+
+            return Json(agendamento, new JsonSerializerOptions
+            {
+                ReferenceHandler = ReferenceHandler.IgnoreCycles,
+                WriteIndented = true
+            });
         }
+
+
 
         public async Task<IActionResult> CreateAsync()
         {

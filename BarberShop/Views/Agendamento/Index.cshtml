@@ -1,0 +1,140 @@
+﻿@model IEnumerable<BarberShop.Domain.Entities.Agendamento>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div id="agendamentoPage" class="container-fluid">
+    <h2 class="text-center">Gerenciar Agendamentos</h2>
+
+    <!-- Tabela exibida em telas maiores -->
+    <div class="table-responsive d-none d-md-block">
+        <table class="table table-dark table-striped" id="tabelaAgendamentos">
+            <thead>
+                <tr>
+                    <th>Cliente</th>
+                    <th>Barbeiro</th>
+                    <th>Data/Hora</th>
+                    <th>Status Agendamento</th>
+                    <th>Status Pagamento</th>
+                    <th>Valor Total</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var agendamento in Model)
+                {
+                    <tr data-id="@agendamento.AgendamentoId">
+                        <td>@agendamento.Cliente.Nome</td>
+                        <td>@agendamento.Barbeiro.Nome</td>
+                        <td>@agendamento.DataHora.ToString("g")</td>
+                        <td>@agendamento.Status</td>
+                        <td>@(agendamento.Pagamento != null ? agendamento.Pagamento.StatusPagamento.ToString() : "Sem pagamento")</td>
+                        <td>@agendamento.PrecoTotal?.ToString("C")</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm btnEditar" data-id="@agendamento.AgendamentoId" data-bs-toggle="modal" data-bs-target="#editarAgendamentoModal">Editar</button>
+                            <button class="btn btn-danger btn-sm btnExcluir" data-id="@agendamento.AgendamentoId" data-bs-toggle="modal" data-bs-target="#excluirAgendamentoModal">Excluir</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Exibição em cards para telas menores -->
+    <div class="d-md-none">
+        @foreach (var agendamento in Model)
+        {
+            <div class="barbeiro-card mb-3">
+                <h5 class="card-title">Cliente: @agendamento.Cliente.Nome</h5>
+                <p class="card-text"><strong>Barbeiro:</strong> @agendamento.Barbeiro.Nome</p>
+                <p class="card-text"><strong>Data/Hora:</strong> @agendamento.DataHora.ToString("g")</p>
+                <p class="card-text"><strong>Status Agendamento:</strong> @agendamento.Status</p>
+                <p class="card-text"><strong>Status Pagamento:</strong> @(agendamento.Pagamento != null ? agendamento.Pagamento.StatusPagamento.ToString() : "Sem pagamento")</p>
+                <p class="card-text"><strong>Valor Total:</strong> @agendamento.PrecoTotal?.ToString("C")</p>
+                <div class="actions d-flex justify-content-between">
+                    <button class="btn btn-warning btn-sm btnEditar" data-id="@agendamento.AgendamentoId" data-bs-toggle="modal" data-bs-target="#editarAgendamentoModal">Editar</button>
+                    <button class="btn btn-danger btn-sm btnExcluir" data-id="@agendamento.AgendamentoId" data-bs-toggle="modal" data-bs-target="#excluirAgendamentoModal">Excluir</button>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Modal para Edição do Agendamento -->
+    <div class="modal fade" id="editarAgendamentoModal" tabindex="-1" aria-labelledby="editarAgendamentoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form id="formEditarAgendamento">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editarAgendamentoModalLabel">Editar Agendamento</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="editarAgendamentoId" name="AgendamentoId" />
+
+                        <!-- Campo para Data/Hora -->
+                        <div class="form-group">
+                            <label for="DataHora">Data/Hora</label>
+                            <input type="datetime-local" class="form-control" id="editarDataHora" name="DataHora" required />
+                        </div>
+
+                        <!-- Campo para Status do Agendamento -->
+                        <div class="form-group">
+                            <label for="Status">Status Agendamento</label>
+                            <select class="form-control" id="editarStatus" name="Status" required>
+                                <option value="0">Pendente</option>
+                                <option value="1">Confirmado</option>
+                                <option value="2">Cancelado</option>
+                                <option value="3">Concluido</option>
+                            </select>
+                        </div>
+
+                        <!-- Campo para Status do Pagamento -->
+                        <div class="form-group">
+                            <label for="StatusPagamento">Status Pagamento</label>
+                            <select class="form-control" id="editarStatusPagamento" name="StatusPagamento">
+                                <option value="-1">Não Especificado</option>
+                                <option value="0">Pendente</option>
+                                <option value="1">Aprovado</option>
+                                <option value="2">Recusado</option>
+                                <option value="3">Cancelado</option>
+                                <option value="4">Reembolsado</option>
+                                <option value="5">Em Processamento</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="PrecoTotal">Valor Total</label>
+                            <input type="text" class="form-control" id="editarPrecoTotal" name="PrecoTotal" required />
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modal para Exclusão do Agendamento -->
+    <div class="modal fade" id="excluirAgendamentoModal" tabindex="-1" aria-labelledby="excluirAgendamentoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="excluirAgendamentoModalLabel">Excluir Agendamento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Tem certeza de que deseja excluir este agendamento?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Não</button>
+                    <button type="button" id="btnConfirmarExcluir" class="btn btn-danger">Sim</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

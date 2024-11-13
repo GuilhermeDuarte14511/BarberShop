@@ -716,11 +716,12 @@ if (redefinirSenhaAdminPage) {
     }
 
 
-    // Carregar a localização em português para o Flatpickr
-    flatpickr.localize(flatpickr.l10ns.pt);
+   
 
     // Lógica para a página de Escolher Barbeiro
     if ($('#escolherBarbeiroPage').length > 0) {
+        // Carregar a localização em português para o Flatpickr
+        flatpickr.localize(flatpickr.l10ns.pt);
         var selectedBarbeiroId = null;
         var selectedDuracaoTotal = $('#escolherBarbeiroPage').data('duracao-total');
         var selectedServicoIds = $('#escolherBarbeiroPage').data('servico-ids');
@@ -2156,4 +2157,158 @@ if (redefinirSenhaAdminPage) {
         alternarMensagem(); // Exibe a primeira mensagem imediatamente
         setInterval(alternarMensagem, 5000); // Troca de mensagem a cada 5 segundos
     }
+    var agendamentosPage = document.getElementById('agendamentoPage');
+
+    if (agendamentosPage) {
+
+        // Função para aplicar máscara de valor
+        function aplicarMascaraPreco(input) {
+            input.on('input', function () {
+                let valor = $(this).val().replace(/\D/g, '');
+                valor = (valor / 100).toFixed(2) + '';
+                valor = valor.replace(".", ",");
+                $(this).val(valor);
+            });
+        }
+
+        // Aplica a máscara de preço ao campo de edição
+        aplicarMascaraPreco($('#editarPrecoTotal'));
+
+        // Converte o preço formatado (string) para float
+        function converterPrecoParaFloat(precoFormatado) {
+            const valorFloat = parseFloat(precoFormatado.replace(/\./g, '').replace(',', '.'));
+            return valorFloat;
+        }
+
+        function mostrarLoading() {
+            $('#loadingSpinnerAgendamento').show();
+        }
+
+        function ocultarLoading() {
+            $('#loadingSpinnerAgendamento').hide();
+        }
+
+        // Abrir modal de edição
+        $(document).on('click', '.btnEditar', function () {
+            const agendamentoId = $(this).data('id');
+            mostrarLoading();
+
+            $.get(`/Agendamento/Details/${agendamentoId}`, function (data) {
+                console.log("Dados do agendamento recebidos:", data);
+
+                $('#editarAgendamentoId').val(data.AgendamentoId);
+
+                // Verifica se DataHora existe e é uma data válida
+                if (data.DataHora) {
+                    const dataHora = new Date(data.DataHora);
+                    console.log("DataHora convertida:", dataHora);
+
+                    if (!isNaN(dataHora)) {
+                        $('#editarDataHora').val(dataHora.toISOString().slice(0, 16)); // Converte para o formato esperado
+                    } else {
+                        console.warn("Data inválida recebida:", data.DataHora);
+                        $('#editarDataHora').val(''); // Limpa o campo ou insere um valor padrão
+                    }
+                } else {
+                    console.warn("Campo DataHora está nulo ou indefinido");
+                    $('#editarDataHora').val(''); // Limpa o campo ou insere um valor padrão
+                }
+
+                $('#editarStatus').val(data.Status);
+                $('#editarStatusPagamento').val(data.Pagamento ? data.Pagamento.StatusPagamento : -1);
+
+                // Verifica se PrecoTotal existe e é um número
+                if (data.PrecoTotal !== undefined && data.PrecoTotal !== null) {
+                    const precoFormatado = data.PrecoTotal.toFixed(2).replace('.', ',');
+                    $('#editarPrecoTotal').val(precoFormatado);
+                } else {
+                    console.warn("Campo PrecoTotal está nulo ou indefinido");
+                    $('#editarPrecoTotal').val('');
+                }
+
+                $('#editarAgendamentoModal').modal('show');
+            }).always(function () {
+                ocultarLoading();
+            });
+        });
+
+        // Submeter formulário de edição
+        $('#formEditarAgendamento').on('submit', function (e) {
+            e.preventDefault();
+            mostrarLoading();
+
+            const precoFormatado = $('#editarPrecoTotal').val();
+            const precoFloat = converterPrecoParaFloat(precoFormatado);
+
+            const formData = {
+                AgendamentoId: $('#editarAgendamentoId').val(),
+                DataHora: $('#editarDataHora').val(),
+                Status: $('#editarStatus').val(),
+                StatusPagamento: $('#editarStatusPagamento').val(),
+                PrecoTotal: precoFloat
+            };
+
+            console.log("Enviando dados de edição:", formData); // Log dos dados sendo enviados para edição
+
+            $.ajax({
+                url: `/Agendamento/Edit/${formData.AgendamentoId}`,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function (response) {
+                    console.log("Resposta da edição:", response); // Log da resposta da edição
+                    $('#editarAgendamentoModal').modal('hide');
+                    showToast(response.message, response.success ? 'success' : 'danger');
+                    if (response.success) {
+                        setTimeout(() => location.reload(), 1500);
+                    }
+                },
+                error: function () {
+                    showToast('Erro ao editar o agendamento.', 'danger');
+                },
+                complete: function () {
+                    ocultarLoading();
+                }
+            });
+        });
+
+        // Abrir modal de exclusão
+        $(document).on('click', '.btnExcluir', function () {
+            const agendamentoId = $(this).data('id');
+            const clienteNome = $(this).closest('tr').find('td:first').text();
+            console.log("Abrindo modal de exclusão para o agendamento ID:", agendamentoId, "Cliente:", clienteNome); // Log do ID do agendamento e nome do cliente
+
+            $('#excluirAgendamentoNome').text(clienteNome);
+            $('#btnConfirmarExcluir').data('id', agendamentoId);
+            $('#excluirModal').modal('show');
+        });
+
+        // Confirmar exclusão
+        $('#btnConfirmarExcluir').on('click', function () {
+            const agendamentoId = $(this).data('id');
+            console.log("Confirmando exclusão para o agendamento ID:", agendamentoId); // Log do ID do agendamento para exclusão
+            mostrarLoading();
+
+            $.ajax({
+                url: '/Agendamento/DeleteConfirmed',
+                type: 'POST',
+                data: { id: agendamentoId },
+                success: function (response) {
+                    console.log("Resposta da exclusão:", response); // Log da resposta da exclusão
+                    $('#excluirModal').modal('hide');
+                    showToast(response.message, response.success ? 'success' : 'danger');
+                    if (response.success) {
+                        setTimeout(() => location.reload(), 1500);
+                    }
+                },
+                error: function () {
+                    showToast('Erro ao excluir o agendamento.', 'danger');
+                },
+                complete: function () {
+                    ocultarLoading();
+                }
+            });
+        });
+    }
+
 });
