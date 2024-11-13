@@ -119,9 +119,9 @@
                         // Exibe o toast de sucesso com a mensagem de redirecionamento
                         showToast('Senha redefinida com sucesso! Redirecionando para a tela inicial...', 'success');
 
-                        // Espera 5 segundos (tempo de exibição do toast) e depois redireciona
+                        // Espera 5 segundos (tempo de exibição do toast) e depois redireciona para a URL fornecida pelo servidor
                         setTimeout(function () {
-                            window.location.href = '/'; // Redireciona para a tela inicial ou a página principal
+                            window.location.href = data.redirectUrl; // Redireciona para a URL correta da barbearia
                         }, 5000); // Atraso de 5 segundos
                     } else {
                         // Exibe o toast de erro
