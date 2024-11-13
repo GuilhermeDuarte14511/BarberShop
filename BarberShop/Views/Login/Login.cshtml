@@ -35,9 +35,38 @@
                     </div>
                 </form>
 
+                <!-- Esqueci a Senha Link -->
+                <div class="text-center mt-3">
+                    <a href="#" class="text-light" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">Esqueci a senha?</a>
+                </div>
+
                 <div class="text-center mt-4">
                     <p class="text-light">Ainda não é membro? <a href="#" class="text-danger" data-bs-toggle="modal" data-bs-target="#registerModal">Se cadastre agora!</a></p>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Recuperação de Senha -->
+<div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-labelledby="forgotPasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-light">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger" id="forgotPasswordModalLabel">Recuperação de Senha</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <p>Insira seu e-mail cadastrado para recuperar sua senha:</p>
+                <form id="forgotPasswordForm">
+                    <div class="form-group mb-4">
+                        <input type="email" id="forgotPasswordEmail" name="usuarioEmailRecuperar" class="form-control text-center" placeholder="E-mail" required />
+                    </div>
+                    <div id="forgotPasswordErrorMessage" class="text-danger mt-2" style="display:none;">E-mail não encontrado.</div>
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-danger btn-block">Enviar</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

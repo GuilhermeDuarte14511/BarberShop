@@ -13,6 +13,8 @@ namespace BarberShop.Domain.Entities
         public DateTime? CodigoValidacaoExpiracao { get; set; }
         public string Role { get; set; }
 
+        public string? TokenRecuperacaoSenha { get; set; }
+        public DateTime? TokenExpiracao { get; set; }
         public int BarbeariaId { get; set; }
         public Barbearia Barbearia { get; set; }
     }

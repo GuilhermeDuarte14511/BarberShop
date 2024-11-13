@@ -1,0 +1,25 @@
+﻿@{
+    ViewData["Title"] = "Token Inválido";
+}
+
+<div class="container mt-5" id="tokenInvalidoPage">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card bg-dark text-light p-4 text-center">
+                <h3 class="text-danger mb-4">Token Inválido ou Expirado</h3>
+                <p>O link de redefinição de senha é inválido ou expirou. Por favor, solicite um novo link de redefinição.</p>
+                <div class="text-center mt-4">
+                    <!-- Se a URL de redirecionamento estiver disponível, mostra o botão para ir ao login da barbearia -->
+                    @if (ViewData["RedirecionamentoUrl"] != null)
+                    {
+                        <a href="@ViewData["RedirecionamentoUrl"]" class="btn btn-danger">Voltar para o Login da Barbearia</a>
+                    }
+                    else
+                    {
+                        <a href="/Login" class="btn btn-danger">Voltar para o Login</a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

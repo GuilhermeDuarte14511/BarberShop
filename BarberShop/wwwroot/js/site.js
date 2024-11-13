@@ -1,5 +1,141 @@
 ﻿$(document).ready(function () {
 
+    console.log("site.js carregado e document.ready acionado");
+
+    var loginPage = document.getElementById('loginPage');
+
+    if (loginPage) {
+        // Formulário de recuperação de senha
+        const forgotPasswordForm = $("#forgotPasswordForm");
+        const forgotPasswordEmailInput = $("#forgotPasswordEmail");
+        const forgotPasswordErrorMessage = $("#forgotPasswordErrorMessage");
+
+        forgotPasswordForm.on("submit", function (event) {
+            event.preventDefault();
+            const usuarioEmailRecuperarHtml = forgotPasswordEmailInput.val();  // Coleta o e-mail da entrada
+            showToast("Formulário de recuperação de senha enviado com email: " + usuarioEmailRecuperarHtml, 'info');
+
+            $.ajax({
+                url: "/Login/SolicitarRecuperacaoSenha",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(usuarioEmailRecuperarHtml),  // Enviando apenas a string
+                success: function (data) {
+                    if (data.success) {
+                        $('#forgotPasswordModal').modal('hide');
+                        showToast("Instruções de recuperação de senha foram enviadas para o seu e-mail.", 'success');
+                    } else {
+                        showToast(data.message || "Erro ao solicitar recuperação de senha.", 'danger');
+                    }
+                },
+                error: function (error) {
+                    showToast("Erro no envio da recuperação de senha: " + error.message, 'danger');
+                }
+            });
+        });
+    }
+
+    var redefinirSenhaPage = document.getElementById('redefinirSenhaPage');
+
+    if (redefinirSenhaPage) {
+        $('#novaSenhaRedefinir').on('input', function () {
+            const password = $(this).val();
+            const lengthRequirement = password.length >= 8;
+            const uppercaseRequirement = /[A-Z]/.test(password);
+            const lowercaseRequirement = /[a-z]/.test(password);
+            const numberRequirement = /\d/.test(password);
+            const specialRequirement = /[!@#$%^&*]/.test(password);
+
+            $('#lengthRequirementRedefinir').toggleClass('text-success', lengthRequirement).toggleClass('text-danger', !lengthRequirement);
+            $('#uppercaseRequirementRedefinir').toggleClass('text-success', uppercaseRequirement).toggleClass('text-danger', !uppercaseRequirement);
+            $('#lowercaseRequirementRedefinir').toggleClass('text-success', lowercaseRequirement).toggleClass('text-danger', !lowercaseRequirement);
+            $('#numberRequirementRedefinir').toggleClass('text-success', numberRequirement).toggleClass('text-danger', !numberRequirement);
+            $('#specialRequirementRedefinir').toggleClass('text-success', specialRequirement).toggleClass('text-danger', !specialRequirement);
+        });
+
+        // Toggle de visibilidade das senhas
+        $('#toggleNovaSenhaRedefinir').on('click', function () {
+            const passwordField = $('#novaSenhaRedefinir');
+            const type = passwordField.attr('type') === 'password' ? 'text' : 'password';
+            passwordField.attr('type', type);
+            $(this).find('i').toggleClass('fa-eye fa-eye-slash');
+        });
+
+        $('#toggleConfirmarSenhaRedefinir').on('click', function () {
+            const confirmPasswordField = $('#confirmarSenhaRedefinir');
+            const type = confirmPasswordField.attr('type') === 'password' ? 'text' : 'password';
+            confirmPasswordField.attr('type', type);
+            $(this).find('i').toggleClass('fa-eye fa-eye-slash');
+        });
+
+        // Função para verificar se as senhas coincidem
+        $('#confirmarSenhaRedefinir').on('input', function () {
+            const novaSenha = $('#novaSenhaRedefinir').val();
+            const confirmarSenha = $(this).val();
+
+            // Verifica se as senhas coincidem
+            if (novaSenha !== confirmarSenha) {
+                $('#errorMessageRedefinir').text('As senhas não coincidem.').show();
+                $('#redefinirSenhaForm button[type="submit"]').prop('disabled', true);
+            } else {
+                $('#errorMessageRedefinir').hide();
+                if (novaSenha.length >= 8 && /[A-Z]/.test(novaSenha) && /[a-z]/.test(novaSenha) && /\d/.test(novaSenha) && /[!@#$%^&*]/.test(novaSenha)) {
+                    $('#redefinirSenhaForm button[type="submit"]').prop('disabled', false); // Habilita o botão
+                } else {
+                    $('#redefinirSenhaForm button[type="submit"]').prop('disabled', true); // Desabilita o botão
+                }
+            }
+        });
+
+        $('#redefinirSenhaForm').on('submit', function (e) {
+            e.preventDefault();
+
+            const clienteId = $('#clienteId').val();
+            const token = $('#token').val();
+            const novaSenha = $('#novaSenhaRedefinir').val();
+            const confirmarSenha = $('#confirmarSenhaRedefinir').val();
+            const barbeariaUrl = $('#barbeariaUrl').val(); // Captura a URL da barbearia
+
+            // Verifica se as senhas coincidem
+            if (novaSenha !== confirmarSenha) {
+                $('#errorMessageRedefinir').text('As senhas não coincidem.').show();
+                return;
+            } else {
+                $('#errorMessageRedefinir').hide();
+            }
+
+            // Envia a nova senha para o servidor
+            $.ajax({
+                url: '/Login/RedefinirSenha',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    clienteId: parseInt(clienteId, 10), // Converte para número
+                    token: token,
+                    novaSenha: novaSenha
+                }),
+                success: function (data) {
+                    if (data.success) {
+                        // Exibe o toast de sucesso com a mensagem de redirecionamento
+                        showToast('Senha redefinida com sucesso! Redirecionando para a tela inicial...', 'success');
+
+                        // Espera 5 segundos (tempo de exibição do toast) e depois redireciona
+                        setTimeout(function () {
+                            window.location.href = '/'; // Redireciona para a tela inicial ou a página principal
+                        }, 5000); // Atraso de 5 segundos
+                    } else {
+                        // Exibe o toast de erro
+                        showToast(data.message || 'Erro ao redefinir senha.', 'danger');
+                    }
+                },
+                error: function () {
+                    // Exibe o toast de erro caso haja erro no processamento
+                    showToast('Erro ao processar a solicitação.', 'danger');
+                }
+            });
+        });
+
+    }
 
     // Verifica se a div "pagineInicialIndex" está presente no DOM
     const paginaInicialIndex = document.getElementById("pagineInicialIndex");
@@ -30,9 +166,10 @@
         }
     }
 
-    // Função para exibir Toasts
+    // Função para exibir Toasts com setTimeout
     function showToast(message, type = 'info') {
         console.log("showToast chamado com mensagem:", message); // Log inicial para chamada
+
         const toastHtml = `
     <div class="toast align-items-center text-white bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
         <div class="d-flex">
@@ -41,18 +178,26 @@
         </div>
     </div>`;
 
+        // Adiciona o toast ao container de toasts
         $('#toastContainer').append(toastHtml);
         const toastElement = $('#toastContainer .toast').last();
-        const toastInstance = new bootstrap.Toast(toastElement[0], { delay: 5000 });
 
+        // Cria a instância do Toast
+        const toastInstance = new bootstrap.Toast(toastElement[0]);
 
+        // Exibe o toast
         toastInstance.show();
 
-        // Remove o toast do DOM após ele ser ocultado
-        toastElement.on('hidden.bs.toast', function () {
-            $(this).remove();
-        });
+        // Usando setTimeout para esperar 5 segundos antes de remover o toast
+        setTimeout(function () {
+            // Fecha o toast manualmente após 5 segundos
+            toastInstance.hide();
+
+            // Remove o toast do DOM após o fechamento
+            toastElement.remove();
+        }, 5000); // Atraso de 5 segundos
     }
+
 
     // Variáveis globais
     var emailDomains = ["gmail.com", "yahoo.com.br", "outlook.com", "hotmail.com"];

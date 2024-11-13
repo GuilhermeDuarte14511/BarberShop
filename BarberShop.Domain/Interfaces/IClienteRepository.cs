@@ -10,6 +10,9 @@ namespace BarberShop.Domain.Interfaces
         Task<Cliente> GetByIdAndBarbeariaIdAsync(int clienteId, int barbeariaId);
         Task<IEnumerable<Cliente>> GetAllByBarbeariaIdAsync(int barbeariaId);
         Task<Cliente> GetByEmailOrPhoneAsync(string email, string phone, int barbeariaId);
+
+        Task<Cliente> GetByEmailAsync(string email);
+
         Task UpdateCodigoVerificacaoAsync(int clienteId, string codigoVerificacao, DateTime? expiracao);
 
     }

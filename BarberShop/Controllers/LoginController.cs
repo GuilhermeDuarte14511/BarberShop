@@ -1,4 +1,5 @@
-﻿using BarberShop.Application.Services;
+﻿using BarberShop.Application.DTOs;
+using BarberShop.Application.Services;
 using BarberShop.Domain.Entities;
 using BarberShop.Domain.Interfaces;
 using Microsoft.AspNetCore.Authentication;
@@ -11,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace BarberShopMVC.Controllers
 {
-    public class LoginController : Controller
+    public class LoginController : BaseController
     {
         private readonly IClienteRepository _clienteRepository;
         private readonly IUsuarioRepository _usuarioRepository;
@@ -24,7 +25,8 @@ namespace BarberShopMVC.Controllers
             IUsuarioRepository usuarioRepository,
             IEmailService emailService,
             IAutenticacaoService autenticacaoService,
-            IBarbeariaRepository barbeariaRepository)
+            IBarbeariaRepository barbeariaRepository,
+            ILogService logService) : base(logService)
         {
             _clienteRepository = clienteRepository;
             _usuarioRepository = usuarioRepository;
@@ -35,342 +37,509 @@ namespace BarberShopMVC.Controllers
 
         public async Task<IActionResult> Login(string barbeariaUrl)
         {
-            // Verifica se o usuário já está autenticado
-            if (User.Identity.IsAuthenticated)
+            try
             {
-                // Obtém a URL da barbearia armazenada na sessão
-                var barbeariaUrlSession = HttpContext.Session.GetString("BarbeariaUrl");
-
-                // Redireciona para a tela inicial se a URL da barbearia na sessão corresponder à URL acessada
-                if (!string.IsNullOrEmpty(barbeariaUrlSession) && barbeariaUrlSession == barbeariaUrl)
+                if (User.Identity.IsAuthenticated)
                 {
-                    return RedirectToAction("MenuPrincipal", "Cliente", new { barbeariaUrl });
-                }
-            }
-
-            // Carrega os dados da barbearia para o caso de o usuário ainda não estar autenticado
-            var barbearia = await _barbeariaRepository.GetByUrlSlugAsync(barbeariaUrl);
-
-            if (barbearia != null)
-            {
-                HttpContext.Session.SetInt32("BarbeariaId", barbearia.BarbeariaId); // Armazena o Id da barbearia na sessão
-                HttpContext.Session.SetString("BarbeariaUrl", barbeariaUrl); // Armazena a URL da barbearia na sessão
-
-                ViewData["BarbeariaNome"] = barbearia.Nome;
-
-                if (barbearia.Logo != null)
-                {
-                    ViewData["BarbeariaLogo"] = "data:image/png;base64," + Convert.ToBase64String(barbearia.Logo);
+                    var barbeariaUrlSession = HttpContext.Session.GetString("BarbeariaUrl");
+                    if (!string.IsNullOrEmpty(barbeariaUrlSession) && barbeariaUrlSession == barbeariaUrl)
+                    {
+                        return RedirectToAction("MenuPrincipal", "Cliente", new { barbeariaUrl });
+                    }
                 }
 
-                return View();
+                var barbearia = await _barbeariaRepository.GetByUrlSlugAsync(barbeariaUrl);
+
+                if (barbearia != null)
+                {
+                    HttpContext.Session.SetInt32("BarbeariaId", barbearia.BarbeariaId);
+                    HttpContext.Session.SetString("BarbeariaUrl", barbeariaUrl);
+
+                    ViewData["BarbeariaNome"] = barbearia.Nome;
+                    if (barbearia.Logo != null)
+                    {
+                        ViewData["BarbeariaLogo"] = "data:image/png;base64," + Convert.ToBase64String(barbearia.Logo);
+                    }
+
+                    return View();
+                }
+                else
+                {
+                    await LogAsync("Warning", "Login", "Barbearia não encontrada", $"Url: {barbeariaUrl}");
+                    return RedirectToAction("BarbeariaNaoEncontrada", "Erro");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                return RedirectToAction("BarbeariaNaoEncontrada", "Erro");
+                await LogAsync("Error", "Login", $"Erro ao carregar login: {ex.Message}", $"Url: {barbeariaUrl}");
+                return RedirectToAction("Error", "Erro");
             }
         }
-
-
 
         [HttpGet]
         public async Task<IActionResult> AdminLogin(string barbeariaUrl)
         {
-            // Verifica se o usuário já está autenticado e possui o papel de administrador
-            if (User.Identity.IsAuthenticated && User.IsInRole("Admin"))
+            try
             {
-                // Obtém a URL da barbearia armazenada na sessão
-                var barbeariaUrlSession = HttpContext.Session.GetString("BarbeariaUrl");
-
-                // Redireciona para a tela inicial administrativa se a URL da barbearia na sessão corresponder à URL acessada
-                if (!string.IsNullOrEmpty(barbeariaUrlSession) && barbeariaUrlSession == barbeariaUrl)
+                if (User.Identity.IsAuthenticated && User.IsInRole("Admin"))
                 {
-                    return RedirectToAction("Index", "Admin", new { barbeariaUrl });
-                }
-            }
-
-            // Carrega os dados da barbearia caso o usuário não esteja autenticado
-            var barbearia = await _barbeariaRepository.GetByUrlSlugAsync(barbeariaUrl);
-
-            if (barbearia != null)
-            {
-                HttpContext.Session.SetInt32("BarbeariaId", barbearia.BarbeariaId);
-                HttpContext.Session.SetString("BarbeariaUrl", barbeariaUrl);
-
-                ViewData["BarbeariaNome"] = barbearia.Nome;
-                ViewData["BarbeariaUrl"] = barbeariaUrl;
-                if (barbearia.Logo != null)
-                {
-                    ViewData["BarbeariaLogo"] = "data:image/png;base64," + Convert.ToBase64String(barbearia.Logo);
+                    var barbeariaUrlSession = HttpContext.Session.GetString("BarbeariaUrl");
+                    if (!string.IsNullOrEmpty(barbeariaUrlSession) && barbeariaUrlSession == barbeariaUrl)
+                    {
+                        return RedirectToAction("Index", "Admin", new { barbeariaUrl });
+                    }
                 }
 
-                return View("AdminLogin");
+                var barbearia = await _barbeariaRepository.GetByUrlSlugAsync(barbeariaUrl);
+
+                if (barbearia != null)
+                {
+                    HttpContext.Session.SetInt32("BarbeariaId", barbearia.BarbeariaId);
+                    HttpContext.Session.SetString("BarbeariaUrl", barbeariaUrl);
+
+                    ViewData["BarbeariaNome"] = barbearia.Nome;
+                    ViewData["BarbeariaUrl"] = barbeariaUrl;
+                    if (barbearia.Logo != null)
+                    {
+                        ViewData["BarbeariaLogo"] = "data:image/png;base64," + Convert.ToBase64String(barbearia.Logo);
+                    }
+
+                    return View("AdminLogin");
+                }
+                else
+                {
+                    await LogAsync("Warning", "AdminLogin", "Barbearia não encontrada", $"Url: {barbeariaUrl}");
+                    return RedirectToAction("BarbeariaNaoEncontrada", "Erro");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                return RedirectToAction("BarbeariaNaoEncontrada", "Erro");
+                await LogAsync("Error", "AdminLogin", $"Erro ao carregar login administrativo: {ex.Message}", $"Url: {barbeariaUrl}");
+                return RedirectToAction("Error", "Erro");
             }
         }
-
 
         [HttpPost]
         public async Task<IActionResult> AdminLogin(string email, string password)
         {
-            var usuario = await _usuarioRepository.GetByEmailAsync(email);
-
-            if (usuario == null || !_autenticacaoService.VerifyPassword(password, usuario.SenhaHash) || usuario.Role != "Admin")
+            try
             {
-                return Json(new { success = false, message = "Credenciais inválidas ou usuário não é administrador." });
-            }
+                var usuario = await _usuarioRepository.GetByEmailAsync(email);
+                if (usuario == null || !_autenticacaoService.VerifyPassword(password, usuario.SenhaHash) || usuario.Role != "Admin")
+                {
+                    return Json(new { success = false, message = "Credenciais inválidas ou usuário não é administrador." });
+                }
 
-            var barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
-            if (!barbeariaId.HasValue)
+                var barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
+                if (!barbeariaId.HasValue)
+                {
+                    return Json(new { success = false, message = "Erro ao identificar a barbearia." });
+                }
+
+                var barbearia = await _barbeariaRepository.GetByIdAsync(barbeariaId.Value);
+                string codigoVerificacao = GerarCodigoVerificacao();
+                usuario.CodigoValidacao = codigoVerificacao;
+                usuario.CodigoValidacaoExpiracao = DateTime.UtcNow.AddMinutes(5);
+                await _usuarioRepository.UpdateCodigoVerificacaoAsync(usuario.UsuarioId, codigoVerificacao, usuario.CodigoValidacaoExpiracao);
+                await _emailService.EnviarEmailCodigoVerificacaoAsync(usuario.Email, usuario.Nome, codigoVerificacao, barbearia?.Nome);
+
+                await LogAsync("Info", "AdminLogin", $"Código de verificação enviado para o administrador {usuario.UsuarioId}", $"Email: {email}");
+                return Json(new { success = true, usuarioId = usuario.UsuarioId });
+            }
+            catch (Exception ex)
             {
-                return Json(new { success = false, message = "Erro ao identificar a barbearia." });
+                await LogAsync("Error", "AdminLogin", $"Erro ao realizar login de administrador: {ex.Message}", $"Email: {email}");
+                return Json(new { success = false, message = "Erro interno ao realizar login." });
             }
-
-            var barbearia = await _barbeariaRepository.GetByIdAsync(barbeariaId.Value);
-
-            string codigoVerificacao = GerarCodigoVerificacao();
-            usuario.CodigoValidacao = codigoVerificacao;
-            usuario.CodigoValidacaoExpiracao = DateTime.UtcNow.AddMinutes(5);
-            await _usuarioRepository.UpdateCodigoVerificacaoAsync(usuario.UsuarioId, codigoVerificacao, usuario.CodigoValidacaoExpiracao);
-            await _emailService.EnviarEmailCodigoVerificacaoAsync(usuario.Email, usuario.Nome, codigoVerificacao, barbearia?.Nome);
-
-            return Json(new { success = true, usuarioId = usuario.UsuarioId });
         }
 
         [HttpPost]
         public async Task<IActionResult> VerificarAdminCodigo(int usuarioId, string codigo)
         {
-            var usuario = await _usuarioRepository.GetByIdAsync(usuarioId);
-
-            if (usuario == null || usuario.CodigoValidacaoExpiracao < DateTime.UtcNow || codigo != usuario.CodigoValidacao)
+            try
             {
-                return Json(new { success = false, message = "Código inválido ou expirado." });
+                var usuario = await _usuarioRepository.GetByIdAsync(usuarioId);
+
+                if (usuario == null || usuario.CodigoValidacaoExpiracao < DateTime.UtcNow || codigo != usuario.CodigoValidacao)
+                {
+                    return Json(new { success = false, message = "Código inválido ou expirado." });
+                }
+
+                var claims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.NameIdentifier, usuario.UsuarioId.ToString()),
+                    new Claim(ClaimTypes.Name, usuario.Nome),
+                    new Claim(ClaimTypes.Role, usuario.Role)
+                };
+
+                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+
+                var authProperties = new AuthenticationProperties
+                {
+                    IsPersistent = true,
+                    ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8)
+                };
+                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal, authProperties);
+
+                var barbeariaUrl = HttpContext.Session.GetString("BarbeariaUrl");
+
+                await LogAsync("Info", "VerificarAdminCodigo", $"Administrador {usuarioId} autenticado com sucesso.", $"UsuarioId: {usuarioId}");
+                return Json(new { success = true, redirectUrl = Url.Action("Index", "Admin", new { barbeariaUrl }) });
             }
-
-            var claims = new List<Claim>
+            catch (Exception ex)
             {
-                new Claim(ClaimTypes.NameIdentifier, usuario.UsuarioId.ToString()),
-                new Claim(ClaimTypes.Name, usuario.Nome),
-                new Claim(ClaimTypes.Role, usuario.Role)
-            };
-
-            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
-
-            // Defina um tempo de expiração de 8 horas para o administrador
-            var authProperties = new AuthenticationProperties
-            {
-                IsPersistent = true,
-                ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8) // Duração específica para o administrador
-            };
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal, authProperties);
-
-            // Recupera a URL da barbearia da sessão
-            var barbeariaUrl = HttpContext.Session.GetString("BarbeariaUrl");
-
-            // Redireciona para o dashboard com a URL da barbearia
-            return Json(new { success = true, redirectUrl = Url.Action("Index", "Admin", new { barbeariaUrl }) });
+                await LogAsync("Error", "VerificarAdminCodigo", $"Erro ao verificar código de administrador: {ex.Message}", $"UsuarioId: {usuarioId}");
+                return Json(new { success = false, message = "Erro ao verificar código." });
+            }
         }
-
-
 
         [HttpPost]
         public async Task<IActionResult> Login(string inputFieldLogin, string passwordInputLogin)
         {
-            if (string.IsNullOrEmpty(inputFieldLogin) || string.IsNullOrEmpty(passwordInputLogin))
+            try
             {
-                return Json(new { success = false, message = "Por favor, insira um telefone, email e senha válidos." });
-            }
-
-            bool isEmail = inputFieldLogin.Contains("@");
-            string emailInput = isEmail ? inputFieldLogin : null;
-            string phoneInput = isEmail ? null : inputFieldLogin;
-
-            // Obtém o barbeariaId e a barbeariaUrl da sessão
-            int? barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
-            string barbeariaUrl = HttpContext.Session.GetString("BarbeariaUrl");
-
-            if (!barbeariaId.HasValue || string.IsNullOrEmpty(barbeariaUrl))
-            {
-                return Json(new { success = false, message = "Erro ao identificar a barbearia." });
-            }
-
-            var cliente = await _clienteRepository.GetByEmailOrPhoneAsync(emailInput, phoneInput, barbeariaId.Value);
-
-            if (cliente != null)
-            {
-                if (_autenticacaoService.VerifyPassword(passwordInputLogin, cliente.Senha))
+                if (string.IsNullOrEmpty(inputFieldLogin) || string.IsNullOrEmpty(passwordInputLogin))
                 {
-                    var claimsPrincipal = _autenticacaoService.AutenticarCliente(cliente);
-                    await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal);
+                    return Json(new { success = false, message = "Por favor, insira um telefone, email e senha válidos." });
+                }
 
-                    // Redireciona para o MenuPrincipal incluindo o barbeariaUrl
-                    return Json(new { success = true, redirectUrl = Url.Action("MenuPrincipal", "Cliente", new { barbeariaUrl }) });
+                bool isEmail = inputFieldLogin.Contains("@");
+                string emailInput = isEmail ? inputFieldLogin : null;
+                string phoneInput = isEmail ? null : inputFieldLogin;
+
+                int? barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
+                string barbeariaUrl = HttpContext.Session.GetString("BarbeariaUrl");
+
+                if (!barbeariaId.HasValue || string.IsNullOrEmpty(barbeariaUrl))
+                {
+                    return Json(new { success = false, message = "Erro ao identificar a barbearia." });
+                }
+
+                var cliente = await _clienteRepository.GetByEmailOrPhoneAsync(emailInput, phoneInput, barbeariaId.Value);
+
+                if (cliente != null)
+                {
+                    if (_autenticacaoService.VerifyPassword(passwordInputLogin, cliente.Senha))
+                    {
+                        var claimsPrincipal = _autenticacaoService.AutenticarCliente(cliente);
+                        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal);
+
+                        return Json(new { success = true, redirectUrl = Url.Action("MenuPrincipal", "Cliente", new { barbeariaUrl }) });
+                    }
+                    else
+                    {
+                        return Json(new { success = false, message = "Senha incorreta. Tente novamente." });
+                    }
                 }
                 else
                 {
-                    return Json(new { success = false, message = "Senha incorreta. Tente novamente." });
+                    return Json(new { success = false, message = "Cliente não encontrado. Revise a informação e tente novamente." });
                 }
             }
-            else
+            catch (Exception ex)
             {
-                return Json(new { success = false, message = "Cliente não encontrado. Revise a informação e tente novamente." });
+                await LogAsync("Error", "Login", $"Erro ao realizar login: {ex.Message}", $"Input: {inputFieldLogin}");
+                return Json(new { success = false, message = "Erro interno ao realizar login." });
             }
         }
-
-
 
         [HttpPost]
         public async Task<IActionResult> Cadastro(string nameInput, string registerEmailInput, string registerPhoneInput, string passwordInput)
         {
-            if (string.IsNullOrEmpty(registerEmailInput) || string.IsNullOrEmpty(registerPhoneInput) || string.IsNullOrEmpty(nameInput) || string.IsNullOrEmpty(passwordInput))
+            try
             {
-                return Json(new { success = false, message = "Todos os campos são obrigatórios." });
+                if (string.IsNullOrEmpty(registerEmailInput) || string.IsNullOrEmpty(registerPhoneInput) || string.IsNullOrEmpty(nameInput) || string.IsNullOrEmpty(passwordInput))
+                {
+                    return Json(new { success = false, message = "Todos os campos são obrigatórios." });
+                }
+
+                int? barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
+                if (!barbeariaId.HasValue)
+                {
+                    return Json(new { success = false, message = "Erro ao identificar a barbearia." });
+                }
+
+                var clienteExistente = await _clienteRepository.GetByEmailOrPhoneAsync(registerEmailInput, registerPhoneInput, barbeariaId.Value);
+                if (clienteExistente != null)
+                {
+                    return Json(new { success = false, message = "Este email ou telefone já está cadastrado." });
+                }
+
+                var cliente = new Cliente
+                {
+                    Nome = nameInput,
+                    Email = registerEmailInput,
+                    Telefone = registerPhoneInput,
+                    Senha = _autenticacaoService.HashPassword(passwordInput),
+                    Role = "Cliente",
+                    BarbeariaId = barbeariaId.Value
+                };
+
+                await _clienteRepository.AddAsync(cliente);
+                await _clienteRepository.SaveChangesAsync();
+
+                var claims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.NameIdentifier, cliente.ClienteId.ToString()),
+                    new Claim(ClaimTypes.Name, cliente.Nome),
+                    new Claim(ClaimTypes.Role, cliente.Role)
+                };
+
+                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+
+                var authProperties = new AuthenticationProperties { IsPersistent = true };
+                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal, authProperties);
+
+                var redirectUrl = Url.Action("MenuPrincipal", "Cliente");
+
+                await LogAsync("Info", "Cadastro", "Cliente cadastrado e autenticado com sucesso.", $"ClienteId: {cliente.ClienteId}");
+                return Json(new { success = true, redirectUrl });
             }
-
-            // Obtém o barbeariaId da sessão
-            int? barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
-            if (!barbeariaId.HasValue)
+            catch (Exception ex)
             {
-                return Json(new { success = false, message = "Erro ao identificar a barbearia." });
+                await LogAsync("Error", "Cadastro", $"Erro ao realizar cadastro: {ex.Message}", null);
+                return Json(new { success = false, message = "Erro interno ao realizar cadastro." });
             }
-
-            // Verifica se o cliente já existe para a mesma barbearia
-            var clienteExistente = await _clienteRepository.GetByEmailOrPhoneAsync(registerEmailInput, registerPhoneInput, barbeariaId.Value);
-            if (clienteExistente != null)
-            {
-                return Json(new { success = false, message = "Este email ou telefone já está cadastrado." });
-            }
-
-            var cliente = new Cliente
-            {
-                Nome = nameInput,
-                Email = registerEmailInput,
-                Telefone = registerPhoneInput,
-                Senha = _autenticacaoService.HashPassword(passwordInput),
-                Role = "Cliente",
-                BarbeariaId = barbeariaId.Value // Atribui o barbeariaId ao cliente
-            };
-
-            await _clienteRepository.AddAsync(cliente);
-
-            // Salva as alterações no banco
-            await _clienteRepository.SaveChangesAsync();
-
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, cliente.ClienteId.ToString()),
-                new Claim(ClaimTypes.Name, cliente.Nome),
-                new Claim(ClaimTypes.Role, cliente.Role)
-            };
-
-            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
-
-            var authProperties = new AuthenticationProperties { IsPersistent = true };
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal, authProperties);
-
-            var redirectUrl = Url.Action("MenuPrincipal", "Cliente");
-
-            return Json(new { success = true, redirectUrl });
         }
-
-
 
         [HttpPost]
         public async Task<IActionResult> VerificarCodigo(int clienteId, string codigo)
         {
-            var cliente = await _clienteRepository.GetByIdAsync(clienteId);
-
-            if (cliente == null || cliente.CodigoValidacaoExpiracao < DateTime.UtcNow || codigo != cliente.CodigoValidacao)
+            try
             {
-                return Json(new { success = false, message = "Código inválido ou expirado." });
+                var cliente = await _clienteRepository.GetByIdAsync(clienteId);
+
+                if (cliente == null || cliente.CodigoValidacaoExpiracao < DateTime.UtcNow || codigo != cliente.CodigoValidacao)
+                {
+                    return Json(new { success = false, message = "Código inválido ou expirado." });
+                }
+
+                var claims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.NameIdentifier, cliente.ClienteId.ToString()),
+                    new Claim(ClaimTypes.Name, cliente.Nome),
+                    new Claim(ClaimTypes.Role, cliente.Role)
+                };
+
+                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+
+                var authProperties = new AuthenticationProperties { IsPersistent = true };
+                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal, authProperties);
+
+                var redirectUrl = cliente.Role == "Admin" ? Url.Action("Index", "Admin") : Url.Action("MenuPrincipal", "Cliente");
+
+                await _clienteRepository.UpdateAsync(cliente);
+
+                await LogAsync("Info", "VerificarCodigo", "Código verificado e cliente autenticado com sucesso.", $"ClienteId: {clienteId}");
+                return Json(new { success = true, redirectUrl });
             }
-
-            var claims = new List<Claim>
+            catch (Exception ex)
             {
-                new Claim(ClaimTypes.NameIdentifier, cliente.ClienteId.ToString()),
-                new Claim(ClaimTypes.Name, cliente.Nome),
-                new Claim(ClaimTypes.Role, cliente.Role)
-            };
-
-            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
-
-            var authProperties = new AuthenticationProperties { IsPersistent = true };
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal, authProperties);
-
-            var redirectUrl = cliente.Role == "Admin" ? Url.Action("Index", "Admin") : Url.Action("MenuPrincipal", "Cliente");
-
-            await _clienteRepository.UpdateAsync(cliente);
-
-            return Json(new { success = true, redirectUrl });
+                await LogAsync("Error", "VerificarCodigo", $"Erro ao verificar código: {ex.Message}", $"ClienteId: {clienteId}");
+                return Json(new { success = false, message = "Erro ao verificar código." });
+            }
         }
 
         [HttpGet]
         public async Task<IActionResult> ReenviarCodigo(int clienteId)
         {
-            var cliente = await _clienteRepository.GetByIdAsync(clienteId);
-
-            if (cliente == null)
+            try
             {
-                return Json(new { success = false, message = "Cliente não encontrado." });
-            }
+                var cliente = await _clienteRepository.GetByIdAsync(clienteId);
 
-            int? barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
-            if (!barbeariaId.HasValue)
+                if (cliente == null)
+                {
+                    return Json(new { success = false, message = "Cliente não encontrado." });
+                }
+
+                int? barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
+                if (!barbeariaId.HasValue)
+                {
+                    return Json(new { success = false, message = "Erro ao identificar a barbearia." });
+                }
+
+                var barbearia = await _barbeariaRepository.GetByIdAsync(barbeariaId.Value);
+
+                string codigoVerificacao = GerarCodigoVerificacao();
+                cliente.CodigoValidacao = codigoVerificacao;
+                cliente.CodigoValidacaoExpiracao = DateTime.UtcNow.AddMinutes(5);
+                await _clienteRepository.UpdateAsync(cliente);
+
+                await _emailService.EnviarEmailCodigoVerificacaoAsync(cliente.Email, cliente.Nome, codigoVerificacao, barbearia?.Nome);
+
+                await LogAsync("Info", "ReenviarCodigo", "Código de verificação reenviado com sucesso.", $"ClienteId: {clienteId}");
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
             {
-                return Json(new { success = false, message = "Erro ao identificar a barbearia." });
+                await LogAsync("Error", "ReenviarCodigo", $"Erro ao reenviar código de verificação: {ex.Message}", $"ClienteId: {clienteId}");
+                return Json(new { success = false, message = "Erro ao reenviar código de verificação." });
             }
-
-            var barbearia = await _barbeariaRepository.GetByIdAsync(barbeariaId.Value);
-
-            string codigoVerificacao = GerarCodigoVerificacao();
-            cliente.CodigoValidacao = codigoVerificacao;
-            cliente.CodigoValidacaoExpiracao = DateTime.UtcNow.AddMinutes(5);
-            await _clienteRepository.UpdateAsync(cliente);
-
-            await _emailService.EnviarEmailCodigoVerificacaoAsync(cliente.Email, cliente.Nome, codigoVerificacao, barbearia?.Nome);
-
-            return Json(new { success = true });
         }
-
 
         [HttpGet]
         public async Task<IActionResult> ReenviarCodigoAdm(int usuarioId)
         {
-            var usuario = await _usuarioRepository.GetByIdAsync(usuarioId);
-
-            if (usuario == null || usuario.Role != "Admin")
+            try
             {
-                return Json(new { success = false, message = "Usuário administrador não encontrado." });
-            }
+                var usuario = await _usuarioRepository.GetByIdAsync(usuarioId);
 
-            var barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
-            if (!barbeariaId.HasValue)
+                if (usuario == null || usuario.Role != "Admin")
+                {
+                    return Json(new { success = false, message = "Usuário administrador não encontrado." });
+                }
+
+                var barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
+                if (!barbeariaId.HasValue)
+                {
+                    return Json(new { success = false, message = "Erro ao identificar a barbearia." });
+                }
+
+                var barbearia = await _barbeariaRepository.GetByIdAsync(barbeariaId.Value);
+
+                string codigoVerificacao = GerarCodigoVerificacao();
+                usuario.CodigoValidacao = codigoVerificacao;
+                usuario.CodigoValidacaoExpiracao = DateTime.UtcNow.AddMinutes(5);
+                await _usuarioRepository.UpdateCodigoVerificacaoAsync(usuario.UsuarioId, codigoVerificacao, usuario.CodigoValidacaoExpiracao);
+                await _emailService.EnviarEmailCodigoVerificacaoAsync(usuario.Email, usuario.Nome, codigoVerificacao, barbearia?.Nome);
+
+                await LogAsync("Info", "ReenviarCodigoAdm", "Código de verificação para admin reenviado com sucesso.", $"UsuarioId: {usuarioId}");
+                return Json(new { success = true, message = "Novo código de verificação enviado para o email." });
+            }
+            catch (Exception ex)
             {
-                return Json(new { success = false, message = "Erro ao identificar a barbearia." });
+                await LogAsync("Error", "ReenviarCodigoAdm", $"Erro ao reenviar código de verificação para admin: {ex.Message}", $"UsuarioId: {usuarioId}");
+                return Json(new { success = false, message = "Erro ao reenviar código de verificação." });
             }
-
-            var barbearia = await _barbeariaRepository.GetByIdAsync(barbeariaId.Value);
-
-            string codigoVerificacao = GerarCodigoVerificacao();
-            usuario.CodigoValidacao = codigoVerificacao;
-            usuario.CodigoValidacaoExpiracao = DateTime.UtcNow.AddMinutes(5);
-            await _usuarioRepository.UpdateCodigoVerificacaoAsync(usuario.UsuarioId, codigoVerificacao, usuario.CodigoValidacaoExpiracao);
-            await _emailService.EnviarEmailCodigoVerificacaoAsync(usuario.Email, usuario.Nome, codigoVerificacao, barbearia?.Nome);
-
-            return Json(new { success = true, message = "Novo código de verificação enviado para o email." });
         }
 
         [HttpPost]
         public async Task<IActionResult> Logout()
         {
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            return RedirectToAction("Login", "Login");
+            try
+            {
+                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                await LogAsync("Info", "Logout", "Usuário deslogado com sucesso.", null);
+                return RedirectToAction("Login", "Login");
+            }
+            catch (Exception ex)
+            {
+                await LogAsync("Error", "Logout", $"Erro ao deslogar usuário: {ex.Message}", null);
+                return RedirectToAction("Error", "Erro");
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SolicitarRecuperacaoSenha([FromBody] string email)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(email))
+                {
+                    return Json(new { success = false, message = "E-mail não fornecido." });
+                }
+
+                var cliente = await _clienteRepository.GetByEmailAsync(email);
+                if (cliente == null)
+                {
+                    return Json(new { success = false, message = "E-mail não encontrado." });
+                }
+
+                var token = Guid.NewGuid().ToString();
+                cliente.TokenRecuperacaoSenha = token;
+                cliente.TokenExpiracao = DateTime.UtcNow.AddHours(1);
+                await _clienteRepository.UpdateAsync(cliente);
+
+                var linkRecuperacao = Url.Action("RedefinirSenha", "Login", new { clienteId = cliente.ClienteId, token }, Request.Scheme);
+                await _emailService.EnviarEmailRecuperacaoSenhaAsync(cliente.Email, cliente.Nome, linkRecuperacao);
+
+                await LogAsync("Info", "SolicitarRecuperacaoSenha", "E-mail de recuperação de senha enviado com sucesso.", $"ClienteId: {cliente.ClienteId}");
+                return Json(new { success = true, message = "Instruções de recuperação de senha enviadas para o e-mail." });
+            }
+            catch (Exception ex)
+            {
+                await LogAsync("Error", "SolicitarRecuperacaoSenha", $"Erro ao solicitar recuperação de senha: {ex.Message}", $"Email: {email}");
+                return Json(new { success = false, message = "Erro ao processar a solicitação de recuperação de senha." });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> RedefinirSenha(int clienteId, string token)
+        {
+            try
+            {
+                var cliente = await _clienteRepository.GetByIdAsync(clienteId);
+
+                if (cliente == null || cliente.TokenRecuperacaoSenha != token || cliente.TokenExpiracao < DateTime.UtcNow)
+                {
+                    // Loga o erro de token inválido ou expirado
+                    await LogAsync("Warning", "RedefinirSenha", "Token de redefinição de senha inválido ou expirado.", $"ClienteId: {clienteId}");
+
+                    var barbearia = await _barbeariaRepository.GetByIdAsync(cliente.BarbeariaId);
+                    if (barbearia == null)
+                    {
+                        await LogAsync("Error", "RedefinirSenha", "Barbearia associada não encontrada.", $"ClienteId: {clienteId}");
+                        return RedirectToAction("Error", "Erro");
+                    }
+
+                    var urlRedirecionamento = Url.Action("Login", "Login", new { area = "", barbeariaUrl = barbearia.UrlSlug }, Request.Scheme);
+
+                    ViewData["RedirecionamentoUrl"] = urlRedirecionamento;
+
+                    return View("TokenInvalido");
+                }
+
+                // Se o token for válido, apenas carrega a página de redefinição de senha
+                ViewData["ClienteId"] = cliente.ClienteId;
+                ViewData["Token"] = token;
+                return View();
+            }
+            catch (Exception ex)
+            {
+                // Loga o erro em caso de exceção
+                await LogAsync("Error", "RedefinirSenha", $"Erro ao carregar a página de redefinição de senha: {ex.Message}", $"ClienteId: {clienteId}");
+                return RedirectToAction("Error", "Erro");
+            }
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> RedefinirSenha([FromBody] RedefinirSenhaDto redefinirSenhaDto)
+        {
+            try
+            {
+                var cliente = await _clienteRepository.GetByIdAsync(redefinirSenhaDto.ClienteId);
+                if (cliente == null || cliente.TokenRecuperacaoSenha != redefinirSenhaDto.Token || cliente.TokenExpiracao < DateTime.UtcNow)
+                {
+                    await LogAsync("Warning", "RedefinirSenha", "Token de redefinição de senha inválido ou expirado.", $"ClienteId: {redefinirSenhaDto.ClienteId}");
+                    return Json(new { success = false, message = "Token inválido ou expirado." });
+                }
+
+                cliente.Senha = _autenticacaoService.HashPassword(redefinirSenhaDto.NovaSenha);
+                cliente.TokenRecuperacaoSenha = null;
+                cliente.TokenExpiracao = null;
+                await _clienteRepository.UpdateAsync(cliente);
+
+                var barbearia = await _barbeariaRepository.GetByIdAsync(cliente.BarbeariaId);
+                if (barbearia == null)
+                {
+                    await LogAsync("Error", "RedefinirSenha", "Barbearia não encontrada ao redefinir senha.", $"ClienteId: {redefinirSenhaDto.ClienteId}");
+                    return Json(new { success = false, message = "Barbearia não encontrada." });
+                }
+
+                var urlRedirecionamento = Url.Action("Login", "Login", new { area = "", barbeariaUrl = barbearia.UrlSlug }, Request.Scheme);
+
+                await LogAsync("Info", "RedefinirSenha", "Senha redefinida com sucesso.", $"ClienteId: {redefinirSenhaDto.ClienteId}");
+                return Json(new { success = true, message = "Senha redefinida com sucesso.", redirectUrl = urlRedirecionamento });
+            }
+            catch (Exception ex)
+            {
+                await LogAsync("Error", "RedefinirSenha", $"Erro ao redefinir senha: {ex.Message}", $"ClienteId: {redefinirSenhaDto.ClienteId}");
+                return Json(new { success = false, message = "Erro ao redefinir senha." });
+            }
         }
 
         private string GerarCodigoVerificacao()

@@ -48,5 +48,8 @@
             string destinatarioEmail,
             string destinatarioNome,
             string nomeBarbearia);
+
+        Task EnviarEmailRecuperacaoSenhaAsync(string destinatarioEmail, string destinatarioNome, string linkRecuperacao);
+
     }
 }

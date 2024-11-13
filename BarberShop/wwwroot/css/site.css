@@ -978,6 +978,20 @@ body {
     }
 
 
+/* Estilo para o ícone do olho dentro do campo */
+.toggle-password-icon {
+    position: absolute;
+    right: 10px; /* Ajuste a posição horizontal conforme necessário */
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #6c757d;
+}
+
+    .toggle-password-icon i {
+        font-size: 1.2em; /* Tamanho do ícone */
+    }
+
 
 /* Responsivo para Dispositivos Móveis */
 @media (max-width: 768px) {

@@ -60,6 +60,11 @@ namespace BarberShop.Infrastructure.Repositories
             return await _context.Clientes
                 .FirstOrDefaultAsync(c => (c.Email == email || c.Telefone == phone) && c.BarbeariaId == barbeariaId);
         }
+         public async Task<Cliente> GetByEmailAsync(string email)
+        {
+            return await _context.Clientes
+                .FirstOrDefaultAsync(c => (c.Email == email));
+        }
 
         public async Task UpdateAsync(Cliente entity)
         {

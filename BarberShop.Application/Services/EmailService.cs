@@ -437,5 +437,99 @@ namespace BarberShop.Application.Services
                 throw;
             }
         }
+
+        public async Task EnviarEmailRecuperacaoSenhaAsync(string destinatarioEmail, string destinatarioNome, string linkRecuperacao)
+        {
+            var assunto = "Redefinição de Senha";
+            var conteudo = $"Olá, {destinatarioNome}!\n\nClique no link abaixo para redefinir sua senha:\n{linkRecuperacao}\n\nEste link expira em 1 hora.";
+
+            string htmlContent = $@"
+                <html>
+                <head>
+                    <style>
+                        body {{
+                            font-family: 'Arial', sans-serif;
+                            background-color: #2c2f33;
+                            margin: 0;
+                            padding: 0;
+                        }}
+                        .container {{
+                            background-color: #23272a;
+                            color: #ffffff;
+                            max-width: 600px;
+                            margin: 20px auto;
+                            border-radius: 10px;
+                            padding: 20px;
+                            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                        }}
+                        h1 {{
+                            font-size: 24px;
+                            color: #e74c3c;
+                            text-align: center;
+                            border-bottom: 2px solid #e74c3c;
+                            padding-bottom: 10px;
+                            margin-bottom: 20px;
+                        }}
+                        p {{
+                            font-size: 16px;
+                            line-height: 1.6;
+                            color: #ffffff;
+                        }}
+                        .link {{
+                            display: block;
+                            width: fit-content;
+                            background-color: #99aab5;
+                            color: #23272a;
+                            font-size: 18px;
+                            font-weight: bold;
+                            text-align: center;
+                            padding: 15px;
+                            border-radius: 8px;
+                            margin: 20px auto;
+                            text-decoration: none;
+                        }}
+                        .link:hover {{
+                            background-color: #7289da;
+                            color: #ffffff;
+                        }}
+                        .footer {{
+                            text-align: center;
+                            margin-top: 20px;
+                            font-size: 12px;
+                            color: #99aab5;
+                        }}
+                    </style>
+                </head>
+                <body>
+                    <div class='container'>
+                        <h1>Redefinição de Senha</h1>
+                        <p>Olá, <strong>{destinatarioNome}</strong>,</p>
+                        <p>Para redefinir sua senha, clique no link abaixo:</p>
+                        <a href='{linkRecuperacao}' class='link'>Redefinir Senha</a>
+                        <p>Este link expira em <strong>1 hora</strong>.</p>
+                        <p>Se você não solicitou a redefinição de senha, por favor ignore este e-mail.</p>
+                        <div class='footer'>
+                            <p>&copy; {DateTime.Now.Year} BarberShop. Todos os direitos reservados.</p>
+                        </div>
+                    </div>
+                </body>
+                </html>";
+
+            var from = new EmailAddress("barbershoperbrasil@outlook.com", "BarberShop");
+            var to = new EmailAddress(destinatarioEmail, destinatarioNome);
+            var msg = MailHelper.CreateSingleEmail(from, to, assunto, conteudo, htmlContent);
+
+            var client = new SendGridClient(_sendGridApiKey);
+            var response = await client.SendEmailAsync(msg);
+
+            if (response.StatusCode != System.Net.HttpStatusCode.OK && response.StatusCode != System.Net.HttpStatusCode.Accepted)
+            {
+                await _logService.SaveLogAsync("EmailService", $"Falha ao enviar o e-mail de redefinição de senha, status code: {response.StatusCode}", "ERROR", _sendGridApiKey);
+                throw new Exception($"Falha ao enviar o e-mail, status code: {response.StatusCode}");
+            }
+
+            await _logService.SaveLogAsync("EmailService", $"E-mail de redefinição de senha enviado com sucesso para: {destinatarioEmail}", "INFO", _sendGridApiKey);
+        }
+
     }
 }
