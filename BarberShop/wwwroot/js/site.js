@@ -1,6 +1,5 @@
 ﻿$(document).ready(function () {
 
-    console.log("site.js carregado e document.ready acionado");
 
     var loginPage = document.getElementById('loginPage');
 
@@ -243,11 +242,6 @@ if (redefinirSenhaAdminPage) {
     const paginaInicialIndex = document.getElementById("pagineInicialIndex");
 
     if (paginaInicialIndex) {
-        // Coloque o script específico para essa página aqui
-        console.log("Div 'pagineInicialIndex' detectada - script ativado.");
-
-        // Exemplo de lógica específica
-        // Pode incluir a lógica de busca ao vivo, animações, etc.
 
         const searchBar = document.getElementById("searchBarbearia");
         const barbeariaCards = document.querySelectorAll(".barbearia-card-container");
@@ -270,7 +264,6 @@ if (redefinirSenhaAdminPage) {
 
     // Função para exibir Toasts com setTimeout
     function showToast(message, type = 'info') {
-        console.log("showToast chamado com mensagem:", message); // Log inicial para chamada
 
         const toastHtml = `
     <div class="toast align-items-center text-white bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
@@ -327,7 +320,6 @@ if (redefinirSenhaAdminPage) {
                     dropdownHtml += '<div class="autocomplete-suggestion">' + inputValue + domain + '</div>';
                 });
                 $('#emailAutocompleteLogin').html(dropdownHtml).fadeIn();
-                console.log("Sugestões de email exibidas:", dropdownHtml); // Log para verificar sugestões de email
             } else {
                 $('#emailAutocompleteLogin').fadeOut();
             }
@@ -382,7 +374,6 @@ if (redefinirSenhaAdminPage) {
             success: function (data) {
                 $('#loadingSpinner').fadeOut(); // Esconde o spinner
                 $('#submitButtonLogin').prop('disabled', false);
-                console.log("Resposta recebida do servidor:", data); // Log para verificar a resposta do servidor
 
                 if (data.success) {
                     window.location.href = data.redirectUrl;
@@ -538,12 +529,6 @@ if (redefinirSenhaAdminPage) {
 
         $('#loadingSpinner').fadeIn();
         var formData = $(this).serialize();
-
-        // Exibe os valores dos campos no console
-        console.log("Nome:", $('#nameInput').val());
-        console.log("Email:", $('#registerEmailInput').val());
-        console.log("Telefone:", $('#registerPhoneInput').val());
-        console.log("Senha:", $('#registerPasswordInput').val());
 
         $.ajax({
             type: 'POST',
@@ -743,12 +728,10 @@ if (redefinirSenhaAdminPage) {
         var horarioSelecionado = null; // Armazena o horário selecionado
         var horariosPorDia = {}; // Objeto para armazenar os horários disponíveis por dia
 
-        console.log("Página de Escolher Barbeiro carregada");
 
         // Evento de clique no botão de cada barbeiro
         $('.barbeiro-btn').on('click', function () {
             selectedBarbeiroId = $(this).data('barbeiro-id');
-            console.log("Barbeiro selecionado com ID:", selectedBarbeiroId);
 
             if (!selectedDuracaoTotal || selectedDuracaoTotal <= 0) {
                 showToast("Nenhum serviço selecionado ou duração inválida.", "danger");
@@ -774,7 +757,7 @@ if (redefinirSenhaAdminPage) {
                     horariosPorDia = {}; // Limpa o objeto antes de preencher
 
                     data.forEach(function (horario) {
-                        const dataHora = dayjs(horario);
+                        const dataHora = dayjs(horario).add(3, 'hour'); // Ajuste para UTC+3
                         const dia = dataHora.format('YYYY-MM-DD');
                         const horarioInicio = dataHora.format('HH:mm');
                         const horarioFim = dataHora.add(selectedDuracaoTotal, 'minute').format('HH:mm');
@@ -876,6 +859,7 @@ if (redefinirSenhaAdminPage) {
 
 
 
+
     if ($('#resumoAgendamentoPage').length > 0) {
         let selectedPaymentMethod = null;
         const stripe = Stripe("pk_live_51QFMA5Hl3zYZjP9pt96kFgHES5ArjpXgdXa2AXrZr3IXsqpWC9JpHAsLajdeOMCIoCu31wruWj5SLeqbmh9aeVPU003NEkIbJe");
@@ -899,12 +883,9 @@ if (redefinirSenhaAdminPage) {
             }
         };
 
-        console.log("Página de Resumo de Agendamento carregada");
-
         async function initializeCardElement() {
             try {
                 const amount = parseFloat($('#total-price').data('preco-total'));
-                console.log("Inicializando pagamento com valor:", amount);
 
                 const response = await $.ajax({
                     url: '/api/payment/create-payment-intent',
@@ -918,7 +899,6 @@ if (redefinirSenhaAdminPage) {
                 elements = stripe.elements({ appearance });
                 cardElement = elements.create('card');
                 cardElement.mount('#payment-element');
-                console.log("Elemento de cartão inicializado com clientSecret:", clientSecret);
             } catch (error) {
                 console.error('Erro ao inicializar o elemento do cartão:', error);
                 showToast('Erro ao configurar o pagamento. Tente novamente mais tarde.', 'danger');
@@ -1281,7 +1261,6 @@ if (redefinirSenhaAdminPage) {
 
     // Lógica do login administrativo
     if ($('#adminLoginPageAdm').length > 0) {
-        console.log("Página de login administrativo carregada.");
 
         const mensagens = [
             "Bem-vindo ao ambiente administrativo da BarberShop",
@@ -1302,7 +1281,6 @@ if (redefinirSenhaAdminPage) {
         let intervaloContagemRegressivaAdm;
 
         function iniciarContagemRegressivaAdm() {
-            console.log("Iniciando contagem regressiva...");
             tempoContagemRegressivaAdm = 30;
             $('#adminCountdownTimerAdm').text(tempoContagemRegressivaAdm);
             $('#resendCodeLinkAdm').hide();
@@ -1312,7 +1290,6 @@ if (redefinirSenhaAdminPage) {
                 if (tempoContagemRegressivaAdm <= 0) {
                     clearInterval(intervaloContagemRegressivaAdm);
                     $('#resendCodeLinkAdm').show();
-                    console.log("Contagem regressiva finalizada.");
                 }
             }, 1000);
         }
@@ -1337,7 +1314,6 @@ if (redefinirSenhaAdminPage) {
 
         $('#adminLoginFormAdm').on('submit', function (e) {
             e.preventDefault();
-            console.log("Tentativa de login administrativo.");
 
             const email = $('#adminEmailInputAdm').val().trim();
             const senha = $('#adminPasswordInputAdm').val().trim();
@@ -1364,7 +1340,6 @@ if (redefinirSenhaAdminPage) {
                 success: function (data) {
                     $('#adminFullScreenSpinnerAdm').fadeOut(); // Esconde o spinner após sucesso
                     if (data.success) {
-                        console.log("Login administrativo bem-sucedido.");
                         $('#usuarioIdFieldAdm').val(data.usuarioId);
                         $('#adminSubmitButtonAdm').prop('disabled', false);
                         $('#verificationModalAdm').modal('show');
@@ -1372,21 +1347,18 @@ if (redefinirSenhaAdminPage) {
                     } else {
                         $('#adminSubmitButtonAdm').prop('disabled', false);
                         showToast(data.message, 'danger');
-                        console.log("Erro no login administrativo:", data.message);
                     }
                 },
                 error: function (xhr, status, error) {
                     $('#adminFullScreenSpinnerAdm').fadeOut(); // Esconde o spinner após erro
                     $('#adminSubmitButtonAdm').prop('disabled', false);
                     showToast('Ocorreu um erro. Por favor, tente novamente.', 'danger');
-                    console.log("Erro na requisição de login administrativo:", error);
                 }
             });
         });
 
         $('#resendCodeAdm').on('click', function (e) {
             e.preventDefault();
-            console.log("Solicitação de reenvio de código.");
 
             const usuarioId = $('#usuarioIdFieldAdm').val();
             const barbeariaUrl = $('#adminLoginFormAdm input[name="barbeariaUrl"]').val(); // Obtendo a URL da barbearia
@@ -1398,22 +1370,18 @@ if (redefinirSenhaAdminPage) {
                     if (data.success) {
                         showToast("Código de verificação reenviado!", 'info');
                         iniciarContagemRegressivaAdm();
-                        console.log("Código de verificação reenviado com sucesso.");
                     } else {
                         showToast(data.message, 'danger');
-                        console.log("Erro ao reenviar código:", data.message);
                     }
                 },
                 error: function (xhr, status, error) {
                     showToast('Erro ao reenviar o código. Tente novamente.', 'danger');
-                    console.log("Erro na requisição de reenvio de código:", error);
                 }
             });
         });
 
         $('#verificationFormAdm').on('submit', function (e) {
             e.preventDefault();
-            console.log("Tentativa de verificação de código.");
 
             $('#verifySpinnerAdm').show();
             $('#VerifyCodeAdm').prop('disabled', true);
@@ -1430,19 +1398,16 @@ if (redefinirSenhaAdminPage) {
                     $('#VerifyCodeAdm').prop('disabled', false);
 
                     if (data.success) {
-                        console.log("Verificação de código bem-sucedida.");
                         window.location.href = data.redirectUrl;
                     } else {
                         $('#codeErrorMessageAdm').show();
                         showToast(data.message, 'danger');
-                        console.log("Código inválido ou expirado:", data.message);
                     }
                 },
                 error: function (xhr, status, error) {
                     $('#verifySpinnerAdm').hide();
                     $('#VerifyCodeAdm').prop('disabled', false);
                     showToast('Erro ao verificar o código. Tente novamente.', 'danger');
-                    console.log("Erro na requisição de verificação de código:", error);
                 }
             });
         });
@@ -1518,8 +1483,6 @@ if (redefinirSenhaAdminPage) {
             $('#dashboard-container').empty();
             try {
                 const data = await fetchDashboardData();
-                console.log("Dados recebidos para gráficos:", data);
-
                 if (data && Object.values(data).some(item => item && ((Array.isArray(item) && item.length > 0) || (typeof item === 'object' && Object.keys(item).length > 0)))) {
                     window.dashboardData = data;
                     initializeDashboardCharts(data); // Inicializa os gráficos com os dados recebidos
@@ -1535,7 +1498,6 @@ if (redefinirSenhaAdminPage) {
 
         // Função para exibir um layout padrão se não houver dados
         function displayDefaultLayout() {
-            console.log("Exibindo layout padrão - Nenhum dado encontrado.");
             $('#dashboard-container').html(`
             <div class="text-center my-5">
                 <h4>Nenhum dado disponível</h4>
@@ -1673,7 +1635,6 @@ if (redefinirSenhaAdminPage) {
                     method: "GET"
                 });
 
-                console.log("Dados do relatório personalizado:", data);
 
                 const chartConfig = {
                     title: getReportTitle(reportType),
@@ -1790,7 +1751,6 @@ if (redefinirSenhaAdminPage) {
                 valor = (valor / 100).toFixed(2) + '';
                 valor = valor.replace(".", ",");
                 $(this).val(valor);
-                console.log("Valor com máscara de moeda aplicado:", valor);
             });
         }
 
@@ -1798,9 +1758,7 @@ if (redefinirSenhaAdminPage) {
         aplicarMascaraPreco($('#editarPreco'));
 
         function converterPrecoParaFloat(precoFormatado) {
-            console.log("Valor formatado antes da conversão:", precoFormatado);
             const valorFloat = parseFloat(precoFormatado.replace(/\./g, '').replace(',', '.'));
-            console.log("Valor convertido para float:", valorFloat);
             return valorFloat;
         }
 
@@ -1825,7 +1783,6 @@ if (redefinirSenhaAdminPage) {
 
             const precoFormatado = $('#adicionarPreco').val();
             const precoFloat = converterPrecoParaFloat(precoFormatado);
-            console.log("Preço enviado ao backend (float):", precoFloat);
 
             const formData = {
                 Nome: $('#adicionarNome').val(),
@@ -1875,7 +1832,6 @@ if (redefinirSenhaAdminPage) {
 
             const precoFormatado = $('#editarPreco').val();
             const precoFloat = converterPrecoParaFloat(precoFormatado);
-            console.log("Preço atualizado enviado ao backend (float):", precoFloat);
 
             const formData = {
                 ServicoId: $('#editarServicoId').val(),
@@ -1955,9 +1911,6 @@ if (redefinirSenhaAdminPage) {
         $('#buscarAgendamentosBtn').on('click', function () {
             const dataInicio = $('#dataInicio').val();
             const dataFim = $('#dataFim').val();
-
-            console.log("Data de Início:", dataInicio);
-            console.log("Data de Fim:", dataFim);
 
             if (!dataInicio) {
                 alert('Por favor, selecione uma data de início.');
@@ -2042,7 +1995,6 @@ if (redefinirSenhaAdminPage) {
             mostrarLoading();
 
             $.get(`/Pagamento/Detalhes/${pagamentoId}`, function (data) {
-                console.log("Detalhes do pagamento:", data);
                 const valorPago = data.valorPago ? parseFloat(data.valorPago).toFixed(2).replace('.', ',') : 'N/A';
                 $('#detalhesModalBody').html(`
                 <p><strong>Cliente:</strong> ${data.nomeCliente}</p>
@@ -2115,39 +2067,32 @@ if (redefinirSenhaAdminPage) {
 
 
     if ($('#avaliacaoPage').length > 0) {
-        console.log('Página de avaliação carregada.');
 
         // Função para exibir o spinner de carregamento
         function mostrarLoading() {
             $('#avaliacaoLoadingSpinner').show();
-            console.log('Spinner de carregamento exibido.');
         }
 
         // Função para ocultar o spinner de carregamento
         function ocultarLoading() {
             $('#avaliacaoLoadingSpinner').hide();
-            console.log('Spinner de carregamento ocultado.');
         }
 
         // Ação para marcar estrelas ao passar o mouse
         $('#avaliacaoEstrelas .avaliacao-estrela').on('mouseenter', function () {
             $(this).prevAll().addBack().addClass('hover');
-            console.log('Mouse entrou em uma estrela:', $(this).data('value'));
         }).on('mouseleave', function () {
             $('#avaliacaoEstrelas .avaliacao-estrela').removeClass('hover');
-            console.log('Mouse saiu das estrelas.');
         });
 
         // Ação para clicar nas estrelas para avaliação
         $('#avaliacaoEstrelas .avaliacao-estrela').on('click', function () {
             const nota = $(this).data('value');
-            console.log('Estrela clicada com valor:', nota);
             $('#avaliacaoEstrelas .avaliacao-estrela').removeClass('selecionada');
             $(this).prevAll().addBack().addClass('selecionada');
 
             // Exibir o campo de observação
             $('#avaliacaoObservacaoContainer').addClass('visible').css({ 'opacity': 1, 'max-height': '150px' });
-            console.log('Campo de observação exibido.');
         });
 
         // Ação para enviar a avaliação
@@ -2155,28 +2100,23 @@ if (redefinirSenhaAdminPage) {
             const observacao = $('#avaliacaoObservacao').val();
             const nota = $('#avaliacaoEstrelas .avaliacao-estrela.selecionada').length;
 
-            console.log('Tentando enviar avaliação com nota:', nota);
             if (nota > 0) {
                 mostrarLoading();
-
                 // Envio fake da avaliação
                 setTimeout(function () {
                     $('#avaliacaoMensagemAgradecimento').fadeIn();
-                    console.log('Mensagem de agradecimento exibida.');
                     $('#avaliacaoObservacao').val('');
                     $('#avaliacaoEstrelas .avaliacao-estrela').removeClass('selecionada');
                     $('#avaliacaoObservacaoContainer').removeClass('visible').css({ 'opacity': 0, 'max-height': 0 });
 
                     setTimeout(function () {
                         $('#avaliacaoMensagemAgradecimento').fadeOut();
-                        console.log('Mensagem de agradecimento ocultada.');
                     }, 3000);
                 }, 1000);
 
                 ocultarLoading();
             } else {
                 alert('Por favor, selecione uma avaliação.');
-                console.log('Nenhuma estrela selecionada. Avaliação não enviada.');
             }
         });
     }
@@ -2216,14 +2156,4 @@ if (redefinirSenhaAdminPage) {
         alternarMensagem(); // Exibe a primeira mensagem imediatamente
         setInterval(alternarMensagem, 5000); // Troca de mensagem a cada 5 segundos
     }
-
-
-
-
-
-
-
-
-
-
 });
