@@ -542,6 +542,114 @@ namespace BarberShopMVC.Controllers
             }
         }
 
+        [HttpPost]
+        public async Task<IActionResult> SolicitarRecuperacaoSenhaAdmin([FromBody] string email)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(email))
+                {
+                    return Json(new { success = false, message = "E-mail não fornecido." });
+                }
+
+                var usuario = await _usuarioRepository.GetByEmailAsync(email);
+                if (usuario == null || usuario.Role != "Admin")
+                {
+                    return Json(new { success = false, message = "E-mail não encontrado ou usuário não é administrador." });
+                }
+
+                var token = Guid.NewGuid().ToString();
+                usuario.TokenRecuperacaoSenha = token;
+                usuario.TokenExpiracao = DateTime.UtcNow.AddHours(1);
+                await _usuarioRepository.UpdateAsync(usuario);
+
+                var linkRecuperacao = Url.Action("RedefinirSenhaAdmin", "Login", new { usuarioId = usuario.UsuarioId, token }, Request.Scheme);
+                await _emailService.EnviarEmailRecuperacaoSenhaAsync(usuario.Email, usuario.Nome, linkRecuperacao);
+
+                await LogAsync("Info", "SolicitarRecuperacaoSenhaAdmin", "E-mail de recuperação de senha enviado com sucesso.", $"UsuarioId: {usuario.UsuarioId}");
+                return Json(new { success = true, message = "Instruções de recuperação de senha enviadas para o e-mail." });
+            }
+            catch (Exception ex)
+            {
+                await LogAsync("Error", "SolicitarRecuperacaoSenhaAdmin", $"Erro ao solicitar recuperação de senha: {ex.Message}", $"Email: {email}");
+                return Json(new { success = false, message = "Erro ao processar a solicitação de recuperação de senha." });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> RedefinirSenhaAdmin(int usuarioId, string token)
+        {
+            try
+            {
+                var usuario = await _usuarioRepository.GetByIdAsync(usuarioId);
+
+                if (usuario == null || usuario.TokenRecuperacaoSenha != token || usuario.TokenExpiracao < DateTime.UtcNow)
+                {
+                    await LogAsync("Warning", "RedefinirSenhaAdmin", "Token de redefinição de senha inválido ou expirado.", $"UsuarioId: {usuarioId}");
+
+                    var barbearia = await _barbeariaRepository.GetByIdAsync(usuario.BarbeariaId);
+                    if (barbearia == null)
+                    {
+                        await LogAsync("Error", "RedefinirSenhaAdmin", "Barbearia associada não encontrada.", $"UsuarioId: {usuarioId}");
+                        return RedirectToAction("Error", "Erro");
+                    }
+
+                    var urlRedirecionamento = Url.Action("AdminLogin", "Login", new { area = "", barbeariaUrl = barbearia.UrlSlug }, Request.Scheme);
+
+                    ViewData["RedirecionamentoUrl"] = urlRedirecionamento;
+                    return View("TokenInvalido");
+                }
+
+                ViewData["UsuarioId"] = usuario.UsuarioId;
+                ViewData["Token"] = token;
+                return View();
+            }
+            catch (Exception ex)
+            {
+                await LogAsync("Error", "RedefinirSenhaAdmin", $"Erro ao carregar a página de redefinição de senha: {ex.Message}", $"UsuarioId: {usuarioId}");
+                return RedirectToAction("Error", "Erro");
+            }
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> RedefinirSenhaAdmin([FromBody] RedefinirSenhaDto redefinirSenhaDto)
+        {
+            try
+            {
+                var usuario = await _usuarioRepository.GetByIdAsync(redefinirSenhaDto.ClienteId);
+                if (usuario == null || usuario.TokenRecuperacaoSenha != redefinirSenhaDto.Token || usuario.TokenExpiracao < DateTime.UtcNow)
+                {
+                    await LogAsync("Warning", "RedefinirSenhaAdmin", "Token de redefinição de senha inválido ou expirado.", $"UsuarioId: {redefinirSenhaDto.ClienteId}");
+                    return Json(new { success = false, message = "Token inválido ou expirado." });
+                }
+
+                usuario.SenhaHash = _autenticacaoService.HashPassword(redefinirSenhaDto.NovaSenha);
+                usuario.TokenRecuperacaoSenha = null;
+                usuario.TokenExpiracao = null;
+                await _usuarioRepository.UpdateAsync(usuario);
+
+                var barbearia = await _barbeariaRepository.GetByIdAsync(usuario.BarbeariaId);
+                if (barbearia == null)
+                {
+                    await LogAsync("Error", "RedefinirSenhaAdmin", "Barbearia não encontrada ao redefinir senha.", $"UsuarioId: {redefinirSenhaDto.ClienteId}");
+                    return Json(new { success = false, message = "Barbearia não encontrada." });
+                }
+
+                var urlRedirecionamento = Url.Action("AdminLogin", "Login", new { area = "", barbeariaUrl = barbearia.UrlSlug }, Request.Scheme);
+
+                await LogAsync("Info", "RedefinirSenhaAdmin", "Senha redefinida com sucesso.", $"UsuarioId: {redefinirSenhaDto.ClienteId}");
+                return Json(new { success = true, message = "Senha redefinida com sucesso.", redirectUrl = urlRedirecionamento });
+            }
+            catch (Exception ex)
+            {
+                await LogAsync("Error", "RedefinirSenhaAdmin", $"Erro ao redefinir senha: {ex.Message}", $"UsuarioId: {redefinirSenhaDto.ClienteId}");
+                return Json(new { success = false, message = "Erro ao redefinir senha." });
+            }
+        }
+
+
+
         private string GerarCodigoVerificacao()
         {
             Random random = new Random();

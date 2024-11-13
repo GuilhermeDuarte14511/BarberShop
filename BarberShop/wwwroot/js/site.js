@@ -137,6 +137,108 @@
 
     }
 
+    var redefinirSenhaAdminPage = document.getElementById('redefinirSenhaPageAdmin');
+
+    if (redefinirSenhaAdminPage) {
+        $('#novaSenhaRedefinirAdmin').on('input', function () {
+            const password = $(this).val();
+            const lengthRequirement = password.length >= 8;
+            const uppercaseRequirement = /[A-Z]/.test(password);
+            const lowercaseRequirement = /[a-z]/.test(password);
+            const numberRequirement = /\d/.test(password);
+            const specialRequirement = /[!@#$%^&*]/.test(password);
+
+            $('#lengthRequirementRedefinirAdmin').toggleClass('text-success', lengthRequirement).toggleClass('text-danger', !lengthRequirement);
+            $('#uppercaseRequirementRedefinirAdmin').toggleClass('text-success', uppercaseRequirement).toggleClass('text-danger', !uppercaseRequirement);
+            $('#lowercaseRequirementRedefinirAdmin').toggleClass('text-success', lowercaseRequirement).toggleClass('text-danger', !lowercaseRequirement);
+            $('#numberRequirementRedefinirAdmin').toggleClass('text-success', numberRequirement).toggleClass('text-danger', !numberRequirement);
+            $('#specialRequirementRedefinirAdmin').toggleClass('text-success', specialRequirement).toggleClass('text-danger', !specialRequirement);
+        });
+
+        // Toggle de visibilidade das senhas
+        $('#toggleNovaSenhaRedefinirAdmin').on('click', function () {
+            const passwordField = $('#novaSenhaRedefinirAdmin');
+            const type = passwordField.attr('type') === 'password' ? 'text' : 'password';
+            passwordField.attr('type', type);
+            $(this).find('i').toggleClass('fa-eye fa-eye-slash');
+        });
+
+        $('#toggleConfirmarSenhaRedefinirAdmin').on('click', function () {
+            const confirmPasswordField = $('#confirmarSenhaRedefinirAdmin');
+            const type = confirmPasswordField.attr('type') === 'password' ? 'text' : 'password';
+            confirmPasswordField.attr('type', type);
+            $(this).find('i').toggleClass('fa-eye fa-eye-slash');
+        });
+
+        // Função para verificar se as senhas coincidem
+        $('#confirmarSenhaRedefinirAdmin').on('input', function () {
+            const novaSenha = $('#novaSenhaRedefinirAdmin').val();
+            const confirmarSenha = $(this).val();
+
+            // Verifica se as senhas coincidem
+            if (novaSenha !== confirmarSenha) {
+                $('#errorMessageRedefinirAdmin').text('As senhas não coincidem.').show();
+                $('#redefinirSenhaFormAdmin button[type="submit"]').prop('disabled', true); // Desabilita o botão
+            } else {
+                $('#errorMessageRedefinirAdmin').hide();
+                if (novaSenha.length >= 8 && /[A-Z]/.test(novaSenha) && /[a-z]/.test(novaSenha) && /\d/.test(novaSenha) && /[!@#$%^&*]/.test(novaSenha)) {
+                    $('#redefinirSenhaFormAdmin button[type="submit"]').prop('disabled', false); // Habilita o botão
+                } else {
+                    $('#redefinirSenhaFormAdmin button[type="submit"]').prop('disabled', true); // Desabilita o botão
+                }
+            }
+        });
+
+        $('#redefinirSenhaFormAdmin').on('submit', function (e) {
+            e.preventDefault();
+
+            const usuarioId = $('#usuarioIdAdmin').val();
+            const token = $('#tokenAdmin').val();
+            const novaSenha = $('#novaSenhaRedefinirAdmin').val();
+            const confirmarSenha = $('#confirmarSenhaRedefinirAdmin').val();
+
+            // Verifica se as senhas coincidem
+            if (novaSenha !== confirmarSenha) {
+                $('#errorMessageRedefinirAdmin').text('As senhas não coincidem.').show();
+                return;
+            } else {
+                $('#errorMessageRedefinirAdmin').hide();
+            }
+
+            // Envia a nova senha para o servidor
+            $.ajax({
+                url: '/Login/RedefinirSenhaAdmin',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    clienteId: parseInt(usuarioId, 10), // Converte para número
+                    token: token,
+                    novaSenha: novaSenha
+                }),
+                success: function (data) {
+                    if (data.success) {
+                        // Exibe o toast de sucesso com a mensagem de redirecionamento
+                        showToast('Senha redefinida com sucesso! Redirecionando para a tela inicial...', 'success');
+
+                        // Espera 5 segundos (tempo de exibição do toast) e depois redireciona para a URL fornecida pelo servidor
+                        setTimeout(function () {
+                            window.location.href = data.redirectUrl; // Redireciona para a URL correta da barbearia
+                        }, 5000); // Atraso de 5 segundos
+                    } else {
+                        // Exibe o toast de erro
+                        showToast(data.message || 'Erro ao redefinir senha.', 'danger');
+                    }
+                },
+                error: function () {
+                    // Exibe o toast de erro caso haja erro no processamento
+                    showToast('Erro ao processar a solicitação.', 'danger');
+                }
+            });
+        });
+    }
+
+
+
     // Verifica se a div "pagineInicialIndex" está presente no DOM
     const paginaInicialIndex = document.getElementById("pagineInicialIndex");
 
@@ -1287,6 +1389,42 @@
                     $('#VerifyCodeAdm').prop('disabled', false);
                     showToast('Erro ao verificar o código. Tente novamente.', 'danger');
                     console.log("Erro na requisição de verificação de código:", error);
+                }
+            });
+        });
+
+        // Redefinir senha admin
+        $('#forgotPasswordLinkAdm').on('click', function () {
+            $('#forgotPasswordModalAdm').modal('show');
+        });
+
+        $('#forgotPasswordFormAdm').on('submit', function (event) {
+            event.preventDefault();
+
+            const email = $('#forgotPasswordEmailAdm').val().trim();
+            const barbeariaUrl = $('#adminLoginFormAdm input[name="barbeariaUrl"]').val();
+
+            if (!validarEmailAdm(email)) {
+                showToast('Por favor, insira um e-mail válido.', 'danger');
+                return;
+            }
+
+            showToast("Solicitando redefinição de senha para: " + email, 'info');
+            $.ajax({
+                url: `/${barbeariaUrl}/Login/SolicitarRecuperacaoSenhaAdmin`,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(email),
+                success: function (data) {
+                    if (data.success) {
+                        $('#forgotPasswordModalAdm').modal('hide');
+                        showToast("Instruções de recuperação de senha enviadas para o seu e-mail.", 'success');
+                    } else {
+                        showToast(data.message || "Erro ao solicitar recuperação de senha.", 'danger');
+                    }
+                },
+                error: function (xhr, status, error) {
+                    showToast("Erro ao processar a solicitação de redefinição de senha.", 'danger');
                 }
             });
         });

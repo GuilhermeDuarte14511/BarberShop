@@ -25,7 +25,7 @@
 
                 <h3 class="text-center text-danger mb-4">Login Administrativo</h3>
                 <form id="adminLoginFormAdm" method="post" action="/@barbeariaUrl/Admin/AdminLogin">
-                    <input type="hidden" name="barbeariaUrl" value="@barbeariaUrl" /> <!-- Campo oculto com a URL da barbearia -->
+                    <input type="hidden" name="barbeariaUrl" value="@barbeariaUrl" />
 
                     <div class="form-group mb-4">
                         <input type="email" id="adminEmailInputAdm" name="email" class="form-control text-center" placeholder="E-mail" required>
@@ -38,6 +38,9 @@
                     </div>
                     <div class="text-center mt-4">
                         <button type="submit" id="adminSubmitButtonAdm" class="btn btn-danger btn-block">Entrar</button>
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#forgotPasswordModalAdm" class="text-light">Esqueceu sua senha?</a>
                     </div>
                 </form>
             </div>
@@ -80,6 +83,30 @@
                 <div class="text-center mt-3">
                     <p id="resendCodeLinkAdm" style="display: none;">Não recebeu o código? <a href="#" id="resendCodeAdm">Reenviar</a></p>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Redefinição de Senha para Admin -->
+<div class="modal fade" id="forgotPasswordModalAdm" tabindex="-1" aria-labelledby="forgotPasswordModalLabelAdm" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-light">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger" id="forgotPasswordModalLabelAdm">Redefinir Senha Administrativa</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <p>Por favor, insira o seu e-mail administrativo para receber um link de redefinição de senha.</p>
+                <form id="forgotPasswordFormAdm">
+                    <div class="form-group mb-4">
+                        <input type="email" id="forgotPasswordEmailAdm" name="email" class="form-control text-center" placeholder="E-mail" required />
+                    </div>
+                    <div id="forgotPasswordErrorMessageAdm" class="text-danger mt-2" style="display:none;"></div>
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-danger btn-block">Enviar</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
