@@ -1,0 +1,91 @@
+﻿<!-- HTML da página Meus Dados -->
+@model BarberShop.Domain.Entities.Barbearia
+
+@{
+    ViewData["Title"] = "Meus Dados";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div id="meusdadosPage" class="container my-5 p-4 barbearia-dados-container">
+    <!-- Foto da Barbearia e Upload -->
+    <div class="text-center mb-4">
+        <div class="position-relative d-inline-block">
+            <img src="@(ViewData["BarbeariaLogo"] ?? "~/images/default-logo.png")"
+                 alt="Logo da Barbearia" class="barbearia-logo-img rounded-circle" />
+
+            <form id="uploadLogoForm" enctype="multipart/form-data" class="upload-logo-form">
+                <label for="file-upload" class="upload-icon">
+                    <i class="fas fa-camera"></i>
+                </label>
+                <input type="file" id="file-upload" name="Logo" class="d-none" />
+            </form>
+
+            <!-- Barra de progresso horizontal -->
+            <div id="uploadProgress" class="progress-container-horizontal d-none mt-3">
+                <div class="progress-bar-horizontal bg-success" role="progressbar" style="width: 0%;"></div>
+            </div>
+        </div>
+        <h2 class="mt-3">@Model.Nome</h2>
+        <p class="text-muted">@Model.Descricao</p>
+    </div>
+
+    <!-- Formulário de Edição -->
+    <form asp-controller="Barbearia" asp-action="SalvarDados" method="post">
+        <div class="row mt-4">
+            <div class="col-md-6 mb-3">
+                <div class="info-card p-3 rounded">
+                    <h5 class="text-danger">Endereço</h5>
+                    <input type="text"
+                           class="form-control"
+                           id="endereco"
+                           name="Endereco"
+                           value="@Model.Endereco.Split(',')[0].Trim()"
+                           required
+                           placeholder="Rua" />
+
+                    <input type="text"
+                           class="form-control mt-2"
+                           id="numero"
+                           name="Numero"
+                           value="@(Model.Endereco.Contains(",") ? Model.Endereco.Split(',')[1].Trim() : "")"
+                           placeholder="Número" />
+
+                    <input type="text" class="form-control mt-2" name="Cidade" value="@Model.Cidade" required placeholder="Cidade" />
+                    <input type="text" class="form-control mt-2" name="Estado" value="@Model.Estado" required placeholder="Estado" />
+                    <input type="text" class="form-control mt-2" id="cep" name="CEP" value="@Model.CEP" required placeholder="CEP" />
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <div class="info-card p-3 rounded">
+                    <h5 class="text-danger">Contato</h5>
+                    <input type="text" class="form-control" id="telefone" name="Telefone" value="@Model.Telefone" required placeholder="Telefone" />
+                    <input type="email" class="form-control mt-2" name="Email" value="@Model.Email" required placeholder="Email" />
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <div class="info-card p-3 rounded">
+                    <h5 class="text-danger">Horário de Funcionamento</h5>
+                    <textarea class="form-control" name="HorarioFuncionamento" required>@Model.HorarioFuncionamento</textarea>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <div class="info-card p-3 rounded">
+                    <h5 class="text-danger">Status</h5>
+                    <div class="form-group form-check">
+                        <input type="checkbox" class="form-check-input" id="statusCheckbox" name="Status" value="true" @(Model.Status ? "checked" : "") />
+                        <label class="form-check-label" for="statusCheckbox">Ativa</label>
+                    </div>
+                    <input type="hidden" name="Status" value="false" />
+                    <p class="mt-2">Data de Criação: @Model.DataCriacao.ToString("dd/MM/yyyy")</p>
+                </div>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary mt-4">Salvar Alterações</button>
+    </form>
+</div>
+
+<!-- Toast Container -->
+<div id="toastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>

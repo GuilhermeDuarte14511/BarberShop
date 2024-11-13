@@ -40,5 +40,35 @@ namespace BarberShop.Infrastructure.Repositories
         {
             return await _context.Barbearias.AnyAsync(b => b.UrlSlug == urlSlug);
         }
+
+        public async Task AtualizarLogoAsync(int barbeariaId, byte[] logo)
+        {
+            var barbearia = await _context.Barbearias.FindAsync(barbeariaId);
+            if (barbearia != null)
+            {
+                // Preserva o Endereço atual com o número, caso ele já esteja no banco de dados
+                var enderecoAtual = barbearia.Endereco;
+
+                // Atualiza apenas a Logo
+                barbearia.Logo = logo;
+
+                // Marca a propriedade Logo como modificada
+                _context.Entry(barbearia).Property(b => b.Logo).IsModified = true;
+
+                // Força o Endereço a manter o valor original (com o número, caso já esteja)
+                _context.Entry(barbearia).Property(b => b.Endereco).OriginalValue = enderecoAtual;
+
+                await _context.SaveChangesAsync();
+            }
+        }
+
+
+        public async Task<byte[]> ObterLogoAsync(int barbeariaId)
+        {
+            return await _context.Barbearias
+                .Where(b => b.BarbeariaId == barbeariaId)
+                .Select(b => b.Logo)
+                .FirstOrDefaultAsync();
+        }
     }
 }

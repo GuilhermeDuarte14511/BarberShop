@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BarberShop.Domain.Entities
 {
@@ -16,7 +17,8 @@ namespace BarberShop.Domain.Entities
         // Informações de contato
         public string? Telefone { get; set; }
         public string? Email { get; set; }
-
+        [NotMapped]
+        public string? Numero { get; set; }
         // Endereço completo
         public string? Endereco { get; set; }
         public string? Cidade { get; set; }

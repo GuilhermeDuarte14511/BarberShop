@@ -11,5 +11,12 @@ namespace BarberShop.Domain.Interfaces
 
         // Novo método para verificar existência de UrlSlug
         Task<bool> ExistsByUrlSlugAsync(string urlSlug);
+
+        // Método para atualizar somente a logo
+        Task AtualizarLogoAsync(int barbeariaId, byte[] logo);
+
+        // Método para obter a logo para exibição imediata
+        Task<byte[]> ObterLogoAsync(int barbeariaId);
+
     }
 }

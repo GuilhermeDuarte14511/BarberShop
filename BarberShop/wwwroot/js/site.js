@@ -138,103 +138,103 @@
 
     var redefinirSenhaAdminPage = document.getElementById('redefinirSenhaPageAdmin');
 
-if (redefinirSenhaAdminPage) {
-    $('#novaSenhaRedefinirAdmin').on('input', function () {
-        const password = $(this).val();
-        const lengthRequirement = password.length >= 8;
-        const uppercaseRequirement = /[A-Z]/.test(password);
-        const lowercaseRequirement = /[a-z]/.test(password);
-        const numberRequirement = /\d/.test(password);
-        const specialRequirement = /[!@#$%^&*]/.test(password);
+    if (redefinirSenhaAdminPage) {
+        $('#novaSenhaRedefinirAdmin').on('input', function () {
+            const password = $(this).val();
+            const lengthRequirement = password.length >= 8;
+            const uppercaseRequirement = /[A-Z]/.test(password);
+            const lowercaseRequirement = /[a-z]/.test(password);
+            const numberRequirement = /\d/.test(password);
+            const specialRequirement = /[!@#$%^&*]/.test(password);
 
-        $('#lengthRequirementRedefinirAdmin').toggleClass('text-success', lengthRequirement).toggleClass('text-danger', !lengthRequirement);
-        $('#uppercaseRequirementRedefinirAdmin').toggleClass('text-success', uppercaseRequirement).toggleClass('text-danger', !uppercaseRequirement);
-        $('#lowercaseRequirementRedefinirAdmin').toggleClass('text-success', lowercaseRequirement).toggleClass('text-danger', !lowercaseRequirement);
-        $('#numberRequirementRedefinirAdmin').toggleClass('text-success', numberRequirement).toggleClass('text-danger', !numberRequirement);
-        $('#specialRequirementRedefinirAdmin').toggleClass('text-success', specialRequirement).toggleClass('text-danger', !specialRequirement);
-    });
+            $('#lengthRequirementRedefinirAdmin').toggleClass('text-success', lengthRequirement).toggleClass('text-danger', !lengthRequirement);
+            $('#uppercaseRequirementRedefinirAdmin').toggleClass('text-success', uppercaseRequirement).toggleClass('text-danger', !uppercaseRequirement);
+            $('#lowercaseRequirementRedefinirAdmin').toggleClass('text-success', lowercaseRequirement).toggleClass('text-danger', !lowercaseRequirement);
+            $('#numberRequirementRedefinirAdmin').toggleClass('text-success', numberRequirement).toggleClass('text-danger', !numberRequirement);
+            $('#specialRequirementRedefinirAdmin').toggleClass('text-success', specialRequirement).toggleClass('text-danger', !specialRequirement);
+        });
 
-    // Toggle de visibilidade das senhas
-    $('#toggleNovaSenhaRedefinirAdmin').on('click', function () {
-        const passwordField = $('#novaSenhaRedefinirAdmin');
-        const type = passwordField.attr('type') === 'password' ? 'text' : 'password';
-        passwordField.attr('type', type);
-        $(this).find('i').toggleClass('fa-eye fa-eye-slash');
-    });
+        // Toggle de visibilidade das senhas
+        $('#toggleNovaSenhaRedefinirAdmin').on('click', function () {
+            const passwordField = $('#novaSenhaRedefinirAdmin');
+            const type = passwordField.attr('type') === 'password' ? 'text' : 'password';
+            passwordField.attr('type', type);
+            $(this).find('i').toggleClass('fa-eye fa-eye-slash');
+        });
 
-    $('#toggleConfirmarSenhaRedefinirAdmin').on('click', function () {
-        const confirmPasswordField = $('#confirmarSenhaRedefinirAdmin');
-        const type = confirmPasswordField.attr('type') === 'password' ? 'text' : 'password';
-        confirmPasswordField.attr('type', type);
-        $(this).find('i').toggleClass('fa-eye fa-eye-slash');
-    });
+        $('#toggleConfirmarSenhaRedefinirAdmin').on('click', function () {
+            const confirmPasswordField = $('#confirmarSenhaRedefinirAdmin');
+            const type = confirmPasswordField.attr('type') === 'password' ? 'text' : 'password';
+            confirmPasswordField.attr('type', type);
+            $(this).find('i').toggleClass('fa-eye fa-eye-slash');
+        });
 
-    // Função para verificar se as senhas coincidem
-    $('#confirmarSenhaRedefinirAdmin').on('input', function () {
-        const novaSenha = $('#novaSenhaRedefinirAdmin').val();
-        const confirmarSenha = $(this).val();
+        // Função para verificar se as senhas coincidem
+        $('#confirmarSenhaRedefinirAdmin').on('input', function () {
+            const novaSenha = $('#novaSenhaRedefinirAdmin').val();
+            const confirmarSenha = $(this).val();
 
-        // Verifica se as senhas coincidem
-        if (novaSenha !== confirmarSenha) {
-            $('#errorMessageRedefinirAdmin').text('As senhas não coincidem.').show();
-            $('#redefinirSenhaFormAdmin button[type="submit"]').prop('disabled', true); // Desabilita o botão
-        } else {
-            $('#errorMessageRedefinirAdmin').hide();
-            if (novaSenha.length >= 8 && /[A-Z]/.test(novaSenha) && /[a-z]/.test(novaSenha) && /\d/.test(novaSenha) && /[!@#$%^&*]/.test(novaSenha)) {
-                $('#redefinirSenhaFormAdmin button[type="submit"]').prop('disabled', false); // Habilita o botão
-            } else {
+            // Verifica se as senhas coincidem
+            if (novaSenha !== confirmarSenha) {
+                $('#errorMessageRedefinirAdmin').text('As senhas não coincidem.').show();
                 $('#redefinirSenhaFormAdmin button[type="submit"]').prop('disabled', true); // Desabilita o botão
-            }
-        }
-    });
-
-    $('#redefinirSenhaFormAdmin').on('submit', function (e) {
-        e.preventDefault();
-
-        const usuarioId = $('#usuarioIdAdmin').val();
-        const token = $('#tokenAdmin').val();
-        const novaSenha = $('#novaSenhaRedefinirAdmin').val();
-        const confirmarSenha = $('#confirmarSenhaRedefinirAdmin').val();
-
-        // Verifica se as senhas coincidem
-        if (novaSenha !== confirmarSenha) {
-            $('#errorMessageRedefinirAdmin').text('As senhas não coincidem.').show();
-            return;
-        } else {
-            $('#errorMessageRedefinirAdmin').hide();
-        }
-
-        // Envia a nova senha para o servidor
-        $.ajax({
-            url: '/Login/RedefinirSenhaAdmin',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({
-                clienteId: parseInt(usuarioId, 10), // Converte para número
-                token: token,
-                novaSenha: novaSenha
-            }),
-            success: function (data) {
-                if (data.success) {
-                    // Exibe o toast de sucesso com a mensagem de redirecionamento
-                    showToast('Senha redefinida com sucesso! Redirecionando para a tela inicial...', 'success');
-
-                    // Espera 5 segundos (tempo de exibição do toast) e depois redireciona para a URL fornecida pelo servidor
-                    setTimeout(function () {
-                        window.location.href = data.redirectUrl; // Redireciona para a URL correta da barbearia
-                    }, 5000); // Atraso de 5 segundos
+            } else {
+                $('#errorMessageRedefinirAdmin').hide();
+                if (novaSenha.length >= 8 && /[A-Z]/.test(novaSenha) && /[a-z]/.test(novaSenha) && /\d/.test(novaSenha) && /[!@#$%^&*]/.test(novaSenha)) {
+                    $('#redefinirSenhaFormAdmin button[type="submit"]').prop('disabled', false); // Habilita o botão
                 } else {
-                    // Exibe o toast de erro
-                    showToast(data.message || 'Erro ao redefinir senha.', 'danger');
+                    $('#redefinirSenhaFormAdmin button[type="submit"]').prop('disabled', true); // Desabilita o botão
                 }
-            },
-            error: function () {
-                // Exibe o toast de erro caso haja erro no processamento
-                showToast('Erro ao processar a solicitação.', 'danger');
             }
         });
-    });
-}
+
+        $('#redefinirSenhaFormAdmin').on('submit', function (e) {
+            e.preventDefault();
+
+            const usuarioId = $('#usuarioIdAdmin').val();
+            const token = $('#tokenAdmin').val();
+            const novaSenha = $('#novaSenhaRedefinirAdmin').val();
+            const confirmarSenha = $('#confirmarSenhaRedefinirAdmin').val();
+
+            // Verifica se as senhas coincidem
+            if (novaSenha !== confirmarSenha) {
+                $('#errorMessageRedefinirAdmin').text('As senhas não coincidem.').show();
+                return;
+            } else {
+                $('#errorMessageRedefinirAdmin').hide();
+            }
+
+            // Envia a nova senha para o servidor
+            $.ajax({
+                url: '/Login/RedefinirSenhaAdmin',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    clienteId: parseInt(usuarioId, 10), // Converte para número
+                    token: token,
+                    novaSenha: novaSenha
+                }),
+                success: function (data) {
+                    if (data.success) {
+                        // Exibe o toast de sucesso com a mensagem de redirecionamento
+                        showToast('Senha redefinida com sucesso! Redirecionando para a tela inicial...', 'success');
+
+                        // Espera 5 segundos (tempo de exibição do toast) e depois redireciona para a URL fornecida pelo servidor
+                        setTimeout(function () {
+                            window.location.href = data.redirectUrl; // Redireciona para a URL correta da barbearia
+                        }, 5000); // Atraso de 5 segundos
+                    } else {
+                        // Exibe o toast de erro
+                        showToast(data.message || 'Erro ao redefinir senha.', 'danger');
+                    }
+                },
+                error: function () {
+                    // Exibe o toast de erro caso haja erro no processamento
+                    showToast('Erro ao processar a solicitação.', 'danger');
+                }
+            });
+        });
+    }
 
 
 
@@ -716,7 +716,7 @@ if (redefinirSenhaAdminPage) {
     }
 
 
-   
+
 
     // Lógica para a página de Escolher Barbeiro
     if ($('#escolherBarbeiroPage').length > 0) {
@@ -2310,5 +2310,135 @@ if (redefinirSenhaAdminPage) {
             });
         });
     }
+
+    const meusDadosPage = document.getElementById('meusdadosPage');
+
+    if (meusDadosPage) {
+        const uploadInput = document.getElementById('file-upload');
+        const uploadForm = document.getElementById('uploadLogoForm');
+        const logoImage = document.querySelector(".barbearia-logo-img");
+        const progressContainer = document.getElementById("uploadProgress");
+        const progressBar = document.querySelector(".progress-bar-horizontal");
+        const enderecoInput = document.getElementById("endereco");
+        const numeroInput = document.getElementById("numero");
+        const cepInput = document.getElementById("cep");
+        const cidadeInput = document.querySelector("input[name='Cidade']");
+        const estadoInput = document.querySelector("input[name='Estado']");
+        const form = meusDadosPage.querySelector("form");
+
+        // Concatenar endereço e número antes de enviar o formulário principal
+        form.addEventListener("submit", function () {
+            if (numeroInput.value) {
+                enderecoInput.value = `${enderecoInput.value}, ${numeroInput.value}`;
+            }
+        });
+
+        // Máscara de CEP (xxxxx-xxx)
+        cepInput.addEventListener("input", function () {
+            let cep = this.value.replace(/\D/g, ""); // Remove caracteres não numéricos
+            if (cep.length > 5) {
+                cep = cep.slice(0, 5) + "-" + cep.slice(5, 8); // Formato xxxxx-xxx
+            }
+            this.value = cep;
+        });
+
+        // Máscara de Telefone ((xx) xxxxx-xxxx)
+        const telefoneInput = document.getElementById("telefone");
+        telefoneInput.addEventListener("input", function () {
+            let telefone = this.value.replace(/\D/g, ""); // Remove caracteres não numéricos
+            if (telefone.length > 2) {
+                telefone = "(" + telefone.slice(0, 2) + ") " + telefone.slice(2);
+            }
+            if (telefone.length > 9) {
+                telefone = telefone.slice(0, 9) + "-" + telefone.slice(9, 13); // Formato (xx) xxxxx-xxxx
+            }
+            this.value = telefone;
+        });
+
+        // Função para buscar o endereço via API de CEP
+        async function buscarCep(cep) {
+            const cleanedCep = cep.replace(/\D/g, ""); // Remove caracteres não numéricos
+            if (cleanedCep.length !== 8) {
+                alert("Por favor, insira um CEP válido com 8 dígitos.");
+                return;
+            }
+
+            const url = `https://viacep.com.br/ws/${cleanedCep}/json/`;
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.erro) {
+                    alert("CEP não encontrado.");
+                    return;
+                }
+
+                // Preenche os campos com os dados do CEP
+                enderecoInput.value = data.logradouro;
+                cidadeInput.value = data.localidade;
+                estadoInput.value = data.uf;
+            } catch (error) {
+                console.error("Erro ao buscar o CEP:", error);
+            }
+        }
+
+        // Event listener para o campo de CEP
+        cepInput.addEventListener("blur", function () {
+            buscarCep(this.value);
+        });
+
+        // Upload do logo com barra de progresso horizontal
+        uploadInput.addEventListener("change", function () {
+            const file = this.files[0];
+            if (file) {
+                const formData = new FormData(uploadForm);
+                formData.append("Logo", file);
+
+                // Exibe a barra de progresso horizontal e reinicia a largura
+                progressContainer.classList.remove("d-none");
+                progressBar.style.width = "0%";
+
+                fetch('/Barbearia/UploadLogo', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            logoImage.src = "data:image/png;base64," + data.newLogoBase64;
+                            showToast("Logo atualizada com sucesso!", "success");
+                        } else {
+                            showToast("Erro ao atualizar a logo.", "danger");
+                        }
+                    })
+                    .catch(error => {
+                        showToast("Erro ao atualizar a logo.", "danger");
+                        console.error("Erro:", error);
+                    })
+                    .finally(() => {
+                        setTimeout(() => {
+                            progressContainer.classList.add("d-none");
+                        }, 1000);
+                    });
+
+                // Simulação do progresso
+                let progress = 0;
+                const interval = setInterval(() => {
+                    if (progress < 100) {
+                        progress += 10;
+                        progressBar.style.width = `${progress}%`;
+                    } else {
+                        clearInterval(interval);
+                    }
+                }, 200);
+            }
+        });
+    }
+
+
+
 
 });
