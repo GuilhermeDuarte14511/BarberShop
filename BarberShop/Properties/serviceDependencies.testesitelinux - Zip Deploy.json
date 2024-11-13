@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "mssql1": {
+      "serviceConnectorResourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroupName')]/providers/Microsoft.Web/sites/testesitelinux/providers/Microsoft.ServiceLinker/linkers/BarberShopDb_CBEC28F9EB",
+      "secretStore": "AzureAppSettings",
+      "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroupName')]/providers/Microsoft.Sql/servers/guilherme14511dsv/databases/BarberShopDb",
+      "type": "mssql.azure",
+      "connectionId": "BarberShopDb",
+      "dynamicId": null
+    }
+  }
+}
