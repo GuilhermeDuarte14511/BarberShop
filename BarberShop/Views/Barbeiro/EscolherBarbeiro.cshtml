@@ -16,8 +16,15 @@
         @foreach (var barbeiro in Model)
         {
             <div class="col-md-4 col-sm-6 mb-3">
-                <div class="card bg-dark text-light">
+                <div class="card bg-dark text-light barber-card">
                     <div class="card-body text-center">
+                        <!-- Foto do barbeiro arredondada (sem borda vermelha) -->
+                        <div class="photo-container" style="display: inline-block; overflow: hidden;">
+                            <img src="@(barbeiro.Foto != null ? "data:image/png;base64," + Convert.ToBase64String(barbeiro.Foto) : "https://via.placeholder.com/100")"
+                                 alt="Foto do @barbeiro.Nome"
+                                 class="rounded-circle mb-3 photo-preview"
+                                 style="width: 120px; height: 120px; object-fit: cover; cursor: pointer;">
+                        </div>
                         <h5 class="card-title text-warning">@barbeiro.Nome</h5>
                         <button class="btn btn-danger barbeiro-btn" data-barbeiro-id="@barbeiro.BarbeiroId">
                             Escolher Horário
@@ -27,11 +34,12 @@
             </div>
         }
     </div>
-
     <div class="mt-4">
         <button class="btn btn-secondary" onclick="history.back()">Voltar</button>
     </div>
 </div>
+
+
 
 <!-- Modal de Calendário -->
 <div class="modal fade" id="calendarioModal" tabindex="-1" aria-labelledby="calendarioModalLabel" aria-hidden="true">

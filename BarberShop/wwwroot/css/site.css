@@ -1185,6 +1185,7 @@ body {
 
 
 
+
 /* Responsivo para Dispositivos Móveis */
 @media (max-width: 768px) {
     #adminDashboard .col-lg-4,
@@ -1257,6 +1258,8 @@ body {
         object-fit: cover;
         border-radius: 50%;
     }
+
+  
 }
 
 /* Responsivo para Desktops */
