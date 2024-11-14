@@ -1236,10 +1236,26 @@ body {
     .barbearia-logo-img {
         width: 120px;
         height: 120px;
+        object-fit: cover;
+        border-radius: 50%; /* Garante que a imagem também seja redonda */
     }
 
     .info-card {
         font-size: 0.9rem;
+    }
+
+    .logo-container {
+        display: inline-block;
+        padding: 5px; /* Ajuste para criar um espaço entre a imagem e a borda */
+        border: 3px solid #e74c3c; /* Borda vermelha ao redor da imagem */
+        border-radius: 50%; /* Mantém a borda redonda */
+    }
+
+    .photo-preview {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 50%;
     }
 }
 

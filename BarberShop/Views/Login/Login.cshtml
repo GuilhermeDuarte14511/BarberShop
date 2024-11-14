@@ -10,7 +10,11 @@
                 @if (ViewData["BarbeariaLogo"] != null)
                 {
                     <div class="text-center mb-3">
-                        <img src="@ViewData["BarbeariaLogo"]" alt="Logo da Barbearia" class="img-fluid" style="max-height: 100px;">
+                        <div class="logo-container">
+                            <img src="@ViewData["BarbeariaLogo"]"
+                                 alt="Logo da Barbearia"
+                                 class="rounded-circle barbearia-logo-img">
+                        </div>
                     </div>
                 }
 

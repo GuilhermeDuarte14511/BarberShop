@@ -19,7 +19,9 @@
                 @if (!string.IsNullOrEmpty(barbeariaLogo))
                 {
                     <div class="text-center mb-3">
-                        <img src="@barbeariaLogo" alt="Logo da Barbearia" class="img-fluid" style="max-height: 80px;">
+                        <div class="logo-container">
+                            <img src="@barbeariaLogo" alt="Logo da Barbearia" class="rounded-circle barbearia-logo-img">
+                        </div>
                     </div>
                 }
 
@@ -47,6 +49,7 @@
         </div>
     </div>
 </div>
+
 
 <!-- Spinner em tela cheia -->
 <div id="adminFullScreenSpinnerAdm" class="fullscreen-overlay" style="display: none;">

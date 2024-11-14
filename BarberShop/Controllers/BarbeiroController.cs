@@ -56,7 +56,9 @@ namespace BarberShopMVC.Controllers
                     BarbeiroId = barbeiro.BarbeiroId,
                     Nome = barbeiro.Nome,
                     Email = barbeiro.Email,
-                    Telefone = barbeiro.Telefone
+                    Telefone = barbeiro.Telefone,
+                    Foto = barbeiro.Foto
+
                 });
             }
             catch (Exception ex)
@@ -67,45 +69,50 @@ namespace BarberShopMVC.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(Barbeiro barbeiro)
+        public async Task<IActionResult> Create(Barbeiro barbeiro, IFormFile Foto)
         {
             try
             {
                 int? barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
                 if (!barbeariaId.HasValue)
                 {
-                    return BadRequest(new { success = false, message = "Barbearia não encontrada na sessão." });
+                    return BadRequest(new { success = false, message = "ID da barbearia não encontrado" });
                 }
 
                 // Associa o barbeiro à barbearia
                 barbeiro.BarbeariaId = barbeariaId.Value;
 
-                var barbeiroExistente = await _barbeiroRepository.GetByEmailOrPhoneAsync(barbeiro.Email, barbeiro.Telefone);
+                if (Foto != null && Foto.Length > 0)
+                {
+                    using (var ms = new MemoryStream())
+                    {
+                        await Foto.CopyToAsync(ms);
+                        barbeiro.Foto = ms.ToArray();
+                    }
+                }
 
+                var barbeiroExistente = await _barbeiroRepository.GetByEmailOrPhoneAsync(barbeiro.Email, barbeiro.Telefone);
                 if (barbeiroExistente != null)
                 {
                     string mensagemErro = "Já existe um cadastro com ";
                     if (barbeiroExistente.Email == barbeiro.Email)
-                    {
                         mensagemErro += "esse e-mail";
-                    }
                     if (barbeiroExistente.Telefone == barbeiro.Telefone)
-                    {
-                        mensagemErro += mensagemErro.Contains("e-mail") ? " e telefone." : "esse telefone.";
-                    }
+                        mensagemErro += mensagemErro.Contains("e-mail") ? " e telefone" : " esse telefone";
 
                     return Json(new { success = false, message = mensagemErro });
                 }
 
                 await _barbeiroRepository.AddAsync(barbeiro);
-                return Json(new { success = true, message = "Barbeiro adicionado com sucesso." });
+
+                return Json(new { success = true, message = "Barbeiro adicionado com sucesso" });
             }
             catch (Exception ex)
             {
-                await LogAsync("Error", "BarbeiroController.Create", ex.Message, ex.ToString());
-                return StatusCode(500, "Erro ao criar o barbeiro.");
+                return StatusCode(500, new { success = false, message = "Erro ao adicionar o barbeiro" });
             }
         }
+
 
         [HttpPost]
         public async Task<IActionResult> Edit(int id, Barbeiro barbeiro)
@@ -172,6 +179,39 @@ namespace BarberShopMVC.Controllers
             {
                 await LogAsync("Error", "BarbeiroController.EscolherBarbeiro", ex.Message, ex.ToString());
                 return StatusCode(500, "Erro ao carregar os barbeiros.");
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UploadFoto(int id, IFormFile foto)
+        {
+            try
+            {
+                if (foto == null || foto.Length == 0)
+                {
+                    return Json(new { success = false, message = "Nenhuma foto foi selecionada." });
+                }
+
+                var barbeiro = await _barbeiroRepository.GetByIdAsync(id);
+                if (barbeiro == null)
+                {
+                    return NotFound("Barbeiro não encontrado.");
+                }
+
+                using (var ms = new MemoryStream())
+                {
+                    await foto.CopyToAsync(ms);
+                    barbeiro.Foto = ms.ToArray();
+                }
+
+                await _barbeiroRepository.UpdateAsync(barbeiro);
+                var fotoBase64 = Convert.ToBase64String(barbeiro.Foto);
+                return Json(new { success = true, newFotoBase64 = fotoBase64 });
+            }
+            catch (Exception ex)
+            {
+                await LogAsync("Error", "BarbeiroController.UploadFoto", ex.Message, ex.ToString());
+                return StatusCode(500, "Erro ao fazer o upload da foto.");
             }
         }
     }

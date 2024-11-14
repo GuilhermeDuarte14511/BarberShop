@@ -18,30 +18,43 @@
             <div class="col-md-6 col-lg-4 mb-4 barbearia-card-container" data-name="@barbearia.Nome.ToLower()">
                 <div class="card bg-dark text-light shadow-lg rounded-3 h-100 barbearia-card">
                     <div class="card-body text-center">
-                        <!-- Logo da Barbearia -->
-                        @if (barbearia.Logo != null)
-                        {
-                            <img src="data:image/png;base64,@Convert.ToBase64String(barbearia.Logo)" alt="Logo da @barbearia.Nome" class="mb-3 rounded-circle barbearia-logo" style="max-width: 100px; max-height: 100px;">
-                        }
+                        <!-- Logo da Barbearia com estilo redondo -->
+                        <div class="position-relative d-inline-block mb-3">
+                            @if (barbearia.Logo != null)
+                            {
+                                <img src="data:image/png;base64,@Convert.ToBase64String(barbearia.Logo)"
+                                     alt="Logo da @barbearia.Nome"
+                                     class="rounded-circle barbearia-logo-img"
+                                     style="width: 120px; height: 120px;">
+                            }
+                            else
+                            {
+                                <img src="~/images/default-logo.png"
+                                     alt="Logo padrão da Barbearia"
+                                     class="rounded-circle barbearia-logo-img"
+                                     style="width: 120px; height: 120px;">
+                            }
+                        </div>
 
+                        <!-- Nome e Descrição da Barbearia -->
                         <h4 class="card-title mb-2 barbearia-title">@barbearia.Nome</h4>
-                        
-                        <!-- Descrição da Barbearia -->
                         <p class="card-text mb-3 barbearia-descricao">@barbearia.Descricao</p>
 
+                        <!-- Informações adicionais da Barbearia -->
                         <p class="mb-2">
                             <i class="fas fa-map-marker-alt barbearia-icon"></i>
                             <strong>Endereço:</strong>
                             <a href="https://www.google.com/maps/search/?api=1&query=@Uri.EscapeDataString(barbearia.Endereco + ", " + barbearia.Cidade + ", " + barbearia.Estado)"
                                target="_blank" class="text-light">@barbearia.Endereco, @barbearia.Cidade - @barbearia.Estado</a>
                         </p>
-
                         <p class="mb-2"><i class="fas fa-phone barbearia-icon"></i> <strong>Telefone:</strong> @barbearia.Telefone</p>
                         <p class="mb-2"><i class="fas fa-envelope barbearia-icon"></i> <strong>Email:</strong> <a href="mailto:@barbearia.Email" class="text-light">@barbearia.Email</a></p>
                         <p class="mb-2"><i class="fas fa-clock barbearia-icon"></i> <strong>Horário:</strong> @barbearia.HorarioFuncionamento</p>
                         <p class="mb-2"><i class="fas fa-location-arrow barbearia-icon"></i> <strong>CEP:</strong> @barbearia.CEP</p>
 
-                        <a href="@Url.Action("Login", "Login", new { barbeariaUrl = barbearia.UrlSlug })" class="btn w-100 mt-3" style="background-color: #e74c3c; border-color: #e74c3c; color: #ffffff;">
+                        <!-- Botão para acessar a barbearia -->
+                        <a href="@Url.Action("Login", "Login", new { barbeariaUrl = barbearia.UrlSlug })"
+                           class="btn w-100 mt-3" style="background-color: #e74c3c; border-color: #e74c3c; color: #ffffff;">
                             Acessar @barbearia.Nome
                         </a>
                     </div>

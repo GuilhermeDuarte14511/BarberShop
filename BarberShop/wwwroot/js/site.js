@@ -1136,48 +1136,106 @@
         aplicarMascaraTelefone($('#adicionarTelefone'));
         aplicarMascaraTelefone($('#editarTelefone'));
 
-        // Função para exibir o modal de notificação
-        function exibirNotificacaoModal(mensagem, tipo) {
-            $('#notificacaoMensagem').text(mensagem);
-            $('#notificacaoModal').modal('show');
-            $('#notificacaoModal .modal-body').removeClass('text-success text-danger')
-                .addClass(tipo === 'success' ? 'text-success' : 'text-danger');
-
-            // Fecha o modal após 5 segundos e recarrega a página
-            setTimeout(function () {
-                $('#notificacaoModal').modal('hide');
-                location.reload();
-            }, 5000);
-        }
-
         // Ação para o botão "Adicionar Barbeiro"
         $('#btnAdicionarBarbeiro').on('click', function () {
             $('#adicionarNome').val('');
             $('#adicionarEmail').val('');
             $('#adicionarTelefone').val('');
+            $('#adicionarFoto').val(''); // Limpa o campo de seleção de foto
+            $('#adicionarFotoPreview').attr('src', 'https://via.placeholder.com/100'); // Reinicia a pré-visualização
             $('#adicionarModal').modal('show');
+        });
+
+        // Pré-visualização da foto no modal de adição
+        $('#adicionarFoto').on('change', function (event) {
+            const fotoPreview = document.getElementById('adicionarFotoPreview');
+            fotoPreview.src = URL.createObjectURL(event.target.files[0]);
+        });
+
+        // Upload da foto no modal de edição com barra de progresso
+        $('#editarFoto').on('change', function (event) {
+            const fotoPreview = document.getElementById('editarFotoPreview');
+            fotoPreview.src = URL.createObjectURL(event.target.files[0]);
+
+            const barbeiroId = $('#editarBarbeiroId').val();
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('foto', file);
+
+            const progressContainer = $('#uploadProgress');
+            const progressBar = progressContainer.find('.progress-bar');
+            progressContainer.removeClass('d-none');
+            progressBar.css('width', '0%');
+
+            $.ajax({
+                url: `/Barbeiro/UploadFoto/${barbeiroId}`,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                xhr: function () {
+                    const xhr = new window.XMLHttpRequest();
+                    xhr.upload.addEventListener("progress", function (evt) {
+                        if (evt.lengthComputable) {
+                            const percentComplete = (evt.loaded / evt.total) * 100;
+                            progressBar.css('width', `${percentComplete}%`);
+                        }
+                    }, false);
+                    return xhr;
+                },
+                success: function (response) {
+                    if (response.success) {
+                        $('#editarFotoPreview').attr("src", "data:image/png;base64," + response.newFotoBase64);
+                        showToast("Foto atualizada com sucesso!", "success");
+
+                        // Atualiza a imagem no card correspondente
+                        const cardImage = $(`.photo-preview[data-id="${barbeiroId}"]`);
+                        cardImage.attr("src", "data:image/png;base64," + response.newFotoBase64);
+                    } else {
+                        showToast(response.message || "Erro ao atualizar a foto.", "danger");
+                    }
+                },
+                error: function () {
+                    showToast("Erro ao atualizar a foto.", "danger");
+                },
+                complete: function () {
+                    setTimeout(function () {
+                        progressContainer.addClass('d-none');
+                    }, 500);
+                }
+            });
         });
 
         // Submissão do formulário de adição via AJAX
         $('#formAdicionarBarbeiro').on('submit', function (e) {
             e.preventDefault();
-            var formData = $(this).serialize();
-            $('#loadingSpinner').show();
-
+            const formData = new FormData(this); // Inclui a foto e os demais dados do barbeiro
             $.ajax({
                 url: '/Barbeiro/Create',
                 type: 'POST',
                 data: formData,
+                processData: false,
+                contentType: false,
                 success: function (response) {
-                    $('#loadingSpinner').hide();
                     $('#adicionarModal').modal('hide');
-                    exibirNotificacaoModal(response.message, response.success ? 'success' : 'danger');
+                    showToast(response.message, response.success ? "success" : "danger");
+                    if (response.success) {
+                        location.reload();
+                    }
                 },
                 error: function () {
-                    $('#loadingSpinner').hide();
-                    exibirNotificacaoModal('Erro ao adicionar o barbeiro.', 'danger');
+                    showToast("Erro ao adicionar o barbeiro.", "danger");
                 }
             });
+        });
+
+        // Visualizar foto em modal ao clicar na imagem
+        $('.photo-preview').on('click', function () {
+            const fotoUrl = $(this).data('foto');
+            $('#visualizarFoto').attr('src', fotoUrl);
+            $('#visualizarFotoModal').modal('show');
         });
 
         // Ação para o botão de editar
@@ -1191,6 +1249,7 @@
                 $('#editarNome').val(data.nome);
                 $('#editarEmail').val(data.email);
                 $('#editarTelefone').val(data.telefone);
+                $('#editarFotoPreview').attr('src', data.foto ? `data:image/png;base64,${data.foto}` : 'https://via.placeholder.com/100');
                 $('#editarModal').modal('show');
             });
         });
@@ -1198,7 +1257,7 @@
         // Submissão do formulário de edição via AJAX
         $('#formEditarBarbeiro').on('submit', function (e) {
             e.preventDefault();
-            var formData = $(this).serialize();
+            var formData = new FormData(this); // Inclui a foto e outros dados do barbeiro
             var barbeiroId = $('#editarBarbeiroId').val();
             $('#loadingSpinner').show();
 
@@ -1206,14 +1265,16 @@
                 url: `/Barbeiro/Edit/${barbeiroId}`,
                 type: 'POST',
                 data: formData,
+                processData: false,
+                contentType: false,
                 success: function (response) {
                     $('#loadingSpinner').hide();
                     $('#editarModal').modal('hide');
-                    exibirNotificacaoModal(response.message, response.success ? 'success' : 'danger');
+                    showToast(response.message, response.success ? "success" : "danger");
                 },
                 error: function () {
                     $('#loadingSpinner').hide();
-                    exibirNotificacaoModal('Erro ao editar o barbeiro.', 'danger');
+                    showToast("Erro ao editar o barbeiro.", "danger");
                 }
             });
         });
@@ -1221,13 +1282,8 @@
         // Ação para o botão de excluir
         $('.btnExcluir').on('click', function () {
             var barbeiroId = $(this).data('id');
-
-            // Verificar se o botão está em uma tabela ou em um cartão
-            var barbeiroNome = $(this).closest('tr').length > 0 ?
-                $(this).closest('tr').find('td:first').text() :
-                $(this).closest('.barbeiro-card').find('p').first().text().replace('Nome:', '').trim();
-
-            $('#excluirBarbeiroNome').text(barbeiroNome); // Exibe o nome no modal de exclusão
+            var barbeiroNome = $(this).closest('.card').find('.card-title').text();
+            $('#excluirBarbeiroNome').text(barbeiroNome);
             $('#btnConfirmarExcluir').data('id', barbeiroId);
             $('#excluirModal').modal('show');
         });
@@ -1244,21 +1300,18 @@
                 success: function (response) {
                     $('#loadingSpinner').hide();
                     $('#excluirModal').modal('hide');
-                    exibirNotificacaoModal(response.message, response.success ? 'success' : 'danger');
+                    showToast(response.message, response.success ? "success" : "danger");
                 },
                 error: function () {
                     $('#loadingSpinner').hide();
-                    exibirNotificacaoModal('Erro ao excluir o barbeiro.', 'danger');
+                    showToast("Erro ao excluir o barbeiro.", "danger");
                 }
             });
         });
-
-        // Fecha o modal de notificação ao clicar no botão "OK" e recarrega a página
-        $('#notificacaoModal .btn-primary').on('click', function () {
-            $('#notificacaoModal').modal('hide');
-            location.reload();
-        });
     }
+
+
+
 
     // Lógica do login administrativo
     if ($('#adminLoginPageAdm').length > 0) {
