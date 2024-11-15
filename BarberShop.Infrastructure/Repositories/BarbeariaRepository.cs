@@ -70,5 +70,14 @@ namespace BarberShop.Infrastructure.Repositories
                 .Select(b => b.Logo)
                 .FirstOrDefaultAsync();
         }
+
+        // Implementação do novo método para obter o AccountIdStripe da barbearia
+        public async Task<string> GetAccountIdStripeByIdAsync(int barbeariaId)
+        {
+            return await _context.Barbearias
+                .Where(b => b.BarbeariaId == barbeariaId)
+                .Select(b => b.AccountIdStripe)
+                .FirstOrDefaultAsync();
+        }
     }
 }

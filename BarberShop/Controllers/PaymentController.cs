@@ -1,6 +1,7 @@
 ﻿using BarberShop.Application.DTOs;
 using BarberShop.Application.Services;
 using BarberShop.Domain.Entities;
+using BarberShop.Domain.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -15,12 +16,14 @@ namespace BarberShop.API.Controllers
     {
         private readonly IPaymentService _paymentService;
         private readonly IPlanoAssinaturaService _planoAssinaturaService;
+        private readonly IBarbeariaRepository _barbeariaRepository;
 
-        public PaymentController(IPaymentService paymentService, IPlanoAssinaturaService planoAssinaturaService, ILogService logService)
+        public PaymentController(IPaymentService paymentService, IPlanoAssinaturaService planoAssinaturaService, ILogService logService, IBarbeariaRepository barbeariaRepository)
             : base(logService)
         {
             _paymentService = paymentService;
             _planoAssinaturaService = planoAssinaturaService;
+            _barbeariaRepository = barbeariaRepository;
         }
 
         [HttpPost("create-payment-intent")]
@@ -39,6 +42,41 @@ namespace BarberShop.API.Controllers
                 return BadRequest(new { error = "Não foi possível criar o PaymentIntent." });
             }
         }
+
+        [HttpPost("create-payment-intent-barbearia")]
+        public async Task<IActionResult> CreatePaymentIntentBarbearia([FromBody] PaymentIntentBarbeariaRequestDTO request)
+        {
+            await LogAsync("Information", "PaymentController", "Iniciando criação de PaymentIntent para barbearia",
+                           $"Valor: {request.Amount}, Métodos: {string.Join(", ", request.PaymentMethods)}, Barbearia ID: {request.BarbeariaId}, Comissão: {request.CommissionPercentage * 100}%");
+
+            try
+            {
+                // Buscar o accountId associado ao barbeariaId
+                var accountIdStripe = await _barbeariaRepository.GetAccountIdStripeByIdAsync(int.Parse(request.BarbeariaId));
+
+                if (string.IsNullOrEmpty(accountIdStripe))
+                {
+                    return BadRequest(new { error = "Conta da Stripe não encontrada para a barbearia especificada." });
+                }
+
+                // Usar o accountId obtido da barbearia para o PaymentIntent
+                string clientSecret = await _paymentService.CreatePaymentIntentBarbearia(
+                    request.Amount,
+                    request.PaymentMethods,
+                    request.Currency,
+                    accountIdStripe,
+                    request.CommissionPercentage
+                );
+
+                return Ok(new { clientSecret });
+            }
+            catch (Exception ex)
+            {
+                await LogAsync("Error", "PaymentController", "Erro ao criar PaymentIntent para barbearia", ex.Message);
+                return BadRequest(new { error = "Não foi possível criar o PaymentIntent para a barbearia." });
+            }
+        }
+
 
         [HttpPost("process-credit-card")]
         public async Task<IActionResult> ProcessCreditCardPayment([FromBody] CreditCardPaymentRequestDTO request)

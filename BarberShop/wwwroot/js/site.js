@@ -743,7 +743,6 @@
             carregarDiasDisponiveis(); // Carrega os dias e horários disponíveis
         });
 
-        // Função para carregar os dias disponíveis e horários
         function carregarDiasDisponiveis() {
             const barbeariaUrl = $('#barbeariaUrl').val();
 
@@ -754,7 +753,8 @@
                     duracaoTotal: selectedDuracaoTotal
                 },
                 success: function (data) {
-                    // Processa os horários recebidos e organiza por dia
+                    console.log("Horários recebidos do backend:", data); // Log dos horários recebidos do backend
+
                     horariosPorDia = {}; // Limpa o objeto antes de preencher
 
                     data.forEach(function (horario) {
@@ -763,13 +763,18 @@
                         const horarioInicio = dataHora.format('HH:mm');
                         const horarioFim = dataHora.add(selectedDuracaoTotal, 'minute').format('HH:mm');
 
+                        // Log para verificar cada horário processado com ajuste adicional
+                        console.log(`Processando horário ajustado: ${dataHora} (Início: ${horarioInicio} - Fim: ${horarioFim})`);
+
                         if (!horariosPorDia[dia]) {
                             horariosPorDia[dia] = []; // Cria o array de horários para o dia
                         }
                         horariosPorDia[dia].push(`${horarioInicio} - ${horarioFim}`); // Adiciona o horário formatado ao dia
                     });
 
-                    // Atualiza o calendário Flatpickr com os dias disponíveis
+                    // Log para verificar como ficou o objeto final
+                    console.log("Horários organizados por dia após ajuste:", horariosPorDia);
+
                     configurarCalendario(Object.keys(horariosPorDia));
                 },
                 error: function () {
@@ -777,6 +782,9 @@
                 }
             });
         }
+
+
+
 
         function configurarCalendario(diasDisponiveis) {
             flatpickr("#calendarioInput", {
@@ -887,12 +895,21 @@
         async function initializeCardElement() {
             try {
                 const amount = parseFloat($('#total-price').data('preco-total'));
+                const barbeariaId = $('#barbeariaId').val();
+                const commissionPercentage = 0.10; // Substitua pelo valor da comissão desejado
+                const currency = 'brl'; // Defina a moeda desejada, se necessário
 
                 const response = await $.ajax({
-                    url: '/api/payment/create-payment-intent',
+                    url: '/api/payment/create-payment-intent-barbearia',
                     type: 'POST',
                     contentType: 'application/json',
-                    data: JSON.stringify({ amount: amount }),
+                    data: JSON.stringify({
+                        amount: amount,
+                        barbeariaId: barbeariaId,
+                        paymentMethods: ['card'],
+                        currency: currency,
+                        commissionPercentage: commissionPercentage
+                    }),
                     dataType: 'json'
                 });
 
@@ -905,6 +922,7 @@
                 showToast('Erro ao configurar o pagamento. Tente novamente mais tarde.', 'danger');
             }
         }
+
 
         function selectPaymentMethod(method) {
             selectedPaymentMethod = method;

@@ -52,8 +52,18 @@ namespace BarberShop.Application.Services
             }
 
             var horarioFuncionamento = ParseHorarioFuncionamento(barbearia.HorarioFuncionamento);
-            return await _agendamentoRepository.GetAvailableSlotsAsync(barbeariaId, barbeiroId, data, duracaoTotal, horarioFuncionamento);
+            var horariosDisponiveis = await _agendamentoRepository.GetAvailableSlotsAsync(barbeariaId, barbeiroId, data, duracaoTotal, horarioFuncionamento);
+
+            // Log dos horários disponíveis para verificação
+            Console.WriteLine("Horários Disponíveis:");
+            foreach (var horario in horariosDisponiveis)
+            {
+                Console.WriteLine(horario.ToString("yyyy-MM-dd HH:mm"));
+            }
+
+            return horariosDisponiveis;
         }
+
 
         private Dictionary<DayOfWeek, (TimeSpan abertura, TimeSpan fechamento)> ParseHorarioFuncionamento(string horarioFuncionamento)
         {
@@ -93,53 +103,53 @@ namespace BarberShop.Application.Services
             return horarioPorDia;
         }
 
-            public async Task<int> CriarAgendamentoAsync(int barbeariaId, int barbeiroId, DateTime dataHora, int clienteId, List<int> servicoIds, string formaPagamento, decimal precoTotal)
+        public async Task<int> CriarAgendamentoAsync(int barbeariaId, int barbeiroId, DateTime dataHora, int clienteId, List<int> servicoIds, string formaPagamento, decimal precoTotal)
+        {
+            try
             {
-                try
+                var servicos = await _servicoRepository.ObterServicosPorIdsAsync(servicoIds);
+                var duracaoTotal = servicos.Sum(s => s.Duracao);
+
+                var novoAgendamento = new Agendamento
                 {
-                    var servicos = await _servicoRepository.ObterServicosPorIdsAsync(servicoIds);
-                    var duracaoTotal = servicos.Sum(s => s.Duracao);
+                    BarbeariaId = barbeariaId,
+                    BarbeiroId = barbeiroId,
+                    ClienteId = clienteId,
+                    DataHora = dataHora,
+                    DuracaoTotal = duracaoTotal,
+                    FormaPagamento = formaPagamento,
+                    PrecoTotal = precoTotal,
+                    AgendamentoServicos = servicos.Select(s => new AgendamentoServico { ServicoId = s.ServicoId }).ToList()
+                };
 
-                    var novoAgendamento = new Agendamento
-                    {
-                        BarbeariaId = barbeariaId,
-                        BarbeiroId = barbeiroId,
-                        ClienteId = clienteId,
-                        DataHora = dataHora,
-                        DuracaoTotal = duracaoTotal,
-                        FormaPagamento = formaPagamento,
-                        PrecoTotal = precoTotal,
-                        AgendamentoServicos = servicos.Select(s => new AgendamentoServico { ServicoId = s.ServicoId }).ToList()
-                    };
+                // Adiciona o agendamento no contexto, mas não salva ainda
+                var agendamento = await _agendamentoRepository.AddAsync(novoAgendamento);
 
-                    // Adiciona o agendamento no contexto, mas não salva ainda
-                    var agendamento = await _agendamentoRepository.AddAsync(novoAgendamento);
+                // Salva as mudanças no contexto para garantir que o ID do agendamento seja gerado
+                await _agendamentoRepository.SaveChangesAsync();
 
-                    // Salva as mudanças no contexto para garantir que o ID do agendamento seja gerado
-                    await _agendamentoRepository.SaveChangesAsync();
-
-                    var pagamento = new Pagamento
-                    {
-                        AgendamentoId = agendamento.AgendamentoId, // Agora temos certeza de que o ID está disponível
-                        ClienteId = clienteId,
-                        BarbeariaId = barbeariaId,
-                        ValorPago = precoTotal,
-                        StatusPagamento = StatusPagamento.Pendente
-                    };
-
-                    // Adiciona o pagamento no contexto, mas não salva ainda
-                    await _pagamentoRepository.AddAsync(pagamento);
-
-                    // Salva as mudanças no contexto para persistir o pagamento
-                    await _pagamentoRepository.SaveChangesAsync();
-
-                    return agendamento.AgendamentoId;
-                }
-                catch (Exception ex)
+                var pagamento = new Pagamento
                 {
-                    throw new Exception("Erro ao criar o agendamento.", ex);
-                }
+                    AgendamentoId = agendamento.AgendamentoId, // Agora temos certeza de que o ID está disponível
+                    ClienteId = clienteId,
+                    BarbeariaId = barbeariaId,
+                    ValorPago = precoTotal,
+                    StatusPagamento = StatusPagamento.Pendente
+                };
+
+                // Adiciona o pagamento no contexto, mas não salva ainda
+                await _pagamentoRepository.AddAsync(pagamento);
+
+                // Salva as mudanças no contexto para persistir o pagamento
+                await _pagamentoRepository.SaveChangesAsync();
+
+                return agendamento.AgendamentoId;
             }
+            catch (Exception ex)
+            {
+                throw new Exception("Erro ao criar o agendamento.", ex);
+            }
+        }
 
 
 

@@ -332,5 +332,40 @@ namespace BarberShop.Application.Services
             }
         }
 
+        public async Task<string> CreatePaymentIntentBarbearia(decimal amount, List<string> paymentMethods, string currency, string barbeariaAccountId, decimal? commissionPercentage)
+        {
+            await _logService.SaveLogAsync("Information", "PaymentService", "Iniciando criação de PaymentIntent com destino para barbearia.",
+                                           $"Valor: {amount}, Métodos de pagamento: {string.Join(", ", paymentMethods)}, Conta destino: {barbeariaAccountId}, Comissão: {commissionPercentage * 100}%");
+
+            var options = new PaymentIntentCreateOptions
+            {
+                Amount = (long)(amount * 100), // Valor em centavos
+                Currency = currency,
+                PaymentMethodTypes = paymentMethods.Count > 0 ? paymentMethods : null,
+                TransferData = new PaymentIntentTransferDataOptions
+                {
+                    Destination = barbeariaAccountId, // Conta Stripe conectada da barbearia
+                },
+                ApplicationFeeAmount = (long)(amount * 100 * commissionPercentage), // Calcula a comissão com base no percentual informado
+            };
+
+            try
+            {
+                var service = new PaymentIntentService();
+                var paymentIntent = await service.CreateAsync(options);
+
+                await _logService.SaveLogAsync("Information", "PaymentService", "PaymentIntent criado com sucesso para barbearia.",
+                                               $"ID do PaymentIntent: {paymentIntent.Id}, Conta destino: {barbeariaAccountId}, Comissão retida.");
+
+                return paymentIntent.ClientSecret; // Retorna o client_secret para o frontend
+            }
+            catch (StripeException ex)
+            {
+                await _logService.SaveLogAsync("Error", "PaymentService", "Erro ao criar PaymentIntent para barbearia.", ex.Message);
+                throw new Exception("Não foi possível criar o PaymentIntent para a barbearia.");
+            }
+        }
+
+
     }
 }

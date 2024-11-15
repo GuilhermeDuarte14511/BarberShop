@@ -28,6 +28,7 @@ namespace BarberShop.Domain.Entities
         // Horário de funcionamento e descrição da barbearia
         public string? HorarioFuncionamento { get; set; }
         public string? Descricao { get; set; }
+        public string? AccountIdStripe { get; set; }
 
         // Status para indicar se a barbearia está ativa (true para ativo, false para inativo)
         public bool Status { get; set; } // Usando bool para refletir o tipo bit no banco

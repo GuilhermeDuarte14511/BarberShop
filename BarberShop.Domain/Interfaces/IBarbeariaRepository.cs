@@ -18,5 +18,7 @@ namespace BarberShop.Domain.Interfaces
         // Método para obter a logo para exibição imediata
         Task<byte[]> ObterLogoAsync(int barbeariaId);
 
+        Task<string?> GetAccountIdStripeByIdAsync(int barbeariaId);
+
     }
 }

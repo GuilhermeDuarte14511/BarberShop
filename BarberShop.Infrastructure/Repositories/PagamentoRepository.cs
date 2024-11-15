@@ -167,7 +167,8 @@ namespace BarberShop.Infrastructure.Repositories
                         ValorPago = p.ValorPago ?? 0m,
                         StatusPagamento = p.StatusPagamento,
                         PaymentId = p.PaymentId ?? string.Empty,
-                        DataPagamento = p.DataPagamento
+                        DataPagamento = p.DataPagamento,
+                        BarbeariaId = p.BarbeariaId
                     })
                     .ToListAsync();
             }
@@ -176,5 +177,6 @@ namespace BarberShop.Infrastructure.Repositories
                 throw new Exception($"Erro ao recuperar pagamentos para o agendamento com ID {agendamentoId}.", ex);
             }
         }
+
     }
 }

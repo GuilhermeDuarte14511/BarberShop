@@ -148,19 +148,16 @@ namespace BarberShop.Infrastructure.Repositories
         public async Task<IEnumerable<DateTime>> GetAvailableSlotsAsync(int barbeariaId, int barbeiroId, DateTime dataVisualizacao, int duracaoTotal, Dictionary<DayOfWeek, (TimeSpan abertura, TimeSpan fechamento)> horarioFuncionamento)
         {
             var horariosDisponiveis = new List<DateTime>();
-
-            // Define o fuso horário de Brasília
             TimeZoneInfo brasiliaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time");
-
-            // Define o início e o fim do horário de exibição baseado no horário da barbearia
             DateTime dataInicio = dataVisualizacao.Date.AddHours(9);
-            dataInicio = TimeZoneInfo.ConvertTime(dataInicio, brasiliaTimeZone);
-            dataInicio = dataInicio.AddHours(3);
+            dataInicio = TimeZoneInfo.ConvertTime(dataInicio, brasiliaTimeZone).AddHours(3);
 
             if (DateTime.Now > dataInicio)
                 dataInicio = DateTime.Now;
 
             DateTime dataFim = dataInicio.AddDays(7).Date.AddHours(18);
+
+            Console.WriteLine($"Gerando horários disponíveis de {dataInicio} até {dataFim}");
 
             for (DateTime dataAtual = dataInicio; dataAtual <= dataFim; dataAtual = dataAtual.AddDays(1).Date.AddHours(9))
             {
@@ -176,6 +173,8 @@ namespace BarberShop.Infrastructure.Repositories
                     .OrderBy(a => a.DataHora)
                     .ToListAsync();
 
+                Console.WriteLine($"\nDia {dataAtual:dd/MM/yyyy}:");
+
                 foreach (var agendamento in agendamentosDoDia)
                 {
                     DateTime inicioAgendamento = agendamento.DataHora;
@@ -185,7 +184,9 @@ namespace BarberShop.Infrastructure.Repositories
                     {
                         if (horarioAtual >= DateTime.Now)
                         {
+                            DateTime horarioFim = horarioAtual.AddMinutes(duracaoTotal);
                             horariosDisponiveis.Add(horarioAtual);
+                            Console.WriteLine($"  {horarioAtual:HH:mm} - {horarioFim:HH:mm} (Duração: {duracaoTotal} minutos)");
                         }
                         horarioAtual = horarioAtual.AddMinutes(duracaoTotal);
                     }
@@ -199,7 +200,9 @@ namespace BarberShop.Infrastructure.Repositories
                 {
                     if (horarioAtual >= DateTime.Now)
                     {
+                        DateTime horarioFim = horarioAtual.AddMinutes(duracaoTotal);
                         horariosDisponiveis.Add(horarioAtual);
+                        Console.WriteLine($"  {horarioAtual:HH:mm} - {horarioFim:HH:mm} (Duração: {duracaoTotal} minutos)");
                     }
                     horarioAtual = horarioAtual.AddMinutes(duracaoTotal);
                 }
@@ -207,6 +210,9 @@ namespace BarberShop.Infrastructure.Repositories
 
             return horariosDisponiveis;
         }
+
+
+
 
 
 

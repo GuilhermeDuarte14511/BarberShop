@@ -41,6 +41,17 @@ namespace BarberShop.Application.Services
         Task<string> CreatePaymentIntent(decimal amount, List<string> paymentMethods, string currency = "brl");
 
         /// <summary>
+        /// Cria um PaymentIntent para um pagamento direcionado à conta de uma barbearia, com uma comissão para a conta principal.
+        /// </summary>
+        /// <param name="amount">Valor do pagamento em decimal.</param>
+        /// <param name="paymentMethods">Lista de métodos de pagamento aceitos.</param>
+        /// <param name="currency">Moeda do pagamento.</param>
+        /// <param name="barbeariaAccountId">ID da conta Stripe conectada da barbearia.</param>
+        /// <param name="commissionPercentage">Percentual de comissão a ser retido pela conta principal.</param>
+        /// <returns>ClientSecret do PaymentIntent para confirmação no frontend.</returns>
+        Task<string> CreatePaymentIntentBarbearia(decimal amount, List<string> paymentMethods, string currency, string barbeariaAccountId, decimal? commissionPercentage);
+
+        /// <summary>
         /// Processa o reembolso de um pagamento específico.
         /// </summary>
         /// <param name="paymentId">ID do pagamento a ser reembolsado.</param>
@@ -53,6 +64,5 @@ namespace BarberShop.Application.Services
         Task<string> StartSubscription(string planId, string priceId, string clienteNome, string clienteEmail);
 
         Task SavePayment(PaymentDetails paymentDetails);
-
     }
 }
