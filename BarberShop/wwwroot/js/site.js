@@ -892,24 +892,46 @@
             }
         };
 
+        //async function initializeCardElement() {
+        //    try {
+        //        const amount = parseFloat($('#total-price').data('preco-total'));
+        //        const barbeariaId = $('#barbeariaId').val();
+        //        const commissionPercentage = 0.10; // Substitua pelo valor da comissão desejado
+        //        const currency = 'brl'; // Defina a moeda desejada, se necessário
+
+        //        const response = await $.ajax({
+        //            url: '/api/payment/create-payment-intent-barbearia',
+        //            type: 'POST',
+        //            contentType: 'application/json',
+        //            data: JSON.stringify({
+        //                amount: amount,
+        //                barbeariaId: barbeariaId,
+        //                paymentMethods: ['card'],
+        //                currency: currency,
+        //                commissionPercentage: commissionPercentage
+        //            }),
+        //            dataType: 'json'
+        //        });
+
+        //        clientSecret = response.clientSecret;
+        //        elements = stripe.elements({ appearance });
+        //        cardElement = elements.create('card');
+        //        cardElement.mount('#payment-element');
+        //    } catch (error) {
+        //        console.error('Erro ao inicializar o elemento do cartão:', error);
+        //        showToast('Erro ao configurar o pagamento. Tente novamente mais tarde.', 'danger');
+        //    }
+        //}
+
         async function initializeCardElement() {
             try {
                 const amount = parseFloat($('#total-price').data('preco-total'));
-                const barbeariaId = $('#barbeariaId').val();
-                const commissionPercentage = 0.10; // Substitua pelo valor da comissão desejado
-                const currency = 'brl'; // Defina a moeda desejada, se necessário
 
                 const response = await $.ajax({
-                    url: '/api/payment/create-payment-intent-barbearia',
+                    url: '/api/payment/create-payment-intent',
                     type: 'POST',
                     contentType: 'application/json',
-                    data: JSON.stringify({
-                        amount: amount,
-                        barbeariaId: barbeariaId,
-                        paymentMethods: ['card'],
-                        currency: currency,
-                        commissionPercentage: commissionPercentage
-                    }),
+                    data: JSON.stringify({ amount: amount }),
                     dataType: 'json'
                 });
 
