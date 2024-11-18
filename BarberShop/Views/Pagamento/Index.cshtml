@@ -3,8 +3,8 @@
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<div id="pagamentoPage" class="container-fluid">
-    <h2 class="text-center">Gerenciar Pagamentos</h2>
+<div id="pagamentoPage" class="container-fluid mt-5">
+    <h2 class="text-center mb-4">Gerenciar Pagamentos</h2>
 
     <!-- Botão para abrir o modal de Inserir Pagamento -->
     <div class="text-end mb-3">
@@ -64,15 +64,15 @@
                         data-nome="@pagamento.Cliente?.Nome"
                         data-valor="@pagamento.ValorPago">
                         <td>@pagamento.Cliente?.Nome</td>
-                        <td>@(pagamento.ValorPago.HasValue ? pagamento.ValorPago.Value.ToString("C") : "")</td>
+                        <td>@(pagamento.ValorPago.HasValue ? pagamento.ValorPago.Value.ToString("C") : "N/A")</td>
                         <td>@pagamento.StatusPagamento.ToString()</td>
-                        <td>@(pagamento.DataPagamento.HasValue ? pagamento.DataPagamento.Value.ToString("dd/MM/yyyy") : "")</td>
+                        <td>@(pagamento.DataPagamento.HasValue ? pagamento.DataPagamento.Value.ToString("dd/MM/yyyy") : "N/A")</td>
                         <td>
                             <button class="btn btn-primary btn-sm btnDetalhes" data-id="@pagamento.PagamentoId">Ver</button>
                             @if (pagamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.Aprovado)
                             {
                                 <button class="btn btn-danger btn-sm btnReembolso"
-                                        data-payment-id="@pagamento.PaymentId"
+                                        data-payment-id="@pagamento.PaymentId ?? string.Empty"
                                         data-nome="@pagamento.Cliente?.Nome"
                                         data-valor="@pagamento.ValorPago">
                                     Reembolso
@@ -99,7 +99,7 @@
                     @if (pagamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.Aprovado)
                     {
                         <button class="btn btn-danger btn-sm btnReembolso"
-                                data-payment-id="@pagamento.PaymentId"
+                                data-payment-id="@pagamento.PaymentId ?? string.Empty"
                                 data-nome="@pagamento.Cliente?.Nome"
                                 data-valor="@pagamento.ValorPago">
                             Reembolso

@@ -214,5 +214,39 @@ namespace BarberShopMVC.Controllers
                 return StatusCode(500, "Erro ao fazer o upload da foto.");
             }
         }
+
+        [HttpGet]
+        public async Task<IActionResult> ObterBarbeirosPorBarbearia()
+        {
+            try
+            {
+                int? barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
+                if (!barbeariaId.HasValue)
+                {
+                    return Json(new { success = false, message = "ID da barbearia não encontrado na sessão." });
+                }
+
+                var barbeiros = await _barbeiroService.ObterBarbeirosPorBarbeariaIdAsync(barbeariaId.Value);
+
+                if (!barbeiros.Any())
+                {
+                    return Json(new { success = true, message = "Nenhum barbeiro encontrado para esta barbearia.", barbeiros = new List<object>() });
+                }
+
+                var barbeirosFormatados = barbeiros.Select(b => new
+                {
+                    BarbeiroId = b.BarbeiroId,
+                    Nome = b.Nome
+                });
+
+                return Json(new { success = true, barbeiros = barbeirosFormatados });
+            }
+            catch (Exception ex)
+            {
+                await LogAsync("Error", "BarbeiroController.ObterBarbeirosPorBarbearia", ex.Message, ex.ToString());
+                return StatusCode(500, "Erro ao carregar os barbeiros.");
+            }
+        }
+
     }
 }

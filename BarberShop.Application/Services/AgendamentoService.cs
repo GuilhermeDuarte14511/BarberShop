@@ -11,22 +11,29 @@ namespace BarberShop.Application.Services
         private readonly IServicoRepository _servicoRepository;
         private readonly IPagamentoRepository _pagamentoRepository;
         private readonly IBarbeariaRepository _barbeariaRepository;
-        private readonly BarbeariaContext _context; // Adicione o contexto aqui
+        private readonly IFeriadoNacionalRepository _feriadoNacionalRepository;
+        private readonly IFeriadoBarbeariaRepository _feriadoBarbeariaRepository;
+        private readonly IIndisponibilidadeRepository _indisponibilidadeRepository;
 
         public AgendamentoService(
             IAgendamentoRepository agendamentoRepository,
             IServicoRepository servicoRepository,
             IPagamentoRepository pagamentoRepository,
             IBarbeariaRepository barbeariaRepository,
-            BarbeariaContext context // Adicione o contexto como parâmetro do construtor
+            IFeriadoNacionalRepository feriadoNacionalRepository,
+            IFeriadoBarbeariaRepository feriadoBarbeariaRepository,
+            IIndisponibilidadeRepository indisponibilidadeRepository
         )
         {
             _agendamentoRepository = agendamentoRepository;
             _servicoRepository = servicoRepository;
             _pagamentoRepository = pagamentoRepository;
             _barbeariaRepository = barbeariaRepository;
-            _context = context; // Inicialize o contexto
+            _feriadoNacionalRepository = feriadoNacionalRepository;
+            _feriadoBarbeariaRepository = feriadoBarbeariaRepository;
+            _indisponibilidadeRepository = indisponibilidadeRepository;
         }
+
 
         public async Task<Servico> CriarServicoAsync(Servico servico)
         {
@@ -52,17 +59,39 @@ namespace BarberShop.Application.Services
             }
 
             var horarioFuncionamento = ParseHorarioFuncionamento(barbearia.HorarioFuncionamento);
-            var horariosDisponiveis = await _agendamentoRepository.GetAvailableSlotsAsync(barbeariaId, barbeiroId, data, duracaoTotal, horarioFuncionamento);
 
-            // Log dos horários disponíveis para verificação
-            Console.WriteLine("Horários Disponíveis:");
-            foreach (var horario in horariosDisponiveis)
-            {
-                Console.WriteLine(horario.ToString("yyyy-MM-dd HH:mm"));
-            }
+            // Obter feriados nacionais e da barbearia
+            var feriadosNacionais = await _feriadoNacionalRepository.ObterTodosFeriadosAsync();
+            var feriadosBarbearia = await _feriadoBarbeariaRepository.ObterFeriadosPorBarbeariaAsync(barbeariaId);
+
+            // Combinar todos os feriados
+            var datasFeriadosNacionais = feriadosNacionais.Select(f => f.Data);
+            var datasFeriadosBarbearia = feriadosBarbearia.Select(f => f.Data);
+            var feriados = datasFeriadosNacionais
+                .Concat(datasFeriadosBarbearia)
+                .ToHashSet();
+
+            // Obter indisponibilidades do barbeiro e converter para o formato esperado
+            var indisponibilidades = (await _indisponibilidadeRepository.ObterIndisponibilidadesPorBarbeiroAsync(barbeiroId))
+                .Select(i => (i.DataInicio, i.DataFim))
+                .ToList();
+
+            // Passar todas as restrições para o repositório
+            var horariosDisponiveis = await _agendamentoRepository.GetAvailableSlotsAsync(
+                barbeariaId,
+                barbeiroId,
+                data,
+                duracaoTotal,
+                horarioFuncionamento,
+                feriados,
+                indisponibilidades
+            );
 
             return horariosDisponiveis;
         }
+
+
+
 
 
         private Dictionary<DayOfWeek, (TimeSpan abertura, TimeSpan fechamento)> ParseHorarioFuncionamento(string horarioFuncionamento)

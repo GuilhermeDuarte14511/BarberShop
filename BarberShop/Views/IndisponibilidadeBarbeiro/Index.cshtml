@@ -1,0 +1,135 @@
+﻿@model IEnumerable<BarberShop.Domain.Entities.IndisponibilidadeBarbeiro>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div id="indisponibilidadePage" class="container mt-5">
+    <h2 class="text-center mb-4">Gerenciar Indisponibilidades</h2>
+    <button class="btn btn-success mb-3" id="btnAdicionarIndisponibilidade" data-bs-toggle="modal" data-bs-target="#adicionarIndisponibilidadeModal">Adicionar Indisponibilidade</button>
+
+    @if (Model == null)
+    {
+        <div class="indisponibilidadeAlert text-center">
+            Bem-vindo! Não há indisponibilidades cadastradas no momento.
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var indisponibilidade in Model)
+            {
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="indisponibilidadeCard shadow-sm h-100">
+                        <div class="indisponibilidadeCardBody">
+                            <h5 class="indisponibilidadeCardTitle">Indisponibilidade</h5>
+                            <p class="indisponibilidadeCardText"><strong>Barbeiro:</strong> @indisponibilidade.Barbeiro.Nome</p>
+                            <p class="indisponibilidadeCardText"><strong>Início:</strong> @indisponibilidade.DataInicio.ToString("dd/MM/yyyy HH:mm")</p>
+                            <p class="indisponibilidadeCardText"><strong>Fim:</strong> @indisponibilidade.DataFim.ToString("dd/MM/yyyy HH:mm")</p>
+                            <p class="indisponibilidadeCardText"><strong>Motivo:</strong> @indisponibilidade.Motivo</p>
+                            <div class="d-flex justify-content-center mt-3">
+                                <button class="btn btnEditarIndisponibilidade btn-sm me-2" data-id="@indisponibilidade.IndisponibilidadeId" data-bs-toggle="modal" data-bs-target="#editarIndisponibilidadeModal">Editar</button>
+                                <button class="btn btnExcluirIndisponibilidade btn-sm" data-id="@indisponibilidade.IndisponibilidadeId" data-bs-toggle="modal" data-bs-target="#excluirIndisponibilidadeModal">Excluir</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<!-- Modal para Adicionar Indisponibilidade -->
+<div class="modal fade" id="adicionarIndisponibilidadeModal" tabindex="-1" aria-labelledby="adicionarIndisponibilidadeLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="formAdicionarIndisponibilidade" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="adicionarIndisponibilidadeLabel">Adicionar Indisponibilidade</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group mb-3">
+                        <label for="BarbeiroIdIndisponibilidade">Barbeiro</label>
+                        <select class="form-control" id="BarbeiroIdIndisponibilidade" name="BarbeiroId" required>
+                            <!-- Preenchido dinamicamente -->
+                        </select>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="DataInicioIndisponibilidade">Data Início</label>
+                        <input type="datetime-local" class="form-control" id="DataInicioIndisponibilidade" name="DataInicio" required />
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="DataFimIndisponibilidade">Data Fim</label>
+                        <input type="datetime-local" class="form-control" id="DataFimIndisponibilidade" name="DataFim" required />
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="MotivoIndisponibilidade">Motivo</label>
+                        <textarea class="form-control" id="MotivoIndisponibilidade" name="Motivo" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Editar Indisponibilidade -->
+<div class="modal fade" id="editarIndisponibilidadeModal" tabindex="-1" aria-labelledby="editarIndisponibilidadeLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="formEditarIndisponibilidade" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editarIndisponibilidadeLabel">Editar Indisponibilidade</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editarIndisponibilidadeId" name="IndisponibilidadeId" />
+                    <div class="form-group mb-3">
+                        <label for="BarbeiroIdEditarIndisponibilidade">Barbeiro</label>
+                        <select class="form-control" id="BarbeiroIdEditarIndisponibilidade" name="BarbeiroId" required>
+                            <!-- Preenchido dinamicamente -->
+                        </select>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="DataInicioEditarIndisponibilidade">Data Início</label>
+                        <input type="datetime-local" class="form-control" id="DataInicioEditarIndisponibilidade" name="DataInicio" required />
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="DataFimEditarIndisponibilidade">Data Fim</label>
+                        <input type="datetime-local" class="form-control" id="DataFimEditarIndisponibilidade" name="DataFim" required />
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="MotivoEditarIndisponibilidade">Motivo</label>
+                        <textarea class="form-control" id="MotivoEditarIndisponibilidade" name="Motivo" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Excluir Indisponibilidade -->
+<div class="modal fade" id="excluirIndisponibilidadeModal" tabindex="-1" aria-labelledby="excluirIndisponibilidadeLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="excluirIndisponibilidadeLabel">Excluir Indisponibilidade</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Você tem certeza que deseja excluir esta indisponibilidade?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Não</button>
+                <button type="button" id="btnConfirmarExcluirIndisponibilidade" class="btn btn-danger">Sim</button>
+            </div>
+        </div>
+    </div>
+</div>

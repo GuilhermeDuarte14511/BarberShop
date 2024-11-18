@@ -1,6 +1,5 @@
 ﻿using BarberShop.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using System;
 
 namespace BarberShop.Infrastructure.Data
 {
@@ -29,7 +28,10 @@ namespace BarberShop.Infrastructure.Data
         public DbSet<PlanoAssinaturaSistema> PlanoAssinaturaSistema { get; set; }
         public DbSet<PlanoAssinaturaBarbearia> PlanoAssinaturaBarbearias { get; set; }
         public DbSet<PlanoBeneficio> PlanoBeneficios { get; set; }
-        public DbSet<PagamentoAssinatura> PagamentosAssinaturasSite { get; set; } // Novo DbSet para PagamentoAssinatura
+        public DbSet<PagamentoAssinatura> PagamentosAssinaturasSite { get; set; }
+        public DbSet<FeriadoNacional> FeriadosNacionais { get; set; }
+        public DbSet<FeriadoBarbearia> FeriadosBarbearias { get; set; }
+        public DbSet<IndisponibilidadeBarbeiro> IndisponibilidadesBarbeiros { get; set; } // Adicionado
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -56,7 +58,44 @@ namespace BarberShop.Infrastructure.Data
                 .Property(p => p.DataPagamento)
                 .IsRequired();
 
-            // Outras configurações já existentes
+            // Configuração de FeriadosNacionais
+            modelBuilder.Entity<FeriadoNacional>(entity =>
+            {
+                entity.HasKey(f => f.FeriadoId);
+                entity.Property(f => f.Descricao).IsRequired().HasMaxLength(255);
+                entity.Property(f => f.Data).IsRequired();
+                entity.Property(f => f.Recorrente).IsRequired();
+            });
+
+            // Configuração de FeriadosBarbearias
+            modelBuilder.Entity<FeriadoBarbearia>(entity =>
+            {
+                entity.HasKey(fb => fb.FeriadoBarbeariaId);
+                entity.Property(fb => fb.Descricao).HasMaxLength(255);
+                entity.Property(fb => fb.Data).IsRequired();
+                entity.Property(fb => fb.Recorrente).IsRequired();
+
+                // Relacionamento com Barbearia
+                entity.HasOne(fb => fb.Barbearia)
+                      .WithMany(b => b.FeriadosBarbearias)
+                      .HasForeignKey(fb => fb.BarbeariaId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configuração de IndisponibilidadesBarbeiros
+            modelBuilder.Entity<IndisponibilidadeBarbeiro>(entity =>
+            {
+                entity.HasKey(i => i.IndisponibilidadeId);
+                entity.Property(i => i.Motivo).HasMaxLength(255);
+
+                // Relacionamento com Barbeiro
+                entity.HasOne(i => i.Barbeiro)
+                      .WithMany(b => b.Indisponibilidades)
+                      .HasForeignKey(i => i.BarbeiroId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Outras configurações existentes
             modelBuilder.Entity<AgendamentoServico>()
                 .HasKey(agendamentoServico => new { agendamentoServico.AgendamentoId, agendamentoServico.ServicoId });
 

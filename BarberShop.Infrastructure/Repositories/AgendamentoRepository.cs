@@ -145,7 +145,8 @@ namespace BarberShop.Infrastructure.Repositories
             return disponibilidade;
         }
 
-        public async Task<IEnumerable<DateTime>> GetAvailableSlotsAsync(int barbeariaId, int barbeiroId, DateTime dataVisualizacao, int duracaoTotal, Dictionary<DayOfWeek, (TimeSpan abertura, TimeSpan fechamento)> horarioFuncionamento)
+        public async Task<IEnumerable<DateTime>> GetAvailableSlotsAsync(int barbeariaId,int barbeiroId,DateTime dataVisualizacao,int duracaoTotal,Dictionary<DayOfWeek, (TimeSpan abertura, TimeSpan fechamento)> horarioFuncionamento
+                                                                        ,HashSet<DateTime> feriados,List<(DateTime DataInicio, DateTime DataFim)> indisponibilidades)
         {
             var horariosDisponiveis = new List<DateTime>();
             TimeZoneInfo brasiliaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time");
@@ -155,12 +156,26 @@ namespace BarberShop.Infrastructure.Repositories
             if (DateTime.Now > dataInicio)
                 dataInicio = DateTime.Now;
 
-            DateTime dataFim = dataInicio.AddDays(7).Date.AddHours(18);
+            DateTime dataFim = dataInicio.AddDays(14).Date.AddHours(18);
 
             Console.WriteLine($"Gerando horários disponíveis de {dataInicio} até {dataFim}");
 
             for (DateTime dataAtual = dataInicio; dataAtual <= dataFim; dataAtual = dataAtual.AddDays(1).Date.AddHours(9))
             {
+                // Ignorar feriados
+                if (feriados.Contains(dataAtual.Date))
+                {
+                    Console.WriteLine($"Feriado em {dataAtual:dd/MM/yyyy}. Pulando...");
+                    continue;
+                }
+
+                // Verificar indisponibilidades
+                if (indisponibilidades.Any(i => dataAtual.Date >= i.DataInicio.Date && dataAtual.Date <= i.DataFim.Date))
+                {
+                    Console.WriteLine($"Indisponibilidade do barbeiro em {dataAtual:dd/MM/yyyy}. Pulando...");
+                    continue;
+                }
+
                 if (!horarioFuncionamento.TryGetValue(dataAtual.DayOfWeek, out var funcionamentoDia))
                     continue;
 
@@ -210,6 +225,7 @@ namespace BarberShop.Infrastructure.Repositories
 
             return horariosDisponiveis;
         }
+
 
 
 

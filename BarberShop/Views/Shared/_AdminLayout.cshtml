@@ -55,10 +55,34 @@
                     <i class="fas fa-info-circle mr-2"></i> Meus Dados
                 </a>
                 <hr class="sidebar-divider">
+                <!-- Dropdown "Horários" -->
+                <div class="list-group-item bg-dark text-white">
+                    <a href="#submenuHorarios" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="collapse" aria-expanded="false">
+                        <i class="fas fa-clock mr-2"></i> Horários
+                    </a>
+                    <div class="collapse" id="submenuHorarios">
+                        <a href="@Url.Action("Index", "Feriado")" class="list-group-item list-group-item-action bg-dark text-white ml-3">
+                            <i class="fas fa-calendar-alt mr-2"></i> Feriados
+                        </a>
+                        <hr class="sidebar-divider">
+                        <a href="@Url.Action("Index", "IndisponibilidadeBarbeiro")" class="list-group-item list-group-item-action bg-dark text-white ml-3">
+                            <i class="fas fa-user-clock mr-2"></i> Indisponibilidade
+                        </a>
+
+                        <hr class="sidebar-divider">
+                    </div>
+                </div>
+
+                <hr class="sidebar-divider">
+
+
+
+                <!-- Logout -->
                 <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="list-group-item list-group-item-action bg-dark text-white">
                     <i class="fas fa-sign-out-alt mr-2"></i> Logout
                 </a>
                 <hr class="sidebar-divider">
+
                 <!-- Formulário oculto para o logout -->
                 <form id="logout-form" action="@Url.Action("LogoutAdmin", "Login")" method="post" style="display: none;">
                     @Html.AntiForgeryToken()

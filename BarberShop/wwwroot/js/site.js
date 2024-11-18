@@ -2532,6 +2532,279 @@
     }
 
 
+    // Página Feriados
+    if ($('#feriadoPage').length > 0) {
+        // Ação para o botão "Adicionar Feriado"
+        $('#btnAdicionarFeriado').on('click', function () {
+            $('#adicionarFeriadoNome').val('');
+            $('#adicionarFeriadoData').val('');
+            $('#adicionarModal').modal('show');
+        });
+
+        // Submissão do formulário de adição via AJAX
+        $('#formAdicionarFeriado').on('submit', function (e) {
+            e.preventDefault();
+            const formData = $(this).serialize(); // Serializa os dados do formulário
+
+            $.ajax({
+                url: '/Feriado/Create',
+                type: 'POST',
+                data: formData,
+                success: function (response) {
+                    $('#adicionarModal').modal('hide');
+                    showToast(response.message, response.success ? "success" : "danger");
+                    if (response.success) {
+                        location.reload();
+                    }
+                },
+                error: function () {
+                    showToast("Erro ao adicionar o feriado.", "danger");
+                }
+            });
+        });
+
+        // Ação para o botão "Editar"
+        $('.btnEditarFeriado').on('click', function () {
+            const feriadoId = $(this).data('id'); // Obtém o ID do feriado
+
+            // Requisição para obter os detalhes do feriado
+            $.get(`/Feriado/Details/${feriadoId}`, function (data) {
+                if (data.success) {
+                    // Popula o modal com os dados do feriado
+                    $('#editarFeriadoId').val(data.feriadoBarbeariaId);
+                    $('#editarDescricao').val(data.descricao);
+                    $('#editarData').val(data.data.split('T')[0]); // Remove a parte de hora se existir
+                    $('#editarRecorrente').val(data.recorrente.toString()); // Converte boolean para string
+                    $('#editarModal').modal('show');
+                } else {
+                    showToast(data.message || "Erro ao carregar os detalhes do feriado.", "danger");
+                }
+            }).fail(function () {
+                showToast("Erro ao buscar os detalhes do feriado.", "danger");
+            });
+        });
+
+        // Submissão do formulário de edição via AJAX
+        $('#formEditarFeriado').on('submit', function (e) {
+            e.preventDefault();
+            const formData = $(this).serialize();
+            const feriadoId = $('#editarFeriadoId').val();
+
+            $.ajax({
+                url: `/Feriado/Edit/${feriadoId}`,
+                type: 'POST',
+                data: formData,
+                success: function (response) {
+                    $('#editarModal').modal('hide');
+                    showToast(response.message, response.success ? "success" : "danger");
+                    if (response.success) {
+                        location.reload();
+                    }
+                },
+                error: function () {
+                    showToast("Erro ao editar o feriado.", "danger");
+                }
+            });
+        });
+
+        // Ação para o botão de excluir
+        $('.btnExcluir').on('click', function () {
+            const feriadoId = $(this).data('id');
+            const feriadoNome = $(this).closest('.card').find('.card-title').text();
+            $('#excluirFeriadoDescricao').text(feriadoNome);
+            $('#btnConfirmarExcluir').data('id', feriadoId);
+            $('#excluirModal').modal('show');
+        });
+
+        // Confirmação de exclusão
+        $('#btnConfirmarExcluir').on('click', function () {
+            const feriadoId = $(this).data('id');
+
+            $.ajax({
+                url: '/Feriado/DeleteConfirmed',
+                type: 'POST',
+                data: { id: feriadoId },
+                success: function (response) {
+                    $('#excluirModal').modal('hide');
+                    showToast(response.message, response.success ? "success" : "danger");
+                    if (response.success) {
+                        location.reload();
+                    }
+                },
+                error: function () {
+                    showToast("Erro ao excluir o feriado.", "danger");
+                }
+            });
+        });
+
+        // Função de pesquisa
+        $('#searchFeriado').on('input', function () {
+            const query = $(this).val().toLowerCase();
+
+            $('.card').each(function () {
+                const text = $(this).text().toLowerCase();
+                const matches = text.includes(query);
+                $(this).toggle(matches);
+            });
+        });
+
+        // Filtro por recorrência
+        $('#filterRecorrente').on('change', function () {
+            const filter = $(this).val(); // Valor do filtro: "", "true", ou "false"
+
+            $('.card').each(function () {
+                const recorrente = $(this).data('recorrente')?.toString(); // Converte para string
+                const fixo = $(this).data('fixo'); // Valor booleano do atributo fixo
+
+                // Lógica de exibição
+                if (filter === "") {
+                    $(this).show(); // Mostrar todos os cards
+                } else if (filter === "true") {
+                    $(this).toggle(recorrente === "true" || fixo === true); // Mostrar recorrentes ou fixos
+                } else if (filter === "false") {
+                    $(this).toggle(recorrente === "false"); // Mostrar não recorrentes
+                }
+            });
+        });
+    }
+
+
+    // Página de Indisponibilidades
+    if ($('#indisponibilidadePage').length > 0) {
+        // Ação para o botão "Adicionar Indisponibilidade"
+        $('#btnAdicionarIndisponibilidade').on('click', function () {
+            carregarBarbeiros('#BarbeiroIdIndisponibilidade') // Carrega os barbeiros no select
+                .then(() => {
+                    $('#DataInicioIndisponibilidade').val('');
+                    $('#DataFimIndisponibilidade').val('');
+                    $('#MotivoIndisponibilidade').val('');
+                    $('#adicionarIndisponibilidadeModal').modal('show');
+                });
+        });
+
+        // Submissão do formulário de adição via AJAX
+        $('#formAdicionarIndisponibilidade').on('submit', function (e) {
+            e.preventDefault();
+            const formData = $(this).serialize(); // Serializa os dados do formulário
+
+            $.ajax({
+                url: '/IndisponibilidadeBarbeiro/Create',
+                type: 'POST',
+                data: formData,
+                success: function (response) {
+                    $('#adicionarIndisponibilidadeModal').modal('hide');
+                    showToast(response.message, response.success ? "success" : "danger");
+                    if (response.success) {
+                        location.reload();
+                    }
+                },
+                error: function () {
+                    showToast("Erro ao adicionar a indisponibilidade.", "danger");
+                }
+            });
+        });
+
+        // Ação para o botão de editar
+        $('.btnEditarIndisponibilidade').on('click', function () {
+            const indisponibilidadeId = $(this).data('id');
+
+            // Primeiro, carregar os barbeiros no select
+            carregarBarbeiros('#BarbeiroIdEditarIndisponibilidade')
+                .then(() => {
+                    $.get(`/IndisponibilidadeBarbeiro/Details/${indisponibilidadeId}`, function (data) {
+                        $('#editarIndisponibilidadeId').val(data.indisponibilidadeId);
+                        $('#BarbeiroIdEditarIndisponibilidade').val(data.barbeiroId); // Seleciona o barbeiro correspondente
+                        $('#DataInicioEditarIndisponibilidade').val(data.dataInicio.replace(' ', 'T'));
+                        $('#DataFimEditarIndisponibilidade').val(data.dataFim.replace(' ', 'T'));
+                        $('#MotivoEditarIndisponibilidade').val(data.motivo);
+                        $('#editarIndisponibilidadeModal').modal('show');
+                    });
+                });
+        });
+
+        // Submissão do formulário de edição via AJAX
+        $('#formEditarIndisponibilidade').on('submit', function (e) {
+            e.preventDefault();
+            const formData = $(this).serialize();
+            const indisponibilidadeId = $('#editarIndisponibilidadeId').val();
+
+            $.ajax({
+                url: `/IndisponibilidadeBarbeiro/Edit/${indisponibilidadeId}`,
+                type: 'POST',
+                data: formData,
+                success: function (response) {
+                    $('#editarIndisponibilidadeModal').modal('hide');
+                    showToast(response.message, response.success ? "success" : "danger");
+                    if (response.success) {
+                        location.reload();
+                    }
+                },
+                error: function () {
+                    showToast("Erro ao editar a indisponibilidade.", "danger");
+                }
+            });
+        });
+
+        // Ação para o botão de excluir
+        $('.btnExcluirIndisponibilidade').on('click', function () {
+            const indisponibilidadeId = $(this).data('id');
+            $('#btnConfirmarExcluirIndisponibilidade').data('id', indisponibilidadeId);
+            $('#excluirIndisponibilidadeModal').modal('show');
+        });
+
+        // Confirmação de exclusão
+        $('#btnConfirmarExcluirIndisponibilidade').on('click', function () {
+            const indisponibilidadeId = $(this).data('id');
+
+            $.ajax({
+                url: '/IndisponibilidadeBarbeiro/DeleteConfirmed',
+                type: 'POST',
+                data: { id: indisponibilidadeId },
+                success: function (response) {
+                    $('#excluirIndisponibilidadeModal').modal('hide');
+                    showToast(response.message, response.success ? "success" : "danger");
+                    if (response.success) {
+                        location.reload();
+                    }
+                },
+                error: function () {
+                    showToast("Erro ao excluir a indisponibilidade.", "danger");
+                }
+            });
+        });
+
+        // Função para carregar os barbeiros no select
+        function carregarBarbeiros(selectId) {
+            return new Promise((resolve, reject) => {
+                $.ajax({
+                    url: '/Barbeiro/ObterBarbeirosPorBarbearia',
+                    type: 'GET',
+                    success: function (response) {
+                        if (response.success) {
+                            const select = $(selectId);
+                            select.empty(); // Limpa o select antes de adicionar os novos valores
+                            select.append('<option value="">Selecione um barbeiro</option>'); // Adiciona a opção padrão
+                            response.barbeiros.forEach(barbeiro => {
+                                select.append(`<option value="${barbeiro.barbeiroId}">${barbeiro.nome}</option>`);
+                            });
+                            resolve(); // Resolve a Promise após o sucesso
+                        } else {
+                            showToast(response.message, "warning");
+                            reject(); // Rejeita a Promise caso haja erro
+                        }
+                    },
+                    error: function () {
+                        showToast("Erro ao carregar os barbeiros.", "danger");
+                        reject(); // Rejeita a Promise caso haja erro
+                    }
+                });
+            });
+        }
+    }
+
+
+
+
 
 
 });

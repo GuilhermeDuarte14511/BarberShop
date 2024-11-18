@@ -34,6 +34,7 @@ namespace BarberShop.Domain.Entities
         public bool Status { get; set; } // Usando bool para refletir o tipo bit no banco
 
         // Propriedades de navegação
+        public ICollection<FeriadoBarbearia> FeriadosBarbearias { get; set; }
         public ICollection<Barbeiro> Barbeiros { get; set; }
         public ICollection<Servico> Servicos { get; set; }
         public ICollection<Agendamento> Agendamentos { get; set; }

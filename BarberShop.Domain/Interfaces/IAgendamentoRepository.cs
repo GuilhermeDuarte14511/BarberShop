@@ -9,7 +9,7 @@ namespace BarberShop.Domain.Interfaces
     {
         Task<IEnumerable<Agendamento>> GetByClienteIdWithServicosAsync(int clienteId, int? barbeariaId);
         Task<IEnumerable<Agendamento>> GetByClienteIdAsync(int clienteId);
-        Task<IEnumerable<DateTime>> GetAvailableSlotsAsync(int barbeariaId, int barbeiroId, DateTime date, int duracaoTotal, Dictionary<DayOfWeek, (TimeSpan abertura, TimeSpan fechamento)> horarioFuncionamento);
+        Task<IEnumerable<DateTime>> GetAvailableSlotsAsync(int barbeariaId,int barbeiroId,DateTime date,int duracaoTotal,Dictionary<DayOfWeek, (TimeSpan abertura, TimeSpan fechamento)> horarioFuncionamento,HashSet<DateTime> feriados,List<(DateTime DataInicio, DateTime DataFim)> indisponibilidades);
         Task<IEnumerable<Agendamento>> ObterAgendamentosPorBarbeiroIdAsync(int barbeiroId, DateTime data);
         Task<IEnumerable<Agendamento>> ObterAgendamentosPorBarbeiroEHorarioAsync(int barbeiroId, DateTime dataHoraInicio, DateTime dataHoraFim);
         Task AtualizarStatusPagamentoAsync(int agendamentoId, StatusPagamento statusPagamento, string paymentId = null);

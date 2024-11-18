@@ -946,78 +946,115 @@ body {
 
 
 /* Container principal com animação */
-    .barbearias-list-container {
-        animation: fadeInContainer 1s ease-in-out;
-    }
+.barbearias-list-container {
+    animation: fadeInContainer 1s ease-in-out;
+}
 
-    /* Estilo dos cards compactos */
-    .barbearia-card {
-        opacity: 0;
-        transform: translateY(20px);
-        animation: fadeInCard 0.6s ease-out forwards;
-        transition: transform 0.3s;
-        padding: 10px;
-    }
+/* Estilo dos cards compactos */
+.barbearia-card {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInCard 0.6s ease-out forwards;
+    transition: transform 0.3s;
+    padding: 10px;
+}
 
     /* Animação sequencial para cada card */
-    .barbearia-card:nth-child(1) { animation-delay: 0.2s; }
-    .barbearia-card:nth-child(2) { animation-delay: 0.4s; }
-    .barbearia-card:nth-child(3) { animation-delay: 0.6s; }
+    .barbearia-card:nth-child(1) {
+        animation-delay: 0.2s;
+    }
+
+    .barbearia-card:nth-child(2) {
+        animation-delay: 0.4s;
+    }
+
+    .barbearia-card:nth-child(3) {
+        animation-delay: 0.6s;
+    }
 
     /* Efeito de hover para levantar o card */
     .barbearia-card:hover {
         transform: translateY(-8px);
     }
 
-    /* Tamanho reduzido da logo */
-    .barbearia-logo {
-        max-width: 80px;
-        max-height: 80px;
-        transition: transform 0.2s;
-    }
+/* Tamanho reduzido da logo */
+.barbearia-logo {
+    max-width: 80px;
+    max-height: 80px;
+    transition: transform 0.2s;
+}
 
     /* Vibração da logo ao passar o mouse */
     .barbearia-logo:hover {
         animation: vibrate 0.3s linear 1;
     }
 
-    /* Título e ícones em vermelho */
-    .barbearia-title, .barbearia-descricao, .barbearia-icon {
-        color: #e74c3c;
-    }
+/* Título e ícones em vermelho */
+.barbearia-title, .barbearia-descricao, .barbearia-icon {
+    color: #e74c3c;
+}
 
-    /* Botão */
-    .barbearia-btn {
-        background-color: #e74c3c;
-        border-color: #e74c3c;
-        color: #ffffff;
-    }
+/* Botão */
+.barbearia-btn {
+    background-color: #e74c3c;
+    border-color: #e74c3c;
+    color: #ffffff;
+}
 
     .barbearia-btn:hover {
         background-color: #c0392b;
         border-color: #c0392b;
     }
 
-    /* Animações */
-    @keyframes fadeInContainer {
-        from { opacity: 0; }
-        to { opacity: 1; }
+/* Animações */
+@keyframes fadeInContainer {
+    from {
+        opacity: 0;
     }
 
-    @keyframes fadeInCard {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeInCard {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
     }
 
-    /* Animação de vibração */
-    @keyframes vibrate {
-        0% { transform: translate(0); }
-        20% { transform: translate(-2px, 2px); }
-        40% { transform: translate(2px, -2px); }
-        60% { transform: translate(-2px, -2px); }
-        80% { transform: translate(2px, 2px); }
-        100% { transform: translate(0); }
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
+}
+
+/* Animação de vibração */
+@keyframes vibrate {
+    0% {
+        transform: translate(0);
+    }
+
+    20% {
+        transform: translate(-2px, 2px);
+    }
+
+    40% {
+        transform: translate(2px, -2px);
+    }
+
+    60% {
+        transform: translate(-2px, -2px);
+    }
+
+    80% {
+        transform: translate(2px, 2px);
+    }
+
+    100% {
+        transform: translate(0);
+    }
+}
 
 
 /* Estilo para o ícone do olho dentro do campo */
@@ -1183,87 +1220,310 @@ body {
     border-radius: 5px;
 }
 
+/*indisponibilidade cssd*/
+
+/* Geral */
+.indisponibilidadeAlert {
+    background-color: #1c1c1c;
+    color: #fff;
+    border: 1px solid #444;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+/* Cards */
+.indisponibilidadeCard {
+    background: linear-gradient(to bottom, #222, #333);
+    border-radius: 10px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.4);
+    padding: 20px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+    .indisponibilidadeCard:hover {
+        transform: scale(1.05);
+        box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.6);
+    }
+
+.indisponibilidadeCardBody {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+}
+
+.indisponibilidadeCardTitle {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 1.25rem;
+    color: #ffd700;
+}
+
+.indisponibilidadeCardText {
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #444;
+    font-size: 0.95rem;
+}
+
+/* Botões */
+.btnEditarIndisponibilidade {
+    background-color: #ffcc00;
+    color: #000;
+    border: none;
+}
+
+    .btnEditarIndisponibilidade:hover {
+        background-color: #e6b800;
+    }
+
+.btnExcluirIndisponibilidade {
+    background-color: #ff4d4d;
+    color: #fff;
+    border: none;
+}
+
+    .btnExcluirIndisponibilidade:hover {
+        background-color: #cc0000;
+    }
+
+/* Modais */
+.modal-content {
+    background-color: #1c1c1c;
+    color: #fff;
+    border-radius: 10px;
+}
+
+.modal-header {
+    border-bottom: 1px solid #444;
+}
+
+.modal-footer {
+    border-top: 1px solid #444;
+}
+
+/* Feriados */
+
+/* Cards */
+.feriadoCard {
+    background: linear-gradient(to bottom, #222, #333);
+    border-radius: 10px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.4);
+    padding: 20px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+    .feriadoCard:hover {
+        transform: scale(1.05);
+        box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.6);
+    }
+
+.feriadoCardBody {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+}
+
+.feriadoCardTitle {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 1.25rem;
+    color: #ffd700;
+}
+
+.feriadoCardText {
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #444;
+    font-size: 0.95rem;
+}
+
+/* Botões */
+.btnEditarFeriado {
+    background-color: #ffcc00;
+    color: #000;
+    border: none;
+}
+
+    .btnEditarFeriado:hover {
+        background-color: #e6b800;
+    }
+
+.btnExcluirFeriado {
+    background-color: #ff4d4d;
+    color: #fff;
+    border: none;
+}
+
+    .btnExcluirFeriado:hover {
+        background-color: #cc0000;
+    }
+
+/* Modais */
+.modal-content {
+    background-color: #1c1c1c;
+    color: #fff;
+    border-radius: 10px;
+}
+
+.modal-header {
+    border-bottom: 1px solid #444;
+}
+
+.modal-footer {
+    border-top: 1px solid #444;
+}
 
 
 
 /* Responsivo para Dispositivos Móveis */
 @media (max-width: 768px) {
-    #adminDashboard .col-lg-4,
-    #adminDashboard .col-md-6,
-    #adminDashboard .col-12 {
-        flex: 0 0 100%;
-        max-width: 100%;
+    #feriadoPage {
+        padding: 10px;
     }
 
-    .barbeiro-card {
-        margin-bottom: 1rem;
-        padding: 1.5rem;
+    /* Botões */
+    .btn {
+        font-size: 0.9rem;
+        margin-bottom: 10px;
     }
 
-        .barbeiro-card .card-title {
-            font-size: 1.2rem;
-        }
-
-        .barbeiro-card .card-text {
-            font-size: 1rem;
-        }
-
-        .barbeiro-card .actions .btn {
-            font-size: 0.9rem;
-        }
-
-    /* Ajuste de altura dos gráficos em mobile */
-    .card-body canvas {
-        height: 250px !important;
+    .btn-success {
+        display: block;
+        width: 100%; /* Botão ocupa toda a largura */
     }
 
-    .servico-card {
-        margin-bottom: 1rem;
-        padding: 1.5rem;
-    }
-
-        .servico-card .card-title {
-            font-size: 1.2rem;
-        }
-
-        .servico-card .card-text {
-            font-size: 1rem;
-        }
-
-        .servico-card .actions .btn {
-            font-size: 0.9rem;
-        }
-
-    .barbearia-logo-img {
-        width: 120px;
-        height: 120px;
-        object-fit: cover;
-        border-radius: 50%; /* Garante que a imagem também seja redonda */
-    }
-
-    .info-card {
+    /* Filtros e barra de pesquisa */
+    #searchFeriado,
+    #filterRecorrente {
+        margin-bottom: 10px;
         font-size: 0.9rem;
     }
 
-    .logo-container {
-        display: inline-block;
-        padding: 5px; /* Ajuste para criar um espaço entre a imagem e a borda */
-        border: 3px solid #e74c3c; /* Borda vermelha ao redor da imagem */
-        border-radius: 50%; /* Mantém a borda redonda */
+    .filter-section {
+        display: flex;
+        flex-direction: column;
+        gap: 10px; /* Espaçamento entre os filtros */
     }
 
-    .photo-preview {
-        width: 100px;
-        height: 100px;
-        object-fit: cover;
-        border-radius: 50%;
+        .filter-section > * {
+            width: 100%; /* Filtros ocupam 100% da largura no mobile */
+        }
+
+    #filterRecorrente {
+        width: 100% !important;
+        font-size: 1rem;
+        margin-bottom: 10px; /* Espaço extra abaixo do filtro */
     }
 
-  
+    #searchFeriado {
+        margin-bottom: 10px; /* Espaço extra abaixo da barra de pesquisa */
+    }
+
+    /* Cards */
+    .card {
+        margin-bottom: 20px;
+        border-radius: 8px;
+        padding: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Sombra para destacar os cards */
+    }
+
+    .card-title {
+        font-size: 1.2rem;
+        font-weight: bold;
+        text-align: center;
+    }
+
+    .card-text {
+        font-size: 1rem;
+        text-align: center;
+    }
+
+    .text-warning {
+        font-size: 0.9rem;
+        font-weight: bold;
+    }
+
+    /* Botões pequenos */
+    .btn-sm {
+        font-size: 0.8rem;
+        padding: 5px 10px;
+    }
+
+    /* Alinhamento e espaçamento dentro dos cards */
+    .card-body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px; /* Espaçamento entre os elementos no card */
+    }
+
+    .card-text + .card-text {
+        margin-top: 10px; /* Espaçamento entre textos */
+    }
+
+    /* Centralização dos botões */
+    .d-flex {
+        justify-content: center;
+    }
+
+    /* Margem entre colunas */
+    .row > .col-md-4,
+    .row > .col-lg-3 {
+        margin-bottom: 15px;
+    }
+
+    /* Alinhamento do texto nos cards */
+    .card-title,
+    .card-text {
+        text-align: center;
+    }
+
+    /* Adicionando espaço extra entre "Filtros" e os Cards */
+    .filter-section {
+        margin-bottom: 20px;
+    }
+
+    /* Ajustes para botões e selects */
+    .form-control, .form-select {
+        height: auto;
+        padding: 10px;
+    }
+
+    /* Melhoria da experiência visual no mobile */
+    .card {
+        background-color: #1c1c1c; /* Cor de fundo para contraste */
+    }
 }
+
+/* Estilo base para a seção de filtros */
+.filter-section {
+    display: flex;
+    flex-wrap: wrap; /* Ajusta no mobile */
+    gap: 10px; /* Espaçamento entre os itens */
+}
+
+    /* Para o campo de pesquisa e seleção */
+    .filter-section input,
+    .filter-section select {
+        flex: 1; /* Faz com que ambos tenham o mesmo tamanho */
+        min-width: 150px; /* Define um tamanho mínimo para os elementos */
+    }
 
 /* Responsivo para Desktops */
 @media (min-width: 992px) {
+    /* Ajuste para filtros no desktop */
+    .filter-section {
+        flex-wrap: nowrap; /* Mantém os itens lado a lado */
+        gap: 15px; /* Aumenta o espaçamento entre os itens */
+    }
+
+        .filter-section input,
+        .filter-section select {
+            flex: 0 0 48%; /* Ambos ocupam 48% da largura, com espaço entre eles */
+        }
+
     /* Para desktop, mantém 2 ou 3 colunas */
     .col-lg-4 {
         flex: 0 0 33.3333%;
