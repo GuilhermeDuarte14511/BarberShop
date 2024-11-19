@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BarberShop.Domain.Entities
 {
@@ -16,9 +16,17 @@ namespace BarberShop.Domain.Entities
         // Relacionamento com Indisponibilidades
         public ICollection<IndisponibilidadeBarbeiro> Indisponibilidades { get; set; }
 
+        // Relacionamento com BarbeiroServico
+        public ICollection<BarbeiroServico> BarbeiroServicos { get; set; }
+
+        [NotMapped]
+        public List<string> ServicosNaoRealizados { get; set; }
+
         public Barbeiro()
         {
             Indisponibilidades = new List<IndisponibilidadeBarbeiro>();
+            BarbeiroServicos = new List<BarbeiroServico>();
+            ServicosNaoRealizados = new List<string>();
         }
     }
 }

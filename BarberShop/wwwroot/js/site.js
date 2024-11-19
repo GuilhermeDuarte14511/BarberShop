@@ -720,6 +720,52 @@
 
     // Lógica para a página de Escolher Barbeiro
     if ($('#escolherBarbeiroPage').length > 0) {
+
+
+        // Seleciona todos os cards
+        const cards = document.querySelectorAll(".barber-card");
+
+        if (cards.length > 0) {
+            let maxHeight = 0;
+            let maxServicesHeight = 0;
+
+            // Calcula a maior altura do card e a maior altura da lista de serviços
+            cards.forEach((card) => {
+                const cardHeight = card.scrollHeight;
+                const servicesContainer = card.querySelector(".services-container");
+
+                // Verifica a altura do card
+                if (cardHeight > maxHeight) {
+                    maxHeight = cardHeight;
+                }
+
+                // Verifica a altura do contêiner de serviços
+                if (servicesContainer && servicesContainer.scrollHeight > maxServicesHeight) {
+                    maxServicesHeight = servicesContainer.scrollHeight;
+                }
+            });
+
+            console.log("Maior altura do card:", maxHeight);
+            console.log("Maior altura da lista de serviços:", maxServicesHeight);
+
+            // Aplica a altura máxima para todos os cards e ajusta a posição do botão
+            cards.forEach((card) => {
+                card.style.height = `${maxHeight}px`; // Define a altura do card
+
+                const servicesContainer = card.querySelector(".services-container");
+                const button = card.querySelector(".btn-danger");
+
+                // Ajusta a altura do contêiner de serviços e a posição do botão
+                if (servicesContainer) {
+                    servicesContainer.style.height = `${maxServicesHeight}px`;
+                }
+
+                if (button) {
+                    button.style.marginTop = "auto"; // Garante que o botão fique ao final
+                }
+            });
+        }
+
         // Carregar a localização em português para o Flatpickr
         flatpickr.localize(flatpickr.l10ns.pt);
         var selectedBarbeiroId = null;
@@ -1181,8 +1227,8 @@
             $('#adicionarNome').val('');
             $('#adicionarEmail').val('');
             $('#adicionarTelefone').val('');
-            $('#adicionarFoto').val(''); // Limpa o campo de seleção de foto
-            $('#adicionarFotoPreview').attr('src', 'https://via.placeholder.com/100'); // Reinicia a pré-visualização
+            $('#adicionarFoto').val('');
+            $('#adicionarFotoPreview').attr('src', 'https://via.placeholder.com/100');
             $('#adicionarModal').modal('show');
         });
 
@@ -1229,10 +1275,6 @@
                     if (response.success) {
                         $('#editarFotoPreview').attr("src", "data:image/png;base64," + response.newFotoBase64);
                         showToast("Foto atualizada com sucesso!", "success");
-
-                        // Atualiza a imagem no card correspondente
-                        const cardImage = $(`.photo-preview[data-id="${barbeiroId}"]`);
-                        cardImage.attr("src", "data:image/png;base64," + response.newFotoBase64);
                     } else {
                         showToast(response.message || "Erro ao atualizar a foto.", "danger");
                     }
@@ -1251,7 +1293,7 @@
         // Submissão do formulário de adição via AJAX
         $('#formAdicionarBarbeiro').on('submit', function (e) {
             e.preventDefault();
-            const formData = new FormData(this); // Inclui a foto e os demais dados do barbeiro
+            const formData = new FormData(this);
             $.ajax({
                 url: '/Barbeiro/Create',
                 type: 'POST',
@@ -1278,7 +1320,7 @@
             $('#visualizarFotoModal').modal('show');
         });
 
-        // Ação para o botão de editar
+        // Ação ao clicar no botão "Editar"
         $('.btnEditar').on('click', function () {
             var barbeiroId = $(this).data('id');
             $('#loadingSpinner').show();
@@ -1290,14 +1332,137 @@
                 $('#editarEmail').val(data.email);
                 $('#editarTelefone').val(data.telefone);
                 $('#editarFotoPreview').attr('src', data.foto ? `data:image/png;base64,${data.foto}` : 'https://via.placeholder.com/100');
+                $('#btnAdicionarServicoEditar').attr('data-barbeiro-id', data.barbeiroId);
+
+                var servicosContainer = $('#servicosContainer');
+                servicosContainer.empty();
+
+                if (data.servicos && data.servicos.length > 0) {
+                    data.servicos.forEach(function (servico) {
+                        servicosContainer.append(`
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <strong>${servico.nome}</strong>
+                                <span class="text-muted">R$${servico.preco.toFixed(2)} (${servico.duracao} min)</span>
+                            </div>
+                            <button class="btn btn-danger btn-sm btnDesvincular" data-barbeiro-id="${data.barbeiroId}" data-servico-id="${servico.servicoId}">
+                                Desvincular
+                            </button>
+                        </div>
+                    `);
+                    });
+                } else {
+                    servicosContainer.append('<div class="text-muted">Nenhum serviço associado.</div>');
+                }
+
                 $('#editarModal').modal('show');
+            }).fail(function () {
+                showToast('Erro ao carregar os detalhes do barbeiro.', 'danger');
+            });
+        });
+
+        $('#btnAdicionarServicoEditar').on('click', function (e) {
+            e.preventDefault(); // Impede o envio do formulário
+            console.log('Abrindo modal de adicionar serviço...');
+            var barbeiroId = $(this).data('barbeiro-id');
+            $('#servicosDisponiveisContainer').empty();
+
+            $.get(`/Barbeiro/ObterServicosNaoVinculados`, { barbeiroId: barbeiroId }, function (data) {
+                console.log('Serviços recebidos:', data);
+                if (data && data.length > 0) {
+                    data.forEach(function (servico) {
+                        $('#servicosDisponiveisContainer').append(`
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <strong>${servico.nome}</strong>
+                        <span class="text-muted">R$${servico.preco.toFixed(2)} (${servico.duracao} min)</span>
+                    </div>
+                    <button class="btn btn-primary btn-sm btnVincular" data-barbeiro-id="${barbeiroId}" data-servico-id="${servico.servicoId}">
+                        Adicionar
+                    </button>
+                </div>
+            `);
+                    });
+                } else {
+                    $('#servicosDisponiveisContainer').append('<div class="text-muted">Nenhum serviço disponível para adicionar.</div>');
+                }
+
+                $('#adicionarServicoModal').modal('show');
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                console.error('Erro ao carregar serviços:', textStatus, errorThrown);
+                showToast('Erro ao carregar os serviços disponíveis.', 'danger');
+            });
+        });
+
+
+        // Ação de vincular serviço
+        $(document).on('click', '.btnVincular', function () {
+            var barbeiroId = $(this).data('barbeiro-id');
+            var servicoId = $(this).data('servico-id');
+            var button = $(this);
+
+            button.prop('disabled', true);
+            $.ajax({
+                url: `/Barbeiro/VincularServico`,
+                type: 'POST',
+                data: { barbeiroId: barbeiroId, servicoId: servicoId },
+                success: function (response) {
+                    if (response.success) {
+                        showToast('Serviço adicionado com sucesso!', 'success');
+                        button.closest('.d-flex').remove();
+                        $('#servicosContainer').append(`
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <strong>${response.servico.nome}</strong>
+                                <span class="text-muted">R$${response.servico.preco.toFixed(2)} (${response.servico.duracao} min)</span>
+                            </div>
+                            <button class="btn btn-danger btn-sm btnDesvincular" data-barbeiro-id="${barbeiroId}" data-servico-id="${response.servico.servicoId}">
+                                Desvincular
+                            </button>
+                        </div>
+                    `);
+                    } else {
+                        showToast(response.message || 'Erro ao adicionar o serviço.', 'danger');
+                    }
+                },
+                error: function () {
+                    showToast('Erro ao processar a solicitação.', 'danger');
+                }
+            });
+        });
+
+        // Ação de desvincular serviço
+        $(document).on('click', '.btnDesvincular', function () {
+            var barbeiroId = $(this).data('barbeiro-id');
+            var servicoId = $(this).data('servico-id');
+            var button = $(this);
+
+            button.prop('disabled', true);
+            $.ajax({
+                url: `/Barbeiro/DesvincularServico`,
+                type: 'POST',
+                data: { barbeiroId: barbeiroId, servicoId: servicoId },
+                success: function (response) {
+                    if (response.success) {
+                        showToast('Serviço desvinculado com sucesso!', 'success');
+                        button.closest('.d-flex').remove();
+                    } else {
+                        showToast(response.message || 'Erro ao desvincular o serviço.', 'danger');
+                        button.prop('disabled', false);
+                    }
+                },
+                error: function () {
+                    showToast('Erro ao processar a solicitação.', 'danger');
+                    button.prop('disabled', false);
+                }
             });
         });
 
         // Submissão do formulário de edição via AJAX
         $('#formEditarBarbeiro').on('submit', function (e) {
             e.preventDefault();
-            var formData = new FormData(this); // Inclui a foto e outros dados do barbeiro
+            console.log('Formulário de edição submetido');
+            var formData = new FormData(this);
             var barbeiroId = $('#editarBarbeiroId').val();
             $('#loadingSpinner').show();
 
@@ -1308,11 +1473,13 @@
                 processData: false,
                 contentType: false,
                 success: function (response) {
+                    console.log('Edição bem-sucedida:', response);
                     $('#loadingSpinner').hide();
                     $('#editarModal').modal('hide');
                     showToast(response.message, response.success ? "success" : "danger");
                 },
-                error: function () {
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.error('Erro ao editar barbeiro:', textStatus, errorThrown);
                     $('#loadingSpinner').hide();
                     showToast("Erro ao editar o barbeiro.", "danger");
                 }
@@ -1341,6 +1508,9 @@
                     $('#loadingSpinner').hide();
                     $('#excluirModal').modal('hide');
                     showToast(response.message, response.success ? "success" : "danger");
+                    if (response.success) {
+                        location.reload();
+                    }
                 },
                 error: function () {
                     $('#loadingSpinner').hide();
@@ -1349,6 +1519,7 @@
             });
         });
     }
+
 
 
 

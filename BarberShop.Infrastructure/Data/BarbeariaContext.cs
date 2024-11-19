@@ -5,9 +5,15 @@ namespace BarberShop.Infrastructure.Data
 {
     public class BarbeariaContext : DbContext
     {
-        public BarbeariaContext(DbContextOptions<BarbeariaContext> options)
-            : base(options)
+        public BarbeariaContext(DbContextOptions<BarbeariaContext> options) : base(options)
         {
+            Console.WriteLine("DbContext criado.");
+        }
+
+        public override void Dispose()
+        {
+            Console.WriteLine("DbContext descartado.");
+            base.Dispose();
         }
 
         // DbSets para as entidades existentes
@@ -31,11 +37,27 @@ namespace BarberShop.Infrastructure.Data
         public DbSet<PagamentoAssinatura> PagamentosAssinaturasSite { get; set; }
         public DbSet<FeriadoNacional> FeriadosNacionais { get; set; }
         public DbSet<FeriadoBarbearia> FeriadosBarbearias { get; set; }
-        public DbSet<IndisponibilidadeBarbeiro> IndisponibilidadesBarbeiros { get; set; } // Adicionado
+        public DbSet<IndisponibilidadeBarbeiro> IndisponibilidadesBarbeiros { get; set; }
+        public DbSet<BarbeiroServico> BarbeiroServicos { get; set; } // Adicionado
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // Configuração da tabela BarbeiroServico (Relacionamento N para N)
+            modelBuilder.Entity<BarbeiroServico>()
+                .HasKey(bs => new { bs.BarbeiroId, bs.ServicoId }); // Chave composta
+
+            modelBuilder.Entity<BarbeiroServico>()
+                .HasOne(bs => bs.Barbeiro)
+                .WithMany(b => b.BarbeiroServicos)
+                .HasForeignKey(bs => bs.BarbeiroId);
+
+            modelBuilder.Entity<BarbeiroServico>()
+                .HasOne(bs => bs.Servico)
+                .WithMany(s => s.BarbeiroServicos)
+                .HasForeignKey(bs => bs.ServicoId);
+
 
             // Configuração de chave primária para PlanoAssinaturaBarbearia
             modelBuilder.Entity<PlanoAssinaturaBarbearia>()
@@ -104,7 +126,6 @@ namespace BarberShop.Infrastructure.Data
                 .WithOne(p => p.Agendamento)
                 .HasForeignKey<Pagamento>(p => p.AgendamentoId)
                 .OnDelete(DeleteBehavior.Cascade);
-
 
             modelBuilder.Entity<Pagamento>()
                 .Property(p => p.ValorPago)
@@ -182,7 +203,6 @@ namespace BarberShop.Infrastructure.Data
                 .WithMany(ag => ag.Avaliacoes)
                 .HasForeignKey(a => a.AgendamentoId)
                 .OnDelete(DeleteBehavior.Cascade);
-
         }
     }
 }

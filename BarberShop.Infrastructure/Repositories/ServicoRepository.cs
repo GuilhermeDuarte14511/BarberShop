@@ -107,5 +107,20 @@ namespace BarberShop.Infrastructure.Repositories
         {
             return await _context.SaveChangesAsync();
         }
+
+        public async Task<IEnumerable<string>> ObterNomesServicosAsync(IEnumerable<int> servicoIds)
+        {
+            try
+            {
+                return await _context.Servicos
+                    .Where(s => servicoIds.Contains(s.ServicoId))
+                    .Select(s => s.Nome)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Erro ao obter os nomes dos serviços por IDs", ex);
+            }
+        }
     }
 }

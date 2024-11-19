@@ -10,6 +10,23 @@ body {
     overflow-x: hidden;
 }
 
+#cardBodyHomePage {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Espaça os elementos corretamente */
+    align-items: center;
+    gap: 10px;
+}
+
+.separador-servico {
+    border: none;
+    height: 1px;
+    background: linear-gradient(to right, transparent, #444, transparent);
+    margin: 5px 0;
+}
+
+
+
 /* Ícone de "check" alinhado à esquerda */
 .check-icon {
     left: 15px;
@@ -637,7 +654,12 @@ body {
     }
 
 
-/* Estilos para os cards de barbeiros em telas menores */
+/* Botão desabilitado */
+.barbeiro-btn.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 .barbeiro-card {
     background-color: #2b2b2b;
     border: none;
@@ -645,42 +667,112 @@ body {
     box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
     padding: 15px;
     margin-bottom: 1rem;
+    transition: transform 0.2s;
+    height: 450px; /* Altura fixa padrão para todos os cards */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden; /* Garante que o conteúdo adicional não quebre o layout */
 }
 
+#escolherBarbeiroPage .card-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Garante que o botão fique no final */
+    align-items: center;
+    gap: 10px; /* Espaçamento entre os elementos */
+    height: 100%; /* Preenche o espaço total do card */
+}
+
+.barbeiro-btn {
+    width: 100%; /* Botão ocupa toda a largura */
+    margin-top: auto; /* Empurra o botão para o final do card */
+    font-size: 0.9rem;
+}
+
+/* Conteúdo interno do card */
+.services-container {
+    flex-grow: 1; /* Permite que o conteúdo ocupe o espaço disponível */
+    overflow-y: auto; /* Habilita rolagem se o conteúdo exceder o espaço */
+    max-height: 200px; /* Limita a área para a lista de serviços */
+    text-align: left;
+}
+
+    /* Efeito ao passar o mouse */
+    .barbeiro-card:hover:not(.disabled) {
+        transform: scale(1.05);
+    }
+
+    /* Título do card */
     .barbeiro-card .card-title {
         font-size: 1.2rem;
         font-weight: bold;
         color: #f39c12;
+        text-align: center;
     }
 
+    /* Texto do card */
     .barbeiro-card .card-text {
         font-size: 1rem;
         color: #ecf0f1;
+        text-align: center;
     }
 
-    .barbeiro-card .actions .btn {
-        width: 48%;
+    /* Botões de ação no card */
+    .barbeiro-card .btn {
+        width: 100%;
+        font-size: 0.9rem;
     }
 
-    .barbeiro-card .btn-warning {
-        background-color: #e74c3c;
-        border-color: #e74c3c;
+/* Botão desabilitado */
+.barbeiro-btn.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+
+/* Imagem do barbeiro arredondada */
+.photo-preview {
+    border: 2px solid #555;
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 50%;
+    margin-bottom: 1rem;
+}
+
+/* Botão de seleção */
+.barbeiro-card .btn-warning {
+    background-color: #e74c3c;
+    border-color: #e74c3c;
+}
+
+    .barbeiro-card .btn-warning:hover {
+        background-color: #c0392b;
+        border-color: #c0392b;
     }
 
-        .barbeiro-card .btn-warning:hover {
-            background-color: #c0392b;
-            border-color: #c0392b;
-        }
+/* Botão de ação padrão */
+.barbeiro-card .btn-danger {
+    background-color: #e74c3c;
+    border-color: #e74c3c;
+}
 
-    .barbeiro-card .btn-danger {
-        background-color: #e74c3c;
-        border-color: #e74c3c;
+    .barbeiro-card .btn-danger:hover {
+        background-color: #c0392b;
+        border-color: #c0392b;
     }
 
-        .barbeiro-card .btn-danger:hover {
-            background-color: #c0392b;
-            border-color: #c0392b;
-        }
+/* Imagem arredondada */
+.photo-preview {
+    border: 2px solid #555;
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 50%;
+    margin-bottom: 1rem;
+}
+
 
 /* Estilos para os cards de serviços em telas menores */
 .servico-card {
@@ -1154,6 +1246,13 @@ body {
     }
 }
 
+.divider {
+    border: 0;
+    height: 1px;
+    background: linear-gradient(to right, #f39c12, #2c3e50);
+    margin: 20px 0;
+}
+
 
 /* Estilo para o ícone do olho dentro do campo */
 .toggle-password-icon {
@@ -1475,16 +1574,83 @@ body {
 
 
 
-/* Responsivo para Dispositivos Móveis */
+/* CSS Responsivo para Dispositivos Móveis */
 @media (max-width: 768px) {
-    #feriadoPage {
+    #escolherBarbeiroPage {
         padding: 10px;
     }
 
-    /* Botões */
-    .btn {
-        font-size: 0.9rem;
+    .barber-card {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between; /* Distribui os elementos para que o botão fique no final */
+        height: auto; /* Permite que o card cresça conforme o conteúdo */
+        background-color: #2b2b2b;
+        border: none;
+        border-radius: 15px;
+        margin-bottom: 20px;
+        padding: 15px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .photo-preview {
+        width: 80px; /* Tamanho menor da imagem */
+        height: 80px;
         margin-bottom: 10px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 2px solid #555;
+    }
+
+    .services-container {
+        flex-grow: 1; /* Faz com que a lista de serviços preencha o espaço disponível */
+        max-height: 120px; /* Limite menor da altura para a lista de serviços */
+        overflow-y: auto; /* Adiciona rolagem caso necessário */
+        text-align: left;
+    }
+
+    /* Títulos e textos */
+    .barber-card .card-title {
+        font-size: 1rem;
+        font-weight: bold;
+        text-align: center;
+        color: #f39c12;
+    }
+
+    .barber-card .card-text {
+        font-size: 0.9rem;
+        text-align: center;
+        color: #ecf0f1;
+    }
+
+    /* Botão de ação no card */
+    .barber-card .btn {
+        margin-top: auto; /* Empurra o botão para o final do card */
+        font-size: 0.9rem;
+        width: 100%; /* Botão ocupa toda a largura do card */
+    }
+
+    /* Margens e espaçamento entre os cards */
+    .row > .col-sm-6,
+    .row > .col-md-4,
+    .row > .col-lg-3 {
+        margin-bottom: 15px;
+    }
+
+    /* Ajustes no layout geral */
+    .card-body {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1; /* Preenche o espaço entre os elementos */
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px; /* Espaçamento entre os elementos do card */
+    }
+
+    /* Botões adicionais */
+    .btn-sm {
+        font-size: 0.8rem;
+        padding: 5px 10px;
     }
 
     .btn-success {
@@ -1492,7 +1658,7 @@ body {
         width: 100%; /* Botão ocupa toda a largura */
     }
 
-    /* Filtros e barra de pesquisa */
+    /* Barra de pesquisa e filtros */
     #searchFeriado,
     #filterRecorrente {
         margin-bottom: 10px;
@@ -1503,97 +1669,39 @@ body {
         display: flex;
         flex-direction: column;
         gap: 10px; /* Espaçamento entre os filtros */
+        margin-bottom: 20px;
     }
 
         .filter-section > * {
-            width: 100%; /* Filtros ocupam 100% da largura no mobile */
+            width: 100%; /* Filtros ocupam toda a largura */
         }
 
     #filterRecorrente {
         width: 100% !important;
         font-size: 1rem;
-        margin-bottom: 10px; /* Espaço extra abaixo do filtro */
     }
 
-    #searchFeriado {
-        margin-bottom: 10px; /* Espaço extra abaixo da barra de pesquisa */
-    }
-
-    /* Cards */
+    /* Cards gerais */
     .card {
-        margin-bottom: 20px;
+        background-color: #1c1c1c; /* Cor de fundo */
         border-radius: 8px;
         padding: 15px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Sombra para destacar os cards */
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+        margin-bottom: 20px;
     }
 
-    .card-title {
-        font-size: 1.2rem;
-        font-weight: bold;
-        text-align: center;
-    }
-
-    .card-text {
-        font-size: 1rem;
-        text-align: center;
-    }
-
-    .text-warning {
-        font-size: 0.9rem;
-        font-weight: bold;
-    }
-
-    /* Botões pequenos */
-    .btn-sm {
-        font-size: 0.8rem;
-        padding: 5px 10px;
-    }
-
-    /* Alinhamento e espaçamento dentro dos cards */
-    .card-body {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 10px; /* Espaçamento entre os elementos no card */
-    }
-
-    .card-text + .card-text {
-        margin-top: 10px; /* Espaçamento entre textos */
-    }
-
-    /* Centralização dos botões */
+    /* Botões de ação */
     .d-flex {
         justify-content: center;
     }
 
-    /* Margem entre colunas */
-    .row > .col-md-4,
-    .row > .col-lg-3 {
-        margin-bottom: 15px;
-    }
-
-    /* Alinhamento do texto nos cards */
-    .card-title,
-    .card-text {
-        text-align: center;
-    }
-
-    /* Adicionando espaço extra entre "Filtros" e os Cards */
-    .filter-section {
-        margin-bottom: 20px;
-    }
-
-    /* Ajustes para botões e selects */
+    /* Inputs e selects */
     .form-control, .form-select {
         height: auto;
         padding: 10px;
     }
-
-    /* Melhoria da experiência visual no mobile */
-    .card {
-        background-color: #1c1c1c; /* Cor de fundo para contraste */
-    }
 }
+
 
 /* Estilo base para a seção de filtros */
 .filter-section {

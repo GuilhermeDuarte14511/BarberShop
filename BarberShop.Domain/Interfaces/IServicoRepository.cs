@@ -6,6 +6,7 @@ namespace BarberShop.Domain.Interfaces
     {
         Task<IEnumerable<Servico>> ObterServicosPorIdsAsync(IEnumerable<int> servicoIds);
         Task<IEnumerable<Servico>> ObterServicosPorBarbeariaIdAsync(int barbeariaId);
+        Task<IEnumerable<string>> ObterNomesServicosAsync(IEnumerable<int> servicoIds);
 
     }
 }

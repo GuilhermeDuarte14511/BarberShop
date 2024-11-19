@@ -1,6 +1,4 @@
 ﻿using BarberShop.Domain.Entities;
-using BarberShop.Application.Interfaces;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -16,14 +14,17 @@ namespace BarberShop.Application.Services
                 return null;
             }
 
+            // Criando os claims
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, cliente.ClienteId.ToString()),
                 new Claim(ClaimTypes.Name, cliente.Nome),
-                new Claim(ClaimTypes.Email, cliente.Email ?? cliente.Telefone)
+                new Claim(ClaimTypes.Email, cliente.Email ?? cliente.Telefone),
+                new Claim("Telefone", cliente.Telefone ?? string.Empty) // Exemplo de claim adicional
             };
 
-            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            // Configurando a identidade e principal
+            var claimsIdentity = new ClaimsIdentity(claims, "Cookies");
             return new ClaimsPrincipal(claimsIdentity);
         }
 
@@ -31,12 +32,7 @@ namespace BarberShop.Application.Services
         {
             using var sha256 = SHA256.Create();
             var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(senha));
-            var hashedPassword = new StringBuilder();
-            foreach (var b in hashBytes)
-            {
-                hashedPassword.Append(b.ToString("x2"));
-            }
-            return hashedPassword.ToString();
+            return Convert.ToHexString(hashBytes); // Método moderno para converter bytes em string hexadecimal
         }
 
         public bool VerifyPassword(string senha, string senhaHash)

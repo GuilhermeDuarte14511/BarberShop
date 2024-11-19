@@ -13,12 +13,18 @@ namespace BarberShopMVC.Controllers
     {
         private readonly IBarbeiroRepository _barbeiroRepository;
         private readonly IBarbeiroService _barbeiroService;
+        private readonly IBarbeiroServicoService _barbeiroServicoService;
 
-        public BarbeiroController(IBarbeiroRepository barbeiroRepository, IBarbeiroService barbeiroService, ILogService logService)
+        public BarbeiroController(
+            IBarbeiroRepository barbeiroRepository,
+            IBarbeiroService barbeiroService,
+            IBarbeiroServicoService barbeiroServicoService,
+            ILogService logService)
             : base(logService)
         {
             _barbeiroRepository = barbeiroRepository;
             _barbeiroService = barbeiroService;
+            _barbeiroServicoService = barbeiroServicoService;
         }
 
         public async Task<IActionResult> Index()
@@ -51,14 +57,22 @@ namespace BarberShopMVC.Controllers
                     return NotFound();
                 }
 
+                var servicos = await _barbeiroRepository.ObterServicosPorBarbeiroIdAsync(id);
+
                 return Json(new
                 {
                     BarbeiroId = barbeiro.BarbeiroId,
                     Nome = barbeiro.Nome,
                     Email = barbeiro.Email,
                     Telefone = barbeiro.Telefone,
-                    Foto = barbeiro.Foto
-
+                    Foto = barbeiro.Foto,
+                    Servicos = servicos.Select(s => new
+                    {
+                        s.ServicoId,
+                        s.Nome,
+                        s.Preco,
+                        s.Duracao
+                    })
                 });
             }
             catch (Exception ex)
@@ -168,11 +182,18 @@ namespace BarberShopMVC.Controllers
                     return RedirectToAction("BarbeariaNaoEncontrada", "Erro");
                 }
 
-                var barbeiros = await _barbeiroService.ObterBarbeirosPorBarbeariaIdAsync(barbeariaId.Value);
+                // Converter os IDs dos serviços de string para lista de inteiros
+                var servicoIdList = servicoIds.Split(',').Select(int.Parse).ToList();
+
+                // Obter os barbeiros e verificar os serviços que eles realizam
+                var barbeiros = await _barbeiroService.ObterBarbeirosPorServicosAsync(barbeariaId.Value, servicoIdList);
+
+                // Passar os dados para a View
                 ViewData["DuracaoTotal"] = duracaoTotal;
                 ViewData["ServicoIds"] = servicoIds;
                 ViewData["BarbeariaUrl"] = barbeariaUrl;
                 ViewData["BarbeariaId"] = barbeariaId;
+
                 return View("EscolherBarbeiro", barbeiros);
             }
             catch (Exception ex)
@@ -247,6 +268,87 @@ namespace BarberShopMVC.Controllers
                 return StatusCode(500, "Erro ao carregar os barbeiros.");
             }
         }
+
+        [HttpPost]
+        public async Task<IActionResult> DesvincularServico(int barbeiroId, int servicoId)
+        {
+            try
+            {
+                var sucesso = await _barbeiroServicoService.DesvincularServicoAsync(barbeiroId, servicoId);
+                if (!sucesso)
+                {
+                    return Json(new { success = false, message = "Serviço não encontrado ou já desvinculado." });
+                }
+
+                return Json(new { success = true, message = "Serviço desvinculado com sucesso." });
+            }
+            catch (Exception ex)
+            {
+                await LogAsync("Error", "BarbeiroController.DesvincularServico", ex.Message, ex.ToString());
+                return StatusCode(500, "Erro ao desvincular o serviço.");
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ObterServicosNaoVinculados(int barbeiroId)
+        {
+            try
+            {
+                if (barbeiroId <= 0)
+                {
+                    return BadRequest(new { message = "ID do barbeiro inválido." });
+                }
+
+                var servicos = await _barbeiroServicoService.ObterServicosNaoVinculadosAsync(barbeiroId);
+
+                return Json(servicos.Select(s => new
+                {
+                    s.ServicoId,
+                    s.Nome,
+                    s.Preco,
+                    s.Duracao
+                }));
+            }
+            catch (Exception ex)
+            {
+                await LogAsync("Error", "BarbeiroController.ObterServicosNaoVinculados", ex.Message, ex.ToString(), barbeiroId.ToString());
+                return StatusCode(500, new { message = "Erro ao obter os serviços não vinculados." });
+            }
+        }
+
+
+
+        [HttpPost]
+        public async Task<IActionResult> VincularServico(int barbeiroId, int servicoId)
+        {
+            try
+            {
+                await _barbeiroServicoService.VincularServicoAsync(barbeiroId, servicoId);
+
+                var servico = await _barbeiroServicoService.ObterServicoPorIdAsync(servicoId);
+
+                // Retorne apenas os dados necessários
+                return Json(new
+                {
+                    success = true,
+                    servico = new
+                    {
+                        servico.ServicoId,
+                        servico.Nome,
+                        servico.Preco,
+                        servico.Duracao
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                await LogAsync("Error", "BarbeiroController.VincularServico", ex.Message, ex.ToString(), $"{barbeiroId}, {servicoId}");
+                return StatusCode(500, new { message = "Erro ao vincular serviço." });
+            }
+        }
+
+
+
 
     }
 }

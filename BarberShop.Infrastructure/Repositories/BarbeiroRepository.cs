@@ -75,5 +75,27 @@ namespace BarberShop.Infrastructure.Repositories
         {
             return await _context.SaveChangesAsync();
         }
+
+        public async Task<IEnumerable<(int BarbeiroId, int ServicoId)>> ObterBarbeirosComServicosPorBarbeariaIdAsync(int barbeariaId)
+        {
+             var resultado = await _context.BarbeiroServicos
+                .Where(bs => bs.Barbeiro.BarbeariaId == barbeariaId)
+                .Select(bs => new { bs.BarbeiroId, bs.ServicoId }) // Usar tipo anônimo
+                .ToListAsync();
+
+            // Converter para tuplas
+            return resultado.Select(r => (r.BarbeiroId, r.ServicoId));
+        }
+
+        public async Task<IEnumerable<Servico>> ObterServicosPorBarbeiroIdAsync(int barbeiroId)
+        {
+            return await _context.BarbeiroServicos
+                .Where(bs => bs.BarbeiroId == barbeiroId)
+                .Select(bs => bs.Servico)
+                .ToListAsync();
+        }
+
+
+
     }
 }

@@ -14,7 +14,6 @@ using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configurar a string de conexão usando o appsettings.json
 builder.Services.AddDbContext<BarbeariaContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BarberShopDb")));
 
@@ -79,6 +78,7 @@ builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IFeriadoNacionalRepository, FeriadoNacionalRepository>();
 builder.Services.AddScoped<IFeriadoBarbeariaRepository, FeriadoBarbeariaRepository>();
 builder.Services.AddScoped<IIndisponibilidadeRepository, IndisponibilidadeRepository>();
+builder.Services.AddScoped<IBarbeiroServicoRepository, BarbeiroServicoRepository>();
 
 
 // Registrar serviços da camada de aplicação
@@ -91,6 +91,7 @@ builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IFeriadoBarbeariaService, FeriadoBarbeariaService>();
 builder.Services.AddScoped<IIndisponibilidadeService, IndisponibilidadeService>();
 builder.Services.AddScoped<IAvaliacaoService, AvaliacaoService>();
+builder.Services.AddScoped<IBarbeiroServicoService, BarbeiroServicoService>();
 
 
 // Configurar autenticação com cookies
@@ -111,49 +112,49 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true; // Necessário para o funcionamento da aplicação
 });
 
-// Lê a expressão cron do appsettings.json
-var cronExpression = builder.Configuration["AppSettings:QuartzCron"];
+//// Lê a expressão cron do appsettings.json
+//var cronExpression = builder.Configuration["AppSettings:QuartzCron"];
 
-// Verifica se a expressão cron foi configurada, caso contrário, define um padrão (a cada 10 segundos)
-if (string.IsNullOrWhiteSpace(cronExpression))
-{
-    cronExpression = "0/10 * * * * ?"; // Default: a cada 10 segundos
-    Console.WriteLine("Expressão cron não configurada. Usando o padrão: 0/10 * * * * ?");
-}
-else
-{
-    Console.WriteLine($"Usando a expressão cron configurada: {cronExpression}");
-}
+//// Verifica se a expressão cron foi configurada, caso contrário, define um padrão (a cada 10 segundos)
+//if (string.IsNullOrWhiteSpace(cronExpression))
+//{
+//    cronExpression = "0/10 * * * * ?"; // Default: a cada 10 segundos
+//    Console.WriteLine("Expressão cron não configurada. Usando o padrão: 0/10 * * * * ?");
+//}
+//else
+//{
+//    Console.WriteLine($"Usando a expressão cron configurada: {cronExpression}");
+//}
 
-// Configura o Quartz.NET
-builder.Services.AddQuartz(config =>
-{
-    // Define o Job
-    var jobKey = new JobKey("EnviarEmailAvaliacaoJob");
+//// Configura o Quartz.NET
+//builder.Services.AddQuartz(config =>
+//{
+//    // Define o Job
+//    var jobKey = new JobKey("EnviarEmailAvaliacaoJob");
 
-    config.AddJob<EnviarEmailAvaliacaoJob>(opts =>
-    {
-        opts.WithIdentity(jobKey);
-        Console.WriteLine($"Job 'EnviarEmailAvaliacaoJob' registrado com sucesso.");
-    });
+//    config.AddJob<EnviarEmailAvaliacaoJob>(opts =>
+//    {
+//        opts.WithIdentity(jobKey);
+//        Console.WriteLine($"Job 'EnviarEmailAvaliacaoJob' registrado com sucesso.");
+//    });
 
-    // Define a Trigger
-    config.AddTrigger(opts =>
-    {
-        opts.ForJob(jobKey)
-            .WithIdentity("EnviarEmailAvaliacaoTrigger")
-            .StartNow() // Inicia imediatamente
-            .WithSimpleSchedule(schedule =>
-                schedule.WithIntervalInMinutes(10) // Executa a cada 10 minutos
-                        .RepeatForever()); // Repete indefinidamente
-        Console.WriteLine("Trigger para o Job 'EnviarEmailAvaliacaoJob' configurada para iniciar imediatamente e repetir a cada 10 minutos.");
-    });
-});
+//    // Define a Trigger
+//    config.AddTrigger(opts =>
+//    {
+//        opts.ForJob(jobKey)
+//            .WithIdentity("EnviarEmailAvaliacaoTrigger")
+//            .StartNow() // Inicia imediatamente
+//            .WithSimpleSchedule(schedule =>
+//                schedule.WithIntervalInMinutes(10) // Executa a cada 10 minutos
+//                        .RepeatForever()); // Repete indefinidamente
+//        Console.WriteLine("Trigger para o Job 'EnviarEmailAvaliacaoJob' configurada para iniciar imediatamente e repetir a cada 10 minutos.");
+//    });
+//});
 
-builder.Services.AddQuartzHostedService(options =>
-{
-    options.WaitForJobsToComplete = true; // Garante que os jobs sejam completados ao encerrar o serviço
-});
+//builder.Services.AddQuartzHostedService(options =>
+//{
+//    options.WaitForJobsToComplete = true; // Garante que os jobs sejam completados ao encerrar o serviço
+//});
 
 // Adicionar serviços MVC e configurar o Swagger
 builder.Services.AddControllersWithViews();
