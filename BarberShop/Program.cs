@@ -1,4 +1,5 @@
 using BarberShop.Application.Interfaces;
+using BarberShop.Application.Jobs;
 using BarberShop.Application.Services;
 using BarberShop.Application.Settings;
 using BarberShop.Domain.Entities;
@@ -7,6 +8,7 @@ using BarberShop.Infrastructure.Data;
 using BarberShop.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using Quartz;
 using Stripe;
 using System.Security.Claims;
 
@@ -58,6 +60,9 @@ builder.Services.AddSingleton(provider =>
     return configuration["Stripe:PublishableKey"];
 });
 
+builder.Services.AddHttpContextAccessor();
+
+
 // Registrar repositórios
 builder.Services.AddScoped<IClienteRepository, ClienteRepository>();
 builder.Services.AddScoped<IBarbeiroRepository, BarbeiroRepository>();
@@ -85,6 +90,8 @@ builder.Services.AddScoped<IAutenticacaoService, AutenticacaoService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IFeriadoBarbeariaService, FeriadoBarbeariaService>();
 builder.Services.AddScoped<IIndisponibilidadeService, IndisponibilidadeService>();
+builder.Services.AddScoped<IAvaliacaoService, AvaliacaoService>();
+
 
 // Configurar autenticação com cookies
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -102,6 +109,50 @@ builder.Services.AddSession(options =>
     options.IdleTimeout = TimeSpan.FromMinutes(30); // Tempo de expiração da sessão
     options.Cookie.HttpOnly = true; // Acesso apenas via HTTP
     options.Cookie.IsEssential = true; // Necessário para o funcionamento da aplicação
+});
+
+// Lê a expressão cron do appsettings.json
+var cronExpression = builder.Configuration["AppSettings:QuartzCron"];
+
+// Verifica se a expressão cron foi configurada, caso contrário, define um padrão (a cada 10 segundos)
+if (string.IsNullOrWhiteSpace(cronExpression))
+{
+    cronExpression = "0/10 * * * * ?"; // Default: a cada 10 segundos
+    Console.WriteLine("Expressão cron não configurada. Usando o padrão: 0/10 * * * * ?");
+}
+else
+{
+    Console.WriteLine($"Usando a expressão cron configurada: {cronExpression}");
+}
+
+// Configura o Quartz.NET
+builder.Services.AddQuartz(config =>
+{
+    // Define o Job
+    var jobKey = new JobKey("EnviarEmailAvaliacaoJob");
+
+    config.AddJob<EnviarEmailAvaliacaoJob>(opts =>
+    {
+        opts.WithIdentity(jobKey);
+        Console.WriteLine($"Job 'EnviarEmailAvaliacaoJob' registrado com sucesso.");
+    });
+
+    // Define a Trigger
+    config.AddTrigger(opts =>
+    {
+        opts.ForJob(jobKey)
+            .WithIdentity("EnviarEmailAvaliacaoTrigger")
+            .StartNow() // Inicia imediatamente
+            .WithSimpleSchedule(schedule =>
+                schedule.WithIntervalInMinutes(10) // Executa a cada 10 minutos
+                        .RepeatForever()); // Repete indefinidamente
+        Console.WriteLine("Trigger para o Job 'EnviarEmailAvaliacaoJob' configurada para iniciar imediatamente e repetir a cada 10 minutos.");
+    });
+});
+
+builder.Services.AddQuartzHostedService(options =>
+{
+    options.WaitForJobsToComplete = true; // Garante que os jobs sejam completados ao encerrar o serviço
 });
 
 // Adicionar serviços MVC e configurar o Swagger

@@ -8,14 +8,12 @@ namespace BarberShop.Application.DTOs
 {
     public class AvaliacaoDTO
     {
+        public int AvaliacaoId { get; set; }
         public int AgendamentoId { get; set; }
-        public DateTime DataHora { get; set; }
-        public int Status { get; set; }
-        public int DuracaoTotal { get; set; }
-        public string FormaPagamento { get; set; }
-        public decimal PrecoTotal { get; set; }
-        public string ClienteNome { get; set; }
-        public string BarbeiroNome { get; set; }
-        public string Servicos { get; set; }
+        public int NotaBarbeiro { get; set; }
+        public int NotaServico { get; set; }
+        public string Observacao { get; set; }
+        public DateTime DataAvaliado { get; set; }
     }
+
 }

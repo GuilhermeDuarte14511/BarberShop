@@ -11,6 +11,7 @@ namespace BarberShop.Domain.Interfaces
         Task UpdateAsync(T entity);
         Task DeleteAsync(int id);
         Task<int> SaveChangesAsync(); // Deve retornar um Task<int>
+
     }
 
 }

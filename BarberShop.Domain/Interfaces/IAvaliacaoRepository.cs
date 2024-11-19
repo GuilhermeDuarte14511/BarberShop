@@ -9,6 +9,8 @@ namespace BarberShop.Domain.Interfaces
 {
     public interface IAvaliacaoRepository : IRepository<Avaliacao>
     {
-        Task<IEnumerable<Avaliacao>> GetAvaliacoesPorAgendamentoIdAsync(int agendamentoId);
+        Task<Avaliacao> ObterAvaliacaoPorAgendamentoIdAsync(int agendamentoId);
+        Task<Avaliacao> AdicionarAvaliacaoAsync(Avaliacao avaliacao);
+
     }
 }

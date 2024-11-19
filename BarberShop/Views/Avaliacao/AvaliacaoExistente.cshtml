@@ -1,0 +1,50 @@
+﻿@model BarberShop.Domain.Entities.Avaliacao
+
+<div id="avaliacaoExistentePage" class="avaliacao-container">
+    <h2>Avaliação do Atendimento</h2>
+
+    <div class="detalhes-atendimento">
+        <p>
+            Você foi atendido no dia <strong>@Model.Agendamento.DataHora.ToString("dd/MM/yyyy HH:mm")</strong> pelo barbeiro
+            <strong>@Model.Agendamento.Barbeiro.Nome</strong> para realizar:
+            <strong>@String.Join(", ", Model.Agendamento.AgendamentoServicos.Select(s => s.Servico.Nome))</strong>
+        </p>
+        <p>Veja abaixo a avaliação:</p>
+    </div>
+
+    <!-- Estrelas de Avaliação para Serviço -->
+    <div>
+        <h4>Avaliação do Serviço</h4>
+        <div id="avaliacaoExistenteEstrelasServico" class="avaliacao-estrelas">
+            @for (int i = 1; i <= 5; i++)
+            {
+                <svg class="avaliacao-estrela @(Model.NotaServico >= i ? "selecionada" : "")" data-value="@i" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                </svg>
+            }
+        </div>
+    </div>
+
+    <!-- Estrelas de Avaliação para Barbeiro -->
+    <div>
+        <h4>Avaliação do Barbeiro</h4>
+        <div id="avaliacaoExistenteEstrelasBarbeiro" class="avaliacao-estrelas">
+            @for (int i = 1; i <= 5; i++)
+            {
+                <svg class="avaliacao-estrela @(Model.NotaBarbeiro >= i ? "selecionada" : "")" data-value="@i" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                </svg>
+            }
+        </div>
+    </div>
+
+    <!-- Observação -->
+    <div>
+        <h4>Observação</h4>
+        <textarea id="avaliacaoExistenteObservacao" class="form-control" placeholder="Nenhuma observação fornecida" readonly>
+            @Model.Observacao
+        </textarea>
+    </div>
+
+    <a href="/Home/Index" class="btn btn-primary mt-3">Voltar</a>
+</div>

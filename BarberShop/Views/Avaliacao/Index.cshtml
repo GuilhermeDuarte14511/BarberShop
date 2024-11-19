@@ -2,39 +2,65 @@
 
 <div id="avaliacaoPage" class="avaliacao-container">
     <h2>Avaliação do Atendimento</h2>
-    <p>Você foi atendido no dia <strong>@Model.DataHora.ToString("dd/MM/yyyy HH:mm")</strong> pelo barbeiro <strong>@Model.Barbeiro.Nome</strong> para fazer <strong>@String.Join(", ", Model.AgendamentoServicos.Select(s => s.Servico.Nome))</strong></p>
-    <p>Deixe-nos uma avaliação pelo seu atendimento:</p>
+    <input type="hidden" id="agendamentoId" value="@Model.AgendamentoId" />
 
-    <!-- Exibir serviços, se houver -->
-    <p><strong>Serviços:</strong> @String.Join(", ", Model.AgendamentoServicos.Select(s => s.Servico.Nome))</p>
-
-    <!-- Estrelas de Avaliação com SVG -->
-    <div id="avaliacaoEstrelas" class="avaliacao-estrelas">
-        <svg class="avaliacao-estrela" data-value="1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
-        <svg class="avaliacao-estrela" data-value="2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
-        <svg class="avaliacao-estrela" data-value="3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
-        <svg class="avaliacao-estrela" data-value="4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
-        <svg class="avaliacao-estrela" data-value="5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
+    <div class="detalhes-atendimento">
+        <p>Você foi atendido por <strong>@Model.Barbeiro.Nome</strong> no dia <strong>@Model.DataHora.ToString("dd/MM/yyyy HH:mm")</strong>.</p>
+        <p>Para fazer os seguintes serviços:</p>
+        <ul>
+            @foreach (var servico in Model.AgendamentoServicos.Select(s => s.Servico.Nome))
+            {
+                <li>@servico</li>
+            }
+        </ul>
+        <p>Deixe-nos uma avaliação pelo seu atendimento:</p>
     </div>
 
+    <!-- Estrelas de Avaliação para Serviços -->
+    <div class="avaliacao-section">
+        <h3>Avalie os Serviços</h3>
+        <div id="avaliacaoServicos" class="avaliacao-estrelas">
+            <svg class="avaliacao-estrela" data-value="1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
+            <svg class="avaliacao-estrela" data-value="2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
+            <svg class="avaliacao-estrela" data-value="3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
+            <svg class="avaliacao-estrela" data-value="4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
+            <svg class="avaliacao-estrela" data-value="5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
+        </div>
+    </div>
+
+    <!-- Estrelas de Avaliação para o Barbeiro -->
+    <div class="avaliacao-section">
+        <h3>Avalie o Barbeiro</h3>
+        <div id="avaliacaoBarbeiro" class="avaliacao-estrelas">
+            <svg class="avaliacao-estrela" data-value="1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
+            <svg class="avaliacao-estrela" data-value="2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
+            <svg class="avaliacao-estrela" data-value="3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
+            <svg class="avaliacao-estrela" data-value="4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
+            <svg class="avaliacao-estrela" data-value="5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
+        </div>
+    </div>
+
+    <!-- Campo de Observação -->
     <div id="avaliacaoObservacaoContainer" class="avaliacao-observacao-container hidden">
         <textarea id="avaliacaoObservacao" placeholder="Deixe sua observação (opcional)"></textarea>
     </div>
 
     <button id="avaliacaoEnviarBtn" class="btn btn-primary">Enviar Avaliação</button>
-
-    <div id="avaliacaoMensagemAgradecimento" class="avaliacao-mensagem-agradecimento alert alert-success" style="display:none;">
-        <div class="avaliacao-checkmark">
-            <div class="avaliacao-checkmark-circle"></div>
-            <div class="avaliacao-checkmark-stem"></div>
-            <div class="avaliacao-checkmark-kick"></div>
-        </div>
-        Obrigado pela sua avaliação!
-    </div>
-
+    <!-- Spinner de Carregamento -->
     <div id="avaliacaoLoadingSpinner" style="display: none;">
         <div class="spinner-border" role="status">
             <span class="sr-only">Loading...</span>
         </div>
     </div>
+</div>
+
+<!-- Mensagem de Agradecimento -->
+<div id="avaliacaoMensagemAgradecimento" class="avaliacao-mensagem-agradecimento alert alert-success" style="display:none;">
+    <div class="avaliacao-checkmark">
+        <div class="avaliacao-checkmark-circle">
+            <i class="fas fa-check"></i> <!-- Ícone Font Awesome -->
+        </div>
+    </div>
+    <h3>Obrigado pela sua avaliação!</h3>
+    <p>Sua opinião é muito importante para nós.</p>
 </div>

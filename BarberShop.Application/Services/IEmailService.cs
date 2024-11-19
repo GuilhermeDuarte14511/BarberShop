@@ -50,6 +50,8 @@
             string nomeBarbearia);
 
         Task EnviarEmailRecuperacaoSenhaAsync(string destinatarioEmail, string destinatarioNome, string linkRecuperacao);
+        Task EnviaEmailAvaliacao(int agendamentoId, string destinatarioEmail, string destinatarioNome, string nomeBarbearia, string urlBase);
+
 
     }
 }

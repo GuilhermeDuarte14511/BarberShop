@@ -77,13 +77,12 @@ namespace BarberShop.Infrastructure.Repositories
         public async Task<Agendamento> GetDataAvaliacaoAsync(int agendamentoId)
         {
             return await _context.Agendamentos
-                .Include(a => a.Cliente)
-                .Include(a => a.Barbeiro)
-                .Include(a => a.AgendamentoServicos)
-                    .ThenInclude(asg => asg.Servico) // Inclui os serviços
-                .Include(a => a.Avaliacoes) // Inclui as avaliações
+                .Include(a => a.Barbeiro) // Inclui o barbeiro responsável
+                .Include(a => a.AgendamentoServicos) // Inclui os serviços do agendamento
+                    .ThenInclude(asg => asg.Servico) // Inclui os detalhes dos serviços
                 .FirstOrDefaultAsync(a => a.AgendamentoId == agendamentoId);
         }
+
 
         // Implementação de GetAgendamentosPorBarbeariaAsync
         public async Task<IEnumerable<Agendamento>> GetAgendamentosPorBarbeariaAsync(int barbeariaId)
@@ -319,6 +318,19 @@ namespace BarberShop.Infrastructure.Repositories
             return await _context.SaveChangesAsync();
         }
 
+
+        public async Task<IEnumerable<Agendamento>> ObterAgendamentosConcluidosSemEmailAsync()
+        {
+            var dataLimite = DateTime.UtcNow.AddDays(-1);
+
+            return await _context.Agendamentos
+                .Where(a => a.Status == StatusAgendamento.Concluido &&
+                            a.DataHora <= dataLimite &&
+                            (a.EmailEnviado == null || a.EmailEnviado == false))
+                .Include(a => a.Cliente)
+                .Include(a => a.Barbearia)
+                .ToListAsync();
+        }
 
 
     }

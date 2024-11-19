@@ -105,6 +105,7 @@ namespace BarberShop.Infrastructure.Data
                 .HasForeignKey<Pagamento>(p => p.AgendamentoId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+
             modelBuilder.Entity<Pagamento>()
                 .Property(p => p.ValorPago)
                 .HasColumnType("decimal(18,2)");
@@ -175,6 +176,13 @@ namespace BarberShop.Infrastructure.Data
                 .WithMany()
                 .HasForeignKey(p => p.ServicoId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Avaliacao>()
+                .HasOne(a => a.Agendamento)
+                .WithMany(ag => ag.Avaliacoes)
+                .HasForeignKey(a => a.AgendamentoId)
+                .OnDelete(DeleteBehavior.Cascade);
+
         }
     }
 }

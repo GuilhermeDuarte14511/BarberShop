@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace BarberShop.Domain.Entities
 {
@@ -21,8 +22,13 @@ namespace BarberShop.Domain.Entities
         public int BarbeariaId { get; set; }
         public Barbearia Barbearia { get; set; }
 
+        public bool? EmailEnviado { get; set; } // Coluna de controle para e-mail
+
         public ICollection<AgendamentoServico> AgendamentoServicos { get; set; }
+
         public Pagamento Pagamento { get; set; }
+
+        [JsonIgnore] // Ignora a serialização dessa propriedade para evitar ciclos
         public ICollection<Avaliacao> Avaliacoes { get; set; }
     }
 }

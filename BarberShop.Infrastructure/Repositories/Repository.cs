@@ -48,4 +48,5 @@ public class Repository<T> : IRepository<T> where T : class
     {
         return await _context.SaveChangesAsync(); // Retorna o número de entradas afetadas
     }
+
 }

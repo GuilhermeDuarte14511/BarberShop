@@ -2,6 +2,8 @@
 using BarberShop.Domain.Interfaces;
 using BarberShop.Infrastructure.Data;
 using BarberShop.Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
+using SendGrid.Helpers.Mail;
 
 namespace BarberShop.Application.Services
 {
@@ -181,10 +183,6 @@ namespace BarberShop.Application.Services
         }
 
 
-
-
-
-
         public async Task AtualizarStatusPagamentoAsync(int pagamentoId, StatusPagamento statusPagamento)
         {
             var pagamento = await _pagamentoRepository.GetByIdAsync(pagamentoId);
@@ -199,5 +197,13 @@ namespace BarberShop.Application.Services
         {
             return await _pagamentoRepository.GetPagamentosPorAgendamentoIdAsync(agendamentoId);
         }
+
+        public async Task<List<Agendamento>> ObterAgendamentosConcluidosAsync()
+        {
+            var agendamentos = await _agendamentoRepository.ObterAgendamentosConcluidosSemEmailAsync();
+            return agendamentos.ToList();
+        }
+
+
     }
 }

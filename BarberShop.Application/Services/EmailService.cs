@@ -531,5 +531,111 @@ namespace BarberShop.Application.Services
             await _logService.SaveLogAsync("EmailService", $"E-mail de redefinição de senha enviado com sucesso para: {destinatarioEmail}", "INFO", _sendGridApiKey);
         }
 
+        public async Task EnviaEmailAvaliacao(int agendamentoId, string destinatarioEmail, string destinatarioNome, string nomeBarbearia, string urlBase)
+        {
+            try
+            {
+                await _logService.SaveLogAsync("EmailService", $"Iniciando envio de email de avaliação para {destinatarioEmail}", "INFO", _sendGridApiKey);
+
+                var client = new SendGridClient(_sendGridApiKey);
+                var from = new EmailAddress("barbershoperbrasil@outlook.com", nomeBarbearia);
+                var to = new EmailAddress(destinatarioEmail, destinatarioNome);
+                var assunto = "Nos avalie - Sua opinião é muito importante!";
+
+                // URL de avaliação
+                var avaliacaoUrl = $"{urlBase}/Avaliacao/Index?agendamentoId={agendamentoId}";
+
+                // Conteúdo do e-mail
+                string htmlContent = $@"
+                        <html>
+                        <head>
+                            <style>
+                                body {{
+                                    font-family: 'Arial', sans-serif;
+                                    background-color: #2c2f33;
+                                    margin: 0;
+                                    padding: 0;
+                                }}
+                                .container {{
+                                    background-color: #23272a;
+                                    color: #ffffff;
+                                    max-width: 600px;
+                                    margin: 20px auto;
+                                    border-radius: 10px;
+                                    padding: 20px;
+                                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                                }}
+                                h1 {{
+                                    font-size: 24px;
+                                    color: #e74c3c;
+                                    text-align: center;
+                                    border-bottom: 2px solid #e74c3c;
+                                    padding-bottom: 10px;
+                                    margin-bottom: 20px;
+                                }}
+                                p {{
+                                    font-size: 16px;
+                                    line-height: 1.6;
+                                    color: #ffffff;
+                                }}
+                                .link {{
+                                    display: block;
+                                    width: fit-content;
+                                    background-color: #e74c3c;
+                                    color: #ffffff;
+                                    font-size: 18px;
+                                    font-weight: bold;
+                                    text-align: center;
+                                    padding: 15px;
+                                    border-radius: 8px;
+                                    margin: 20px auto;
+                                    text-decoration: none;
+                                }}
+                                .link:hover {{
+                                    background-color: #c0392b;
+                                }}
+                                .footer {{
+                                    text-align: center;
+                                    margin-top: 20px;
+                                    font-size: 12px;
+                                    color: #99aab5;
+                                }}
+                            </style>
+                        </head>
+                        <body>
+                            <div class='container'>
+                                <h1>Ajude-nos a melhorar!</h1>
+                                <p>Olá, <strong>{destinatarioNome}</strong>,</p>
+                                <p>Gostaríamos de saber como foi a sua experiência em nossa barbearia.</p>
+                                <p>Clique no botão abaixo para avaliar o seu atendimento:</p>
+                                <a href='{avaliacaoUrl}' class='link'>Avaliar Agora</a>
+                                <p>Agradecemos o seu tempo e feedback!</p>
+                                <div class='footer'>
+                                    <p>&copy; {DateTime.Now.Year} {nomeBarbearia}. Todos os direitos reservados.</p>
+                                </div>
+                            </div>
+                        </body>
+                        </html>";
+
+                // Criação do e-mail
+                var msg = MailHelper.CreateSingleEmail(from, to, assunto, string.Empty, htmlContent);
+                var response = await client.SendEmailAsync(msg);
+
+                if (response.StatusCode != System.Net.HttpStatusCode.OK && response.StatusCode != System.Net.HttpStatusCode.Accepted)
+                {
+                    await _logService.SaveLogAsync("EmailService", $"Falha ao enviar o e-mail, status code: {response.StatusCode}", "ERROR", _sendGridApiKey);
+                    throw new Exception($"Falha ao enviar o e-mail, status code: {response.StatusCode}");
+                }
+
+                await _logService.SaveLogAsync("EmailService", $"E-mail enviado com sucesso para: {destinatarioEmail}", "INFO", _sendGridApiKey);
+            }
+            catch (Exception ex)
+            {
+                await _logService.SaveLogAsync("EmailService", $"Erro ao enviar e-mail de avaliação para {destinatarioEmail}: {ex.Message}", "ERROR", _sendGridApiKey);
+                throw;
+            }
+        }
+
+
     }
 }

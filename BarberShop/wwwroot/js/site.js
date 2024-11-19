@@ -2161,59 +2161,119 @@
 
 
     if ($('#avaliacaoPage').length > 0) {
+        let notaServico = 0;
+        let notaBarbeiro = 0;
 
-        // Função para exibir o spinner de carregamento
-        function mostrarLoading() {
-            $('#avaliacaoLoadingSpinner').show();
+        // Inicialmente, desabilita o botão de enviar
+        $('#avaliacaoEnviarBtn').prop('disabled', true);
+
+        // Função para exibir o spinner no botão
+        function mostrarSpinnerBotao() {
+            $('#avaliacaoEnviarBtn').html(`
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            Enviando...
+        `).prop('disabled', true);
         }
 
-        // Função para ocultar o spinner de carregamento
-        function ocultarLoading() {
-            $('#avaliacaoLoadingSpinner').hide();
+        // Função para verificar se o botão deve ser habilitado
+        function atualizarEstadoBotao() {
+            if (notaServico > 0 && notaBarbeiro > 0) {
+                $('#avaliacaoEnviarBtn').prop('disabled', false);
+            } else {
+                $('#avaliacaoEnviarBtn').prop('disabled', true);
+            }
         }
 
         // Ação para marcar estrelas ao passar o mouse
-        $('#avaliacaoEstrelas .avaliacao-estrela').on('mouseenter', function () {
+        $('.avaliacao-estrela').on('mouseenter', function () {
             $(this).prevAll().addBack().addClass('hover');
         }).on('mouseleave', function () {
-            $('#avaliacaoEstrelas .avaliacao-estrela').removeClass('hover');
+            $('.avaliacao-estrela').removeClass('hover');
         });
 
-        // Ação para clicar nas estrelas para avaliação
-        $('#avaliacaoEstrelas .avaliacao-estrela').on('click', function () {
-            const nota = $(this).data('value');
-            $('#avaliacaoEstrelas .avaliacao-estrela').removeClass('selecionada');
-            $(this).prevAll().addBack().addClass('selecionada');
+        // Ação para clicar nas estrelas
+        $('.avaliacao-estrela').on('click', function () {
+            const valor = $(this).data('value');
+            const parentId = $(this).parent().attr('id'); // Identifica o pai das estrelas
 
-            // Exibir o campo de observação
-            $('#avaliacaoObservacaoContainer').addClass('visible').css({ 'opacity': 1, 'max-height': '150px' });
+            if (parentId === 'avaliacaoServicos') {
+                notaServico = valor;
+                $('#avaliacaoServicos .avaliacao-estrela').removeClass('selecionada');
+                $(this).prevAll().addBack().addClass('selecionada');
+            } else if (parentId === 'avaliacaoBarbeiro') {
+                notaBarbeiro = valor;
+                $('#avaliacaoBarbeiro .avaliacao-estrela').removeClass('selecionada');
+                $(this).prevAll().addBack().addClass('selecionada');
+            }
+
+            // Exibir campo de observação caso as duas avaliações estejam preenchidas
+            if (notaServico > 0 && notaBarbeiro > 0) {
+                $('#avaliacaoObservacaoContainer')
+                    .addClass('visible')
+                    .css({ opacity: 1, 'max-height': '150px' });
+            }
+
+            // Atualiza o estado do botão
+            atualizarEstadoBotao();
         });
 
         // Ação para enviar a avaliação
         $('#avaliacaoEnviarBtn').on('click', function () {
             const observacao = $('#avaliacaoObservacao').val();
-            const nota = $('#avaliacaoEstrelas .avaliacao-estrela.selecionada').length;
+            const agendamentoId = $('#agendamentoId').val(); // Obtém o ID do input hidden
 
-            if (nota > 0) {
-                mostrarLoading();
-                // Envio fake da avaliação
-                setTimeout(function () {
-                    $('#avaliacaoMensagemAgradecimento').fadeIn();
-                    $('#avaliacaoObservacao').val('');
-                    $('#avaliacaoEstrelas .avaliacao-estrela').removeClass('selecionada');
-                    $('#avaliacaoObservacaoContainer').removeClass('visible').css({ 'opacity': 0, 'max-height': 0 });
+            if (notaServico > 0 && notaBarbeiro > 0) {
+                mostrarSpinnerBotao();
 
-                    setTimeout(function () {
-                        $('#avaliacaoMensagemAgradecimento').fadeOut();
-                    }, 3000);
-                }, 1000);
-
-                ocultarLoading();
+                // Envio real para o backend via AJAX
+                $.ajax({
+                    url: '/Avaliacao/Create',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        AgendamentoId: agendamentoId,
+                        NotaServico: notaServico,
+                        NotaBarbeiro: notaBarbeiro,
+                        Observacao: observacao
+                    }),
+                    success: function (response) {
+                        if (response.success) {
+                            // Ocultar o formulário e exibir a mensagem de agradecimento
+                            $('.avaliacao-container').fadeOut(300, function () {
+                                $('#avaliacaoMensagemAgradecimento')
+                                    .fadeIn(300)
+                                    .css('display', 'block');
+                            });
+                        } else {
+                            // Exibir mensagem de erro
+                            showToast(response.message || 'Erro ao enviar a avaliação.', 'danger');
+                            $('#avaliacaoEnviarBtn')
+                                .html('Enviar Avaliação')
+                                .prop('disabled', false);
+                        }
+                    },
+                    error: function () {
+                        // Exibir mensagem de erro em caso de falha
+                        showToast(
+                            'Ocorreu um erro ao enviar sua avaliação. Tente novamente mais tarde.',
+                            'danger'
+                        );
+                        $('#avaliacaoEnviarBtn')
+                            .html('Enviar Avaliação')
+                            .prop('disabled', false);
+                    }
+                });
             } else {
-                alert('Por favor, selecione uma avaliação.');
+                showToast(
+                    'Por favor, selecione as avaliações para o serviço e o barbeiro.',
+                    'warning'
+                );
             }
         });
     }
+
+
+
 
 
     const pageErro = document.getElementById('erro-barbearia-container');

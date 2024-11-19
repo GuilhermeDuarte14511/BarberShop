@@ -40,12 +40,18 @@ public class AvaliacaoRepository : IAvaliacaoRepository
         return await _context.Avaliacao.FindAsync(id);
     }
 
-    public async Task<IEnumerable<Avaliacao>> GetAvaliacoesPorAgendamentoIdAsync(int agendamentoId)
+    public async Task<Avaliacao> ObterAvaliacaoPorAgendamentoIdAsync(int agendamentoId)
     {
         return await _context.Avaliacao
-            .Where(a => a.AgendamentoId == agendamentoId)
-            .ToListAsync();
+            .Include(a => a.Agendamento)
+                .ThenInclude(ag => ag.Barbeiro) // Inclui informações do barbeiro
+            .Include(a => a.Agendamento)
+                .ThenInclude(ag => ag.AgendamentoServicos)
+                    .ThenInclude(ags => ags.Servico)
+            .FirstOrDefaultAsync(a => a.AgendamentoId == agendamentoId);
     }
+
+
 
     public async Task UpdateAsync(Avaliacao entity)
     {
@@ -57,5 +63,12 @@ public class AvaliacaoRepository : IAvaliacaoRepository
     public async Task<int> SaveChangesAsync()
     {
         return await _context.SaveChangesAsync(); // Retorna o número de entradas afetadas
+    }
+
+    public async Task<Avaliacao> AdicionarAvaliacaoAsync(Avaliacao avaliacao)
+    {
+        var avaliacaoAdicionada = await _context.Avaliacao.AddAsync(avaliacao);
+        await _context.SaveChangesAsync(); // Persiste no banco
+        return avaliacaoAdicionada.Entity; // Retorna a entidade persistida
     }
 }

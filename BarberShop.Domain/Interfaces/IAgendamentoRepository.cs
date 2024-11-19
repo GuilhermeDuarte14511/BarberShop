@@ -18,6 +18,7 @@ namespace BarberShop.Domain.Interfaces
         Task<IEnumerable<Agendamento>> GetAgendamentosPorPeriodoAsync(int barbeariaId, DateTime dataInicio, DateTime dataFim);
         Task<IEnumerable<Agendamento>> GetAgendamentosPorBarbeariaAsync(int barbeariaId);
         Task<Agendamento> GetByIdAndBarbeariaIdAsync(int id, int barbeariaId);
+        Task<IEnumerable<Agendamento>> ObterAgendamentosConcluidosSemEmailAsync();
 
     }
 }
