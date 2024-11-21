@@ -238,6 +238,14 @@ namespace BarberShopMVC.Controllers
             }
         }
 
+        // GET: Exibe a página de alteração de senha
+        [HttpGet]
+        public IActionResult AlterarSenhaCliente(string barbeariaUrl)
+        {
+            ViewData["BarbeariaUrl"] = barbeariaUrl;
+            return View();
+        }
+
         [HttpPost]
         public async Task<IActionResult> AlterarSenhaCliente([FromBody] AlterarSenhaDto alterarSenhaDto)
         {
