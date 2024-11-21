@@ -170,17 +170,37 @@ namespace BarberShopMVC.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        public async Task<IActionResult> Historico()
+        public async Task<IActionResult> Historico(int page = 1, int pageSize = 5) // Alterado para 5
         {
-            var clienteId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var barbeariaUrl = HttpContext.Session.GetString("BarbeariaUrl") ?? "NomeBarbearia";
 
+            var clienteId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
             int? barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
 
             await LogAsync("INFO", nameof(Historico), "Acessado histórico de agendamentos do cliente", $"ID do Cliente: {clienteId}, ID da Barbearia: {barbeariaId}");
 
+            // Obtem todos os agendamentos e aplica ordenação
             var agendamentos = await _clienteService.ObterHistoricoAgendamentosAsync(clienteId, barbeariaId);
-            return View("HistoricoAgendamentos", agendamentos);
+            var totalCount = agendamentos.Count();
+
+            // Aplica paginação
+            var pagedAgendamentos = agendamentos
+                .OrderByDescending(a => a.AgendamentoId)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            // Passa os dados paginados e metadados para a View
+            ViewData["BarbeariaUrl"] = barbeariaUrl;
+            ViewData["CurrentPage"] = page;
+            ViewData["PageSize"] = pageSize;
+            ViewData["TotalPages"] = (int)Math.Ceiling((double)totalCount / pageSize);
+
+            return View("HistoricoAgendamentos", pagedAgendamentos);
         }
+
+
+
 
 
         [HttpGet]

@@ -1,4 +1,5 @@
 ﻿using BarberShop.Application.DTOs;
+using BarberShop.Application.Interfaces;
 using BarberShop.Application.Services;
 using BarberShop.Domain.Entities;
 using BarberShop.Domain.Interfaces;
@@ -19,6 +20,8 @@ namespace BarberShopMVC.Controllers
         private readonly IEmailService _emailService;
         private readonly IAutenticacaoService _autenticacaoService;
         private readonly IBarbeariaRepository _barbeariaRepository;
+        private readonly IRedefinirSenhaService _redefinirSenhaService;
+
 
         public LoginController(
             IClienteRepository clienteRepository,
@@ -26,6 +29,7 @@ namespace BarberShopMVC.Controllers
             IEmailService emailService,
             IAutenticacaoService autenticacaoService,
             IBarbeariaRepository barbeariaRepository,
+            IRedefinirSenhaService redefinirSenhaService,
             ILogService logService) : base(logService)
         {
             _clienteRepository = clienteRepository;
@@ -33,6 +37,7 @@ namespace BarberShopMVC.Controllers
             _emailService = emailService;
             _autenticacaoService = autenticacaoService;
             _barbeariaRepository = barbeariaRepository;
+            _redefinirSenhaService = redefinirSenhaService;
         }
 
         public async Task<IActionResult> Login(string barbeariaUrl)
@@ -224,6 +229,9 @@ namespace BarberShopMVC.Controllers
                     {
                         var claimsPrincipal = _autenticacaoService.AutenticarCliente(cliente);
                         await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal);
+
+                        HttpContext.Session.SetString("BarbeariaUrl", barbeariaUrl);
+                        ViewData["BarbeariaUrl"] = barbeariaUrl;
 
                         return Json(new { success = true, redirectUrl = Url.Action("MenuPrincipal", "Cliente", new { barbeariaUrl }) });
                     }
@@ -485,78 +493,30 @@ namespace BarberShopMVC.Controllers
         [HttpGet]
         public async Task<IActionResult> RedefinirSenha(int clienteId, string token)
         {
-            try
+            if (!await _redefinirSenhaService.ValidarTokenAsync(clienteId, token))
             {
-                var cliente = await _clienteRepository.GetByIdAsync(clienteId);
-
-                if (cliente == null || cliente.TokenRecuperacaoSenha != token || cliente.TokenExpiracao < DateTime.UtcNow)
-                {
-                    // Loga o erro de token inválido ou expirado
-                    await LogAsync("Warning", "RedefinirSenha", "Token de redefinição de senha inválido ou expirado.", $"ClienteId: {clienteId}");
-
-                    var barbearia = await _barbeariaRepository.GetByIdAsync(cliente.BarbeariaId);
-                    if (barbearia == null)
-                    {
-                        await LogAsync("Error", "RedefinirSenha", "Barbearia associada não encontrada.", $"ClienteId: {clienteId}");
-                        return RedirectToAction("Error", "Erro");
-                    }
-
-                    var urlRedirecionamento = Url.Action("Login", "Login", new { area = "", barbeariaUrl = barbearia.UrlSlug }, Request.Scheme);
-
-                    ViewData["RedirecionamentoUrl"] = urlRedirecionamento;
-
-                    return View("TokenInvalido");
-                }
-
-                // Se o token for válido, apenas carrega a página de redefinição de senha
-                ViewData["ClienteId"] = cliente.ClienteId;
-                ViewData["Token"] = token;
-                return View();
+                var urlRedirecionamento = await _redefinirSenhaService.ObterUrlRedirecionamentoAsync(clienteId);
+                ViewData["RedirecionamentoUrl"] = urlRedirecionamento;
+                return View("TokenInvalido");
             }
-            catch (Exception ex)
-            {
-                // Loga o erro em caso de exceção
-                await LogAsync("Error", "RedefinirSenha", $"Erro ao carregar a página de redefinição de senha: {ex.Message}", $"ClienteId: {clienteId}");
-                return RedirectToAction("Error", "Erro");
-            }
+
+            ViewData["ClienteId"] = clienteId;
+            ViewData["Token"] = token;
+            return View();
         }
-
 
         [HttpPost]
         public async Task<IActionResult> RedefinirSenha([FromBody] RedefinirSenhaDto redefinirSenhaDto)
         {
-            try
+            if (!await _redefinirSenhaService.RedefinirSenhaAsync(redefinirSenhaDto))
             {
-                var cliente = await _clienteRepository.GetByIdAsync(redefinirSenhaDto.ClienteId);
-                if (cliente == null || cliente.TokenRecuperacaoSenha != redefinirSenhaDto.Token || cliente.TokenExpiracao < DateTime.UtcNow)
-                {
-                    await LogAsync("Warning", "RedefinirSenha", "Token de redefinição de senha inválido ou expirado.", $"ClienteId: {redefinirSenhaDto.ClienteId}");
-                    return Json(new { success = false, message = "Token inválido ou expirado." });
-                }
-
-                cliente.Senha = _autenticacaoService.HashPassword(redefinirSenhaDto.NovaSenha);
-                cliente.TokenRecuperacaoSenha = null;
-                cliente.TokenExpiracao = null;
-                await _clienteRepository.UpdateAsync(cliente);
-
-                var barbearia = await _barbeariaRepository.GetByIdAsync(cliente.BarbeariaId);
-                if (barbearia == null)
-                {
-                    await LogAsync("Error", "RedefinirSenha", "Barbearia não encontrada ao redefinir senha.", $"ClienteId: {redefinirSenhaDto.ClienteId}");
-                    return Json(new { success = false, message = "Barbearia não encontrada." });
-                }
-
-                var urlRedirecionamento = Url.Action("Login", "Login", new { area = "", barbeariaUrl = barbearia.UrlSlug }, Request.Scheme);
-
-                await LogAsync("Info", "RedefinirSenha", "Senha redefinida com sucesso.", $"ClienteId: {redefinirSenhaDto.ClienteId}");
-                return Json(new { success = true, message = "Senha redefinida com sucesso.", redirectUrl = urlRedirecionamento });
+                return Json(new { success = false, message = "Token inválido ou expirado." });
             }
-            catch (Exception ex)
-            {
-                await LogAsync("Error", "RedefinirSenha", $"Erro ao redefinir senha: {ex.Message}", $"ClienteId: {redefinirSenhaDto.ClienteId}");
-                return Json(new { success = false, message = "Erro ao redefinir senha." });
-            }
+
+            var urlRedirecionamento = await _redefinirSenhaService.ObterUrlRedirecionamentoAsync(redefinirSenhaDto.ClienteId);
+            return Json(new { success = true, message = "Senha redefinida com sucesso.", redirectUrl = urlRedirecionamento });
         }
+
 
         [HttpPost]
         public async Task<IActionResult> SolicitarRecuperacaoSenhaAdmin([FromBody] string email)

@@ -60,5 +60,11 @@ namespace BarberShop.Application.Services
         {
             return await _clienteRepository.GetByEmailOrPhoneAsync(email, telefone, barbeariaId);
         }
+
+        public async Task AtualizarDadosClienteAsync(int clienteId, string nome, string email, string telefone, int barbeariaId)
+        {
+            await _clienteRepository.AtualizarDadosClienteAsync(clienteId, nome, email, telefone, barbeariaId);
+        }
+
     }
 }

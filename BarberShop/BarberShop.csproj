@@ -16,6 +16,7 @@
     <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="7.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="7.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="7.0.0" />
+    <PackageReference Include="X.PagedList.Mvc.Core" Version="10.5.7" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\BarberShop.Application\BarberShop.Application.csproj" />

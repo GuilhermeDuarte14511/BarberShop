@@ -5,132 +5,134 @@
     var barbeirosDisponiveis = Model.Where(b => !b.ServicosNaoRealizados.Any());
     var barbeirosIndisponiveis = Model.Where(b => b.ServicosNaoRealizados.Any());
 }
+<div class="body-with-header">
 
-<!-- Inputs Hidden para armazenar barbeariaUrl e barbeariaId -->
-<input type="hidden" id="barbeariaUrl" value="@ViewData["BarbeariaUrl"]" />
-<input type="hidden" id="barbeariaId" value="@ViewData["BarbeariaId"]" />
+    <!-- Inputs Hidden para armazenar barbeariaUrl e barbeariaId -->
+    <input type="hidden" id="barbeariaUrl" value="@ViewData["BarbeariaUrl"]" />
+    <input type="hidden" id="barbeariaId" value="@ViewData["BarbeariaId"]" />
 
-<div id="escolherBarbeiroPage" class="container mt-5"
-     data-servico-ids="@ViewData["ServicoIds"]"
-     data-duracao-total="@ViewData["DuracaoTotal"]">
-    <h2 class="text-danger text-center mb-4">Escolha o Barbeiro</h2>
+    <div id="escolherBarbeiroPage" class="container mt-5"
+         data-servico-ids="@ViewData["ServicoIds"]"
+         data-duracao-total="@ViewData["DuracaoTotal"]">
+        <h2 class="text-danger text-center mb-4">Escolha o Barbeiro</h2>
 
-    <!-- Lista de Barbeiros Disponíveis -->
-    <h3 class="text-success mt-4">Barbeiros Disponíveis</h3>
-    <div class="row">
-        @if (!barbeirosDisponiveis.Any())
-        {
-            <p class="text-light text-center">Nenhum barbeiro disponível para todos os serviços selecionados.</p>
-        }
-        else
-        {
-            @foreach (var barbeiro in barbeirosDisponiveis)
+        <!-- Lista de Barbeiros Disponíveis -->
+        <h3 class="text-success mt-4">Barbeiros Disponíveis</h3>
+        <div class="row">
+            @if (!barbeirosDisponiveis.Any())
             {
-                <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4">
-                    <div class="card bg-dark text-light barber-card">
-                        <div class="card-body text-center" id="cardBodyBarbeiro-@barbeiro.BarbeiroId">
-                            <div class="photo-container">
-                                <img src="@(barbeiro.Foto != null ? "data:image/png;base64," + Convert.ToBase64String(barbeiro.Foto) : "https://via.placeholder.com/100")"
-                                     alt="Foto do @barbeiro.Nome"
-                                     class="rounded-circle mb-3 photo-preview">
+                <p class="text-light text-center">Nenhum barbeiro disponível para todos os serviços selecionados.</p>
+            }
+            else
+            {
+                @foreach (var barbeiro in barbeirosDisponiveis)
+                {
+                    <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4">
+                        <div class="card bg-dark text-light barber-card">
+                            <div class="card-body text-center" id="cardBodyBarbeiro-@barbeiro.BarbeiroId">
+                                <div class="photo-container">
+                                    <img src="@(barbeiro.Foto != null ? "data:image/png;base64," + Convert.ToBase64String(barbeiro.Foto) : "https://via.placeholder.com/100")"
+                                         alt="Foto do @barbeiro.Nome"
+                                         class="rounded-circle mb-3 photo-preview">
+                                </div>
+                                <h5 class="card-title text-warning">@barbeiro.Nome</h5>
+                                <button id="btnEscolherHorario-@barbeiro.BarbeiroId" class="btn btn-danger barbeiro-btn" data-barbeiro-id="@barbeiro.BarbeiroId">
+                                    Escolher Horário
+                                </button>
                             </div>
-                            <h5 class="card-title text-warning">@barbeiro.Nome</h5>
-                            <button id="btnEscolherHorario-@barbeiro.BarbeiroId" class="btn btn-danger barbeiro-btn" data-barbeiro-id="@barbeiro.BarbeiroId">
-                                Escolher Horário
-                            </button>
                         </div>
                     </div>
-                </div>
+                }
             }
-        }
-    </div>
+        </div>
 
-    <!-- Linha divisória estilizada -->
-    <hr class="my-4 divider">
+        <!-- Linha divisória estilizada -->
+        <hr class="my-4 divider">
 
-    <!-- Lista de Barbeiros Indisponíveis -->
-    <h3 class="text-danger mt-5">Barbeiros Indisponíveis</h3>
-    <div class="row">
-        @if (!barbeirosIndisponiveis.Any())
-        {
-            <p class="text-light text-center">Todos os barbeiros estão disponíveis para os serviços selecionados.</p>
-        }
-        else
-        {
-            @foreach (var barbeiro in barbeirosIndisponiveis)
+        <!-- Lista de Barbeiros Indisponíveis -->
+        <h3 class="text-danger mt-5">Barbeiros Indisponíveis</h3>
+        <div class="row">
+            @if (!barbeirosIndisponiveis.Any())
             {
-                <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4">
-                    <div class="card bg-dark text-light barber-card">
-                        <div class="card-body text-center">
-                            <div class="photo-container">
-                                <img src="@(barbeiro.Foto != null ? "data:image/png;base64," + Convert.ToBase64String(barbeiro.Foto) : "https://via.placeholder.com/100")"
-                                     alt="Foto do @barbeiro.Nome"
-                                     class="rounded-circle mb-3 photo-preview">
-                            </div>
-                            <h5 class="card-title text-warning">@barbeiro.Nome</h5>
-                            <div class="services-container text-start">
-                                <strong>Não realiza:</strong>
-                                <ul class="text-danger">
-                                    @foreach (var servico in barbeiro.ServicosNaoRealizados)
-                                    {
-                                        <li>@servico</li>
-                                    }
-                                </ul>
-                            </div>
-                            <button id="btn-@barbeiro.BarbeiroId" class="btn btn-danger barbeiro-btn disabled mt-3" disabled>
-                                Indisponível
-                            </button>
+                <p class="text-light text-center">Todos os barbeiros estão disponíveis para os serviços selecionados.</p>
+            }
+            else
+            {
+                @foreach (var barbeiro in barbeirosIndisponiveis)
+                {
+                    <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4">
+                        <div class="card bg-dark text-light barber-card">
+                            <div class="card-body text-center">
+                                <div class="photo-container">
+                                    <img src="@(barbeiro.Foto != null ? "data:image/png;base64," + Convert.ToBase64String(barbeiro.Foto) : "https://via.placeholder.com/100")"
+                                         alt="Foto do @barbeiro.Nome"
+                                         class="rounded-circle mb-3 photo-preview">
+                                </div>
+                                <h5 class="card-title text-warning">@barbeiro.Nome</h5>
+                                <div class="services-container text-start">
+                                    <strong>Não realiza:</strong>
+                                    <ul class="text-danger">
+                                        @foreach (var servico in barbeiro.ServicosNaoRealizados)
+                                        {
+                                            <li>@servico</li>
+                                        }
+                                    </ul>
+                                </div>
+                                <button id="btn-@barbeiro.BarbeiroId" class="btn btn-danger barbeiro-btn disabled mt-3" disabled>
+                                    Indisponível
+                                </button>
 
+                            </div>
                         </div>
                     </div>
-                </div>
+                }
             }
-        }
+        </div>
+
+        <div class="mt-4 text-center">
+            <button class="btn btn-secondary" onclick="history.back()">Voltar</button>
+        </div>
     </div>
 
-    <div class="mt-4 text-center">
-        <button class="btn btn-secondary" onclick="history.back()">Voltar</button>
-    </div>
-</div>
-
-<!-- Modal de Calendário -->
-<div class="modal fade" id="calendarioModal" tabindex="-1" aria-labelledby="calendarioModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content bg-dark text-light">
-            <div class="modal-header">
-                <h5 class="modal-title text-danger" id="calendarioModalLabel">Selecione uma Data</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <input type="text" id="calendarioInput" class="form-control bg-dark text-light" placeholder="Selecione um dia" readonly>
+    <!-- Modal de Calendário -->
+    <div class="modal fade" id="calendarioModal" tabindex="-1" aria-labelledby="calendarioModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content bg-dark text-light">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger" id="calendarioModalLabel">Selecione uma Data</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="text" id="calendarioInput" class="form-control bg-dark text-light" placeholder="Selecione um dia" readonly>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Modal de Horários -->
-<div class="modal fade" id="horariosModal" tabindex="-1" aria-labelledby="horariosModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content bg-dark text-light">
-            <div class="modal-header">
-                <h5 class="modal-title text-danger" id="horariosModalLabel">Horários Disponíveis</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div id="horariosContainer" class="d-flex flex-wrap gap-2">
-                    <!-- Horários disponíveis serão inseridos aqui dinamicamente -->
+    <!-- Modal de Horários -->
+    <div class="modal fade" id="horariosModal" tabindex="-1" aria-labelledby="horariosModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content bg-dark text-light">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger" id="horariosModalLabel">Horários Disponíveis</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" id="voltarParaCalendarioBtn">Voltar</button>
+                <div class="modal-body">
+                    <div id="horariosContainer" class="d-flex flex-wrap gap-2">
+                        <!-- Horários disponíveis serão inseridos aqui dinamicamente -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="voltarParaCalendarioBtn">Voltar</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<div id="loadingSpinner" class="text-center mt-3" style="display:none;">
-    <div class="spinner-border text-danger" role="status">
-        <span class="sr-only">Carregando...</span>
+    <div id="loadingSpinner" class="text-center mt-3" style="display:none;">
+        <div class="spinner-border text-danger" role="status">
+            <span class="sr-only">Carregando...</span>
+        </div>
+        <p class="mt-2 text-light">Carregando...</p>
     </div>
-    <p class="mt-2 text-light">Carregando...</p>
 </div>

@@ -10,6 +10,136 @@ body {
     overflow-x: hidden;
 }
 
+/* Header geral */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background-color: #1c1c1c;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+}
+
+/* Adiciona espaço abaixo do header fixo */
+.body-with-header {
+    margin-top: 100px; /* Ajuste para o valor da altura do header */
+}
+
+    /* Título no header */
+    .header h1 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+
+/* Botão do perfil */
+.profile-button {
+    border-radius: 50%;
+    transition: background-color 0.3s ease, transform 0.2s;
+}
+
+    .profile-button:hover {
+        background-color: #2e2e2e;
+        transform: scale(1.1);
+    }
+
+/* Estilo para o dropdown */
+.profile-menu-dropdown {
+    background-color: #2b2b2b;
+    border: 1px solid #444;
+    color: #ecf0f1;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+    border-radius: 8px; /* Bordas arredondadas */
+    overflow: hidden;
+}
+
+    /* Estilo dos itens do menu */
+    .profile-menu-dropdown .dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #ecf0f1;
+        padding: 12px 15px;
+        border-bottom: 1px solid rgba(231, 76, 60, 0.5); /* Linhas mais suaves */
+        transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+        /* Realce do item no hover */
+        .profile-menu-dropdown .dropdown-item:hover {
+            background-color: #e74c3c;
+            color: #ffffff;
+            box-shadow: inset 0px 0px 8px rgba(0, 0, 0, 0.5); /* Sombra interna */
+        }
+
+        /* Indicador para o item selecionado (opcional) */
+        .profile-menu-dropdown .dropdown-item.active {
+            background-color: #c0392b;
+            color: #ffffff;
+            font-weight: bold;
+            border-left: 4px solid #ffffff; /* Indicador visual */
+        }
+
+        /* Ícones */
+        .profile-menu-dropdown .dropdown-item i {
+            font-size: 1.2rem;
+            color: #e74c3c;
+            transition: color 0.3s ease;
+        }
+
+        /* Hover nos ícones */
+        .profile-menu-dropdown .dropdown-item:hover i {
+            color: #ffffff;
+        }
+
+/* Botões do menu */
+.menu-button {
+    width: 100%; /* Ocupa toda a largura do container */
+    max-width: 220px; /* Ajusta largura máxima */
+    height: 45px; /* Reduz a altura */
+    line-height: 1.5; /* Centraliza o texto verticalmente */
+    font-size: 0.9rem; /* Reduz tamanho do texto */
+    color: #ecf0f1; /* Cor do texto */
+    background-color: #e74c3c; /* Vermelho padrão */
+    border: 1px solid #c0392b; /* Borda com tom mais escuro */
+    border-radius: 6px; /* Bordas levemente arredondadas */
+    display: inline-flex; /* Para alinhar ícone e texto */
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase; /* Texto em caixa alta */
+    font-weight: bold;
+    text-decoration: none; /* Remove sublinhado */
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+    /* Hover nos botões */
+    .menu-button:hover {
+        background-color: #c0392b; /* Tom mais escuro no hover */
+        border-color: #a93226; /* Ajusta a borda no hover */
+        transform: scale(1.05); /* Leve aumento no hover */
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2); /* Sombra no hover */
+        color: #ffffff; /* Garante que o texto fique branco */
+    }
+
+    /* Ícones nos botões */
+    .menu-button i {
+        margin-right: 8px; /* Espaço entre ícone e texto */
+        font-size: 1rem; /* Ajusta tamanho do ícone */
+        color: #ecf0f1; /* Mesma cor do texto */
+        transition: color 0.3s ease;
+    }
+
+    /* Hover nos ícones */
+    .menu-button:hover i {
+        color: #ffffff; /* Ícone branco no hover */
+    }
+
+
+
 #cardBodyHomePage {
     display: flex;
     flex-direction: column;
@@ -1419,27 +1549,18 @@ body {
 
 /*indisponibilidade cssd*/
 
-/* Geral */
-.indisponibilidadeAlert {
-    background-color: #1c1c1c;
-    color: #fff;
-    border: 1px solid #444;
-    padding: 20px;
-    border-radius: 10px;
-}
-
 /* Cards */
 .indisponibilidadeCard {
-    background: linear-gradient(to bottom, #222, #333);
+    background: linear-gradient(to bottom, #1c1c1c, #333); /* Fundo mais escuro */
     border-radius: 10px;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.4);
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.6);
     padding: 20px;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
     .indisponibilidadeCard:hover {
         transform: scale(1.05);
-        box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.6);
+        box-shadow: 0px 6px 12px rgba(255, 0, 0, 0.6); /* Sombra com tom vermelho */
     }
 
 .indisponibilidadeCardBody {
@@ -1453,7 +1574,7 @@ body {
     text-align: center;
     margin-bottom: 20px;
     font-size: 1.25rem;
-    color: #ffd700;
+    color: #ff4d4d; /* Vermelho */
 }
 
 .indisponibilidadeCardText {
@@ -1461,11 +1582,23 @@ body {
     padding-bottom: 10px;
     border-bottom: 1px solid #444;
     font-size: 0.95rem;
+    color: #ffffff; /* Texto branco */
 }
 
-/* Botões */
+/* Botão Adicionar */
+.btnAdicionarCustom {
+    background-color: #ff4d4d; /* Fundo vermelho */
+    color: #fff; /* Texto branco */
+    border: none;
+}
+
+    .btnAdicionarCustom:hover {
+        background-color: #cc0000; /* Vermelho escuro no hover */
+    }
+
+/* Botões de Editar e Excluir */
 .btnEditarIndisponibilidade {
-    background-color: #ffcc00;
+    background-color: #ffcc00; /* Amarelo */
     color: #000;
     border: none;
 }
@@ -1475,44 +1608,43 @@ body {
     }
 
 .btnExcluirIndisponibilidade {
-    background-color: #ff4d4d;
+    background-color: #ff4d4d; /* Vermelho */
     color: #fff;
     border: none;
 }
 
     .btnExcluirIndisponibilidade:hover {
-        background-color: #cc0000;
+        background-color: #cc0000; /* Vermelho escuro */
     }
 
 /* Modais */
 .modal-content {
-    background-color: #1c1c1c;
-    color: #fff;
+    background-color: #1c1c1c; /* Fundo escuro */
+    color: #fff; /* Texto branco */
     border-radius: 10px;
 }
 
 .modal-header {
-    border-bottom: 1px solid #444;
+    border-bottom: 1px solid #444; /* Linha cinza escura */
 }
 
 .modal-footer {
     border-top: 1px solid #444;
 }
 
-/* Feriados */
 
 /* Cards */
 .feriadoCard {
-    background: linear-gradient(to bottom, #222, #333);
+    background: linear-gradient(to bottom, #1c1c1c, #333); /* Fundo mais escuro */
     border-radius: 10px;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.4);
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.6);
     padding: 20px;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
     .feriadoCard:hover {
         transform: scale(1.05);
-        box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.6);
+        box-shadow: 0px 6px 12px rgba(255, 0, 0, 0.6); /* Sombra com tom vermelho */
     }
 
 .feriadoCardBody {
@@ -1526,7 +1658,7 @@ body {
     text-align: center;
     margin-bottom: 20px;
     font-size: 1.25rem;
-    color: #ffd700;
+    color: #ff4d4d; /* Vermelho para o título */
 }
 
 .feriadoCardText {
@@ -1534,7 +1666,19 @@ body {
     padding-bottom: 10px;
     border-bottom: 1px solid #444;
     font-size: 0.95rem;
+    color: #ffffff; /* Texto branco */
 }
+
+/* Botões de Adicionar Feriado */
+#btnAdicionarFeriado {
+    background-color: #ff4d4d; /* Vermelho */
+    color: #fff; /* Branco */
+    border: none;
+}
+
+    #btnAdicionarFeriado:hover {
+        background-color: #cc0000; /* Vermelho escuro */
+    }
 
 /* Botões */
 .btnEditarFeriado {
@@ -1559,23 +1703,75 @@ body {
 
 /* Modais */
 .modal-content {
-    background-color: #1c1c1c;
-    color: #fff;
+    background-color: #1c1c1c; /* Fundo escuro */
+    color: #fff; /* Texto branco */
     border-radius: 10px;
 }
 
 .modal-header {
-    border-bottom: 1px solid #444;
+    border-bottom: 1px solid #444; /* Linha cinza escura */
 }
 
 .modal-footer {
     border-top: 1px solid #444;
 }
 
+/* Filtros */
+#searchFeriado {
+    background-color: #333; /* Fundo escuro */
+    color: #fff; /* Texto branco */
+    border: 1px solid #444; /* Borda escura */
+}
+
+#filterRecorrente {
+    background-color: #333; /* Fundo escuro */
+    color: #fff; /* Texto branco */
+    border: 1px solid #444; /* Borda escura */
+}
+
+/* Títulos */
+h2, h3 {
+    color: #ff4d4d; /* Vermelho */
+}
+
+/* Feriados Nacionais e Regionais */
+.text-warning {
+    color: #ff4d4d !important; /* Vermelho */
+}
+
+.text-info {
+    color: #ff4d4d !important; /* Vermelho */
+}
+
+
+.btnAdicionarCustom {
+    background-color: #ff4d4d; /* Fundo vermelho */
+    color: #fff; /* Texto branco */
+    border: none;
+}
+
+    .btnAdicionarCustom:hover {
+        background-color: #cc0000; /* Vermelho escuro no hover */
+    }
+
 
 
 /* CSS Responsivo para Dispositivos Móveis */
 @media (max-width: 768px) {
+
+
+    .header {
+        padding: 10px;
+    }
+
+        .header h1 {
+            font-size: 1.2rem;
+        }
+
+    .profile-menu-dropdown .dropdown-item {
+        font-size: 0.9rem;
+    }
+
     #escolherBarbeiroPage {
         padding: 10px;
     }

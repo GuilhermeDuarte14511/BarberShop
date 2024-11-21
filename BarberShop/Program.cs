@@ -92,6 +92,7 @@ builder.Services.AddScoped<IFeriadoBarbeariaService, FeriadoBarbeariaService>();
 builder.Services.AddScoped<IIndisponibilidadeService, IndisponibilidadeService>();
 builder.Services.AddScoped<IAvaliacaoService, AvaliacaoService>();
 builder.Services.AddScoped<IBarbeiroServicoService, BarbeiroServicoService>();
+builder.Services.AddScoped<IRedefinirSenhaService, RedefinirSenhaService>();
 
 
 // Configurar autenticação com cookies

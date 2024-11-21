@@ -262,6 +262,125 @@
         }
     }
 
+    var alterarSenhaPageCliente = document.getElementById('alterarSenhaPageCliente');
+
+    if (alterarSenhaPageCliente) {
+        // Validação de força da nova senha
+        $('#novaSenhaCliente').on('input', function () {
+            const password = $(this).val();
+            const lengthRequirement = password.length >= 8;
+            const uppercaseRequirement = /[A-Z]/.test(password);
+            const lowercaseRequirement = /[a-z]/.test(password);
+            const numberRequirement = /\d/.test(password);
+            const specialRequirement = /[!@#$%^&*]/.test(password);
+
+            $('#lengthRequirementAlterarSenhaCliente').toggleClass('text-success', lengthRequirement).toggleClass('text-danger', !lengthRequirement);
+            $('#uppercaseRequirementAlterarSenhaCliente').toggleClass('text-success', uppercaseRequirement).toggleClass('text-danger', !uppercaseRequirement);
+            $('#lowercaseRequirementAlterarSenhaCliente').toggleClass('text-success', lowercaseRequirement).toggleClass('text-danger', !lowercaseRequirement);
+            $('#numberRequirementAlterarSenhaCliente').toggleClass('text-success', numberRequirement).toggleClass('text-danger', !numberRequirement);
+            $('#specialRequirementAlterarSenhaCliente').toggleClass('text-success', specialRequirement).toggleClass('text-danger', !specialRequirement);
+        });
+
+        // Exibir ou ocultar senha
+        $('#toggleSenhaAtualCliente, #toggleNovaSenhaCliente').on('click', function () {
+            const input = $(this).prev('input');
+            const type = input.attr('type') === 'password' ? 'text' : 'password';
+            input.attr('type', type);
+            $(this).find('i').toggleClass('fa-eye fa-eye-slash');
+        });
+
+        // Submissão do formulário
+        $('#alterarSenhaFormCliente').on('submit', function (e) {
+            e.preventDefault();
+
+            const clienteId = $('#clienteIdCliente').val();
+            const senhaAtual = $('#senhaAtualCliente').val();
+            const novaSenha = $('#novaSenhaCliente').val();
+
+            $.ajax({
+                url: '/Cliente/AlterarSenhaCliente',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    senhaAtual: senhaAtual,
+                    novaSenha: novaSenha
+                }),
+                success: function (data) {
+                    if (data.success) {
+                        showToast('Senha alterada com sucesso!', 'success');
+                        setTimeout(() => window.location.href = '/Cliente/MenuPrincipal', 3000);
+                    } else {
+                        showToast(data.message || 'Erro ao alterar senha.', 'danger');
+                    }
+                },
+                error: function () {
+                    showToast('Erro ao processar a solicitação.', 'danger');
+                }
+            });
+        });
+    }
+
+    const meusDadosClientePage = document.getElementById('meusdadosClientePage');
+
+    if (meusDadosClientePage) {
+        const nomeInput = document.getElementById('nome');
+        const emailInput = document.getElementById('email');
+        const telefoneInput = document.getElementById('telefone');
+        const form = meusDadosClientePage.querySelector('form');
+
+        // Máscara de Telefone ((xx) xxxxx-xxxx)
+        telefoneInput.addEventListener('input', function () {
+            let telefone = this.value.replace(/\D/g, ''); // Remove caracteres não numéricos
+            if (telefone.length > 2) {
+                telefone = '(' + telefone.slice(0, 2) + ') ' + telefone.slice(2);
+            }
+            if (telefone.length > 9) {
+                telefone = telefone.slice(0, 9) + '-' + telefone.slice(9, 13); // Formato (xx) xxxxx-xxxx
+            }
+            this.value = telefone;
+        });
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const clienteData = {
+                ClienteId: parseInt(document.querySelector('#clienteId')?.value || 0), // Inclua o ClienteId se necessário
+                Nome: nomeInput.value.trim(),
+                Email: emailInput.value.trim(),
+                Telefone: telefoneInput.value.trim(),
+            };
+
+            // Validação básica
+            if (!clienteData.Nome || !clienteData.Email || !clienteData.Telefone) {
+                showToast('Por favor, preencha todos os campos corretamente.', 'danger');
+                return;
+            }
+
+            // Requisição Ajax para salvar os dados
+            fetch('/Cliente/MeusDadosCliente', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(clienteData),
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.success) {
+                        showToast(data.message, 'success');
+                    } else {
+                        showToast(data.message, 'danger');
+                    }
+                })
+                .catch((error) => {
+                    showToast('Erro ao salvar os dados. Tente novamente.', 'danger');
+                    console.error('Erro:', error);
+                });
+        });
+    }
+
+
+
     // Função para exibir Toasts com setTimeout
     function showToast(message, type = 'info') {
 

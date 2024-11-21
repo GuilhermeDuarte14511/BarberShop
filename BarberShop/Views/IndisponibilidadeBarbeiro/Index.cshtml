@@ -5,8 +5,12 @@
 
 <div id="indisponibilidadePage" class="container mt-5">
     <h2 class="text-center mb-4">Gerenciar Indisponibilidades</h2>
-    <button class="btn btn-success mb-3" id="btnAdicionarIndisponibilidade" data-bs-toggle="modal" data-bs-target="#adicionarIndisponibilidadeModal">Adicionar Indisponibilidade</button>
-
+    <button class="btn btnAdicionarCustom mb-3"
+            id="btnAdicionarIndisponibilidade"
+            data-bs-toggle="modal"
+            data-bs-target="#adicionarIndisponibilidadeModal">
+        Adicionar Indisponibilidade
+    </button>
     @if (Model == null)
     {
         <div class="indisponibilidadeAlert text-center">

@@ -1,0 +1,48 @@
+﻿@model BarberShop.Application.DTOs.ClienteDTO
+
+@{
+    ViewData["Title"] = "Meus Dados";
+}
+
+<div id="meusdadosClientePage" class="container my-5 p-4 cliente-dados-container">
+    <div class="text-center mb-4">
+        <h2 class="text-danger">Meus Dados</h2>
+        <p class="text-muted">Gerencie suas informações de contato</p>
+    </div>
+    <input type="hidden" id="clienteId" name="ClienteId" value="@Model.ClienteId" />
+
+    <!-- Formulário de Edição -->
+    <form id="meusDadosClienteForm" method="post">
+        <div class="row mt-4">
+            <div class="col-md-6 mb-3">
+                <div class="info-card p-3 rounded">
+                    <h5 class="text-danger">Nome</h5>
+                    <input type="text" class="form-control" id="nome" name="Nome" value="@Model.Nome" required placeholder="Digite seu nome" />
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <div class="info-card p-3 rounded">
+                    <h5 class="text-danger">E-mail</h5>
+                    <input type="email" class="form-control" id="email" name="Email" value="@Model.Email" required placeholder="Digite seu e-mail" />
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <div class="info-card p-3 rounded">
+                    <h5 class="text-danger">Telefone</h5>
+                    <input type="text" class="form-control" id="telefone" name="Telefone" value="@Model.Telefone" required placeholder="Digite seu telefone" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Botões lado a lado -->
+        <div class="d-flex justify-content-center gap-3 mt-4">
+            <button type="submit" class="btn btn-danger px-4">Salvar Alterações</button>
+            <button type="button" class="btn btn-secondary px-4" onclick="history.back()">Voltar</button>
+        </div>
+    </form>
+</div>
+
+<!-- Toast Container -->
+<div id="toastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>

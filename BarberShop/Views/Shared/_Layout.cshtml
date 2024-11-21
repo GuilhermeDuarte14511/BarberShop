@@ -33,6 +33,61 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body>
+    <header class="header">
+        @if (User.Identity.IsAuthenticated)
+        {
+            var barbeariaUrl = ViewData["BarbeariaUrl"] as string ?? "NomeBarbearia";
+            <h1 class="h4 text-white">BarberShop</h1>
+            <div class="dropdown profile-menu">
+                <!-- Ícone de perfil -->
+                <button class="btn btn-dark profile-button" type="button" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-user-circle fa-lg"></i>
+                </button>
+                <!-- Menu suspenso -->
+                <ul class="dropdown-menu dropdown-menu-end profile-menu-dropdown" aria-labelledby="profileDropdown">
+                    <li>
+                        <a class="dropdown-item" href="@Url.Action("MenuPrincipal", "Cliente", new { barbeariaUrl })">
+                            <i class="fas fa-home"></i> Menu Principal
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="@Url.Action("SolicitarServico", "Cliente", new { barbeariaUrl })">
+                            <i class="fas fa-cut"></i> Solicitar Serviço
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="@Url.Action("Historico", "Agendamento", new { barbeariaUrl })">
+                            <i class="fas fa-history"></i> Histórico
+                        </a>
+                    </li>
+
+                    <li>
+                        <a class="dropdown-item" href="@Url.Action("MeusDadosCliente", "Cliente", new { barbeariaUrl })">
+                            <i class="fas fa-user-edit"></i> Meus Dados
+                        </a>
+                    </li>
+
+
+                    <li>
+                        <a class="dropdown-item" href="@Url.Action("AlterarSenhaCliente", "Cliente", new { barbeariaUrl })">
+                            <i class="fas fa-lock"></i> Alterar Senha
+                        </a>
+                    </li>
+                    <li>
+                        <form id="logoutForm" action="@Url.Action("Logout", "Login", new { barbeariaUrl })" method="post">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="dropdown-item">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        }
+    </header>
+
+
+
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()
@@ -69,8 +124,7 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.9/dist/l10n/pt.js"></script>
 
-
-    <!-- Stripe.js - Inclua o Stripe com a chave pública -->
+    <!-- Stripe.js -->
     <script src="https://js.stripe.com/v3/"></script>
     <script>
         const stripe = Stripe("pk_live_51QFMA5Hl3zYZjP9pt96kFgHES5ArjpXgdXa2AXrZr3IXsqpWC9JpHAsLajdeOMCIoCu31wruWj5SLeqbmh9aeVPU003NEkIbJe");

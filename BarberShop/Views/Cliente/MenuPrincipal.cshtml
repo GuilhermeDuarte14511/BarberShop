@@ -10,29 +10,51 @@
                 <h3 class="text-center text-danger mb-4">Bem-vindo, @User.Identity.Name</h3>
                 <p class="text-center">Escolha uma opção:</p>
 
-                <!-- Botão para Ver Histórico de Agendamentos -->
+                <!-- Botão para Menu Principal -->
                 <div class="form-group mb-4">
-                    <a href="@Url.Action("Historico", "Agendamento", new { barbeariaUrl })" class="btn btn-danger btn-block" id="historicoButton">Ver Histórico de Agendamentos</a>
+                    <a href="@Url.Action("MenuPrincipal", "Cliente", new { barbeariaUrl })" class="menu-button" id="menuPrincipalButton">
+                        <i class="fas fa-home"></i> Menu Principal
+                    </a>
                 </div>
 
-                <!-- Botão para Solicitar Novo Serviço -->
+                <!-- Botão para Solicitar Serviço -->
                 <div class="form-group mb-4">
-                    <a href="@Url.Action("SolicitarServico", "Cliente", new { barbeariaUrl })" class="btn btn-danger btn-block" id="servicoButton">Solicitar Novo Serviço</a>
+                    <a href="@Url.Action("SolicitarServico", "Cliente", new { barbeariaUrl })" class="menu-button" id="servicoButton">
+                        <i class="fas fa-cut"></i> Solicitar Serviço
+                    </a>
                 </div>
+
+                <!-- Botão para Histórico -->
+                <div class="form-group mb-4">
+                    <a href="@Url.Action("Historico", "Agendamento", new { barbeariaUrl })" class="menu-button" id="historicoButton">
+                        <i class="fas fa-history"></i> Histórico
+                    </a>
+                </div>
+
+                <!-- Botão para Meus Dados -->
+                <div class="form-group mb-4">
+                    <a href="@Url.Action("MeusDadosCliente", "Cliente", new { barbeariaUrl })" class="menu-button" id="meusDadosButton">
+                        <i class="fas fa-user-edit"></i> Meus Dados
+                    </a>
+                </div>
+
+
+
+                <!-- Botão para Alterar Senha -->
+                <div class="form-group mb-4">
+                    <a href="@Url.Action("AlterarSenhaCliente", "Cliente", new { barbeariaUrl })" class="menu-button" id="alterarSenhaButton">
+                        <i class="fas fa-lock"></i> Alterar Senha
+                    </a>
+                </div>
+                
 
                 <!-- Botão de Logout -->
                 <form id="logoutForm" action="@Url.Action("Logout", "Login", new { barbeariaUrl })" method="post">
-                    @Html.AntiForgeryToken() <!-- Token antifalsificação -->
-                    <button type="submit" class="btn btn-secondary btn-block">Logout</button>
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="menu-button" id="logoutButton">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
                 </form>
-
-                <!-- Spinner de carregamento (inicialmente oculto) -->
-                <div id="loadingSpinner" class="text-center mt-3" style="display:none;">
-                    <div class="spinner-border text-danger" role="status">
-                        <span class="sr-only">Carregando...</span>
-                    </div>
-                    <p class="mt-2">Carregando...</p>
-                </div>
             </div>
         </div>
     </div>

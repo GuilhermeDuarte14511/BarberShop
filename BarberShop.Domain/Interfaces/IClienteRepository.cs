@@ -14,6 +14,8 @@ namespace BarberShop.Domain.Interfaces
         Task<Cliente> GetByEmailAsync(string email);
 
         Task UpdateCodigoVerificacaoAsync(int clienteId, string codigoVerificacao, DateTime? expiracao);
+        Task AtualizarDadosClienteAsync(int clienteId, string nome, string email, string telefone, int barbeariaId);
+        Task AtualizarSenhaAsync(int clienteId, string novaSenha, string tokenRecuperacao, DateTime? tokenExpiracao);
 
     }
 }

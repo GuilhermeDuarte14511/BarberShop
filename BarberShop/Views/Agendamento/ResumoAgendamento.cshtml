@@ -4,120 +4,122 @@
 @{
     ViewData["Title"] = "Resumo do Agendamento";
 }
+<div class="body-with-header">
 
-<div class="container mt-5" id="resumoAgendamentoPage"
-     data-barbeiro-id="@Model.BarbeiroId"
-     data-servico-ids="@string.Join(",", Model.ServicosSelecionados.Select(s => s.ServicoId))"
-     data-data-hora="@Model.DataHora.ToString("o")">
+    <div class="container mt-5" id="resumoAgendamentoPage"
+         data-barbeiro-id="@Model.BarbeiroId"
+         data-servico-ids="@string.Join(",", Model.ServicosSelecionados.Select(s => s.ServicoId))"
+         data-data-hora="@Model.DataHora.ToString("o")">
 
-    <h2 class="text-danger text-center">Resumo do Agendamento</h2>
+        <h2 class="text-danger text-center">Resumo do Agendamento</h2>
 
-    <div class="card bg-dark text-light">
-        <div class="card-body">
-            <h4 class="card-title text-warning">Detalhes do Agendamento</h4>
-            <p><strong>Barbeiro:</strong> @Model.NomeBarbeiro</p>
-            <p><strong>Data e Hora:</strong> @Model.DataHora.ToString("dd/MM/yyyy HH:mm")</p>
+        <div class="card bg-dark text-light">
+            <div class="card-body">
+                <h4 class="card-title text-warning">Detalhes do Agendamento</h4>
+                <p><strong>Barbeiro:</strong> @Model.NomeBarbeiro</p>
+                <p><strong>Data e Hora:</strong> @Model.DataHora.ToString("dd/MM/yyyy HH:mm")</p>
 
-            <h5 class="text-danger">Serviços Selecionados:</h5>
-            <ul class="list-group bg-dark">
-                @foreach (var servico in Model.ServicosSelecionados)
-                {
-                    <li class="list-group-item bg-dark text-light d-flex justify-content-between">
-                        <span>@servico.Nome</span>
-                        <span>R$ @servico.Preco.ToString("F2")</span>
-                    </li>
-                }
-            </ul>
+                <h5 class="text-danger">Serviços Selecionados:</h5>
+                <ul class="list-group bg-dark">
+                    @foreach (var servico in Model.ServicosSelecionados)
+                    {
+                        <li class="list-group-item bg-dark text-light d-flex justify-content-between">
+                            <span>@servico.Nome</span>
+                            <span>R$ @servico.Preco.ToString("F2")</span>
+                        </li>
+                    }
+                </ul>
 
-            <hr />
-            <p id="total-price" data-preco-total="@Model.PrecoTotal">
-                <strong>Preço Total:</strong> R$ @Model.PrecoTotal.ToString("F2")
-            </p>
+                <hr />
+                <p id="total-price" data-preco-total="@Model.PrecoTotal">
+                    <strong>Preço Total:</strong> R$ @Model.PrecoTotal.ToString("F2")
+                </p>
 
-            <h4 class="text-warning mt-4">Método de Pagamento</h4>
-            <div class="payment-options d-flex justify-content-around mt-3">
-                <div id="creditCardOption" class="payment-option text-center">
-                    <i class="fas fa-credit-card fa-2x text-primary"></i><br>
-                    <small>Cartão de Crédito/Débito</small>
-                </div>
-                <div id="storeOption" class="payment-option text-center">
-                    <i class="fas fa-store fa-2x text-warning"></i><br>
-                    <small>Pagar na Loja</small>
-                </div>
-            </div>
-
-            <!-- Formulário de Pagamento -->
-            <form id="payment-form" style="display: none;">
-                <div style="background-color: #ffffff; padding: 20px; border-radius: 8px; margin-top: 20px;">
-                    <div id="payment-element">
-                        <!-- Stripe Elements vai injetar o formulário completo aqui -->
+                <h4 class="text-warning mt-4">Método de Pagamento</h4>
+                <div class="payment-options d-flex justify-content-around mt-3">
+                    <div id="creditCardOption" class="payment-option text-center">
+                        <i class="fas fa-credit-card fa-2x text-primary"></i><br>
+                        <small>Cartão de Crédito/Débito</small>
+                    </div>
+                    <div id="storeOption" class="payment-option text-center">
+                        <i class="fas fa-store fa-2x text-warning"></i><br>
+                        <small>Pagar na Loja</small>
                     </div>
                 </div>
-                <button id="submit" class="btn btn-success mt-3" type="submit">
-                    <div class="spinner hidden" id="spinner"></div>
-                    <span id="button-text">Pagar e Finalizar Agendamento</span>
-                </button>
-                <div id="payment-message" class="text-danger mt-2 hidden"></div>
-            </form>
 
-            <!-- Inputs ocultos para nome e e-mail do cliente -->
-            <input type="hidden" name="clienteNome" value="@ViewData["ClienteNome"]" />
-            <input type="hidden" name="clienteEmail" value="@ViewData["ClienteEmail"]" />
-            <input type="hidden" name="stripe-publishable-key" value="@ViewData["StripePublishableKey"]" />
+                <!-- Formulário de Pagamento -->
+                <form id="payment-form" style="display: none;">
+                    <div style="background-color: #ffffff; padding: 20px; border-radius: 8px; margin-top: 20px;">
+                        <div id="payment-element">
+                            <!-- Stripe Elements vai injetar o formulário completo aqui -->
+                        </div>
+                    </div>
+                    <button id="submit" class="btn btn-success mt-3" type="submit">
+                        <div class="spinner hidden" id="spinner"></div>
+                        <span id="button-text">Pagar e Finalizar Agendamento</span>
+                    </button>
+                    <div id="payment-message" class="text-danger mt-2 hidden"></div>
+                </form>
 
-            <!-- Inputs ocultos para barbeariaUrl e barbeariaId -->
-            <input type="hidden" id="barbeariaUrl" value="@Model.BarbeariaUrl" />
-            <input type="hidden" id="barbeariaId" value="@Model.BarbeariaId" />
+                <!-- Inputs ocultos para nome e e-mail do cliente -->
+                <input type="hidden" name="clienteNome" value="@ViewData["ClienteNome"]" />
+                <input type="hidden" name="clienteEmail" value="@ViewData["ClienteEmail"]" />
+                <input type="hidden" name="stripe-publishable-key" value="@ViewData["StripePublishableKey"]" />
 
-            <!-- Botões de controle adicionais -->
-            <div class="button-container">
-                <button id="confirmarAgendamentoBtn" class="btn btn-danger" style="display: none;">Finalizar Agendamento</button>
-                <button id="changePaymentMethodBtn" class="btn btn-secondary" style="display: none;">Mudar Forma de Pagamento</button>
+                <!-- Inputs ocultos para barbeariaUrl e barbeariaId -->
+                <input type="hidden" id="barbeariaUrl" value="@Model.BarbeariaUrl" />
+                <input type="hidden" id="barbeariaId" value="@Model.BarbeariaId" />
+
+                <!-- Botões de controle adicionais -->
+                <div class="button-container">
+                    <button id="confirmarAgendamentoBtn" class="btn btn-danger" style="display: none;">Finalizar Agendamento</button>
+                    <button id="changePaymentMethodBtn" class="btn btn-secondary" style="display: none;">Mudar Forma de Pagamento</button>
+                </div>
+
+                <!-- Botão de Voltar -->
+                <div class="mt-4">
+                    <button class="btn btn-secondary" onclick="history.back()">Voltar</button>
+                </div>
             </div>
+        </div>
 
-            <!-- Botão de Voltar -->
-            <div class="mt-4">
-                <button class="btn btn-secondary" onclick="history.back()">Voltar</button>
+        <!-- Spinner de carregamento -->
+        <div id="loadingSpinner" class="text-center mt-3" style="display:none;">
+            <div class="spinner-border text-danger" role="status">
+                <span class="sr-only">Carregando...</span>
+            </div>
+            <p class="mt-2 text-light">Confirmando agendamento...</p>
+        </div>
+    </div>
+
+    <!-- Modal de Sucesso -->
+    <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark text-light">
+                <div class="modal-header">
+                    <h5 class="modal-title text-success" id="successModalLabel">Agendamento Confirmado!</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <p>Seu agendamento foi confirmado com sucesso!</p>
+                    <button id="redirectMenuBtn" class="btn btn-success">OK</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Spinner de carregamento -->
-    <div id="loadingSpinner" class="text-center mt-3" style="display:none;">
-        <div class="spinner-border text-danger" role="status">
-            <span class="sr-only">Carregando...</span>
-        </div>
-        <p class="mt-2 text-light">Confirmando agendamento...</p>
-    </div>
-</div>
-
-<!-- Modal de Sucesso -->
-<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content bg-dark text-light">
-            <div class="modal-header">
-                <h5 class="modal-title text-success" id="successModalLabel">Agendamento Confirmado!</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body text-center">
-                <p>Seu agendamento foi confirmado com sucesso!</p>
-                <button id="redirectMenuBtn" class="btn btn-success">OK</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal de Erro de Pagamento -->
-<div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content bg-dark text-light">
-            <div class="modal-header">
-                <h5 class="modal-title text-danger" id="errorModalLabel">Erro no Pagamento</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body text-center">
-                <p id="errorMessage">Agendamento confirmado, mas o pagamento foi recusado. Entre em contato conosco.</p>
-                <button id="errorRedirectBtn" class="btn btn-danger">OK</button>
+    <!-- Modal de Erro de Pagamento -->
+    <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark text-light">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger" id="errorModalLabel">Erro no Pagamento</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <p id="errorMessage">Agendamento confirmado, mas o pagamento foi recusado. Entre em contato conosco.</p>
+                    <button id="errorRedirectBtn" class="btn btn-danger">OK</button>
+                </div>
             </div>
         </div>
     </div>

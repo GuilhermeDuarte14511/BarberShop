@@ -92,5 +92,51 @@ namespace BarberShop.Infrastructure.Repositories
         {
             return await _context.SaveChangesAsync();
         }
+
+
+        public async Task AtualizarDadosClienteAsync(int clienteId, string nome, string email, string telefone, int barbeariaId)
+        {
+            var cliente = await _context.Clientes
+                .FirstOrDefaultAsync(c => c.ClienteId == clienteId && c.BarbeariaId == barbeariaId);
+
+            if (cliente != null)
+            {
+                cliente.Nome = nome;
+                cliente.Email = email;
+                cliente.Telefone = telefone;
+
+                // Atualiza somente os campos modificados
+                _context.Entry(cliente).Property(c => c.Nome).IsModified = true;
+                _context.Entry(cliente).Property(c => c.Email).IsModified = true;
+                _context.Entry(cliente).Property(c => c.Telefone).IsModified = true;
+
+                await _context.SaveChangesAsync();
+            }
+            else
+            {
+                throw new Exception("Cliente não encontrado.");
+            }
+        }
+
+        public async Task AtualizarSenhaAsync(int clienteId, string novaSenha, string tokenRecuperacao, DateTime? tokenExpiracao)
+        {
+            var cliente = await _context.Clientes.FindAsync(clienteId);
+            if (cliente != null)
+            {
+                cliente.Senha = novaSenha;
+                cliente.TokenRecuperacaoSenha = tokenRecuperacao;
+                cliente.TokenExpiracao = tokenExpiracao;
+
+                _context.Entry(cliente).Property(c => c.Senha).IsModified = true;
+                _context.Entry(cliente).Property(c => c.TokenRecuperacaoSenha).IsModified = true;
+                _context.Entry(cliente).Property(c => c.TokenExpiracao).IsModified = true;
+
+                await _context.SaveChangesAsync();
+            }
+            else
+            {
+                throw new Exception("Cliente não encontrado.");
+            }
+        }
     }
 }
