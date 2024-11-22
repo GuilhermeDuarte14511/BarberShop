@@ -72,7 +72,14 @@
                         <hr class="sidebar-divider">
                     </div>
                 </div>
-
+                <hr class="sidebar-divider">
+                @if (User.IsInRole("Admin"))
+                {
+                    <a href="@Url.Action("Index", "Usuario")" class="list-group-item list-group-item-action bg-dark text-white">
+                        <i class="fas fa-users mr-2"></i> Usuários
+                    </a>
+                    <hr class="sidebar-divider">
+                }
                 <hr class="sidebar-divider">
 
 

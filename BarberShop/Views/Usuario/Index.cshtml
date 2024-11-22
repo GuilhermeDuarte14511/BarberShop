@@ -1,0 +1,143 @@
+﻿@model IEnumerable<BarberShop.Domain.Entities.Usuario>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div id="usuarioPage" class="container-fluid">
+    <h2 class="text-center">Gerenciar Usuários</h2>
+
+    <!-- Botão de Adicionar Usuário -->
+    <button class="btn mb-3"
+            id="btnAdicionarUsuario"
+            style="background-color: #ff4d4d; color: #fff; border: none;">
+        Adicionar Usuário
+    </button>
+
+    <!-- Tabela para Telas Maiores -->
+    <div class="table-responsive d-none d-md-block">
+        <table class="table table-dark table-striped" id="tabelaUsuarios">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Email</th>
+                    <th>Telefone</th>
+                    <th>Função</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var usuario in Model)
+                {
+                    <tr data-id="@usuario.UsuarioId">
+                        <td>@usuario.Nome</td>
+                        <td>@usuario.Email</td>
+                        <td>@usuario.Telefone</td>
+                        <td>@usuario.Role</td>
+                        <td>@(usuario.Status == 1 ? "Ativo" : "Inativo")</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm btnEditarUsuario" data-id="@usuario.UsuarioId">Editar</button>
+                            <button class="btn btn-danger btn-sm btnExcluirUsuario" data-id="@usuario.UsuarioId">Excluir</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="usuarios-list d-md-none">
+        @foreach (var usuario in Model)
+        {
+            <div class="usuario-card" data-id="@usuario.UsuarioId">
+                <div class="usuario-card-body">
+                    <p><strong>Nome:</strong> @usuario.Nome</p>
+                    <p><strong>Email:</strong> @usuario.Email</p>
+                    <p><strong>Telefone:</strong> @usuario.Telefone</p>
+                    <p><strong>Função:</strong> @usuario.Role</p>
+                    <p><strong>Status:</strong> @(usuario.Status == 1 ? "Ativo" : "Inativo")</p>
+                    <div class="actions">
+                        <button class="btn btnEditarUsuario btn-sm" data-id="@usuario.UsuarioId">Editar</button>
+                        <button class="btn btnExcluirUsuario btn-sm" data-id="@usuario.UsuarioId">Excluir</button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+
+
+    <!-- Modais -->
+    <!-- Modal de Criação/Edição -->
+    <div class="modal fade" id="usuarioModal" tabindex="-1" aria-labelledby="usuarioModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form id="formUsuario">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="usuarioModalLabel">Adicionar Usuário</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="usuarioId" name="UsuarioId" />
+                        <div class="form-group mb-2">
+                            <label for="Nome">Nome</label>
+                            <input type="text" class="form-control" id="usuarioNome" name="Nome" required />
+                        </div>
+                        <div class="form-group mb-2">
+                            <label for="Email">Email</label>
+                            <input type="email" class="form-control" id="usuarioEmail" name="Email" required />
+                        </div>
+                        <div class="form-group mb-2">
+                            <label for="Telefone">Telefone</label>
+                            <input type="text" class="form-control" id="usuarioTelefone" name="Telefone" />
+                        </div>
+                        <div class="form-group mb-2">
+                            <label for="Role">Função</label>
+                            <select class="form-select" id="usuarioRole" name="Role" required>
+                                <option value="Admin">Admin</option>
+                                <option value="Barbeiro">Barbeiro</option>
+                            </select>
+                        </div>
+                        <div class="form-group mb-2">
+                            <label for="Status">Status</label>
+                            <select class="form-select" id="usuarioStatus" name="Status" required>
+                                <option value="1">Ativo</option>
+                                <option value="0">Inativo</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Exclusão -->
+    <div class="modal fade" id="excluirUsuarioModal" tabindex="-1" aria-labelledby="excluirUsuarioModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="excluirUsuarioModalLabel">Excluir Usuário</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Você tem certeza que deseja excluir o usuário <strong id="excluirUsuarioNome"></strong>?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Não</button>
+                    <button type="button" id="btnConfirmarExcluirUsuario" class="btn btn-danger">Sim</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Spinner de carregamento -->
+    <div id="loadingSpinnerUsuario" class="text-center mt-3" style="display:none;">
+        <div class="spinner-border text-danger" role="status">
+            <span class="sr-only">Carregando...</span>
+        </div>
+        <p class="mt-2 text-light">Carregando...</p>
+    </div>
+</div>

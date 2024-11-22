@@ -99,5 +99,14 @@ namespace BarberShop.Application.Services
 
             return barbeiros;
         }
+
+        public async Task<Barbeiro> CriarBarbeiroAsync(Barbeiro barbeiro)
+        {
+            if (barbeiro == null)
+                throw new ArgumentNullException(nameof(barbeiro));
+
+            // Salva o barbeiro no banco de dados
+            return await _barbeiroRepository.AddAsync(barbeiro);
+        }
     }
 }

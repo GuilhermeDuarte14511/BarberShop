@@ -40,5 +40,14 @@ namespace BarberShop.Infrastructure.Repositories
             _context.Usuarios.Remove(usuario);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<List<Usuario>> ObterPorEmailOuTelefoneAsync(string email, string telefone)
+        {
+            // Busca por usuários com e-mail ou telefone correspondente
+            return await _context.Usuarios
+                .Where(u => u.Email == email || u.Telefone == telefone)
+                .ToListAsync();
+        }
+
     }
 }

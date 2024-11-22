@@ -44,12 +44,20 @@
         @foreach (var servico in Model)
         {
             <div class="servico-card" data-id="@servico.ServicoId">
-                <p><strong>Nome:</strong> @servico.Nome</p>
-                <p><strong>Preço:</strong> @servico.Preco.ToString("N2")</p> <!-- Formatação ajustada -->
-                <p><strong>Duração:</strong> @servico.Duracao</p>
-                <div class="actions">
-                    <button class="btn btn-warning btn-sm btnEditar" data-id="@servico.ServicoId">Editar</button>
-                    <button class="btn btn-danger btn-sm btnExcluir" data-id="@servico.ServicoId">Excluir</button>
+                <div class="servico-card-body">
+                    <div class="servico-card-line">
+                        <p><strong>Nome:</strong> @servico.Nome</p>
+                    </div>
+                    <div class="servico-card-line">
+                        <p><strong>Preço:</strong> @servico.Preco.ToString("N2")</p> <!-- Formatação ajustada -->
+                    </div>
+                    <div class="servico-card-line">
+                        <p><strong>Duração:</strong> @servico.Duracao</p>
+                    </div>
+                    <div class="servico-card-actions" style="margin-top: 10px !important ">
+                        <button class="btn btn-warning btn-sm btnEditar" data-id="@servico.ServicoId">Editar</button>
+                        <button class="btn btn-danger btn-sm btnExcluir" data-id="@servico.ServicoId">Excluir</button>
+                    </div>
                 </div>
             </div>
         }

@@ -20,7 +20,9 @@ namespace BarberShop.Application.Services
                 new Claim(ClaimTypes.NameIdentifier, cliente.ClienteId.ToString()),
                 new Claim(ClaimTypes.Name, cliente.Nome),
                 new Claim(ClaimTypes.Email, cliente.Email ?? cliente.Telefone),
-                new Claim("Telefone", cliente.Telefone ?? string.Empty) // Exemplo de claim adicional
+                new Claim("Telefone", cliente.Telefone ?? string.Empty),
+                new Claim(ClaimTypes.Role, cliente.Role)
+
             };
 
             // Configurando a identidade e principal

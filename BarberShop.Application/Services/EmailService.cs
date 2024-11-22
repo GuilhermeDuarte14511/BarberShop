@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using BarberShop.Domain.Interfaces;
+using Microsoft.Extensions.Configuration;
 
 namespace BarberShop.Application.Services
 {
@@ -11,11 +12,13 @@ namespace BarberShop.Application.Services
     {
         private readonly string _sendGridApiKey;
         private readonly ILogService _logService;
+        private readonly IConfiguration _configuration;
 
-        public EmailService(string sendGridApiKey, ILogService logService)
+        public EmailService(string sendGridApiKey, ILogService logService, IConfiguration configuration)
         {
             _sendGridApiKey = sendGridApiKey;
             _logService = logService;
+            _configuration = configuration;
         }
 
         public async Task EnviarEmailAgendamentoAsync(string destinatarioEmail, string destinatarioNome, string assunto, string conteudo, string barbeiroNome, DateTime dataHoraInicio,
@@ -636,6 +639,147 @@ namespace BarberShop.Application.Services
             }
         }
 
+        public async Task EnviarEmailBoasVindasAsync(string destinatarioEmail, string destinatarioNome, string senha, string tipoUsuario, string nomeBarbearia = null, string urlSlug = null)
+        {
+            try
+            {
+                await _logService.SaveLogAsync("EmailService", $"Iniciando envio de email de boas-vindas para {destinatarioEmail}", "INFO", _sendGridApiKey);
 
+                var client = new SendGridClient(_sendGridApiKey);
+                var from = new EmailAddress("barbershoperbrasil@outlook.com", nomeBarbearia ?? "BarberShop System");
+                var to = new EmailAddress(destinatarioEmail, destinatarioNome);
+                var assunto = "Bem-vindo(a) ao Sistema BarberShop!";
+
+                string saudacao = nomeBarbearia != null
+                    ? $"Bem-vindo(a) ao sistema da barbearia <strong>{nomeBarbearia}</strong>!"
+                    : "Bem-vindo(a) ao nosso sistema!";
+
+                // Recupera o BaseUrl do appSettings
+                string baseUrl = _configuration["AppSettings:BaseUrl"];
+
+                // Constrói a URL de acesso
+                string accessUrl = $"{baseUrl}/{urlSlug}/Admin";
+
+                string htmlContent = $@"
+                                    <html>
+                                    <head>
+                                        <style>
+                                            body {{
+                                                font-family: 'Arial', sans-serif;
+                                                background-color: #2c2f33;
+                                                margin: 0;
+                                                padding: 0;
+                                            }}
+                                            .container {{
+                                                background-color: #23272a;
+                                                color: #ffffff;
+                                                max-width: 600px;
+                                                margin: 20px auto;
+                                                border-radius: 10px;
+                                                padding: 20px;
+                                                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                                            }}
+                                            h1 {{
+                                                font-size: 24px;
+                                                color: #e74c3c;
+                                                text-align: center;
+                                                border-bottom: 2px solid #e74c3c;
+                                                padding-bottom: 10px;
+                                                margin-bottom: 20px;
+                                            }}
+                                            p {{
+                                                font-size: 16px;
+                                                line-height: 1.6;
+                                                color: #ffffff;
+                                            }}
+                                            .details {{
+                                                background-color: #99aab5;
+                                                padding: 15px;
+                                                border-radius: 8px;
+                                                margin-bottom: 20px;
+                                                color: #23272a;
+                                            }}
+                                            .footer {{
+                                                text-align: center;
+                                                margin-top: 20px;
+                                                font-size: 12px;
+                                                color: #99aab5;
+                                            }}
+                                            .button {{
+                                                display: inline-block;
+                                                padding: 10px 20px;
+                                                font-size: 16px;
+                                                color: #ffffff;
+                                                background-color: #e74c3c;
+                                                text-decoration: none;
+                                                border-radius: 5px;
+                                                margin-top: 20px;
+                                            }}
+                                        </style>
+                                    </head>
+                                    <body>
+                                        <div class='container'>
+                                            <h1>Bem-vindo(a), {destinatarioNome}!</h1>
+                                            <p>{saudacao}</p>
+                                            <p>Você foi registrado(a) como <strong>{tipoUsuario}</strong>.</p>
+                                            <p>Aqui estão suas credenciais de acesso:</p>
+                                            <div class='details'>
+                                                <p><strong>Login:</strong> {destinatarioEmail}</p>
+                                                <p><strong>Senha:</strong> {senha}</p>
+                                            </div>
+                                            <p>Por favor, altere sua senha após o primeiro acesso para garantir sua segurança.</p>
+                                            <p>Para acessar o sistema, clique no botão abaixo:</p>
+                                            <p style='text-align: center;'>
+                                                <a href='{accessUrl}' class='buttonEmail'>Acesse por aqui</a>
+                                            </p>
+                                            <p>Se precisar de ajuda, entre em contato com o suporte.</p>
+                                            <div class='footer'>
+                                                <p>&copy; {DateTime.Now.Year} {nomeBarbearia ?? "BarberShop System"}. Todos os direitos reservados.</p>
+                                            </div>
+                                        </div>
+                                    </body>
+                                    </html>";
+
+                var plainTextContent = $@"
+                Bem-vindo(a), {destinatarioNome}!
+
+                {saudacao}
+
+                Você foi registrado(a) como {tipoUsuario}.
+
+                Suas credenciais de acesso são:
+                Login: {destinatarioEmail}
+                Senha: {senha}
+
+                Para acessar o sistema, visite: {accessUrl}
+
+                Por favor, altere sua senha após o primeiro acesso.
+
+                Se precisar de ajuda, entre em contato com o suporte.
+
+                © {DateTime.Now.Year} {nomeBarbearia ?? "BarberShop System"}. Todos os direitos reservados.";
+
+                var msg = MailHelper.CreateSingleEmail(from, to, assunto, plainTextContent, htmlContent);
+                var response = await client.SendEmailAsync(msg);
+
+                if (response.StatusCode != System.Net.HttpStatusCode.OK && response.StatusCode != System.Net.HttpStatusCode.Accepted)
+                {
+                    await _logService.SaveLogAsync("EmailService", $"Falha ao enviar o e-mail de boas-vindas, status code: {response.StatusCode}", "ERROR", _sendGridApiKey);
+                    throw new Exception($"Falha ao enviar o e-mail, status code: {response.StatusCode}");
+                }
+
+                await _logService.SaveLogAsync("EmailService", $"E-mail de boas-vindas enviado com sucesso para {destinatarioEmail}", "INFO", _sendGridApiKey);
+            }
+            catch (Exception ex)
+            {
+                await _logService.SaveLogAsync("EmailService", $"Erro ao enviar e-mail de boas-vindas para {destinatarioEmail}: {ex.Message}", "ERROR", _sendGridApiKey);
+                throw;
+            }
+        }
     }
+
+
+
+
 }
+

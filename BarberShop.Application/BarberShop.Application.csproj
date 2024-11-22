@@ -1,34 +1,30 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="Quartz" Version="3.13.1" />
-    <PackageReference Include="Quartz.Extensions.DependencyInjection" Version="3.13.1" />
-    <PackageReference Include="Quartz.Extensions.Hosting" Version="3.13.1" />
-    <PackageReference Include="RabbitMQ.Client" Version="7.0.0" />
-    <PackageReference Include="SendGrid" Version="9.29.3" />
-    <PackageReference Include="Stripe.net" Version="47.0.0" />
-    <PackageReference Include="X.PagedList.Mvc.Core" Version="10.5.7" />
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Abstractions" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Analyzers" />
+    <PackageReference Include="Newtonsoft.Json" />
+    <PackageReference Include="Quartz" />
+    <PackageReference Include="Quartz.Extensions.DependencyInjection" />
+    <PackageReference Include="Quartz.Extensions.Hosting" />
+    <PackageReference Include="RabbitMQ.Client" />
+    <PackageReference Include="SendGrid" />
+    <PackageReference Include="Stripe.net" />
+    <PackageReference Include="X.PagedList.Mvc.Core" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\BarberShop.Domain\BarberShop.Domain.csproj" />
     <ProjectReference Include="..\BarberShop.Infrastructure\BarberShop.Infrastructure.csproj" />
   </ItemGroup>
-
   <ItemGroup>
     <EditorConfigFiles Remove="D:\Portifólios\BarberShopOficial\BarberShop.Application\DTOs\.editorconfig" />
   </ItemGroup>
-
   <ItemGroup>
     <None Include="D:\Portifólios\BarberShopOficial\BarberShop.Application\DTOs\.editorconfig" />
   </ItemGroup>
-
 </Project>

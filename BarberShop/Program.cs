@@ -49,8 +49,12 @@ string sendGridApiKey = builder.Environment.IsDevelopment()
 builder.Services.AddScoped<IEmailService, EmailService>(provider =>
 {
     var logService = provider.GetRequiredService<ILogService>();
-    return new EmailService(sendGridApiKey, logService);
+    var configuration = provider.GetRequiredService<IConfiguration>(); // Obtém o IConfiguration
+        var sendGridApiKey = configuration["SendGridApiKey"]; // Obtém a chave da configuração
+
+    return new EmailService(sendGridApiKey, logService, configuration);
 });
+
 
 // Obter a PublishableKey do Stripe e definir para a ViewData na aplicação
 builder.Services.AddSingleton(provider =>
@@ -60,7 +64,6 @@ builder.Services.AddSingleton(provider =>
 });
 
 builder.Services.AddHttpContextAccessor();
-
 
 // Registrar repositórios
 builder.Services.AddScoped<IClienteRepository, ClienteRepository>();
@@ -80,7 +83,6 @@ builder.Services.AddScoped<IFeriadoBarbeariaRepository, FeriadoBarbeariaReposito
 builder.Services.AddScoped<IIndisponibilidadeRepository, IndisponibilidadeRepository>();
 builder.Services.AddScoped<IBarbeiroServicoRepository, BarbeiroServicoRepository>();
 
-
 // Registrar serviços da camada de aplicação
 builder.Services.AddScoped<IClienteService, ClienteService>();
 builder.Services.AddScoped<IAgendamentoService, AgendamentoService>();
@@ -93,17 +95,23 @@ builder.Services.AddScoped<IIndisponibilidadeService, IndisponibilidadeService>(
 builder.Services.AddScoped<IAvaliacaoService, AvaliacaoService>();
 builder.Services.AddScoped<IBarbeiroServicoService, BarbeiroServicoService>();
 builder.Services.AddScoped<IRedefinirSenhaService, RedefinirSenhaService>();
+builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 
-
-// Configurar autenticação com cookies
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
-    {
-        options.LoginPath = "/Login/Login";
-        options.LogoutPath = "/Login/Logout";
-        options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
-        options.SlidingExpiration = true;
-    });
+// Configurar autenticação com cookies (apenas uma vez)
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+}).AddCookie(options =>
+{
+    options.LoginPath = "/Login/Login";
+    options.LogoutPath = "/Login/Logout";
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
+    options.SlidingExpiration = true;
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.Strict;
+});
 
 // Configurar sessões
 builder.Services.AddSession(options =>
@@ -113,48 +121,30 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true; // Necessário para o funcionamento da aplicação
 });
 
-// Lê a expressão cron do appsettings.json
-var cronExpression = builder.Configuration["AppSettings:QuartzCron"];
-
-// Verifica se a expressão cron foi configurada, caso contrário, define um padrão (a cada 10 segundos)
-if (string.IsNullOrWhiteSpace(cronExpression))
-{
-    cronExpression = "0/10 * * * * ?"; // Default: a cada 10 segundos
-    Console.WriteLine("Expressão cron não configurada. Usando o padrão: 0/10 * * * * ?");
-}
-else
-{
-    Console.WriteLine($"Usando a expressão cron configurada: {cronExpression}");
-}
-
 // Configura o Quartz.NET
 builder.Services.AddQuartz(config =>
 {
-    // Define o Job
     var jobKey = new JobKey("EnviarEmailAvaliacaoJob");
 
     config.AddJob<EnviarEmailAvaliacaoJob>(opts =>
     {
         opts.WithIdentity(jobKey);
-        Console.WriteLine($"Job 'EnviarEmailAvaliacaoJob' registrado com sucesso.");
     });
 
-    // Define a Trigger
     config.AddTrigger(opts =>
     {
         opts.ForJob(jobKey)
             .WithIdentity("EnviarEmailAvaliacaoTrigger")
-            .StartNow() // Inicia imediatamente
+            .StartNow()
             .WithSimpleSchedule(schedule =>
-                schedule.WithIntervalInMinutes(10) // Executa a cada 10 minutos
-                        .RepeatForever()); // Repete indefinidamente
-        Console.WriteLine("Trigger para o Job 'EnviarEmailAvaliacaoJob' configurada para iniciar imediatamente e repetir a cada 10 minutos.");
+                schedule.WithIntervalInMinutes(10)
+                        .RepeatForever());
     });
 });
 
 builder.Services.AddQuartzHostedService(options =>
 {
-    options.WaitForJobsToComplete = true; // Garante que os jobs sejam completados ao encerrar o serviço
+    options.WaitForJobsToComplete = true;
 });
 
 // Adicionar serviços MVC e configurar o Swagger
@@ -172,7 +162,6 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-// Habilitar o Swagger e a UI do Swagger em todos os ambientes
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
@@ -182,18 +171,13 @@ app.UseSwaggerUI(c =>
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
-
-// Middleware de autenticação, autorização e sessões
-app.UseSession(); // Habilita o uso de sessões
+app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Configurar redirecionamento para erros de status 404
 app.UseStatusCodePagesWithReExecute("/Erro/BarbeariaNaoEncontrada");
 
-// Mapeamento de Rotas para incluir `UrlSlug`
 app.MapControllerRoute(
     name: "default",
     pattern: "{barbeariaUrl}/{controller=Login}/{action=Login}/{id?}");
@@ -201,8 +185,7 @@ app.MapControllerRoute(
 app.MapControllerRoute(
     name: "adminLogin",
     pattern: "{barbeariaUrl}/admin",
-    defaults: new { controller = "Login", action = "AdminLogin" }
-);
+    defaults: new { controller = "Login", action = "AdminLogin" });
 
 app.MapControllerRoute(
     name: "default",

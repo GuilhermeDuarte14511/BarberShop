@@ -106,5 +106,6 @@ namespace BarberShop.Infrastructure.Repositories
         {
             return await _context.Servicos.FirstOrDefaultAsync(s => s.ServicoId == servicoId);
         }
+
     }
 }

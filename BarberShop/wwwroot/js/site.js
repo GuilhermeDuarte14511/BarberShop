@@ -1838,6 +1838,30 @@
     // Verifica se o elemento com o ID 'adminDashboard' está presente na página
     if ($('#adminDashboard').length > 0) {
 
+
+        function adjustDashboardView() {
+            const mobileMessage = document.getElementById("mobileMessage");
+            const buttonContainer = document.getElementById("buttonContainer");
+            const dashboardContainer = document.getElementById("dashboard-container");
+
+            // Verifica se a largura da janela é menor ou igual a 768px (modo mobile)
+            if (window.innerWidth <= 768) {
+                mobileMessage.classList.remove("d-none"); // Mostra a mensagem
+                buttonContainer.style.display = "none"; // Esconde o botão
+                dashboardContainer.style.display = "none"; // Esconde os gráficos
+            } else {
+                mobileMessage.classList.add("d-none"); // Esconde a mensagem
+                buttonContainer.style.display = "flex"; // Mostra o botão
+                dashboardContainer.style.display = "flex"; // Mostra os gráficos
+            }
+        }
+
+        // Detecta alterações no tamanho da janela e ajusta a interface
+        window.addEventListener("resize", adjustDashboardView);
+
+        // Ajusta a interface ao carregar a página
+        document.addEventListener("DOMContentLoaded", adjustDashboardView);
+
         // Função para buscar os dados do backend
         async function fetchDashboardData() {
             try {
@@ -2989,12 +3013,23 @@
 
         // Função de pesquisa
         $('#searchFeriado').on('input', function () {
-            const query = $(this).val().toLowerCase();
+            const query = $(this).val().toLowerCase(); // Texto da pesquisa em minúsculas
+            const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/; // Regex para validar formato de data dd/MM/yyyy
 
-            $('.card').each(function () {
-                const text = $(this).text().toLowerCase();
-                const matches = text.includes(query);
-                $(this).toggle(matches);
+            $('.feriadoCard').each(function () {
+                const text = $(this).text().toLowerCase(); // Texto completo do card
+                const data = $(this).find('.feriadoCardText strong:contains("Data")').next().text(); // Texto da data no card
+
+                let matches = false;
+                if (dateRegex.test(query)) {
+                    // Se a query for uma data, comparar diretamente
+                    matches = data === query;
+                } else {
+                    // Caso contrário, pesquisar no texto geral
+                    matches = text.includes(query);
+                }
+
+                $(this).toggle(matches); // Mostrar ou ocultar o card
             });
         });
 
@@ -3002,18 +3037,25 @@
         $('#filterRecorrente').on('change', function () {
             const filter = $(this).val(); // Valor do filtro: "", "true", ou "false"
 
-            $('.card').each(function () {
-                const recorrente = $(this).data('recorrente')?.toString(); // Converte para string
+            $('.feriadoCard').each(function () {
+                const recorrente = $(this).data('recorrente')?.toString().toLowerCase(); // Converte para string minúscula
                 const fixo = $(this).data('fixo'); // Valor booleano do atributo fixo
+                let shouldShow = false;
 
-                // Lógica de exibição
+                // Lógica de exibição baseada no filtro
                 if (filter === "") {
-                    $(this).show(); // Mostrar todos os cards
+                    // Mostrar todos os cards se o filtro estiver vazio
+                    shouldShow = true;
                 } else if (filter === "true") {
-                    $(this).toggle(recorrente === "true" || fixo === true); // Mostrar recorrentes ou fixos
+                    // Mostrar todos os feriados recorrentes (independente de ser true ou True) ou fixos
+                    shouldShow = recorrente === "true" || fixo === true;
                 } else if (filter === "false") {
-                    $(this).toggle(recorrente === "false"); // Mostrar não recorrentes
+                    // Mostrar apenas feriados não recorrentes
+                    shouldShow = recorrente === "false";
                 }
+
+                // Aplica a lógica de exibição
+                $(this).toggle(shouldShow);
             });
         });
     }
@@ -3152,9 +3194,163 @@
         }
     }
 
+    if ($('#usuarioPage').length > 0) {
 
+        function mostrarLoading() {
+            $('#loadingSpinnerUsuario').show();
+        }
 
+        function ocultarLoading() {
+            $('#loadingSpinnerUsuario').hide();
+        }
 
+        // Função para aplicar máscara de telefone
+        function aplicarMascaraTelefone(input) {
+            input.on('input', function () {
+                let telefone = $(this).val().replace(/\D/g, ''); // Remove caracteres não numéricos
 
+                // Limita o número de dígitos a 11
+                if (telefone.length > 11) {
+                    telefone = telefone.slice(0, 11);
+                }
+
+                // Aplica a máscara de acordo com o tamanho
+                if (telefone.length > 10) {
+                    telefone = telefone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3'); // Formato com 11 dígitos
+                } else if (telefone.length > 6) {
+                    telefone = telefone.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3'); // Formato com 10 dígitos
+                } else if (telefone.length > 2) {
+                    telefone = telefone.replace(/(\d{2})(\d{0,5})/, '($1) $2'); // Formato inicial
+                }
+
+                $(this).val(telefone);
+            });
+
+            input.on('keypress', function (e) {
+                // Impede a digitação de mais caracteres do que o necessário
+                if ($(this).val().length >= 15 && e.keyCode !== 8 && e.keyCode !== 46) {
+                    e.preventDefault();
+                }
+            });
+        }
+
+        // Aplicar a máscara de telefone ao campo de telefone
+        aplicarMascaraTelefone($('#usuarioTelefone'));
+
+        // Adicionar Usuário
+        $('#btnAdicionarUsuario').on('click', function () {
+            $('#usuarioId').val(''); // Limpa o campo do ID
+            $('#usuarioNome').val('');
+            $('#usuarioEmail').val('');
+            $('#usuarioTelefone').val('');
+            $('#usuarioRole').val('Admin');
+            $('#usuarioStatus').val('1');
+            $('#tipoUsuario').val('Admin'); // Adiciona tipo de usuário padrão
+            $('#usuarioModalLabel').text('Adicionar Usuário');
+            $('#usuarioModal').modal('show');
+        });
+
+        // Editar Usuário
+        $(document).on('click', '.btnEditarUsuario', function () {
+            const usuarioId = $(this).data('id');
+            mostrarLoading();
+
+            // Chama o método ObterUsuario
+            $.get(`/Usuario/ObterUsuario/${usuarioId}`, function (response) {
+                if (response.success) {
+                    const usuario = response.data;
+                    // Preenche os campos do modal com os dados do usuário
+                    $('#usuarioId').val(usuario.usuarioId);
+                    $('#usuarioNome').val(usuario.nome);
+                    $('#usuarioEmail').val(usuario.email);
+                    $('#usuarioTelefone').val(usuario.telefone);
+                    $('#usuarioRole').val(usuario.role);
+                    $('#usuarioStatus').val(usuario.status.toString());
+                    $('#tipoUsuario').val(usuario.role === 'Barbeiro' ? 'Barbeiro' : 'Admin'); // Define tipo de usuário
+                    $('#usuarioModalLabel').text('Editar Usuário');
+                    $('#usuarioModal').modal('show');
+                } else {
+                    showToast(response.message, 'danger');
+                }
+            }).fail(function () {
+                showToast('Erro ao buscar os dados do usuário.', 'danger');
+            }).always(function () {
+                ocultarLoading();
+            });
+        });
+
+        $('#formUsuario').on('submit', function (e) {
+            e.preventDefault();
+            mostrarLoading();
+
+            // Coleta os dados do formulário
+            const formData = {
+                UsuarioId: $('#usuarioId').val() || null, // Null se for novo
+                Nome: $('#usuarioNome').val(),
+                Email: $('#usuarioEmail').val(),
+                Telefone: $('#usuarioTelefone').val(),
+                Role: $('#usuarioRole').val(),
+                Status: parseInt($('#usuarioStatus').val(), 10), // Converte para inteiro
+                BarbeariaId: parseInt($('#BarbeariaId').val(), 10), // Converte para inteiro
+                TipoUsuario: $('#usuarioRole').val() // Tipo de usuário: Admin ou Barbeiro
+            };
+
+            const url = formData.UsuarioId ? `/Usuario/Atualizar` : `/Usuario/Criar`; // Verifica se é PUT ou POST
+            const method = formData.UsuarioId ? 'PUT' : 'POST';
+
+            // Envia a solicitação AJAX
+            $.ajax({
+                url: url,
+                type: method,
+                contentType: 'application/json',
+                data: JSON.stringify(formData), // Envia o JSON no corpo da solicitação
+                success: function (response) {
+                    $('#usuarioModal').modal('hide');
+                    showToast(response.message, response.success ? 'success' : 'danger');
+                    if (response.success) {
+                        setTimeout(() => location.reload(), 1500); // Recarrega a página após sucesso
+                    }
+                },
+                error: function () {
+                    showToast('Erro ao salvar o usuário.', 'danger');
+                },
+                complete: function () {
+                    ocultarLoading();
+                }
+            });
+        });
+
+        // Deletar Usuário
+        $(document).on('click', '.btnExcluirUsuario', function () {
+            const usuarioId = $(this).data('id');
+            const usuarioNome = $(this).closest('.usuario-card').find('p:first').text(); // Pega o primeiro <p> (nome do usuário)
+            $('#excluirUsuarioNome').text(usuarioNome);
+            $('#btnConfirmarExcluirUsuario').data('id', usuarioId);
+            $('#excluirUsuarioModal').modal('show');
+        });
+
+        $('#btnConfirmarExcluirUsuario').on('click', function () {
+            const usuarioId = $(this).data('id');
+            mostrarLoading();
+
+            $.ajax({
+                url: `/Usuario/Deletar/${usuarioId}`,
+                type: 'DELETE',
+                success: function (response) {
+                    $('#excluirUsuarioModal').modal('hide');
+                    showToast(response.message, response.success ? 'success' : 'danger');
+                    if (response.success) {
+                        setTimeout(() => location.reload(), 1500);
+                    }
+                },
+                error: function () {
+                    showToast('Erro ao excluir o usuário.', 'danger');
+                },
+                complete: function () {
+                    ocultarLoading();
+                }
+            });
+        });
+    }
 
 });

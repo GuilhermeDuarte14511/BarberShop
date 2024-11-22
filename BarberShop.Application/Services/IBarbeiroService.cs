@@ -13,5 +13,7 @@ namespace BarberShop.Application.Services
         Task<IEnumerable<Barbeiro>> ObterBarbeirosPorBarbeariaIdAsync(int barbeariaId);
         Task<bool> VerificarDisponibilidadeHorarioAsync(int barbeiroId, DateTime dataHora, int duracao);
         Task<IEnumerable<Barbeiro>> ObterBarbeirosPorServicosAsync(int barbeariaId, List<int> servicoIds);
+        Task<Barbeiro> CriarBarbeiroAsync(Barbeiro barbeiro);
+
     }
 }

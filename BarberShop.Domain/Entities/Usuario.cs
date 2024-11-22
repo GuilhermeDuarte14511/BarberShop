@@ -21,6 +21,7 @@ namespace BarberShop.Domain.Entities
         public DateTime? TokenExpiracao { get; set; }
 
         public int BarbeariaId { get; set; }
+        public int? BarbeiroId { get; set; }
         public Barbearia Barbearia { get; set; }
 
         public ICollection<RelatorioPersonalizado> RelatoriosPersonalizados { get; set; } = new List<RelatorioPersonalizado>();

@@ -1,147 +1,149 @@
-﻿@using BarberShop.Application.DTOs
-@model IEnumerable<FeriadoDTO>
-@{
-    Layout = "~/Views/Shared/_AdminLayout.cshtml";
-}
+﻿    @using BarberShop.Application.DTOs
+    @model IEnumerable<FeriadoDTO>
+    @{
+        Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    }
 
-<div id="feriadoPage" class="container mt-5">
-    <h2 class="text-center">Gerenciar Feriados</h2>
-    <button class="btn btn-success mb-3" id="btnAdicionarFeriado" data-bs-toggle="modal" data-bs-target="#adicionarModal">Adicionar Feriado</button>
+    <div id="feriadoPage" class="container mt-5">
+        <h2 class="text-center">Gerenciar Feriados</h2>
+        <button class="btn btn-success mb-3" id="btnAdicionarFeriado" data-bs-toggle="modal" data-bs-target="#adicionarModal">Adicionar Feriado</button>
 
-    <!-- Filtros -->
-    <div class="filter-section mb-4 d-flex gap-3">
-        <input type="text" id="searchFeriado" class="form-control" placeholder="Pesquisar feriados...">
-        <select id="filterRecorrente" class="form-select">
-            <option value="">Todos</option>
-            <option value="true">Recorrente</option>
-            <option value="false">Não Recorrente</option>
-        </select>
-    </div>
+        <!-- Filtros -->
+        <div class="filter-section mb-4 d-flex gap-3">
+            <input type="text" id="searchFeriado" class="form-control" placeholder="Pesquisar feriados...">
+            <select id="filterRecorrente" class="form-select">
+                <option value="">Todos</option>
+                <option value="true">Recorrente</option>
+                <option value="false">Não Recorrente</option>
+            </select>
+        </div>
 
-    <!-- Feriados Nacionais -->
-    <h3 class="text-center mt-4 text-warning">Feriados Nacionais</h3>
-    <div class="row">
-        @foreach (var feriado in Model.Where(f => f.Fixo))
-        {
-                <div class="col-md-4 col-lg-3 mb-4">
-                    <div class="feriadoCard shadow-sm h-100" data-recorrente="@feriado.Recorrente" data-fixo="true">
-                        <div class="feriadoCardBody">
-                            <h5 class="feriadoCardTitle">@feriado.Descricao</h5>
-                            <p class="feriadoCardText"><strong>Data:</strong> @feriado.Data.ToString("dd/MM/yyyy")</p>
-                            <p class="feriadoCardText"><strong>Recorrente:</strong> @(feriado.Recorrente ? "Sim" : "Não")</p>
-                            <p class="text-warning">Feriado Nacional (Fixo)</p>
+        <!-- Feriados Nacionais -->
+        <h3 class="text-center mt-4 text-warning">Feriados Nacionais</h3>
+        <div class="row">
+            @foreach (var feriado in Model.Where(f => f.Fixo))
+            {
+                    <div class="col-md-4 col-lg-3 mb-4">
+                        <div class="feriadoCard shadow-sm h-100" data-recorrente="@feriado.Recorrente" data-fixo="true">
+                            <div class="feriadoCardBody">
+                                <h5 class="feriadoCardTitle">@feriado.Descricao</h5>
+                                <p class="feriadoCardText"><strong>Data:</strong> @feriado.Data.ToString("dd/MM/yyyy")</p>
+                                <p class="feriadoCardText"><strong>Recorrente:</strong> @(feriado.Recorrente ? "Sim" : "Não")</p>
+                                <p class="text-warning">Feriado Nacional (Fixo)</p>
+                            </div>
                         </div>
                     </div>
-                </div>
-        }
-    </div>
+            }
+        </div>
 
     <!-- Feriados Regionais -->
     <h3 class="text-center mt-4 text-info">Feriados Regionais</h3>
     <div class="row">
-        @foreach (var feriado in Model.Where(f => !f.Fixo))
+        @foreach (var feriado in Model.Where(f => !f.Fixo)) // Feriados não fixos
         {
-                <div class="col-md-4 col-lg-3 mb-4">
-                    <div class="feriadoCard shadow-sm h-100" data-recorrente="@feriado.Recorrente" data-fixo="false">
-                        <div class="feriadoCardBody">
-                            <h5 class="feriadoCardTitle">@feriado.Descricao</h5>
-                            <p class="feriadoCardText"><strong>Data:</strong> @feriado.Data.ToString("dd/MM/yyyy")</p>
-                            <p class="feriadoCardText"><strong>Recorrente:</strong> @(feriado.Recorrente ? "Sim" : "Não")</p>
-                            <div class="d-flex justify-content-center mt-3">
-                                <button class="btn btnEditarFeriado btn-sm me-2" data-id="@feriado.FeriadoBarbeariaId" data-bs-toggle="modal" data-bs-target="#editarModal">Editar</button>
-                                <button class="btn btnExcluirFeriado btn-sm" data-id="@feriado.FeriadoBarbeariaId" data-bs-toggle="modal" data-bs-target="#excluirModal">Excluir</button>
-                            </div>
+            <div class="col-md-4 col-lg-3 mb-4">
+                <div class="feriadoCard shadow-sm h-100" data-recorrente="@feriado.Recorrente.ToString().ToLower()" data-fixo="false">
+                    <div class="feriadoCardBody">
+                        <h5 class="feriadoCardTitle">@feriado.Descricao</h5>
+                        <p class="feriadoCardText"><strong>Data:</strong> @feriado.Data.ToString("dd/MM/yyyy")</p>
+                        <p class="feriadoCardText"><strong>Recorrente:</strong> @(feriado.Recorrente ? "Sim" : "Não")</p>
+                        <p class="text-info">Feriado Regional</p>
+                        <div class="d-flex justify-content-center mt-3">
+                            <button class="btn btnEditarFeriado btn-sm me-2" data-id="@feriado.FeriadoBarbeariaId" data-bs-toggle="modal" data-bs-target="#editarModal">Editar</button>
+                            <button class="btn btnExcluirFeriado btn-sm" data-id="@feriado.FeriadoBarbeariaId" data-bs-toggle="modal" data-bs-target="#excluirModal">Excluir</button>
                         </div>
                     </div>
                 </div>
+            </div>
         }
     </div>
-</div>
 
-<!-- Modais para Adicionar, Editar e Excluir -->
-<div class="modal fade" id="adicionarModal" tabindex="-1" aria-labelledby="adicionarModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <form id="formAdicionarFeriado" method="post">
+    </div>
+
+    <!-- Modais para Adicionar, Editar e Excluir -->
+    <div class="modal fade" id="adicionarModal" tabindex="-1" aria-labelledby="adicionarModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form id="formAdicionarFeriado" method="post">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Adicionar Feriado</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group mb-3">
+                            <label for="Descricao">Descrição</label>
+                            <input type="text" class="form-control" id="Descricao" name="Descricao" required />
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="Data">Data</label>
+                            <input type="date" class="form-control" id="Data" name="Data" required />
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="Recorrente">Recorrente</label>
+                            <select class="form-control" id="Recorrente" name="Recorrente">
+                                <option value="true">Sim</option>
+                                <option value="false">Não</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editarModal" tabindex="-1" aria-labelledby="editarModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form id="formEditarFeriado" method="post">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Editar Feriado</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="editarFeriadoId" name="FeriadoBarbeariaId" />
+                        <div class="form-group mb-3">
+                            <label for="Descricao">Descrição</label>
+                            <input type="text" class="form-control" id="editarDescricao" name="Descricao" required />
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="Data">Data</label>
+                            <input type="date" class="form-control" id="editarData" name="Data" required />
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="Recorrente">Recorrente</label>
+                            <select class="form-control" id="editarRecorrente" name="Recorrente">
+                                <option value="true">Sim</option>
+                                <option value="false">Não</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="excluirModal" tabindex="-1" aria-labelledby="excluirModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Adicionar Feriado</h5>
+                    <h5 class="modal-title">Excluir Feriado</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="form-group mb-3">
-                        <label for="Descricao">Descrição</label>
-                        <input type="text" class="form-control" id="Descricao" name="Descricao" required />
-                    </div>
-                    <div class="form-group mb-3">
-                        <label for="Data">Data</label>
-                        <input type="date" class="form-control" id="Data" name="Data" required />
-                    </div>
-                    <div class="form-group mb-3">
-                        <label for="Recorrente">Recorrente</label>
-                        <select class="form-control" id="Recorrente" name="Recorrente">
-                            <option value="true">Sim</option>
-                            <option value="false">Não</option>
-                        </select>
-                    </div>
+                    Você tem certeza que deseja excluir o feriado <strong id="excluirFeriadoDescricao"></strong>?
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Não</button>
+                    <button type="button" id="btnConfirmarExcluir" class="btn btn-danger">Sim</button>
                 </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="editarModal" tabindex="-1" aria-labelledby="editarModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <form id="formEditarFeriado" method="post">
-                <div class="modal-header">
-                    <h5 class="modal-title">Editar Feriado</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" id="editarFeriadoId" name="FeriadoBarbeariaId" />
-                    <div class="form-group mb-3">
-                        <label for="Descricao">Descrição</label>
-                        <input type="text" class="form-control" id="editarDescricao" name="Descricao" required />
-                    </div>
-                    <div class="form-group mb-3">
-                        <label for="Data">Data</label>
-                        <input type="date" class="form-control" id="editarData" name="Data" required />
-                    </div>
-                    <div class="form-group mb-3">
-                        <label for="Recorrente">Recorrente</label>
-                        <select class="form-control" id="editarRecorrente" name="Recorrente">
-                            <option value="true">Sim</option>
-                            <option value="false">Não</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="excluirModal" tabindex="-1" aria-labelledby="excluirModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Excluir Feriado</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                Você tem certeza que deseja excluir o feriado <strong id="excluirFeriadoDescricao"></strong>?
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Não</button>
-                <button type="button" id="btnConfirmarExcluir" class="btn btn-danger">Sim</button>
             </div>
         </div>
     </div>
-</div>

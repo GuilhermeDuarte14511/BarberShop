@@ -1,5 +1,7 @@
 ﻿using BarberShop.Application.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Cryptography;
+using System.Text;
 
 public class BaseController : Controller
 {
@@ -14,4 +16,19 @@ public class BaseController : Controller
     {
         await _logService.SaveLogAsync(logLevel, source, message, data, resourceId);
     }
+
+    public string GerarSenhaAleatoria(int tamanho = 8)
+    {
+        const string caracteres = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        var senha = new StringBuilder();
+
+        for (int i = 0; i < tamanho; i++)
+        {
+            int index = RandomNumberGenerator.GetInt32(caracteres.Length);
+            senha.Append(caracteres[index]);
+        }
+
+        return senha.ToString();
+    }
+
 }

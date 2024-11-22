@@ -13,22 +13,29 @@
         {
             <div class="col-md-4 col-lg-3 mb-4">
                 <div class="card bg-dark text-light h-100 shadow-sm">
-                    <div class="card-body text-center">
-                        <!-- Exibição da foto do barbeiro ou imagem padrão com borda vermelha -->
-                        <div class="position-relative d-inline-block">
+                    <div class="card-body">
+                        <!-- Foto do barbeiro com borda vermelha -->
+                        <div class="position-relative text-center mb-3">
                             <img src="@(barbeiro.Foto != null ? "data:image/png;base64," + Convert.ToBase64String(barbeiro.Foto) : "https://via.placeholder.com/100")"
                                  alt="Foto do @barbeiro.Nome"
-                                 class="rounded-circle mb-3 photo-preview"
-                                 style="width: 100px; height: 100px; object-fit: cover; cursor: pointer; border: 3px solid #e74c3c; padding: 5px; border-radius: 50%;"
+                                 class="rounded-circle photo-preview"
+                                 style="width: 100px; height: 100px; object-fit: cover; cursor: pointer; border: 3px solid #e74c3c; padding: 5px;"
                                  data-bs-toggle="modal"
                                  data-bs-target="#visualizarFotoModal"
                                  data-foto="@(barbeiro.Foto != null ? "data:image/png;base64," + Convert.ToBase64String(barbeiro.Foto) : "https://via.placeholder.com/100")">
                         </div>
 
-                        <!-- Nome e informações do barbeiro -->
-                        <h5 class="card-title">@barbeiro.Nome</h5>
+                        <!-- Nome do barbeiro -->
+                        <p class="card-text"><strong>Nome:</strong> @barbeiro.Nome</p>
+
+                        <!-- Email -->
                         <p class="card-text"><strong>Email:</strong> @barbeiro.Email</p>
+
+                        <!-- Telefone -->
                         <p class="card-text"><strong>Telefone:</strong> @barbeiro.Telefone</p>
+
+                        <!-- Linha separadora antes dos botões -->
+                        <hr class="text-secondary" />
 
                         <!-- Botões de ação -->
                         <div class="d-flex justify-content-center mt-3">

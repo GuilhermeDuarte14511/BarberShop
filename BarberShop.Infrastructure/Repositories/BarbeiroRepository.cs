@@ -95,6 +95,12 @@ namespace BarberShop.Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        public async Task<Barbeiro> CriarBarbeiroAsync(Barbeiro barbeiro)
+        {
+            await _context.Barbeiros.AddAsync(barbeiro);
+            await _context.SaveChangesAsync();
+            return barbeiro;
+        }
 
 
     }

@@ -163,41 +163,73 @@ namespace BarberShopMVC.Controllers
         {
             try
             {
+                // Obter o usuário pelo ID
                 var usuario = await _usuarioRepository.GetByIdAsync(usuarioId);
 
+                // Validar usuário e código de validação
                 if (usuario == null || usuario.CodigoValidacaoExpiracao < DateTime.UtcNow || codigo != usuario.CodigoValidacao)
                 {
                     return Json(new { success = false, message = "Código inválido ou expirado." });
                 }
 
+                if (usuario.BarbeariaId <= 0)
+                {
+                    return Json(new { success = false, message = "Usuário não está vinculado a uma barbearia válida." });
+                }
+
+                // Buscar a barbearia pelo ID
+                var barbearia = await _barbeariaRepository.GetByIdAsync(usuario.BarbeariaId);
+                if (barbearia == null)
+                {
+                    return Json(new { success = false, message = "Barbearia não encontrada." });
+                }
+
+                // Criar os claims para autenticação
                 var claims = new List<Claim>
                 {
                     new Claim(ClaimTypes.NameIdentifier, usuario.UsuarioId.ToString()),
                     new Claim(ClaimTypes.Name, usuario.Nome),
-                    new Claim(ClaimTypes.Role, usuario.Role)
+                    new Claim(ClaimTypes.Role, usuario.Role),
+                    new Claim("BarbeariaId", usuario.BarbeariaId.ToString()),
+                    new Claim("BarbeariaNome", barbearia.Nome),
+                    new Claim("urlSlug", barbearia.UrlSlug)
                 };
 
+                // Adicionar o claim de BarbeiroId, se aplicável
+                if (usuario.BarbeiroId.HasValue)
+                {
+                    claims.Add(new Claim("BarbeiroId", usuario.BarbeiroId.Value.ToString()));
+                }
+
+                // Criar identidade e principal
                 var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
                 var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
 
+                // Configurar propriedades de autenticação
                 var authProperties = new AuthenticationProperties
                 {
                     IsPersistent = true,
                     ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8)
                 };
+
+                // Realizar o login
                 await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal, authProperties);
 
+                // Recuperar a URL da barbearia da sessão
                 var barbeariaUrl = HttpContext.Session.GetString("BarbeariaUrl");
 
-                await LogAsync("Info", "VerificarAdminCodigo", $"Administrador {usuarioId} autenticado com sucesso.", $"UsuarioId: {usuarioId}");
+                // Registrar log de sucesso
+                await LogAsync("Info", nameof(VerificarAdminCodigo), $"Administrador {usuarioId} autenticado com sucesso.", $"UsuarioId: {usuarioId}");
                 return Json(new { success = true, redirectUrl = Url.Action("Index", "Admin", new { barbeariaUrl }) });
             }
             catch (Exception ex)
             {
-                await LogAsync("Error", "VerificarAdminCodigo", $"Erro ao verificar código de administrador: {ex.Message}", $"UsuarioId: {usuarioId}");
+                // Registrar log de erro
+                await LogAsync("Error", nameof(VerificarAdminCodigo), $"Erro ao verificar código de administrador: {ex.Message}", $"UsuarioId: {usuarioId}");
                 return Json(new { success = false, message = "Erro ao verificar código." });
             }
         }
+
 
         [HttpPost]
         public async Task<IActionResult> Login(string inputFieldLogin, string passwordInputLogin)

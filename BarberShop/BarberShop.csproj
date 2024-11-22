@@ -6,17 +6,20 @@
     <UserSecretsId>721ab38a-e394-40b7-bb2f-a78212d0008c</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Abstractions" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Analyzers" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Quartz.Extensions.DependencyInjection" Version="3.13.1" />
-    <PackageReference Include="Quartz.Extensions.Hosting" Version="3.13.1" />
-    <PackageReference Include="Stripe.net" Version="47.0.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="7.0.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="7.0.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="7.0.0" />
-    <PackageReference Include="X.PagedList.Mvc.Core" Version="10.5.7" />
+    <PackageReference Include="Quartz.Extensions.DependencyInjection" />
+    <PackageReference Include="Quartz.Extensions.Hosting" />
+    <PackageReference Include="Stripe.net" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Swagger" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" />
+    <PackageReference Include="X.PagedList.Mvc.Core" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\BarberShop.Application\BarberShop.Application.csproj" />

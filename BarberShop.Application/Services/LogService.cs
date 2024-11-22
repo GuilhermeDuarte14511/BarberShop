@@ -25,20 +25,18 @@ namespace BarberShop.Application.Services
         {
             try
             {
-                _logger.LogDebug("Salvando log no banco de dados...");
-
-                // Obtenha o usuarioId dos claims, se estiver disponível
                 var usuarioIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier);
                 var usuarioId = usuarioIdClaim != null ? usuarioIdClaim.Value : "Desconhecido";
 
-                // Validações e atribuições de valores padrão
-                logLevel = string.IsNullOrWhiteSpace(logLevel) ? "Information" : logLevel;
-                source = string.IsNullOrWhiteSpace(source) ? "Source não especificado" : source;
-                message = string.IsNullOrWhiteSpace(message) ? "Mensagem não fornecida" : message;
-                data = data ?? DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss");
-                resourceId = string.IsNullOrWhiteSpace(resourceId) ? "N/A" : resourceId;
+                // Validação de claims
+                if (usuarioId == "Desconhecido")
+                {
+                    _logger.LogWarning("Usuário não autenticado ao registrar log.");
+                }
 
-                // Adiciona o usuarioId ao início da mensagem
+                logLevel = string.IsNullOrWhiteSpace(logLevel) ? "Information" : logLevel;
+                data = data ?? DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss");
+
                 var formattedMessage = $"Usuario Id {usuarioId}, {message}";
 
                 var logEntry = new Log
@@ -47,19 +45,19 @@ namespace BarberShop.Application.Services
                     Source = source,
                     Message = formattedMessage,
                     Data = data,
-                    ResourceID = resourceId,
+                    ResourceID = resourceId ?? "N/A",
                     LogDateTime = DateTime.UtcNow
                 };
 
                 _context.Logs.Add(logEntry);
                 await _context.SaveChangesAsync();
-                _logger.LogDebug("Log salvo com sucesso.");
+                _logger.LogDebug($"Log salvo com sucesso: {formattedMessage}");
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Erro ao salvar log no banco de dados: {ex.Message}");
-                throw new Exception("Erro ao salvar log no banco de dados.");
+                _logger.LogError($"Erro ao salvar log: {ex.Message}");
             }
         }
+
     }
 }
