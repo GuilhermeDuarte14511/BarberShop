@@ -461,13 +461,30 @@ namespace BarberShopMVC.Controllers
         {
             try
             {
+                // Faz o logout do usuário
                 await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+                // Log do evento de logout
                 await LogAsync("Info", "Logout", "Usuário deslogado com sucesso.", null);
-                return RedirectToAction("Login", "Login");
+
+                // Recupera a URL da barbearia armazenada na sessão
+                var barbeariaUrl = HttpContext.Session.GetString("BarbeariaUrl");
+
+                // Verifica se existe a URL e redireciona para a página inicial da barbearia
+                if (!string.IsNullOrEmpty(barbeariaUrl))
+                {
+                    return RedirectToAction("Login", "Login", new { barbeariaUrl });
+                }
+
+                // Caso não exista a URL, redireciona para uma página padrão
+                return RedirectToAction("Index", "Home");
             }
             catch (Exception ex)
             {
+                // Log de erro
                 await LogAsync("Error", "Logout", $"Erro ao deslogar usuário: {ex.Message}", null);
+
+                // Redireciona para página de erro
                 return RedirectToAction("Error", "Erro");
             }
         }
@@ -477,16 +494,34 @@ namespace BarberShopMVC.Controllers
         {
             try
             {
+                // Faz o logout do administrador
                 await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+                // Log do evento de logout administrativo
                 await LogAsync("Info", "LogoutAdmin", "Administrador deslogado com sucesso.", null);
-                return RedirectToAction("AdminLogin", "Login"); // Redireciona para a página de login do admin
+
+                // Recupera a URL da barbearia armazenada na sessão
+                var barbeariaUrl = HttpContext.Session.GetString("BarbeariaUrl");
+
+                // Verifica se existe a URL e redireciona para o formato simplificado
+                if (!string.IsNullOrEmpty(barbeariaUrl))
+                {
+                    return Redirect($"/{barbeariaUrl}/admin");
+                }
+
+                // Caso não exista a URL, redireciona para uma página padrão
+                return RedirectToAction("Index", "Home");
             }
             catch (Exception ex)
             {
+                // Log de erro
                 await LogAsync("Error", "LogoutAdmin", $"Erro ao deslogar administrador: {ex.Message}", null);
+
+                // Redireciona para página de erro
                 return RedirectToAction("Error", "Erro");
             }
         }
+
 
         [HttpPost]
         public async Task<IActionResult> SolicitarRecuperacaoSenha([FromBody] string email)
