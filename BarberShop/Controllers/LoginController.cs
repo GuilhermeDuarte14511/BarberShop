@@ -455,7 +455,7 @@ namespace BarberShopMVC.Controllers
                 return Json(new { success = false, message = "Erro ao reenviar código de verificação." });
             }
         }
-
+            
         [HttpPost]
         public async Task<IActionResult> Logout()
         {

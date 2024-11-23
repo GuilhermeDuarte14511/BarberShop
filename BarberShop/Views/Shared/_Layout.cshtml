@@ -36,7 +36,7 @@
     <header class="header">
         @if (User.Identity.IsAuthenticated)
         {
-            var barbeariaUrl = ViewData["BarbeariaUrl"] as string ?? "NomeBarbearia";
+            var barbeariaUrl = ViewData["BarbeariaUrl"] as string ?? "";
             <h1 class="h4 text-white">BarberShop</h1>
             <div class="dropdown profile-menu">
                 <!-- Ícone de perfil -->

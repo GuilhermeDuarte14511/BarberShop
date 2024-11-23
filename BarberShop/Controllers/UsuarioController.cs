@@ -1,8 +1,10 @@
 ﻿using BarberShop.Application.DTOs;
+using BarberShop.Application.Interfaces;
 using BarberShop.Application.Services;
 using BarberShop.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace BarberShop.Application.Controllers
@@ -11,22 +13,27 @@ namespace BarberShop.Application.Controllers
     {
         private readonly IUsuarioService _usuarioService;
         private readonly IBarbeiroService _barbeiroService;
+        private readonly IBarbeiroServicoService _barbeiroServicoService;
         private readonly IEmailService _emailService;
         private readonly IAutenticacaoService _autenticacaoService;
-
+        private readonly IIndisponibilidadeService _indisponibilidadeService;
 
         public UsuarioController(
             IUsuarioService usuarioService,
             IBarbeiroService barbeiroService,
+            IBarbeiroServicoService barbeiroServicoService,
             IEmailService emailService,
             IAutenticacaoService autenticacaoService,
+            IIndisponibilidadeService indisponibilidadeService,
             ILogService logService)
             : base(logService)
         {
             _usuarioService = usuarioService;
             _barbeiroService = barbeiroService;
+            _barbeiroServicoService = barbeiroServicoService;
             _emailService = emailService;
             _autenticacaoService = autenticacaoService;
+            _indisponibilidadeService = indisponibilidadeService;
         }
 
         public async Task<IActionResult> Index()
@@ -76,7 +83,6 @@ namespace BarberShop.Application.Controllers
                 {
                     string mensagemErro = "Já existe um cadastro com ";
 
-                    // Verifica cada usuário retornado para montar a mensagem de erro
                     if (usuariosExistentes.Any(u => u.Email == request.Email))
                         mensagemErro += "esse e-mail";
                     if (usuariosExistentes.Any(u => u.Telefone == request.Telefone))
@@ -84,7 +90,7 @@ namespace BarberShop.Application.Controllers
 
                     return Json(new { success = false, message = mensagemErro });
                 }
-                // Cria um novo objeto Usuario baseado no DTO
+
                 var usuario = new Usuario
                 {
                     Nome = request.Nome,
@@ -95,11 +101,9 @@ namespace BarberShop.Application.Controllers
                     BarbeariaId = barbeariaId
                 };
 
-                // Gera uma senha aleatória
                 var senhaAleatoria = GerarSenhaAleatoria();
-                usuario.SenhaHash = senhaAleatoria; // Hash será gerado no serviço
+                usuario.SenhaHash = senhaAleatoria;
 
-                // Lógica adicional se o usuário for do tipo "Barbeiro"
                 if (request.TipoUsuario == "Barbeiro")
                 {
                     var barbeiro = new Barbeiro
@@ -111,16 +115,13 @@ namespace BarberShop.Application.Controllers
                     };
 
                     barbeiro = await _barbeiroService.CriarBarbeiroAsync(barbeiro);
-                    usuario.BarbeiroId = barbeiro.BarbeiroId; // Vincula o BarbeiroId ao usuário
+                    usuario.BarbeiroId = barbeiro.BarbeiroId;
                 }
 
-                // Salva o usuário no banco
                 var usuarioCriado = await _usuarioService.CriarUsuarioAsync(usuario);
-                // Obter o nome da barbearia e o urlSlug dos claims
                 var nomeBarbearia = User.FindFirst("BarbeariaNome")?.Value;
                 var urlSlug = User.FindFirst("urlSlug")?.Value;
 
-                // Enviar o e-mail de boas-vindas
                 await _emailService.EnviarEmailBoasVindasAsync(
                     usuario.Email,
                     usuario.Nome,
@@ -129,7 +130,6 @@ namespace BarberShop.Application.Controllers
                     nomeBarbearia,
                     urlSlug
                 );
-
 
                 await LogAsync("Information", nameof(UsuarioController), "Usuário criado com sucesso", $"UsuarioId: {usuarioCriado.UsuarioId}");
                 return Json(new { success = true, message = "Usuário criado com sucesso e credenciais enviadas por e-mail!", data = usuarioCriado });
@@ -141,33 +141,40 @@ namespace BarberShop.Application.Controllers
             }
         }
 
-        [HttpPut]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Atualizar([FromBody] Usuario usuario)
-        {
-            if (!ModelState.IsValid)
-            {
-                return Json(new { success = false, message = "Dados inválidos fornecidos." });
-            }
-
-            try
-            {
-                var usuarioAtualizado = await _usuarioService.AtualizarUsuarioAsync(usuario);
-                await LogAsync("Information", nameof(UsuarioController), "Usuário atualizado com sucesso", $"UsuarioId: {usuario.UsuarioId}");
-                return Json(new { success = true, message = "Usuário atualizado com sucesso!", data = usuarioAtualizado });
-            }
-            catch (Exception ex)
-            {
-                await LogAsync("Error", nameof(UsuarioController), "Erro ao atualizar usuário", ex.Message);
-                return Json(new { success = false, message = "Erro ao atualizar usuário." });
-            }
-        }
-
         [HttpDelete]
         public async Task<IActionResult> Deletar(int id)
         {
             try
             {
+                // Obter o usuário pelo ID
+                var usuario = await _usuarioService.ObterUsuarioPorIdAsync(id);
+                if (usuario == null)
+                {
+                    return Json(new { success = false, message = "Usuário não encontrado." });
+                }
+
+                if (usuario.BarbeiroId.HasValue)
+                {
+                    var barbeiroId = usuario.BarbeiroId.Value;
+
+                    // Obter todas as indisponibilidades associadas ao barbeiro
+                    var indisponibilidades = await _indisponibilidadeService.ObterIndisponibilidadesPorBarbeiroAsync(barbeiroId);
+
+                    // Excluir todas as indisponibilidades do barbeiro
+                    foreach (var indisponibilidade in indisponibilidades)
+                    {
+                        await _indisponibilidadeService.ExcluirIndisponibilidadeAsync(indisponibilidade.IndisponibilidadeId);
+                    }
+
+                    // Excluir o barbeiro
+                    var barbeiroExcluido = await _barbeiroService.DeletarBarbeiroAsync(barbeiroId);
+                    if (!barbeiroExcluido)
+                    {
+                        return Json(new { success = false, message = "Erro ao excluir o barbeiro vinculado ao usuário." });
+                    }
+                }
+
+                // Excluir o usuário
                 var sucesso = await _usuarioService.DeletarUsuarioAsync(id);
                 if (!sucesso)
                 {
@@ -183,5 +190,6 @@ namespace BarberShop.Application.Controllers
                 return Json(new { success = false, message = "Erro ao deletar usuário." });
             }
         }
+
     }
 }

@@ -1605,10 +1605,9 @@
             });
         });
 
-        // Ação para o botão de excluir
-        $('.btnExcluir').on('click', function () {
+        $('.btnExcluirBarbeiro').on('click', function () {
             var barbeiroId = $(this).data('id');
-            var barbeiroNome = $(this).closest('.card').find('.card-title').text();
+            var barbeiroNome = $(this).closest('.card').find('.card-text strong:contains("Nome:")').parent().text().replace('Nome: ', '').trim();
             $('#excluirBarbeiroNome').text(barbeiroNome);
             $('#btnConfirmarExcluir').data('id', barbeiroId);
             $('#excluirModal').modal('show');

@@ -11,7 +11,7 @@ namespace BarberShop.Application.Services
     {
         private readonly IBarbeiroRepository _barbeiroRepository;
         private readonly IAgendamentoRepository _agendamentoRepository;
-        private readonly IServicoRepository _servicoRepository; // Adicionado repositório de serviços
+        private readonly IServicoRepository _servicoRepository;
 
         public BarbeiroService(IBarbeiroRepository barbeiroRepository, IAgendamentoRepository agendamentoRepository, IServicoRepository servicoRepository)
         {
@@ -107,6 +107,19 @@ namespace BarberShop.Application.Services
 
             // Salva o barbeiro no banco de dados
             return await _barbeiroRepository.AddAsync(barbeiro);
+        }
+
+        public async Task<bool> DeletarBarbeiroAsync(int id)
+        {
+            if (id <= 0)
+                throw new ArgumentException("ID do barbeiro inválido.", nameof(id));
+
+            var barbeiro = await _barbeiroRepository.GetByIdAsync(id);
+            if (barbeiro == null)
+                return false;
+           
+            await _barbeiroRepository.DeleteAsync(id);
+            return true;
         }
     }
 }

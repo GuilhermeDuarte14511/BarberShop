@@ -14,17 +14,20 @@ namespace BarberShopMVC.Controllers
         private readonly IBarbeiroRepository _barbeiroRepository;
         private readonly IBarbeiroService _barbeiroService;
         private readonly IBarbeiroServicoService _barbeiroServicoService;
+        private readonly IIndisponibilidadeService _indisponibilidadeService;
 
         public BarbeiroController(
             IBarbeiroRepository barbeiroRepository,
             IBarbeiroService barbeiroService,
             IBarbeiroServicoService barbeiroServicoService,
+            IIndisponibilidadeService indisponibilidadeService,
             ILogService logService)
             : base(logService)
         {
             _barbeiroRepository = barbeiroRepository;
             _barbeiroService = barbeiroService;
             _barbeiroServicoService = barbeiroServicoService;
+            _indisponibilidadeService = indisponibilidadeService;
         }
 
         public async Task<IActionResult> Index()
@@ -157,7 +160,15 @@ namespace BarberShopMVC.Controllers
                     return NotFound();
                 }
 
-                await _barbeiroRepository.DeleteAsync(id);
+                // Desvincular todos os serviços associados ao barbeiro
+                var servicosVinculados = await _barbeiroServicoService.ObterServicosPorBarbeiroIdAsync(id);
+                foreach (var servico in servicosVinculados)
+                {
+                    await _barbeiroServicoService.DesvincularServicoAsync(id, servico.ServicoId);
+                }
+
+                // Após desvincular, excluir o barbeiro
+                await _barbeiroService.DeletarBarbeiroAsync(id);
                 return Json(new { success = true, message = "Barbeiro excluído com sucesso." });
             }
             catch (Exception ex)
