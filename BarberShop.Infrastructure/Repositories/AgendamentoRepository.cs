@@ -144,22 +144,16 @@ namespace BarberShop.Infrastructure.Repositories
             return disponibilidade;
         }
 
-        public async Task<IEnumerable<DateTime>> GetAvailableSlotsAsync(int barbeariaId,int barbeiroId,DateTime dataVisualizacao,int duracaoTotal,Dictionary<DayOfWeek, (TimeSpan abertura, TimeSpan fechamento)> horarioFuncionamento
-                                                                        ,HashSet<DateTime> feriados,List<(DateTime DataInicio, DateTime DataFim)> indisponibilidades)
+        public async Task<IEnumerable<DateTime>> GetAvailableSlotsAsync( int barbeariaId,int barbeiroId, DateTime dataVisualizacao, int duracaoTotal, Dictionary<DayOfWeek, (TimeSpan abertura, TimeSpan fechamento)> horarioFuncionamento,HashSet<DateTime> feriados,
+        List<(DateTime DataInicio, DateTime DataFim)> indisponibilidades)
         {
             var horariosDisponiveis = new List<DateTime>();
-            TimeZoneInfo brasiliaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time");
-            DateTime dataInicio = dataVisualizacao.Date.AddHours(9);
-            dataInicio = TimeZoneInfo.ConvertTime(dataInicio, brasiliaTimeZone).AddHours(3);
-
-            if (DateTime.Now > dataInicio)
-                dataInicio = DateTime.Now;
-
-            DateTime dataFim = dataInicio.AddDays(14).Date.AddHours(18);
+            DateTime dataInicio = dataVisualizacao.Date;
+            DateTime dataFim = dataInicio.AddDays(14).Date; // Horários para 14 dias
 
             Console.WriteLine($"Gerando horários disponíveis de {dataInicio} até {dataFim}");
 
-            for (DateTime dataAtual = dataInicio; dataAtual <= dataFim; dataAtual = dataAtual.AddDays(1).Date.AddHours(9))
+            for (DateTime dataAtual = dataInicio; dataAtual <= dataFim; dataAtual = dataAtual.AddDays(1))
             {
                 // Ignorar feriados
                 if (feriados.Contains(dataAtual.Date))
@@ -168,56 +162,59 @@ namespace BarberShop.Infrastructure.Repositories
                     continue;
                 }
 
-                // Verificar indisponibilidades
-                if (indisponibilidades.Any(i => dataAtual.Date >= i.DataInicio.Date && dataAtual.Date <= i.DataFim.Date))
+                // Verificar horário de funcionamento do dia
+                if (!horarioFuncionamento.TryGetValue(dataAtual.DayOfWeek, out var funcionamentoDia))
                 {
-                    Console.WriteLine($"Indisponibilidade do barbeiro em {dataAtual:dd/MM/yyyy}. Pulando...");
+                    Console.WriteLine($"Barbearia fechada em {dataAtual:dd/MM/yyyy}. Pulando...");
                     continue;
                 }
 
-                if (!horarioFuncionamento.TryGetValue(dataAtual.DayOfWeek, out var funcionamentoDia))
-                    continue;
-
                 DateTime horarioAbertura = dataAtual.Date.Add(funcionamentoDia.abertura);
                 DateTime horarioFechamento = dataAtual.Date.Add(funcionamentoDia.fechamento);
-                DateTime horarioAtual = horarioAbertura;
 
+                // Ajustar para o próximo horário válido, considerando o "agora"
+                if (dataAtual.Date == DateTime.Now.Date && horarioAbertura < DateTime.Now)
+                {
+                    horarioAbertura = DateTime.Now.AddMinutes(duracaoTotal); // Ajustar para o próximo horário
+                }
+
+                // Verificar indisponibilidades
+                if (indisponibilidades.Any(i => i.DataInicio.Date <= dataAtual.Date && i.DataFim.Date >= dataAtual.Date))
+                {
+                    Console.WriteLine($"Indisponibilidade no dia {dataAtual:dd/MM/yyyy}. Pulando...");
+                    continue;
+                }
+
+                // Obter os agendamentos do barbeiro no dia
                 var agendamentosDoDia = await _context.Agendamentos
                     .Where(a => a.BarbeiroId == barbeiroId && a.DataHora.Date == dataAtual.Date)
                     .OrderBy(a => a.DataHora)
                     .ToListAsync();
 
-                Console.WriteLine($"\nDia {dataAtual:dd/MM/yyyy}:");
+                DateTime horarioAtual = horarioAbertura;
 
                 foreach (var agendamento in agendamentosDoDia)
                 {
                     DateTime inicioAgendamento = agendamento.DataHora;
                     DateTime fimAgendamento = inicioAgendamento.AddMinutes(agendamento.DuracaoTotal ?? 0);
 
-                    while (horarioAtual.AddMinutes(duracaoTotal) <= inicioAgendamento)
+                    // Adicionar horários disponíveis antes do próximo agendamento
+                    while (horarioAtual.AddMinutes(duracaoTotal) <= inicioAgendamento && horarioAtual.AddMinutes(duracaoTotal) <= horarioFechamento)
                     {
-                        if (horarioAtual >= DateTime.Now)
-                        {
-                            DateTime horarioFim = horarioAtual.AddMinutes(duracaoTotal);
-                            horariosDisponiveis.Add(horarioAtual);
-                            Console.WriteLine($"  {horarioAtual:HH:mm} - {horarioFim:HH:mm} (Duração: {duracaoTotal} minutos)");
-                        }
+                        horariosDisponiveis.Add(horarioAtual);
+                        Console.WriteLine($"Horário disponível: {horarioAtual:HH:mm} - {horarioAtual.AddMinutes(duracaoTotal):HH:mm}");
                         horarioAtual = horarioAtual.AddMinutes(duracaoTotal);
                     }
 
+                    // Ajustar o horário atual para o fim do agendamento
                     horarioAtual = fimAgendamento;
-                    if (horarioAtual >= horarioFechamento)
-                        break;
                 }
 
+                // Adicionar horários disponíveis após o último agendamento até o horário de fechamento
                 while (horarioAtual.AddMinutes(duracaoTotal) <= horarioFechamento)
                 {
-                    if (horarioAtual >= DateTime.Now)
-                    {
-                        DateTime horarioFim = horarioAtual.AddMinutes(duracaoTotal);
-                        horariosDisponiveis.Add(horarioAtual);
-                        Console.WriteLine($"  {horarioAtual:HH:mm} - {horarioFim:HH:mm} (Duração: {duracaoTotal} minutos)");
-                    }
+                    horariosDisponiveis.Add(horarioAtual);
+                    Console.WriteLine($"Horário disponível: {horarioAtual:HH:mm} - {horarioAtual.AddMinutes(duracaoTotal):HH:mm}");
                     horarioAtual = horarioAtual.AddMinutes(duracaoTotal);
                 }
             }
@@ -231,13 +228,17 @@ namespace BarberShop.Infrastructure.Repositories
 
 
 
+
         // Implementação do método ObterAgendamentosPorBarbeiroIdAsync
         public async Task<IEnumerable<Agendamento>> ObterAgendamentosPorBarbeiroIdAsync(int barbeiroId, DateTime data)
         {
             return await _context.Agendamentos
-                .Where(a => a.BarbeiroId == barbeiroId && a.DataHora.Date == data.Date)
+                .Include(a => a.Cliente)
+                .Include(a => a.Barbearia)
+                .Where(a => a.BarbeiroId == barbeiroId && a.DataHora >= data)
                 .ToListAsync();
         }
+
 
         // Implementação do método ObterAgendamentosPorBarbeiroEHorarioAsync
         public async Task<IEnumerable<Agendamento>> ObterAgendamentosPorBarbeiroEHorarioAsync(int barbeiroId, DateTime dataHoraInicio, DateTime dataHoraFim)

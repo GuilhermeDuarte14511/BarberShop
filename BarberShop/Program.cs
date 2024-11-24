@@ -82,6 +82,7 @@ builder.Services.AddScoped<IFeriadoNacionalRepository, FeriadoNacionalRepository
 builder.Services.AddScoped<IFeriadoBarbeariaRepository, FeriadoBarbeariaRepository>();
 builder.Services.AddScoped<IIndisponibilidadeRepository, IndisponibilidadeRepository>();
 builder.Services.AddScoped<IBarbeiroServicoRepository, BarbeiroServicoRepository>();
+builder.Services.AddScoped<IPagamentoRepository, PagamentoRepository>();
 
 // Registrar serviços da camada de aplicação
 builder.Services.AddScoped<IClienteService, ClienteService>();
@@ -96,6 +97,8 @@ builder.Services.AddScoped<IAvaliacaoService, AvaliacaoService>();
 builder.Services.AddScoped<IBarbeiroServicoService, BarbeiroServicoService>();
 builder.Services.AddScoped<IRedefinirSenhaService, RedefinirSenhaService>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
+builder.Services.AddScoped<IPagamentoService, PagamentoService>();
+
 
 // Configurar autenticação com cookies (apenas uma vez)
 builder.Services.AddAuthentication(options =>

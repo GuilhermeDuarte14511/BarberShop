@@ -227,6 +227,9 @@ namespace BarberShopMVC.Controllers
                     await LogAsync("WARNING", nameof(SolicitarServico), "Barbearia não identificada na sessão.", null);
                     return RedirectToAction("BarbeariaNaoEncontrada", "Erro");
                 }
+                ViewData["BarbeariaUrl"] = barbeariaUrl;
+                ViewData["BarbeariaId"] = barbeariaId; // Passa o barbeariaId para a ViewData
+
 
                 var servicos = await _servicoRepository.ObterServicosPorBarbeariaIdAsync(barbeariaId.Value);
                 return View("SolicitarServico", servicos);

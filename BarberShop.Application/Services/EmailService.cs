@@ -776,10 +776,148 @@ namespace BarberShop.Application.Services
                 throw;
             }
         }
+
+
+        public async Task EnviarEmailCancelamentoAgendamentoAsync(string destinatarioEmail,string destinatarioNome,string nomeBarbearia,DateTime dataHora,string barbeiroNome, string baseUrl)
+        {
+            try
+            {
+                await _logService.SaveLogAsync("EmailService", $"Iniciando envio de email de cancelamento para {destinatarioEmail}", "INFO", _sendGridApiKey);
+
+                var client = new SendGridClient(_sendGridApiKey);
+                var from = new EmailAddress("barbershoperbrasil@outlook.com", nomeBarbearia ?? "BarberShop System");
+                var to = new EmailAddress(destinatarioEmail, destinatarioNome);
+                var assunto = "Agendamento Cancelado - Informações Importantes";
+
+                // Gerar URL para reagendamento com base no esquema, domínio e nome da barbearia
+                var urlReagendar = $"{baseUrl}/{nomeBarbearia.ToLower().Replace(" ", "")}";
+
+                string htmlContent = $@"
+                <html>
+                <head>
+                    <style>
+                        body {{
+                            font-family: 'Arial', sans-serif;
+                            background-color: #2c2f33;
+                            margin: 0;
+                            padding: 0;
+                        }}
+                        .container {{
+                            background-color: #23272a;
+                            color: #ffffff;
+                            max-width: 600px;
+                            margin: 20px auto;
+                            border-radius: 10px;
+                            padding: 20px;
+                            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                        }}
+                        h1 {{
+                            font-size: 24px;
+                            color: #e74c3c;
+                            text-align: center;
+                            border-bottom: 2px solid #e74c3c;
+                            padding-bottom: 10px;
+                            margin-bottom: 20px;
+                        }}
+                        p {{
+                            font-size: 16px;
+                            line-height: 1.6;
+                            color: #ffffff;
+                        }}
+                        .details {{
+                            background-color: #99aab5;
+                            padding: 15px;
+                            border-radius: 8px;
+                            margin-bottom: 20px;
+                            color: #23272a;
+                        }}
+                        .cta {{
+                            text-align: center;
+                            margin-top: 20px;
+                        }}
+                        .button {{
+                            display: inline-block;
+                            padding: 12px 25px;
+                            font-size: 16px;
+                            color: #ffffff;
+                            background-color: #e74c3c;
+                            text-decoration: none;
+                            border-radius: 20px; /* Bordas arredondadas */
+                            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+                            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+                        }}
+                        .button:hover {{
+                            background-color: #c0392b;
+                            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.3);
+                        }}
+                        .footer {{
+                            text-align: center;
+                            margin-top: 20px;
+                            font-size: 12px;
+                            color: #99aab5;
+                        }}
+                    </style>
+                </head>
+                <body>
+                    <div class='container'>
+                        <h1>Seu Agendamento foi Cancelado</h1>
+                        <p>Olá, <strong>{destinatarioNome}</strong>,</p>
+                        <p>Infelizmente, seu agendamento com o barbeiro <strong>{barbeiroNome}</strong> na data <strong>{dataHora:dd/MM/yyyy - HH:mm}</strong> foi cancelado.</p>
+                        <p>Por favor, entre em contato com a barbearia <strong>{nomeBarbearia}</strong> para mais informações ou para reagendar seu atendimento.</p>
+                        <div class='details'>
+                            <p>Pedimos desculpas por qualquer inconveniente e agradecemos pela sua compreensão.</p>
+                        </div>
+                        <div class='cta'>
+                            <a href='{urlReagendar}' class='button'>Reagendar Agora</a>
+                        </div>
+                        <p>Se precisar de ajuda, entre em contato conosco diretamente pelo nosso <a href='mailto:suporte@{nomeBarbearia.ToLower().Replace(" ", "")}.com'>e-mail de suporte</a>.</p>
+                        <div class='footer'>
+                            <p>&copy; {DateTime.Now.Year} {nomeBarbearia ?? "BarberShop System"}. Todos os direitos reservados.</p>
+                        </div>
+                    </div>
+                </body>
+                </html>";
+
+                        var plainTextContent = $@"
+                Olá, {destinatarioNome},
+
+                Infelizmente, seu agendamento com o barbeiro {barbeiroNome} na data {dataHora:dd/MM/yyyy - HH:mm} foi cancelado.
+
+                Por favor, entre em contato com a barbearia {nomeBarbearia} para mais informações ou para reagendar seu atendimento.
+
+                Pedimos desculpas por qualquer inconveniente e agradecemos pela sua compreensão.
+
+                Para reagendar, visite: {urlReagendar}
+
+                Se precisar de ajuda, entre em contato conosco pelo e-mail suporte@{nomeBarbearia.ToLower().Replace(" ", "")}.com.
+
+                Atenciosamente,
+                {nomeBarbearia}
+
+                © {DateTime.Now.Year} {nomeBarbearia ?? "BarberShop System"}. Todos os direitos reservados.";
+
+                var msg = MailHelper.CreateSingleEmail(from, to, assunto, plainTextContent, htmlContent);
+                var response = await client.SendEmailAsync(msg);
+
+                if (response.StatusCode != System.Net.HttpStatusCode.OK && response.StatusCode != System.Net.HttpStatusCode.Accepted)
+                {
+                    await _logService.SaveLogAsync("EmailService", $"Falha ao enviar o e-mail de cancelamento, status code: {response.StatusCode}", "ERROR", _sendGridApiKey);
+                    throw new Exception($"Falha ao enviar o e-mail, status code: {response.StatusCode}");
+                }
+
+                await _logService.SaveLogAsync("EmailService", $"E-mail de cancelamento enviado com sucesso para {destinatarioEmail}", "INFO", _sendGridApiKey);
+            }
+            catch (Exception ex)
+            {
+                await _logService.SaveLogAsync("EmailService", $"Erro ao enviar e-mail de cancelamento para {destinatarioEmail}: {ex.Message}", "ERROR", _sendGridApiKey);
+                throw;
+            }
+        }
+
+
+
+
     }
-
-
-
 
 }
 

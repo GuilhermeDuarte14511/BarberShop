@@ -1958,7 +1958,7 @@
             }
         }
 
-        // Função para exportar o gráfico para Excel
+        // Função para exportar o gráfico para Excel com dados adicionais
         function exportChartToExcel(chartId) {
             const chart = Chart.getChart(`${chartId}Canvas`);
             if (!chart) {
@@ -1966,19 +1966,27 @@
                 return;
             }
 
-            const data = chart.data.labels.map((label, index) => ({
-                Label: label,
-                Valor: chart.data.datasets[0].data[index]
+            // Dados básicos do gráfico
+            const labels = chart.data.labels;
+            const dataSet = chart.data.datasets[0];
+
+            // Adicionando dados adicionais ao Excel
+            const additionalData = dataSet.data.map((value, index) => ({
+                Label: labels[index],
+                Valor: value,
+                Percentual: ((value / dataSet.data.reduce((a, b) => a + b, 0)) * 100).toFixed(2) + '%', // Percentual do total
+                Cor: dataSet.backgroundColor ? dataSet.backgroundColor[index] : "N/A" // Cor do item (se disponível)
             }));
 
             // Converte os dados para uma planilha Excel
-            const worksheet = XLSX.utils.json_to_sheet(data);
+            const worksheet = XLSX.utils.json_to_sheet(additionalData);
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Dados do Gráfico");
 
             // Inicia o download do arquivo Excel
             XLSX.writeFile(workbook, `${chartId}.xlsx`);
         }
+
 
         // Evento para exportar o gráfico ao clicar no item do menu
         $(document).on("click", ".export-to-excel", function (e) {
@@ -2664,17 +2672,15 @@
 
                 $('#editarAgendamentoId').val(data.AgendamentoId);
 
-                // Verifica se DataHora existe e é uma data válida
+                // Ajustar DataHora para evitar alteração de fuso horário
                 if (data.DataHora) {
                     const dataHora = new Date(data.DataHora);
-                    console.log("DataHora convertida:", dataHora);
+                    console.log("DataHora convertida (sem fuso horário):", dataHora);
 
-                    if (!isNaN(dataHora)) {
-                        $('#editarDataHora').val(dataHora.toISOString().slice(0, 16)); // Converte para o formato esperado
-                    } else {
-                        console.warn("Data inválida recebida:", data.DataHora);
-                        $('#editarDataHora').val(''); // Limpa o campo ou insere um valor padrão
-                    }
+                    const dataLocal = `${dataHora.getFullYear()}-${(dataHora.getMonth() + 1).toString().padStart(2, '0')}-${dataHora.getDate().toString().padStart(2, '0')}`;
+                    const horaLocal = `${dataHora.getHours().toString().padStart(2, '0')}:${dataHora.getMinutes().toString().padStart(2, '0')}`;
+
+                    $('#editarDataHora').val(`${dataLocal}T${horaLocal}`);
                 } else {
                     console.warn("Campo DataHora está nulo ou indefinido");
                     $('#editarDataHora').val(''); // Limpa o campo ou insere um valor padrão
@@ -2700,40 +2706,46 @@
 
         // Submeter formulário de edição
         $('#formEditarAgendamento').on('submit', function (e) {
-            e.preventDefault();
+            e.preventDefault(); // Impede o comportamento padrão do formulário
             mostrarLoading();
 
+            // Formatar o preço corretamente
             const precoFormatado = $('#editarPrecoTotal').val();
             const precoFloat = converterPrecoParaFloat(precoFormatado);
 
+            // Criar o objeto de dados do formulário
             const formData = {
-                AgendamentoId: $('#editarAgendamentoId').val(),
-                DataHora: $('#editarDataHora').val(),
-                Status: $('#editarStatus').val(),
-                StatusPagamento: $('#editarStatusPagamento').val(),
-                PrecoTotal: precoFloat
+                AgendamentoId: parseInt($('#editarAgendamentoId').val()), // Garantir que seja inteiro
+                DataHora: $('#editarDataHora').val(), // Formato: YYYY-MM-DDTHH:mm
+                Status: parseInt($('#editarStatus').val()), // Garantir que seja inteiro
+                PrecoTotal: precoFloat, // Float para decimal no C#
+                Pagamento: { // Incluindo o pagamento como parte do objeto
+                    StatusPagamento: parseInt($('#editarStatusPagamento').val()), // Garantir que seja inteiro
+                    ValorPago: precoFloat // Passar o PrecoTotal como ValorPago
+                }
             };
 
-            console.log("Enviando dados de edição:", formData); // Log dos dados sendo enviados para edição
 
+            console.log("Enviando dados de edição:", formData); // Log para depuração
+
+            // Enviar os dados para o servidor via AJAX
             $.ajax({
-                url: `/Agendamento/Edit/${formData.AgendamentoId}`,
+                url: `/Agendamento/Edit/${formData.AgendamentoId}`, // O ID do agendamento na URL
                 type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(formData),
+                contentType: 'application/json', // O corpo será JSON
+                data: JSON.stringify(formData), // Serializar os dados para JSON
                 success: function (response) {
-                    console.log("Resposta da edição:", response); // Log da resposta da edição
-                    $('#editarAgendamentoModal').modal('hide');
-                    showToast(response.message, response.success ? 'success' : 'danger');
-                    if (response.success) {
-                        setTimeout(() => location.reload(), 1500);
-                    }
+                    console.log("Resposta da edição:", response); // Log da resposta
+                    $('#editarAgendamentoModal').modal('hide'); // Fecha o modal de edição
+                    showToast('Agendamento editado com sucesso!', 'success'); // Exibe o toast de sucesso
+                    setTimeout(() => location.reload(), 1500); // Recarregar a página após 1,5s
                 },
-                error: function () {
-                    showToast('Erro ao editar o agendamento.', 'danger');
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.error("Erro na edição:", textStatus, errorThrown); // Log do erro
+                    showToast('Erro ao editar o agendamento.', 'danger'); // Exibe toast de erro
                 },
                 complete: function () {
-                    ocultarLoading();
+                    ocultarLoading(); // Oculta o loading no final
                 }
             });
         });

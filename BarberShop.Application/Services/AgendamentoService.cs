@@ -16,6 +16,7 @@ namespace BarberShop.Application.Services
         private readonly IFeriadoNacionalRepository _feriadoNacionalRepository;
         private readonly IFeriadoBarbeariaRepository _feriadoBarbeariaRepository;
         private readonly IIndisponibilidadeRepository _indisponibilidadeRepository;
+        private readonly IPagamentoService _pagamentoService;
 
         public AgendamentoService(
             IAgendamentoRepository agendamentoRepository,
@@ -24,7 +25,8 @@ namespace BarberShop.Application.Services
             IBarbeariaRepository barbeariaRepository,
             IFeriadoNacionalRepository feriadoNacionalRepository,
             IFeriadoBarbeariaRepository feriadoBarbeariaRepository,
-            IIndisponibilidadeRepository indisponibilidadeRepository
+            IIndisponibilidadeRepository indisponibilidadeRepository,
+            IPagamentoService pagamentoService
         )
         {
             _agendamentoRepository = agendamentoRepository;
@@ -34,6 +36,7 @@ namespace BarberShop.Application.Services
             _feriadoNacionalRepository = feriadoNacionalRepository;
             _feriadoBarbeariaRepository = feriadoBarbeariaRepository;
             _indisponibilidadeRepository = indisponibilidadeRepository;
+            _pagamentoService = pagamentoService;
         }
 
 
@@ -203,6 +206,72 @@ namespace BarberShop.Application.Services
             var agendamentos = await _agendamentoRepository.ObterAgendamentosConcluidosSemEmailAsync();
             return agendamentos.ToList();
         }
+
+        public async Task AtualizarAgendamentoAsync(int id, Agendamento agendamentoAtualizado)
+        {
+            // Buscar o agendamento no banco de dados
+            var agendamentoExistente = await _agendamentoRepository.GetByIdAsync(id);
+            if (agendamentoExistente == null)
+            {
+                throw new Exception("Agendamento não encontrado.");
+            }
+
+            // Atualizar os campos permitidos no agendamento
+            agendamentoExistente.DataHora = agendamentoAtualizado.DataHora;
+            agendamentoExistente.Status = agendamentoAtualizado.Status;
+            agendamentoExistente.PrecoTotal = agendamentoAtualizado.PrecoTotal;
+
+            // Verificar se há um pagamento vinculado
+            if (agendamentoExistente.Pagamento != null)
+            {
+                // Atualizar os campos do pagamento existente
+                agendamentoExistente.Pagamento.StatusPagamento = agendamentoAtualizado.Pagamento?.StatusPagamento ?? agendamentoExistente.Pagamento.StatusPagamento;
+                agendamentoExistente.Pagamento.ValorPago = agendamentoAtualizado.PrecoTotal ?? agendamentoExistente.Pagamento.ValorPago;
+
+                // Atualizar a data de pagamento, se necessário
+                if (agendamentoAtualizado.Pagamento?.StatusPagamento == StatusPagamento.Aprovado)
+                {
+                    agendamentoExistente.Pagamento.DataPagamento = DateTime.UtcNow;
+                }
+
+                // Persistir alterações no pagamento
+                await _pagamentoService.AtualizarPagamentoAsync(agendamentoExistente.Pagamento);
+            }
+            else if (agendamentoAtualizado.Pagamento != null)
+            {
+                // Criar um novo pagamento se ainda não existir e foi enviado um no agendamento atualizado
+                var novoPagamento = new Pagamento
+                {
+                    AgendamentoId = id,
+                    ClienteId = agendamentoExistente.ClienteId,
+                    BarbeariaId = agendamentoExistente.BarbeariaId,
+                    ValorPago = agendamentoAtualizado.PrecoTotal ?? 0,
+                    StatusPagamento = agendamentoAtualizado.Pagamento.StatusPagamento,
+                    DataPagamento = agendamentoAtualizado.Pagamento.StatusPagamento == StatusPagamento.Aprovado
+                        ? DateTime.UtcNow
+                        : null
+                };
+
+                // Adicionar o novo pagamento
+                await _pagamentoService.AdicionarPagamentoAsync(novoPagamento);
+                agendamentoExistente.Pagamento = novoPagamento;
+            }
+            else
+            {
+                throw new Exception("Nenhum pagamento vinculado encontrado e nenhuma atualização de pagamento fornecida.");
+            }
+
+            // Persistir alterações no agendamento
+            await _agendamentoRepository.UpdateAsync(agendamentoExistente);
+        }
+
+        public async Task<List<Agendamento>> ObterAgendamentosFuturosPorBarbeiroIdAsync(int barbeiroId)
+        {
+            var hoje = DateTime.Today;
+            var agendamentosFuturos = await _agendamentoRepository.ObterAgendamentosPorBarbeiroIdAsync(barbeiroId, hoje);
+            return agendamentosFuturos.ToList();
+        }
+
 
 
     }

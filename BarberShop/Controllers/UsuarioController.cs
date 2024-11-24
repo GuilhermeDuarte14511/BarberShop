@@ -16,6 +16,7 @@ namespace BarberShop.Application.Controllers
         private readonly IBarbeiroServicoService _barbeiroServicoService;
         private readonly IEmailService _emailService;
         private readonly IAutenticacaoService _autenticacaoService;
+        private readonly IAgendamentoService _agendamentoService;
         private readonly IIndisponibilidadeService _indisponibilidadeService;
 
         public UsuarioController(
@@ -25,6 +26,7 @@ namespace BarberShop.Application.Controllers
             IEmailService emailService,
             IAutenticacaoService autenticacaoService,
             IIndisponibilidadeService indisponibilidadeService,
+            IAgendamentoService agendamentoService,
             ILogService logService)
             : base(logService)
         {
@@ -34,6 +36,7 @@ namespace BarberShop.Application.Controllers
             _emailService = emailService;
             _autenticacaoService = autenticacaoService;
             _indisponibilidadeService = indisponibilidadeService;
+            _agendamentoService = agendamentoService;
         }
 
         public async Task<IActionResult> Index()
@@ -145,7 +148,9 @@ namespace BarberShop.Application.Controllers
         public async Task<IActionResult> Deletar(int id)
         {
             try
-            {
+            { 
+
+                var baseUrl = $"{Request.Scheme}://{Request.Host.Value}";
                 // Obter o usuário pelo ID
                 var usuario = await _usuarioService.ObterUsuarioPorIdAsync(id);
                 if (usuario == null)
@@ -157,13 +162,35 @@ namespace BarberShop.Application.Controllers
                 {
                     var barbeiroId = usuario.BarbeiroId.Value;
 
-                    // Obter todas as indisponibilidades associadas ao barbeiro
-                    var indisponibilidades = await _indisponibilidadeService.ObterIndisponibilidadesPorBarbeiroAsync(barbeiroId);
+                    // Obter todos os agendamentos futuros associados ao barbeiro
+                    var agendamentosFuturos = await _agendamentoService.ObterAgendamentosFuturosPorBarbeiroIdAsync(barbeiroId);
 
-                    // Excluir todas as indisponibilidades do barbeiro
-                    foreach (var indisponibilidade in indisponibilidades)
+                    // Notificar os clientes sobre o cancelamento de seus agendamentos
+                    foreach (var agendamento in agendamentosFuturos)
                     {
-                        await _indisponibilidadeService.ExcluirIndisponibilidadeAsync(indisponibilidade.IndisponibilidadeId);
+                        await _emailService.EnviarEmailCancelamentoAgendamentoAsync(
+                            agendamento.Cliente.Email,
+                            agendamento.Cliente.Nome,
+                            agendamento.Barbearia.Nome,
+                            agendamento.DataHora,
+                            usuario.Nome,
+                            $"{baseUrl}/{agendamento.Barbearia.UrlSlug}" // Passa a URL base com o slug da barbearia
+                        );
+
+                        // Cancelar o agendamento
+                        agendamento.Status = StatusAgendamento.Cancelado;
+                        await _agendamentoService.AtualizarAgendamentoAsync(agendamento.AgendamentoId, agendamento);
+                    }
+
+                    // Obter todos os serviços vinculados ao barbeiro
+                    var servicosVinculados = await _barbeiroServicoService.ObterServicosPorBarbeiroIdAsync(barbeiroId);
+                    if (servicosVinculados != null && servicosVinculados.Any())
+                    {
+                        // Desvincular todos os serviços associados ao barbeiro
+                        foreach (var servico in servicosVinculados)
+                        {
+                            await _barbeiroServicoService.DesvincularServicoAsync(barbeiroId, servico.ServicoId);
+                        }
                     }
 
                     // Excluir o barbeiro
@@ -190,6 +217,7 @@ namespace BarberShop.Application.Controllers
                 return Json(new { success = false, message = "Erro ao deletar usuário." });
             }
         }
+
 
     }
 }

@@ -131,24 +131,30 @@ namespace BarberShopMVC.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(int id, Agendamento agendamento)
+        public async Task<IActionResult> Edit(int id, [FromBody] Agendamento agendamento)
         {
+
             if (id != agendamento.AgendamentoId)
             {
                 await LogAsync("ERROR", nameof(Edit), "ID de agendamento inconsistente ao editar", $"ID fornecido: {id}, ID do agendamento: {agendamento.AgendamentoId}");
-                return BadRequest();
+                return Json(new { success = false, message = "ID do agendamento é inconsistente." });
             }
 
-            if (ModelState.IsValid)
+            try
             {
-                await _agendamentoRepository.UpdateAsync(agendamento);
+                await _agendamentoService.AtualizarAgendamentoAsync(id,agendamento);
                 await LogAsync("INFO", nameof(Edit), "Agendamento editado com sucesso", $"ID do Agendamento: {agendamento.AgendamentoId}");
-                return RedirectToAction(nameof(Index));
-            }
 
-            await LogAsync("WARNING", nameof(Edit), "Erro de validação ao editar agendamento", "Dados do ModelState inválidos");
-            return View(agendamento);
+                // Retornar sucesso em JSON
+                return Json(new { success = true, message = "Agendamento editado com sucesso!" });
+            }
+            catch (Exception ex)
+            {
+                await LogAsync("ERROR", nameof(Edit), "Erro ao editar agendamento", ex.Message);
+                return Json(new { success = false, message = "Ocorreu um erro ao tentar editar o agendamento. Tente novamente." });
+            }
         }
+
 
         public async Task<IActionResult> Delete(int id)
         {
@@ -162,12 +168,21 @@ namespace BarberShopMVC.Controllers
             return View(agendamento);
         }
 
-        [HttpPost, ActionName("Delete")]
+        [HttpPost]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            await _agendamentoRepository.DeleteAsync(id);
-            await LogAsync("INFO", nameof(DeleteConfirmed), "Agendamento excluído com sucesso", $"ID do Agendamento: {id}");
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                await _agendamentoRepository.DeleteAsync(id);
+                await LogAsync("INFO", nameof(DeleteConfirmed), "Agendamento excluído com sucesso", $"ID do Agendamento: {id}");
+
+                return Json(new { success = true, message = "Agendamento excluído com sucesso!" });
+            }
+            catch (Exception ex)
+            {
+                await LogAsync("ERROR", nameof(DeleteConfirmed), "Erro ao excluir agendamento", $"ID do Agendamento: {id}, Erro: {ex.Message}");
+                return Json(new { success = false, message = "Erro ao excluir o agendamento. Tente novamente." });
+            }
         }
 
         public async Task<IActionResult> Historico(int page = 1, int pageSize = 5) // Alterado para 5

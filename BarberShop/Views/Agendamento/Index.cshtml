@@ -24,10 +24,13 @@
             <tbody>
                 @foreach (var agendamento in Model)
                 {
+                    var dataHoraAjustada = TimeZoneInfo.ConvertTimeFromUtc(agendamento.DataHora.ToUniversalTime(),
+                    TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time"));
+
                     <tr data-id="@agendamento.AgendamentoId">
                         <td>@agendamento.Cliente.Nome</td>
                         <td>@agendamento.Barbeiro.Nome</td>
-                        <td>@agendamento.DataHora.ToString("g")</td>
+                        <td>@dataHoraAjustada.ToString("dd/MM/yyyy HH:mm")</td>
                         <td>@agendamento.Status</td>
                         <td>@(agendamento.Pagamento != null ? agendamento.Pagamento.StatusPagamento.ToString() : "Sem pagamento")</td>
                         <td>@agendamento.PrecoTotal?.ToString("C")</td>
@@ -41,14 +44,18 @@
         </table>
     </div>
 
+
     <!-- Exibição em cards para telas menores -->
     <div class="d-md-none">
         @foreach (var agendamento in Model)
         {
+            var dataHoraAjustada = TimeZoneInfo.ConvertTimeFromUtc(agendamento.DataHora.ToUniversalTime(),
+            TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time"));
+
             <div class="servico-card mb-3">
                 <h5 class="card-title">Cliente: @agendamento.Cliente.Nome</h5>
                 <p class="card-text"><strong>Barbeiro:</strong> @agendamento.Barbeiro.Nome</p>
-                <p class="card-text"><strong>Data/Hora:</strong> @agendamento.DataHora.ToString("g")</p>
+                <p class="card-text"><strong>Data/Hora:</strong> @dataHoraAjustada.ToString("dd/MM/yyyy HH:mm")</p>
                 <p class="card-text"><strong>Status Agendamento:</strong> @agendamento.Status</p>
                 <p class="card-text"><strong>Status Pagamento:</strong> @(agendamento.Pagamento != null ? agendamento.Pagamento.StatusPagamento.ToString() : "Sem pagamento")</p>
                 <p class="card-text"><strong>Valor Total:</strong> @agendamento.PrecoTotal?.ToString("C")</p>
@@ -59,6 +66,7 @@
             </div>
         }
     </div>
+
 
     <!-- Modal para Edição do Agendamento -->
     <div class="modal fade" id="editarAgendamentoModal" tabindex="-1" aria-labelledby="editarAgendamentoModalLabel" aria-hidden="true">
