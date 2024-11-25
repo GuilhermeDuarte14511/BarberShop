@@ -3,7 +3,7 @@
     "mssql1": {
       "secretStore": "AzureAppSettings",
       "type": "mssql.onprem",
-      "connectionId": "BarberShopDb",
+      "connectionId": "EspacoBarberShopOficial",
       "dynamicId": null
     }
   }

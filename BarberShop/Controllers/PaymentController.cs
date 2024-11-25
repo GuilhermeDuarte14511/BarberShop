@@ -177,6 +177,9 @@ namespace BarberShop.API.Controllers
         [HttpPost("start-subscription")]
         public async Task<IActionResult> StartSubscription([FromBody] StartSubscriptionRequestDTO request)
         {
+            if (request == null)
+                return BadRequest(new { error = "O corpo da requisição não pode estar vazio." });
+
             await LogAsync("Information", "PaymentController", "Iniciando assinatura", $"ID do Plano: {request.PlanId}, Cliente: {request.ClienteNome}");
 
             try

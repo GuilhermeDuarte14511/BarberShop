@@ -6,7 +6,7 @@
     },
     "mssql1": {
       "type": "mssql",
-      "connectionId": "BarberShopDb",
+      "connectionId": "EspacoBarberShopOficial",
       "dynamicId": null
     }
   }

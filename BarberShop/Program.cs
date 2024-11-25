@@ -15,7 +15,7 @@ using System.Security.Claims;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<BarbeariaContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("BarberShopDb")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("EspacoBarberShopOficial")));
 
 // Carregar secrets somente em Development
 if (builder.Environment.IsDevelopment())
