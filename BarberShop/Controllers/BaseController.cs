@@ -17,6 +17,7 @@ public class BaseController : Controller
         await _logService.SaveLogAsync(logLevel, source, message, data, resourceId);
     }
 
+    [NonAction]
     public string GerarSenhaAleatoria(int tamanho = 8)
     {
         const string caracteres = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";

@@ -158,18 +158,15 @@ builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
-// Configurar pipeline de processamento de requisições HTTP
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Home/Error");
-    app.UseHsts();
-}
+// Configuração de middleware
+app.UseExceptionHandler("/Home/Error");
+app.UseHsts();
 
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "BarberShop API V1");
-    c.RoutePrefix = "swagger";
+    c.RoutePrefix = "swagger"; // Swagger disponível em /swagger
 });
 
 app.UseHttpsRedirection();
@@ -181,6 +178,7 @@ app.UseAuthorization();
 
 app.UseStatusCodePagesWithReExecute("/Erro/BarbeariaNaoEncontrada");
 
+// Configuração de rotas
 app.MapControllerRoute(
     name: "default",
     pattern: "{barbeariaUrl}/{controller=Login}/{action=Login}/{id?}");
@@ -191,7 +189,7 @@ app.MapControllerRoute(
     defaults: new { controller = "Login", action = "AdminLogin" });
 
 app.MapControllerRoute(
-    name: "default",
+    name: "home",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();

@@ -1,11 +1,8 @@
 {
   "dependencies": {
-    "identityapp1": {
-      "ignored": "true",
-      "type": "identityapp"
-    },
     "mssql1": {
-      "type": "mssql",
+      "secretStore": "AzureAppSettings",
+      "type": "mssql.onprem",
       "connectionId": "BarberShopDb",
       "dynamicId": null
     }
