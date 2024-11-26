@@ -21,12 +21,12 @@ namespace BarberShop.Infrastructure.Repositories
 
         public async Task<int[]> GetAgendamentosPorSemanaAsync(int barbeariaId, int? barbeiroId = null)
         {
-            // Data inicial para considerar os últimos 7 dias
-            var startDate = DateTime.Now.AddDays(-7).Date;
+            var hoje = DateTime.Now.Date;
+            var inicioSemana = hoje.AddDays(-(int)hoje.DayOfWeek + (int)DayOfWeek.Monday); // Segunda-feira
+            var fimSemana = inicioSemana.AddDays(6).Date; // Domingo
 
-            // Consulta base para buscar agendamentos da barbearia no período de 7 dias
             var query = _context.Agendamentos
-                .Where(a => a.DataHora >= startDate && a.DataHora <= DateTime.Now && a.BarbeariaId == barbeariaId);
+                .Where(a => a.DataHora.Date >= inicioSemana && a.DataHora.Date <= fimSemana && a.BarbeariaId == barbeariaId);
 
             // Aplica o filtro pelo barbeiro, caso fornecido
             if (barbeiroId.HasValue)
@@ -126,13 +126,15 @@ namespace BarberShop.Infrastructure.Repositories
 
         public async Task<decimal[]> GetLucroDaSemanaAsync(int barbeariaId, int? barbeiroId = null)
         {
-            // Data inicial para considerar os últimos 7 dias
-            var startDate = DateTime.Now.AddDays(-7).Date;
+            // Determina o início e o fim da semana atual (segunda a domingo)
+            var hoje = DateTime.Now.Date;
+            var inicioSemana = hoje.AddDays(-(int)hoje.DayOfWeek + (int)DayOfWeek.Monday); // Segunda-feira
+            var fimSemana = inicioSemana.AddDays(6).Date; // Domingo
 
             // Consulta base para buscar agendamentos concluídos com lucro na barbearia
             var query = _context.Agendamentos
-                .Where(a => a.DataHora >= startDate
-                            && a.DataHora <= DateTime.Now
+                .Where(a => a.DataHora.Date >= inicioSemana
+                            && a.DataHora.Date <= fimSemana
                             && a.Status == StatusAgendamento.Concluido
                             && a.PrecoTotal.HasValue
                             && a.BarbeariaId == barbeariaId);
@@ -149,17 +151,17 @@ namespace BarberShop.Infrastructure.Repositories
                 .ToListAsync();
 
             // Agrupa os lucros por dia da semana no lado do cliente
-            var lucroDaSemana = agendamentos
-                .GroupBy(a => a.DataHora.DayOfWeek)
-                .OrderBy(g => g.Key)
-                .Select(g => g.Sum(a => a.PrecoTotal.Value))
+            var lucroDaSemana = Enum.GetValues(typeof(DayOfWeek))
+                .Cast<DayOfWeek>()
+                .Select(dia =>
+                    agendamentos
+                        .Where(a => a.DataHora.DayOfWeek == dia)
+                        .Sum(a => a.PrecoTotal ?? 0)) // Calcula o total do dia, retorna 0 se não houver
                 .ToArray();
 
             // Retorna o resultado
             return lucroDaSemana;
         }
-
-
 
         public async Task<decimal[]> GetLucroDoMesAsync(int barbeariaId, int? barbeiroId = null)
         {

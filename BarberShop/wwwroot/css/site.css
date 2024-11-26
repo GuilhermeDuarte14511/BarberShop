@@ -1937,6 +1937,87 @@ h2, h3 {
     }
 
 
+    /*pagina dos barbeirosd*/
+
+
+
+
+
+
+/* Card com estilo de linhas horizontais para Agendamentos */
+.agendamento-card {
+    background: #1c1c1c;
+    border-radius: 10px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.6);
+    padding: 20px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+    .agendamento-card p {
+        font-size: 0.95rem;
+        color: #ffffff;
+        padding: 10px 0;
+        margin: 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2); /* Linha separadora */
+    }
+
+/* Corpo do cartão */
+.agendamento-card-body {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Linhas do cartão */
+.agendamento-card-line {
+    margin-bottom: 10px;
+    color: #ffffff;
+}
+
+/* Ações */
+.agendamento-card-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px; /* Espaçamento acima dos botões */
+    padding-top: 15px; /* Espaçamento adicional para separar dos textos */
+    border-top: 1px solid rgba(255, 255, 255, 0.2); /* Linha separadora acima dos botões */
+}
+
+/* Botões */
+.agendamento-card .btn {
+    font-size: 0.9rem;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+/* Botão de editar */
+.agendamento-card .btnEditar {
+    background-color: #ffcc00; /* Amarelo */
+    color: #000; /* Preto */
+    border: none;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+    .agendamento-card .btnEditar:hover {
+        background-color: #e6b800; /* Amarelo mais escuro */
+        transform: scale(1.05);
+    }
+
+/* Botão de excluir */
+.agendamento-card .btnExcluir {
+    background-color: #ff4d4d; /* Vermelho */
+    color: #fff; /* Branco */
+    border: none;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+    .agendamento-card .btnExcluir:hover {
+        background-color: #cc0000; /* Vermelho mais escuro */
+        transform: scale(1.05);
+    }
+
+
 
 
 /* CSS Responsivo para Dispositivos Móveis */

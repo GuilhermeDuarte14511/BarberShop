@@ -1,0 +1,177 @@
+﻿@using BarberShop.Domain.Entities
+@model IEnumerable<BarberShop.Domain.Entities.Agendamento>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var currentPage = (int)ViewData["CurrentPage"];
+    var totalPages = (int)ViewData["TotalPages"];
+    var pageSize = (int)ViewData["PageSize"];
+    ViewData["Title"] = "Meus Agendamentos - Barber Shop";
+}
+
+<div id="meusAgendamentosPage" class="container-fluid">
+    <h2 class="text-center">Meus Agendamentos</h2>
+
+    <!-- Formulário de Filtro -->
+    <form id="formFiltro" method="get" action="@Url.Action("MeusAgendamentos", "Barbeiro")">
+        <div class="row">
+            <div class="col-md-3">
+                <input type="text" name="cliente" class="form-control" placeholder="Buscar por cliente">
+            </div>
+            <div class="col-md-3">
+                <select name="statusAgendamento" class="form-select">
+                    <option value="">Todos os status de agendamento</option>
+                    <option value="Pendente">Pendente</option>
+                    <option value="Confirmado">Confirmado</option>
+                    <option value="Concluido">Concluído</option>
+                    <option value="Cancelado">Cancelado</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <input type="date" name="dataInicio" class="form-control" placeholder="Data Inicial">
+            </div>
+            <div class="col-md-3">
+                <input type="date" name="dataFim" class="form-control" placeholder="Data Final">
+            </div>
+            <div class="col-md-3 mt-3">
+                <select name="formaPagamento" class="form-select">
+                    <option value="">Todas as formas de pagamento</option>
+                    <option value="creditCard">Cartão de Crédito</option>
+                    <option value="store">Loja</option>
+                </select>
+            </div>
+            <div class="col-md-3 mt-3">
+                <select name="statusPagamento" class="form-select">
+                    <option value="">Todos os status de pagamento</option>
+                    <option value="Pendente">Pendente</option>
+                    <option value="Aprovado">Aprovado</option>
+                    <option value="Recusado">Recusado</option>
+                    <option value="Cancelado">Cancelado</option>
+                    <option value="Reembolsado">Reembolsado</option>
+                    <option value="EmProcessamento">Em Processamento</option>
+                </select>
+            </div>
+            <div class="col-md-3 mt-3">
+                <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+            </div>
+            <div class="col-md-3 mt-3">
+                <button type="button" class="btn btn-secondary w-100" id="btnLimparFiltro">Limpar Filtro</button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Tabela exibida em telas maiores -->
+    <div class="table-responsive d-none d-md-block" style="max-height: 600px; overflow-y: auto;">
+        <table class="table table-dark table-striped" id="tabelaMeusAgendamentos">
+            <thead>
+                <tr>
+                    <th>Cliente</th>
+                    <th>Data/Hora</th>
+                    <th>Status Agendamento</th>
+                    <th>Status Pagamento</th>
+                    <th>Forma de Pagamento</th>
+                    <th>Valor Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var agendamento in Model)
+                {
+                    var dataHoraAjustada = TimeZoneInfo.ConvertTimeFromUtc(agendamento.DataHora.ToUniversalTime(),
+                    TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time"));
+
+                    <tr>
+                        <td>@agendamento.Cliente.Nome</td>
+                        <td>@dataHoraAjustada.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@(Enum.GetName(typeof(StatusAgendamento), agendamento.Status))</td>
+                        <td>@(agendamento.Pagamento != null ? Enum.GetName(typeof(StatusPagamento), agendamento.Pagamento.StatusPagamento) : "Sem pagamento")</td>
+                        <td>@(agendamento.FormaPagamento == "creditCard" ? "Cartão de Crédito" : "Loja")</td>
+                        <td>@agendamento.PrecoTotal?.ToString("C")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="agendamentos-list d-md-none">
+        @foreach (var agendamento in Model)
+        {
+            var dataHoraAjustada = TimeZoneInfo.ConvertTimeFromUtc(agendamento.DataHora.ToUniversalTime(),
+            TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time"));
+
+            <div class="agendamento-card" data-id="@agendamento.AgendamentoId">
+                <div class="agendamento-card-body">
+                    <div class="agendamento-card-line">
+                        <p><strong>Cliente:</strong> @agendamento.Cliente.Nome</p>
+                    </div>
+                    <div class="agendamento-card-line">
+                        <p><strong>Data/Hora:</strong> @dataHoraAjustada.ToString("dd/MM/yyyy HH:mm")</p>
+                    </div>
+                    <div class="agendamento-card-line">
+                        <p><strong>Status Agendamento:</strong> @(Enum.GetName(typeof(StatusAgendamento), agendamento.Status))</p>
+                    </div>
+                    <div class="agendamento-card-line">
+                        <p><strong>Status Pagamento:</strong> @(agendamento.Pagamento != null ? Enum.GetName(typeof(StatusPagamento), agendamento.Pagamento.StatusPagamento) : "Sem pagamento")</p>
+                    </div>
+                    <div class="agendamento-card-line">
+                        <p><strong>Forma de Pagamento:</strong> @(agendamento.FormaPagamento == "creditCard" ? "Cartão de Crédito" : "Loja")</p>
+                    </div>
+                    <div class="agendamento-card-line">
+                        <p><strong>Valor Total:</strong> @agendamento.PrecoTotal?.ToString("C")</p>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Controles de Paginação -->
+    <div class="mt-4 d-flex justify-content-center">
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                @if (currentPage > 1)
+                {
+                    <li class="page-item">
+                        <a class="page-link" href="@Url.Action("MeusAgendamentos", new { page = currentPage - 1, pageSize })">Anterior</a>
+                    </li>
+                }
+                @for (int i = 1; i <= totalPages; i++)
+                {
+                    <li class="page-item @(i == currentPage ? "active" : "")">
+                        <a class="page-link" href="@Url.Action("MeusAgendamentos", new { page = i, pageSize })">@i</a>
+                    </li>
+                }
+                @if (currentPage < totalPages)
+                {
+                    <li class="page-item">
+                        <a class="page-link" href="@Url.Action("MeusAgendamentos", new { page = currentPage + 1, pageSize })">Próxima</a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    </div>
+
+    <div class="modal fade" id="modalLimparFiltro" tabindex="-1" aria-labelledby="modalLimparFiltroLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalLimparFiltroLabel">Confirmação</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Tem certeza que deseja limpar o filtro? Isso retornará os resultados padrão.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="confirmLimparFiltro">Sim, limpar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 9999;">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+            <div class="spinner-border text-light" role="status">
+                <span class="visually-hidden">Carregando...</span>
+            </div>
+        </div>
+    </div>
+</div>

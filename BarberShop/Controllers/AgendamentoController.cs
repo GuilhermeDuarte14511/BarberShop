@@ -185,7 +185,7 @@ namespace BarberShopMVC.Controllers
             }
         }
 
-        public async Task<IActionResult> Historico(int page = 1, int pageSize = 5) // Alterado para 5
+        public async Task<IActionResult> Historico(int page = 1, int pageSize = 5) 
         {
             var barbeariaUrl = HttpContext.Session.GetString("BarbeariaUrl") ?? "NomeBarbearia";
 

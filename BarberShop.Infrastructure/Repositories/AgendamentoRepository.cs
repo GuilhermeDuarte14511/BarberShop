@@ -333,6 +333,60 @@ namespace BarberShop.Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<Agendamento>> ObterAgendamentosPorBarbeiroEBarbeariaAsync(int barbeiroId, int barbeariaId)
+        {
+            return await _context.Agendamentos
+            .AsNoTracking()
+            .Include(a => a.Cliente)
+            .Include(a => a.AgendamentoServicos)
+            .Include(a => a.Pagamento)
+            .Where(a => a.BarbeiroId == barbeiroId && a.BarbeariaId == barbeariaId)
+            .ToListAsync();
+
+        }
+
+        public async Task<IEnumerable<Agendamento>> FiltrarAgendamentosAsync(int barbeiroId,int barbeariaId,string clienteNome = null,DateTime? dataInicio = null,DateTime? dataFim = null,string formaPagamento = null,StatusAgendamento? status = null,
+                                                                             StatusPagamento? statusPagamento = null)
+        {
+            var query = _context.Agendamentos
+                .Include(a => a.Cliente)
+                .Include(a => a.Pagamento)
+                .Where(a => a.BarbeiroId == barbeiroId && a.BarbeariaId == barbeariaId)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(clienteNome))
+            {
+                query = query.Where(a => a.Cliente.Nome.Contains(clienteNome));
+            }
+
+            if (dataInicio.HasValue)
+            {
+                query = query.Where(a => a.DataHora >= dataInicio.Value);
+            }
+
+            if (dataFim.HasValue)
+            {
+                query = query.Where(a => a.DataHora <= dataFim.Value);
+            }
+
+            if (!string.IsNullOrEmpty(formaPagamento))
+            {
+                query = query.Where(a => a.FormaPagamento == formaPagamento);
+            }
+
+            if (status.HasValue)
+            {
+                query = query.Where(a => a.Status == status.Value);
+            }
+
+            if (statusPagamento.HasValue)
+            {
+                query = query.Where(a => a.Pagamento != null && a.Pagamento.StatusPagamento == statusPagamento.Value);
+            }
+
+            return await query.ToListAsync();
+        }
+
 
     }
 }

@@ -10,6 +10,7 @@ public interface IAgendamentoService
     Task<List<Agendamento>> ObterAgendamentosConcluidosAsync();
     Task AtualizarAgendamentoAsync(int id, Agendamento agendamentoAtualizado);
     Task<List<Agendamento>> ObterAgendamentosFuturosPorBarbeiroIdAsync(int barbeiroId);
+    Task<IEnumerable<Agendamento>> ObterAgendamentosPorBarbeiroEBarbeariaAsync(int barbeiroId, int barbeariaId);
 
-
+    Task<IEnumerable<Agendamento>> FiltrarAgendamentosAsync(int barbeiroId,int barbeariaId,string clienteNome = null,DateTime? dataInicio = null,DateTime? dataFim = null,string formaPagamento = null, StatusAgendamento? status = null, StatusPagamento? statusPagamento = null);
 }

@@ -13,5 +13,6 @@ namespace BarberShop.Domain.Interfaces
         Task<Barbeiro> CriarBarbeiroAsync(Barbeiro barbeiro);
         Task DeleteAsync(int id);
 
+
     }
 }

@@ -3364,4 +3364,175 @@
         });
     }
 
+
+    var meusAgendamentosBarbeiro = document.getElementById('meusAgendamentosPage');
+
+    if (meusAgendamentosBarbeiro) {
+        // Controle de loading para o formulário de filtro
+        var formFiltro = document.getElementById('formFiltro');
+        var loadingOverlay = document.getElementById('loadingOverlay');
+        var btnLimparFiltro = document.getElementById('btnLimparFiltro');
+        var modalLimparFiltro = new bootstrap.Modal(document.getElementById('modalLimparFiltro'));
+
+        if (formFiltro) {
+            formFiltro.addEventListener('submit', function (e) {
+                e.preventDefault(); // Previne o comportamento padrão do formulário
+
+                // Mostra o overlay de carregamento
+                if (loadingOverlay) {
+                    loadingOverlay.style.display = 'block';
+                }
+
+                // Serializa os dados do formulário
+                var formData = new FormData(formFiltro);
+                var queryString = new URLSearchParams(formData).toString();
+
+                // Faz a chamada AJAX para o filtro
+                fetch(`/Barbeiro/FiltrarAgendamentos?${queryString}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Erro ao buscar os agendamentos');
+                        }
+                        return response.json(); // Espera o JSON com os dados atualizados
+                    })
+                    .then(data => {
+                        // Atualiza a tabela e os cartões com os novos dados
+                        atualizarTabela(data.agendamentos);
+                        atualizarCartoes(data.agendamentos);
+
+                        // Esconde o overlay de carregamento
+                        if (loadingOverlay) {
+                            loadingOverlay.style.display = 'none';
+                        }
+
+                        // Exibe um toast de sucesso
+                        showToast('Agendamentos filtrados com sucesso!', 'success');
+                    })
+                    .catch(error => {
+                        console.error(error);
+
+                        // Esconde o overlay de carregamento
+                        if (loadingOverlay) {
+                            loadingOverlay.style.display = 'none';
+                        }
+
+                        // Exibe um toast de erro
+                        showToast('Erro ao filtrar os agendamentos. Tente novamente.', 'danger');
+                    });
+            });
+        }
+
+        // Evento para o botão de "Limpar Filtro"
+        if (btnLimparFiltro) {
+            btnLimparFiltro.addEventListener('click', function () {
+                modalLimparFiltro.show();
+            });
+        }
+
+        // Evento para confirmar a limpeza do filtro
+        var confirmLimparFiltro = document.getElementById('confirmLimparFiltro');
+        if (confirmLimparFiltro) {
+            confirmLimparFiltro.addEventListener('click', function () {
+                modalLimparFiltro.hide();
+
+                // Reseta o formulário de filtro
+                formFiltro.reset();
+
+                // Envia o formulário com valores padrão
+                formFiltro.dispatchEvent(new Event('submit'));
+            });
+        }
+
+        // Limpa o overlay quando a página carregar
+        window.addEventListener('load', function () {
+            if (loadingOverlay) {
+                loadingOverlay.style.display = 'none';
+            }
+        });
+
+        // Função para atualizar a tabela
+        function atualizarTabela(agendamentos) {
+            var tabelaCorpo = document.querySelector('#tabelaMeusAgendamentos tbody');
+            if (tabelaCorpo) {
+                tabelaCorpo.innerHTML = ''; // Limpa o conteúdo atual
+
+                agendamentos.forEach(agendamento => {
+                    var linha = `
+                <tr>
+                    <td>${agendamento.cliente.nome}</td>
+                    <td>${new Date(agendamento.dataHora).toLocaleString()}</td>
+                    <td>${traduzirStatusAgendamento(agendamento.status)}</td>
+                    <td>${agendamento.pagamento ? traduzirStatusPagamento(agendamento.pagamento.statusPagamento) : 'Sem pagamento'}</td>
+                    <td>${agendamento.formaPagamento === 'creditCard' ? 'Cartão de Crédito' : 'Loja'}</td>
+                    <td>${agendamento.precoTotal ? agendamento.precoTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : ''}</td>
+                </tr>
+            `;
+                    tabelaCorpo.innerHTML += linha;
+                });
+            }
+        }
+
+        // Função para atualizar os cartões
+        function atualizarCartoes(agendamentos) {
+            var listaCartoes = document.querySelector('.agendamentos-list');
+            if (listaCartoes) {
+                listaCartoes.innerHTML = ''; // Limpa o conteúdo atual
+
+                agendamentos.forEach(agendamento => {
+                    var cartao = `
+                <div class="agendamento-card" data-id="${agendamento.agendamentoId}">
+                    <div class="agendamento-card-body">
+                        <div class="agendamento-card-line">
+                            <p><strong>Cliente:</strong> ${agendamento.cliente.nome}</p>
+                        </div>
+                        <div class="agendamento-card-line">
+                            <p><strong>Data/Hora:</strong> ${new Date(agendamento.dataHora).toLocaleString()}</p>
+                        </div>
+                        <div class="agendamento-card-line">
+                            <p><strong>Status Agendamento:</strong> ${traduzirStatusAgendamento(agendamento.status)}</p>
+                        </div>
+                        <div class="agendamento-card-line">
+                            <p><strong>Status Pagamento:</strong> ${agendamento.pagamento ? traduzirStatusPagamento(agendamento.pagamento.statusPagamento) : 'Sem pagamento'}</p>
+                        </div>
+                        <div class="agendamento-card-line">
+                            <p><strong>Forma de Pagamento:</strong> ${agendamento.formaPagamento === 'creditCard' ? 'Cartão de Crédito' : 'Loja'}</p>
+                        </div>
+                        <div class="agendamento-card-line">
+                            <p><strong>Valor Total:</strong> ${agendamento.precoTotal ? agendamento.precoTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : ''}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+                    listaCartoes.innerHTML += cartao;
+                });
+            }
+        }
+
+        // Função para traduzir status de agendamento
+        function traduzirStatusAgendamento(status) {
+            switch (status) {
+                case 0: return 'Pendente';
+                case 1: return 'Confirmado';
+                case 2: return 'Cancelado';
+                case 3: return 'Concluído';
+                default: return 'Desconhecido';
+            }
+        }
+
+        // Função para traduzir status de pagamento
+        function traduzirStatusPagamento(statusPagamento) {
+            switch (statusPagamento) {
+                case 0: return 'Pendente';
+                case 1: return 'Aprovado';
+                case 2: return 'Recusado';
+                case 3: return 'Cancelado';
+                case 4: return 'Reembolsado';
+                case 5: return 'Em Processamento';
+                default: return 'Não Especificado';
+            }
+        }
+    }
+
+
+
 });

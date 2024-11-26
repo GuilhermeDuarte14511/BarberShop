@@ -272,7 +272,16 @@ namespace BarberShop.Application.Services
             return agendamentosFuturos.ToList();
         }
 
+        public async Task<IEnumerable<Agendamento>> ObterAgendamentosPorBarbeiroEBarbeariaAsync(int barbeiroId, int barbeariaId)
+        {
+            return await _agendamentoRepository.ObterAgendamentosPorBarbeiroEBarbeariaAsync(barbeiroId, barbeariaId);
+        }
 
-
+        public async Task<IEnumerable<Agendamento>> FiltrarAgendamentosAsync(int barbeiroId, int barbeariaId,string clienteNome = null,DateTime? dataInicio = null,DateTime? dataFim = null,string formaPagamento = null,StatusAgendamento? status = null,
+                                                                             StatusPagamento? statusPagamento = null) 
+        {
+            return await _agendamentoRepository.FiltrarAgendamentosAsync(
+                barbeiroId, barbeariaId, clienteNome, dataInicio, dataFim, formaPagamento, status, statusPagamento);
+        }
     }
 }

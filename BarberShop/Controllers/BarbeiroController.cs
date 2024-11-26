@@ -15,12 +15,14 @@ namespace BarberShopMVC.Controllers
         private readonly IBarbeiroService _barbeiroService;
         private readonly IBarbeiroServicoService _barbeiroServicoService;
         private readonly IIndisponibilidadeService _indisponibilidadeService;
+        private readonly IAgendamentoService _agendamentoService;
 
         public BarbeiroController(
             IBarbeiroRepository barbeiroRepository,
             IBarbeiroService barbeiroService,
             IBarbeiroServicoService barbeiroServicoService,
             IIndisponibilidadeService indisponibilidadeService,
+            IAgendamentoService agendamentoService,
             ILogService logService)
             : base(logService)
         {
@@ -28,6 +30,7 @@ namespace BarberShopMVC.Controllers
             _barbeiroService = barbeiroService;
             _barbeiroServicoService = barbeiroServicoService;
             _indisponibilidadeService = indisponibilidadeService;
+            _agendamentoService = agendamentoService;
         }
 
         public async Task<IActionResult> Index()
@@ -359,7 +362,108 @@ namespace BarberShopMVC.Controllers
         }
 
 
+        [HttpGet]
+        public async Task<IActionResult> FiltrarAgendamentos(int page = 1, int pageSize = 10, string clienteNome = null, DateTime? dataInicio = null, DateTime? dataFim = null, string formaPagamento = null, StatusAgendamento? status = null, StatusPagamento? statusPagamento = null)
+        {
+            try
+            {
+                // Recupera os claims do usuário logado
+                var claimsPrincipal = User;
+                var barbeiroIdClaim = claimsPrincipal.FindFirst("BarbeiroId")?.Value;
+                var barbeariaIdClaim = claimsPrincipal.FindFirst("BarbeariaId")?.Value;
 
+                // Valida se os claims estão disponíveis
+                if (string.IsNullOrEmpty(barbeiroIdClaim) || string.IsNullOrEmpty(barbeariaIdClaim))
+                {
+                    return Unauthorized();
+                }
+
+                int barbeiroId = int.Parse(barbeiroIdClaim);
+                int barbeariaId = int.Parse(barbeariaIdClaim);
+
+                // Executa o filtro de agendamentos
+                var agendamentos = await _agendamentoService.FiltrarAgendamentosAsync(
+                    barbeiroId,
+                    barbeariaId,
+                    clienteNome,
+                    dataInicio,
+                    dataFim,
+                    formaPagamento,
+                    status,
+                    statusPagamento
+                );
+
+                var totalCount = agendamentos.Count();
+                var pagedAgendamentos = agendamentos
+                    .OrderByDescending(a => a.DataHora)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize);
+
+                return Json(new
+                {
+                    agendamentos = pagedAgendamentos.Select(a => new
+                    {
+                        a.AgendamentoId,
+                        Cliente = new { a.Cliente.Nome },
+                        a.DataHora,
+                        a.Status,
+                        Pagamento = a.Pagamento != null ? new { a.Pagamento.StatusPagamento } : null,
+                        a.FormaPagamento,
+                        a.PrecoTotal
+                    }),
+                    totalCount
+                });
+            }
+            catch (Exception ex)
+            {
+                await LogAsync("Error", nameof(FiltrarAgendamentos), ex.Message, ex.ToString());
+                return StatusCode(500, new { error = "Erro ao filtrar os agendamentos." });
+            }
+        }
+
+
+        public async Task<IActionResult> MeusAgendamentos(int page = 1, int pageSize = 10)
+        {
+            try
+            {
+                // Recupera os claims
+                var claimsPrincipal = User;
+                var barbeiroIdClaim = claimsPrincipal.FindFirst("BarbeiroId")?.Value;
+                var barbeariaIdClaim = claimsPrincipal.FindFirst("BarbeariaId")?.Value;
+
+                // Valida os claims
+                if (string.IsNullOrEmpty(barbeiroIdClaim) || string.IsNullOrEmpty(barbeariaIdClaim))
+                {
+                    return RedirectToAction("Login", "Login");
+                }
+
+                int barbeiroId = int.Parse(barbeiroIdClaim);
+                int barbeariaId = int.Parse(barbeariaIdClaim);
+
+                // Obtem todos os agendamentos e aplica ordenação
+                var agendamentos = await _agendamentoService.ObterAgendamentosPorBarbeiroEBarbeariaAsync(barbeiroId, barbeariaId);
+                var totalCount = agendamentos.Count();
+
+                // Aplica paginação
+                var pagedAgendamentos = agendamentos
+                    .OrderByDescending(a => a.DataHora)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList();
+
+                // Passa os dados paginados e metadados para a View
+                ViewData["CurrentPage"] = page;
+                ViewData["PageSize"] = pageSize;
+                ViewData["TotalPages"] = (int)Math.Ceiling((double)totalCount / pageSize);
+
+                return View("MeusAgendamentos", pagedAgendamentos);
+            }
+            catch (Exception ex)
+            {
+                await LogAsync("Error", "BarbeiroController.MeusAgendamentos", ex.Message, ex.ToString());
+                return StatusCode(500, "Erro ao carregar os agendamentos.");
+            }
+        }
 
     }
 }
