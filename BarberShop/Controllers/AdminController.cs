@@ -4,7 +4,7 @@ using System.Security.Claims;
 
 namespace BarberShopMVC.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Barbeiro")]
     public class AdminController : Controller
     {
         // Dashboard Administrativo

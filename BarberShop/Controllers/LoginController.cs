@@ -86,7 +86,7 @@ namespace BarberShopMVC.Controllers
         {
             try
             {
-                if (User.Identity.IsAuthenticated && User.IsInRole("Admin"))
+                if (User.Identity.IsAuthenticated && User.IsInRole("Admin") || User.IsInRole("Admin"))
                 {
                     var barbeariaUrlSession = HttpContext.Session.GetString("BarbeariaUrl");
                     if (!string.IsNullOrEmpty(barbeariaUrlSession) && barbeariaUrlSession == barbeariaUrl)
@@ -130,7 +130,7 @@ namespace BarberShopMVC.Controllers
             try
             {
                 var usuario = await _usuarioRepository.GetByEmailAsync(email);
-                if (usuario == null || !_autenticacaoService.VerifyPassword(password, usuario.SenhaHash) || usuario.Role != "Admin")
+                if (usuario == null ||!_autenticacaoService.VerifyPassword(password, usuario.SenhaHash) || (usuario.Role != "Admin" && usuario.Role != "Barbeiro"))
                 {
                     return Json(new { success = false, message = "Credenciais inválidas ou usuário não é administrador." });
                 }

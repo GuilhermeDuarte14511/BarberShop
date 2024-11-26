@@ -105,6 +105,8 @@ namespace BarberShop.Application.Controllers
                 };
 
                 var senhaAleatoria = GerarSenhaAleatoria();
+                var senhaAleatoriaDescriptografada = senhaAleatoria;
+                senhaAleatoria = _autenticacaoService.HashPassword(senhaAleatoria);
                 usuario.SenhaHash = senhaAleatoria;
 
                 if (request.TipoUsuario == "Barbeiro")
@@ -128,7 +130,7 @@ namespace BarberShop.Application.Controllers
                 await _emailService.EnviarEmailBoasVindasAsync(
                     usuario.Email,
                     usuario.Nome,
-                    senhaAleatoria,
+                    senhaAleatoriaDescriptografada,
                     request.TipoUsuario,
                     nomeBarbearia,
                     urlSlug
