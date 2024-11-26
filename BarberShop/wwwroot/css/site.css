@@ -2018,10 +2018,87 @@ h2, h3 {
     }
 
 
+/* Estilo para ajustar o espaçamento do formulário de filtro */
+#formFiltro .row > div {
+    margin-bottom: 15px; /* Adiciona espaçamento entre os campos */
+}
+
+/* Estilo para os cartões em dispositivos menores */
+.agendamentos-list .agendamento-card {
+    margin-bottom: 15px; /* Espaçamento entre os cartões */
+    padding: 15px; /* Espaçamento interno */
+    border-radius: 8px;
+    background: #1c1c1c; /* Fundo escuro */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* Estilo para títulos dentro do cartão */
+.agendamento-card .agendamento-card-line p {
+    margin: 0; /* Remove margem superior/inferior */
+    padding: 5px 0; /* Adiciona espaçamento interno */
+    font-size: 0.95rem; /* Ajusta o tamanho do texto */
+}
+
+/* Estilo para o botão de limpar */
+#btnLimparFiltro {
+    margin-top: 15px;
+    background-color: #6c757d; /* Cinza para diferenciar */
+    border-color: #6c757d;
+}
+
+    #btnLimparFiltro:hover {
+        background-color: #5a6268; /* Cinza mais escuro ao passar o mouse */
+        border-color: #545b62;
+    }
+
+/* Ajuste do modal para exibição mais centralizada */
+#modalLimparFiltro .modal-dialog {
+    margin-top: 10%;
+}
+
+/* Overlay de carregamento */
+#loadingOverlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+}
+
+    #loadingOverlay .spinner-border {
+        width: 3rem;
+        height: 3rem;
+    }
+
+        #loadingOverlay .spinner-border .visually-hidden {
+            font-size: 1.2rem;
+        }
+
+#meusAgendamentosForm .form-label {
+    height: 24px; /* Altura para alinhar consistentemente os labels */
+}
+
+#meusAgendamentosForm button {
+    margin-top: auto; /* Garante o alinhamento ao fundo */
+}
+
+#meusAgendamentosForm {
+    margin-bottom: 20px; /* Espaçamento inferior do formulário */
+}
+
+#tabelaMeusAgendamentos {
+    margin-top: 20px; /* Espaçamento superior da tabela */
+}
+
+
 
 
 /* CSS Responsivo para Dispositivos Móveis */
 @media (max-width: 768px) {
+
 
     /* Esconde gráficos e botões no mobile */
     #buttonContainer,
@@ -2101,6 +2178,19 @@ h2, h3 {
 
 /* CSS para Tablets */
 @media (min-width: 768px) and (max-width: 991px) {
+
+    /* No tablet, as tabelas ainda devem se comportar bem */
+    #meusServicosBarbeiro table {
+        font-size: 1rem;
+        width: 100%;
+        margin-bottom: 20px;
+    }
+
+    .col-md-6 {
+        width: 50%; /* Em tablets, as colunas devem ocupar metade da tela */
+        padding: 10px;
+    }
+
     #dashboard-container {
         display: flex;
         flex-wrap: wrap;

@@ -1,4 +1,5 @@
-﻿using BarberShop.Domain.Entities;
+﻿using BarberShop.Application.DTOs;
+using BarberShop.Domain.Entities;
 using BarberShop.Domain.Interfaces;
 using BarberShop.Infrastructure.Data;
 using BarberShop.Infrastructure.Repositories;
@@ -283,5 +284,94 @@ namespace BarberShop.Application.Services
             return await _agendamentoRepository.FiltrarAgendamentosAsync(
                 barbeiroId, barbeariaId, clienteNome, dataInicio, dataFim, formaPagamento, status, statusPagamento);
         }
+
+        public async Task AtualizarAgendamentoAsync(int id, AgendamentoDto agendamentoAtualizadoDto)
+        {
+            var agendamentoExistente = await _agendamentoRepository.GetByIdAsync(id);
+            if (agendamentoExistente == null)
+            {
+                throw new Exception("Agendamento não encontrado.");
+            }
+
+            // Atualiza os campos básicos do agendamento
+            agendamentoExistente.DataHora = agendamentoAtualizadoDto.DataHora.Value;
+            agendamentoExistente.Status = agendamentoAtualizadoDto.Status;
+            agendamentoExistente.PrecoTotal = agendamentoAtualizadoDto.PrecoTotal ?? agendamentoExistente.PrecoTotal.GetValueOrDefault();
+
+            // Verifica se o pagamento já existe
+            if (agendamentoExistente.Pagamento != null)
+            {
+                if (Enum.TryParse(agendamentoAtualizadoDto.StatusPagamento, out StatusPagamento statusPagamento))
+                {
+                    agendamentoExistente.Pagamento.StatusPagamento = statusPagamento;
+                }
+                agendamentoExistente.Pagamento.ValorPago = agendamentoAtualizadoDto.PrecoTotal ?? agendamentoExistente.Pagamento.ValorPago.GetValueOrDefault();
+
+                // Atualiza a data de pagamento, se necessário
+                if (agendamentoExistente.Pagamento.StatusPagamento == StatusPagamento.Aprovado)
+                {
+                    agendamentoExistente.Pagamento.DataPagamento = DateTime.UtcNow;
+                }
+
+                await _pagamentoService.AtualizarPagamentoAsync(agendamentoExistente.Pagamento);
+            }
+            else if (!string.IsNullOrEmpty(agendamentoAtualizadoDto.StatusPagamento))
+            {
+                // Cria um novo pagamento se não existir e há informações no DTO
+                if (Enum.TryParse(agendamentoAtualizadoDto.StatusPagamento, out StatusPagamento novoStatusPagamento))
+                {
+                    var novoPagamento = new Pagamento
+                    {
+                        AgendamentoId = id,
+                        ClienteId = agendamentoExistente.ClienteId,
+                        BarbeariaId = agendamentoExistente.BarbeariaId,
+                        ValorPago = agendamentoAtualizadoDto.PrecoTotal ?? 0, // Se for nulo, usa 0 como padrão
+                        StatusPagamento = novoStatusPagamento,
+                        DataPagamento = novoStatusPagamento == StatusPagamento.Aprovado
+                            ? DateTime.UtcNow
+                            : null
+                    };
+
+                    await _pagamentoService.AdicionarPagamentoAsync(novoPagamento);
+                    agendamentoExistente.Pagamento = novoPagamento;
+                }
+            }
+
+            // Atualiza o agendamento no repositório
+            await _agendamentoRepository.UpdateAsync(agendamentoExistente);
+        }
+
+        public async Task<AgendamentoDto> ObterAgendamentoCompletoPorIdAsync(int id)
+        {
+            var agendamento = await _agendamentoRepository.ObterAgendamentoCompletoPorIdAsync(id);
+
+            if (agendamento == null)
+                return null;
+
+            return new AgendamentoDto
+            {
+                AgendamentoId = agendamento.AgendamentoId,
+                DataHora = agendamento.DataHora,
+                Status = agendamento.Status,
+                PrecoTotal = agendamento.PrecoTotal,
+                StatusPagamento = agendamento.Pagamento?.StatusPagamento.ToString() ?? "Não Especificado",
+                FormaPagamento = agendamento.FormaPagamento,
+                Cliente = new ClienteDTO
+                {
+                    Nome = agendamento.Cliente?.Nome
+                },
+                BarbeiroNome = agendamento.Barbeiro?.Nome,
+                Servicos = agendamento.AgendamentoServicos
+                    .Select(agendamentoServico => new ServicoDTO
+                    {
+                        ServicoId = agendamentoServico.Servico.ServicoId,
+                        Nome = agendamentoServico.Servico.Nome,
+                        Preco = (decimal)agendamentoServico.Servico.Preco
+                    }).ToList(),
+                Pagamento = agendamento.Pagamento
+            };
+        }
+
+
     }
 }

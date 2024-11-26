@@ -32,4 +32,12 @@ public class BaseController : Controller
         return senha.ToString();
     }
 
+    // Função para obter o ID do barbeiro logado a partir do claim
+    public int ObterBarbeiroIdLogado()
+    {
+        var barbeiroIdClaim = User.FindFirst("BarbeiroId")?.Value;
+        return int.Parse(barbeiroIdClaim ?? "0");
+    }
+
+
 }

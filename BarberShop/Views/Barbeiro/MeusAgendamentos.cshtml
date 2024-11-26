@@ -6,59 +6,71 @@
     var currentPage = (int)ViewData["CurrentPage"];
     var totalPages = (int)ViewData["TotalPages"];
     var pageSize = (int)ViewData["PageSize"];
+    var urlSlug = (string)ViewData["UrlSlug"];
     ViewData["Title"] = "Meus Agendamentos - Barber Shop";
 }
 
 <div id="meusAgendamentosPage" class="container-fluid">
-    <h2 class="text-center">Meus Agendamentos</h2>
+    <input type="hidden" name="urlSlug" id="urlSlugHidden" value="@((string)ViewData["UrlSlug"])">
 
-    <!-- Formulário de Filtro -->
-    <form id="formFiltro" method="get" action="@Url.Action("MeusAgendamentos", "Barbeiro")">
-        <div class="row">
+    <form id="meusAgendamentosForm">
+        <div class="row g-3">
             <div class="col-md-3">
-                <input type="text" name="cliente" class="form-control" placeholder="Buscar por cliente">
+                <label for="clienteNome" class="form-label">Buscar por cliente</label>
+                <input type="text" name="clienteNome" id="clienteInput" class="form-control" placeholder="Ex.: João">
             </div>
             <div class="col-md-3">
-                <select name="statusAgendamento" class="form-select">
+                <label for="status" class="form-label">Status do Agendamento</label>
+                <select name="status" id="statusAgendamentoSelect" class="form-select">
                     <option value="">Todos os status de agendamento</option>
-                    <option value="Pendente">Pendente</option>
-                    <option value="Confirmado">Confirmado</option>
-                    <option value="Concluido">Concluído</option>
-                    <option value="Cancelado">Cancelado</option>
+                    <option value="0">Pendente</option>
+                    <option value="1">Confirmado</option>
+                    <option value="2">Cancelado</option>
+                    <option value="3">Concluído</option>
                 </select>
             </div>
             <div class="col-md-3">
-                <input type="date" name="dataInicio" class="form-control" placeholder="Data Inicial">
+                <label for="dataInicio" class="form-label">Data Inicial</label>
+                <input type="date" name="dataInicio" id="dataInicioInput" class="form-control">
             </div>
             <div class="col-md-3">
-                <input type="date" name="dataFim" class="form-control" placeholder="Data Final">
+                <label for="dataFim" class="form-label">Data Final</label>
+                <input type="date" name="dataFim" id="dataFimInput" class="form-control">
             </div>
-            <div class="col-md-3 mt-3">
-                <select name="formaPagamento" class="form-select">
+            <div class="col-md-3">
+                <label for="formaPagamento" class="form-label">Forma de Pagamento</label>
+                <select name="formaPagamento" id="formaPagamentoSelect" class="form-select">
                     <option value="">Todas as formas de pagamento</option>
                     <option value="creditCard">Cartão de Crédito</option>
                     <option value="store">Loja</option>
                 </select>
             </div>
-            <div class="col-md-3 mt-3">
-                <select name="statusPagamento" class="form-select">
+            <div class="col-md-3">
+                <label for="statusPagamento" class="form-label">Status do Pagamento</label>
+                <select name="statusPagamento" id="statusPagamentoSelect" class="form-select">
                     <option value="">Todos os status de pagamento</option>
-                    <option value="Pendente">Pendente</option>
-                    <option value="Aprovado">Aprovado</option>
-                    <option value="Recusado">Recusado</option>
-                    <option value="Cancelado">Cancelado</option>
-                    <option value="Reembolsado">Reembolsado</option>
-                    <option value="EmProcessamento">Em Processamento</option>
+                    <option value="-1">Não Especificado</option>
+                    <option value="0">Pendente</option>
+                    <option value="1">Aprovado</option>
+                    <option value="2">Recusado</option>
+                    <option value="3">Cancelado</option>
+                    <option value="4">Reembolsado</option>
+                    <option value="5">Em Processamento</option>
                 </select>
             </div>
-            <div class="col-md-3 mt-3">
-                <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+            <div class="col-md-3">
+                <label class="form-label d-block">&nbsp;</label> <!-- Espaço para alinhar o botão -->
+                <button type="submit" id="filtrarBtn" class="btn btn-primary w-100">Filtrar</button>
             </div>
-            <div class="col-md-3 mt-3">
-                <button type="button" class="btn btn-secondary w-100" id="btnLimparFiltro">Limpar Filtro</button>
+            <div class="col-md-3">
+                <label class="form-label d-block">&nbsp;</label> <!-- Espaço para alinhar o botão -->
+                <button type="button" id="limparFiltroBtn" class="btn btn-secondary w-100">Limpar Filtro</button>
             </div>
         </div>
     </form>
+
+
+
 
     <!-- Tabela exibida em telas maiores -->
     <div class="table-responsive d-none d-md-block" style="max-height: 600px; overflow-y: auto;">
@@ -71,6 +83,7 @@
                     <th>Status Pagamento</th>
                     <th>Forma de Pagamento</th>
                     <th>Valor Total</th>
+                    <th>Ações</th>
                 </tr>
             </thead>
             <tbody>
@@ -86,12 +99,21 @@
                         <td>@(agendamento.Pagamento != null ? Enum.GetName(typeof(StatusPagamento), agendamento.Pagamento.StatusPagamento) : "Sem pagamento")</td>
                         <td>@(agendamento.FormaPagamento == "creditCard" ? "Cartão de Crédito" : "Loja")</td>
                         <td>@agendamento.PrecoTotal?.ToString("C")</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm btnEditar"
+                                    data-id="@agendamento.AgendamentoId"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#editarAgendamentoModal">
+                                Editar
+                            </button>
+                        </td>
                     </tr>
                 }
             </tbody>
         </table>
     </div>
 
+    <!-- Lista de agendamentos exibida em telas menores -->
     <div class="agendamentos-list d-md-none">
         @foreach (var agendamento in Model)
         {
@@ -117,6 +139,14 @@
                     </div>
                     <div class="agendamento-card-line">
                         <p><strong>Valor Total:</strong> @agendamento.PrecoTotal?.ToString("C")</p>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button class="btn btn-warning btn-sm btnEditar"
+                                data-id="@agendamento.AgendamentoId"
+                                data-bs-toggle="modal"
+                                data-bs-target="#editarAgendamentoModal">
+                            Editar
+                        </button>
                     </div>
                 </div>
             </div>
@@ -166,6 +196,71 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal de Edição -->
+    <div class="modal fade" id="editarAgendamentoModal" tabindex="-1" aria-labelledby="editarAgendamentoModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editarAgendamentoModalLabel">Editar Agendamento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formEditarAgendamento">
+                        <input type="hidden" id="editarAgendamentoId">
+
+                        <div class="mb-3">
+                            <label for="editarDataHora" class="form-label">Data/Hora</label>
+                            <input type="datetime-local" class="form-control" id="editarDataHora" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="editarStatus" class="form-label">Status do Agendamento</label>
+                            <select class="form-select" id="editarStatus" required>
+                                <option value="0">Pendente</option>
+                                <option value="1">Confirmado</option>
+                                <option value="2">Cancelado</option>
+                                <option value="3">Concluído</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="editarStatusPagamento" class="form-label">Status do Pagamento</label>
+                            <select class="form-select" id="editarStatusPagamento" required>
+                                <option value="-1">Não Especificado</option>
+                                <option value="0">Pendente</option>
+                                <option value="1">Aprovado</option>
+                                <option value="2">Recusado</option>
+                                <option value="3">Cancelado</option>
+                                <option value="4">Reembolsado</option>
+                                <option value="5">Em Processamento</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="editarFormaPagamento" class="form-label">Forma de Pagamento</label>
+                            <select class="form-select" id="editarFormaPagamento" required>
+                                <option value="creditCard">Cartão de Crédito</option>
+                                <option value="store">Loja</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="editarPrecoTotal" class="form-label">Valor Total</label>
+                            <input type="text" class="form-control" id="editarPrecoTotal" required>
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" id="btnSalvarAtualizacaoAgendamento" class="btn btn-primary">Salvar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
 
     <div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 9999;">
         <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">

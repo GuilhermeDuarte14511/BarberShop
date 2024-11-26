@@ -1,0 +1,88 @@
+﻿@model BarberShop.Application.Dtos.MeusServicosDto
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Meus Serviços - Barber Shop";
+}
+<div id="meusServicosBarbeiro" class="escolhemeubarbeiroPage">
+
+    <div class="container">
+        <h2 class="text-center mb-4">Meus Serviços</h2>
+
+        <div class="row">
+            <!-- Tabela de Serviços Vinculados -->
+            <div class="col-12 col-md-6 mb-4">
+                <h4 class="text-center">Serviços Vinculados</h4>
+                <div class="table-responsive">
+                    <table id="vinculadosTable" class="table table-dark table-striped">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th class="d-none d-md-table-cell">Preço</th>
+                                <th class="d-none d-md-table-cell">Duração</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var servico in Model.ServicosVinculados)
+                            {
+                                <tr>
+                                    <td>@servico.Nome</td>
+                                    <td class="d-none d-md-table-cell">@servico.Preco.ToString("C")</td>
+                                    <td class="d-none d-md-table-cell">@servico.Duracao minutos</td>
+                                    <td>
+                                        <button class="btn btn-danger btn-sm p-1 desvincularServicoBtn" data-id="@servico.ServicoId">Desvincular</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tabela de Serviços Disponíveis para Vincular -->
+            <div class="col-12 col-md-6">
+                <h4 class="text-center">Serviços Disponíveis para Vincular</h4>
+                <div class="table-responsive">
+                    <table id="disponiveisTable" class="table table-dark table-striped">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th class="d-none d-md-table-cell">Preço</th>
+                                <th class="d-none d-md-table-cell">Duração</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var servico in Model.ServicosNaoVinculados)
+                            {
+                                <tr>
+                                    <td>@servico.Nome</td>
+                                    <td class="d-none d-md-table-cell">@servico.Preco.ToString("C")</td>
+                                    <td class="d-none d-md-table-cell">@servico.Duracao minutos</td>
+                                    <td>
+                                        <button class="btn btn-success btn-sm p-1 vincularServicoBtn" data-id="@servico.ServicoId">Vincular</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Container de Toasts -->
+    <div id="toastContainer" class="position-fixed top-0 end-0 p-3" style="z-index: 1055;"></div>
+</div>
+
+<style>
+    /* Estilos personalizados para página */
+    .escolhemeubarbeiroPage {
+        padding: 1rem;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+</style>

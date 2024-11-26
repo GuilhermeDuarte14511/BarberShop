@@ -3368,57 +3368,29 @@
     var meusAgendamentosBarbeiro = document.getElementById('meusAgendamentosPage');
 
     if (meusAgendamentosBarbeiro) {
-        // Controle de loading para o formulário de filtro
-        var formFiltro = document.getElementById('formFiltro');
+        var formFiltro = document.getElementById('meusAgendamentosForm');
         var loadingOverlay = document.getElementById('loadingOverlay');
-        var btnLimparFiltro = document.getElementById('btnLimparFiltro');
-        var modalLimparFiltro = new bootstrap.Modal(document.getElementById('modalLimparFiltro'));
+        var btnLimparFiltro = document.getElementById('limparFiltroBtn');
+        var modalLimparFiltroElement = document.getElementById('modalLimparFiltro');
+        var modalLimparFiltro = new bootstrap.Modal(modalLimparFiltroElement);
 
+        var modalEditar = new bootstrap.Modal(document.getElementById('editarAgendamentoModal'));
+        var formEditar = document.getElementById('formEditarAgendamento');
+        var editarAgendamentoId = document.getElementById('editarAgendamentoId');
+        var editarDataHora = document.getElementById('editarDataHora');
+        var editarStatus = document.getElementById('editarStatus');
+        var editarStatusPagamento = document.getElementById('editarStatusPagamento');
+        var editarPrecoTotal = document.getElementById('editarPrecoTotal');
+        var editarFormaPagamento = document.getElementById('editarFormaPagamento');
+
+        // Impede duplicação de submissão
+        let isSubmitting = false;
+
+        // Evento de submissão do formulário de filtros
         if (formFiltro) {
             formFiltro.addEventListener('submit', function (e) {
-                e.preventDefault(); // Previne o comportamento padrão do formulário
-
-                // Mostra o overlay de carregamento
-                if (loadingOverlay) {
-                    loadingOverlay.style.display = 'block';
-                }
-
-                // Serializa os dados do formulário
-                var formData = new FormData(formFiltro);
-                var queryString = new URLSearchParams(formData).toString();
-
-                // Faz a chamada AJAX para o filtro
-                fetch(`/Barbeiro/FiltrarAgendamentos?${queryString}`)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Erro ao buscar os agendamentos');
-                        }
-                        return response.json(); // Espera o JSON com os dados atualizados
-                    })
-                    .then(data => {
-                        // Atualiza a tabela e os cartões com os novos dados
-                        atualizarTabela(data.agendamentos);
-                        atualizarCartoes(data.agendamentos);
-
-                        // Esconde o overlay de carregamento
-                        if (loadingOverlay) {
-                            loadingOverlay.style.display = 'none';
-                        }
-
-                        // Exibe um toast de sucesso
-                        showToast('Agendamentos filtrados com sucesso!', 'success');
-                    })
-                    .catch(error => {
-                        console.error(error);
-
-                        // Esconde o overlay de carregamento
-                        if (loadingOverlay) {
-                            loadingOverlay.style.display = 'none';
-                        }
-
-                        // Exibe um toast de erro
-                        showToast('Erro ao filtrar os agendamentos. Tente novamente.', 'danger');
-                    });
+                e.preventDefault();
+                enviarFiltro(1); // Sempre começa da página 1 ao filtrar
             });
         }
 
@@ -3434,12 +3406,8 @@
         if (confirmLimparFiltro) {
             confirmLimparFiltro.addEventListener('click', function () {
                 modalLimparFiltro.hide();
-
-                // Reseta o formulário de filtro
-                formFiltro.reset();
-
-                // Envia o formulário com valores padrão
-                formFiltro.dispatchEvent(new Event('submit'));
+                formFiltro.reset(); // Reseta os campos do formulário
+                enviarFiltro(1); // Envia a requisição para a página 1 com filtros resetados
             });
         }
 
@@ -3450,65 +3418,269 @@
             }
         });
 
-        // Função para atualizar a tabela
+        // Função para enviar os filtros
+        function enviarFiltro(page) {
+            if (loadingOverlay) {
+                loadingOverlay.style.display = 'block';
+            }
+
+            var formData = new FormData(formFiltro);
+            formData.append('page', page);
+            formData.append('pageSize', 10);
+
+            var queryString = new URLSearchParams(formData).toString();
+
+            fetch(`/Barbeiro/FiltrarAgendamentos?${queryString}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erro ao buscar os agendamentos');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    atualizarTabela(data.agendamentos);
+                    atualizarCartoes(data.agendamentos);
+                    atualizarPaginacao(data.totalCount, 10, page);
+
+                    if (loadingOverlay) {
+                        loadingOverlay.style.display = 'none';
+                    }
+                    showToast('Agendamentos filtrados com sucesso!', 'success');
+                })
+                .catch(error => {
+                    console.error(error);
+                    if (loadingOverlay) {
+                        loadingOverlay.style.display = 'none';
+                    }
+                    showToast('Erro ao filtrar os agendamentos. Tente novamente.', 'danger');
+                });
+        }
+
         function atualizarTabela(agendamentos) {
             var tabelaCorpo = document.querySelector('#tabelaMeusAgendamentos tbody');
             if (tabelaCorpo) {
-                tabelaCorpo.innerHTML = ''; // Limpa o conteúdo atual
+                tabelaCorpo.innerHTML = '';
 
                 agendamentos.forEach(agendamento => {
                     var linha = `
-                <tr>
-                    <td>${agendamento.cliente.nome}</td>
-                    <td>${new Date(agendamento.dataHora).toLocaleString()}</td>
-                    <td>${traduzirStatusAgendamento(agendamento.status)}</td>
-                    <td>${agendamento.pagamento ? traduzirStatusPagamento(agendamento.pagamento.statusPagamento) : 'Sem pagamento'}</td>
-                    <td>${agendamento.formaPagamento === 'creditCard' ? 'Cartão de Crédito' : 'Loja'}</td>
-                    <td>${agendamento.precoTotal ? agendamento.precoTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : ''}</td>
-                </tr>
-            `;
+                        <tr>
+                            <td>${agendamento.cliente.nome}</td>
+                            <td>${new Date(agendamento.dataHora).toLocaleString()}</td>
+                            <td>${traduzirStatusAgendamento(agendamento.status)}</td>
+                            <td>${agendamento.pagamento ? traduzirStatusPagamento(agendamento.pagamento.statusPagamento) : 'Sem pagamento'}</td>
+                            <td>${agendamento.formaPagamento === 'creditCard' ? 'Cartão de Crédito' : 'Loja'}</td>
+                            <td>${agendamento.precoTotal ? agendamento.precoTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : ''}</td>
+                            <td>
+                                <button 
+                                    class="btn btn-warning btn-sm btnEditar" 
+                                    data-id="${agendamento.agendamentoId}">
+                                    Editar
+                                </button>
+                            </td>
+                        </tr>
+                    `;
                     tabelaCorpo.innerHTML += linha;
+                });
+
+                // Adiciona os eventos de clique nos botões "Editar"
+                tabelaCorpo.querySelectorAll('.btnEditar').forEach(button => {
+                    button.addEventListener('click', function () {
+                        const agendamentoId = this.getAttribute('data-id');
+                        abrirModalEdicao(agendamentoId);
+                    });
                 });
             }
         }
 
-        // Função para atualizar os cartões
+
         function atualizarCartoes(agendamentos) {
             var listaCartoes = document.querySelector('.agendamentos-list');
             if (listaCartoes) {
-                listaCartoes.innerHTML = ''; // Limpa o conteúdo atual
+                listaCartoes.innerHTML = '';
 
                 agendamentos.forEach(agendamento => {
-                    var cartao = `
-                <div class="agendamento-card" data-id="${agendamento.agendamentoId}">
-                    <div class="agendamento-card-body">
-                        <div class="agendamento-card-line">
-                            <p><strong>Cliente:</strong> ${agendamento.cliente.nome}</p>
+                    var dataHoraFormatada = new Date(agendamento.dataHora).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                    var card = `
+                        <div class="agendamento-card" data-id="${agendamento.agendamentoId}">
+                            <div class="agendamento-card-body">
+                                <div class="agendamento-card-line">
+                                    <p><strong>Cliente:</strong> ${agendamento.cliente.nome}</p>
+                                </div>
+                                <div class="agendamento-card-line">
+                                    <p><strong>Data/Hora:</strong> ${dataHoraFormatada}</p>
+                                </div>
+                                <div class="agendamento-card-line">
+                                    <p><strong>Status Agendamento:</strong> ${traduzirStatusAgendamento(agendamento.status)}</p>
+                                </div>
+                                <div class="agendamento-card-line">
+                                    <p><strong>Status Pagamento:</strong> ${agendamento.pagamento ? traduzirStatusPagamento(agendamento.pagamento.statusPagamento) : 'Sem pagamento'}</p>
+                                </div>
+                                <div class="agendamento-card-line">
+                                    <p><strong>Forma de Pagamento:</strong> ${agendamento.formaPagamento === 'creditCard' ? 'Cartão de Crédito' : 'Loja'}</p>
+                                </div>
+                                <div class="agendamento-card-line">
+                                    <p><strong>Valor Total:</strong> ${agendamento.precoTotal ? agendamento.precoTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : ''}</p>
+                                </div>
+                                <div class="d-flex justify-content-end">
+                                    <button class="btn btn-warning btn-sm btnEditar" 
+                                            data-id="${agendamento.agendamentoId}">
+                                        Editar
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        <div class="agendamento-card-line">
-                            <p><strong>Data/Hora:</strong> ${new Date(agendamento.dataHora).toLocaleString()}</p>
-                        </div>
-                        <div class="agendamento-card-line">
-                            <p><strong>Status Agendamento:</strong> ${traduzirStatusAgendamento(agendamento.status)}</p>
-                        </div>
-                        <div class="agendamento-card-line">
-                            <p><strong>Status Pagamento:</strong> ${agendamento.pagamento ? traduzirStatusPagamento(agendamento.pagamento.statusPagamento) : 'Sem pagamento'}</p>
-                        </div>
-                        <div class="agendamento-card-line">
-                            <p><strong>Forma de Pagamento:</strong> ${agendamento.formaPagamento === 'creditCard' ? 'Cartão de Crédito' : 'Loja'}</p>
-                        </div>
-                        <div class="agendamento-card-line">
-                            <p><strong>Valor Total:</strong> ${agendamento.precoTotal ? agendamento.precoTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : ''}</p>
-                        </div>
-                    </div>
-                </div>
-            `;
-                    listaCartoes.innerHTML += cartao;
+                    `;
+                    listaCartoes.innerHTML += card;
+                });
+
+                // Adiciona os eventos de clique nos botões "Editar"
+                listaCartoes.querySelectorAll('.btnEditar').forEach(button => {
+                    button.addEventListener('click', function () {
+                        const agendamentoId = this.getAttribute('data-id');
+                        abrirModalEdicao(agendamentoId);
+                    });
                 });
             }
         }
 
-        // Função para traduzir status de agendamento
+        // Função para atualizar a paginação
+        function atualizarPaginacao(totalCount, pageSize, currentPage) {
+            var paginationContainer = document.querySelector('.pagination');
+            if (!paginationContainer) return;
+
+            paginationContainer.innerHTML = ''; // Limpa a paginação atual
+
+            if (totalCount > pageSize) {
+                var totalPages = Math.ceil(totalCount / pageSize);
+
+                // Botão "Anterior"
+                if (currentPage > 1) {
+                    var prev = document.createElement('li');
+                    prev.className = 'page-item';
+                    prev.innerHTML = `<a class="page-link" href="#" data-page="${currentPage - 1}">Anterior</a>`;
+                    paginationContainer.appendChild(prev);
+                }
+
+                // Páginas numeradas
+                for (let i = 1; i <= totalPages; i++) {
+                    var pageItem = document.createElement('li');
+                    pageItem.className = `page-item ${i === currentPage ? 'active' : ''}`;
+                    pageItem.innerHTML = `<a class="page-link" href="#" data-page="${i}">${i}</a>`;
+                    paginationContainer.appendChild(pageItem);
+                }
+
+                // Botão "Próxima"
+                if (currentPage < totalPages) {
+                    var next = document.createElement('li');
+                    next.className = 'page-item';
+                    next.innerHTML = `<a class="page-link" href="#" data-page="${currentPage + 1}">Próxima</a>`;
+                    paginationContainer.appendChild(next);
+                }
+            }
+        }
+
+        // Função para abrir o modal de edição
+        document.addEventListener('click', function (event) {
+            if (event.target && event.target.matches('.btnEditar')) {
+                const agendamentoId = event.target.getAttribute('data-id');
+                abrirModalEdicao(agendamentoId);
+            }
+        });
+
+        function abrirModalEdicao(agendamentoId) {
+            if (loadingOverlay) {
+                loadingOverlay.style.display = 'block';
+            }
+
+            fetch(`/Barbeiro/DetailsAgendamento/${agendamentoId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erro ao carregar os dados do agendamento.');
+                    }
+                    return response.json();
+                })
+                .then(agendamento => {
+                    document.getElementById('editarAgendamentoId').value = agendamento.agendamentoId;
+                    document.getElementById('editarDataHora').value = new Date(agendamento.dataHora).toISOString().slice(0, 16);
+                    document.getElementById('editarStatus').value = agendamento.status;
+                    document.getElementById('editarStatusPagamento').value = agendamento.statusPagamento;
+                    document.getElementById('editarFormaPagamento').value = agendamento.formaPagamento;
+                    const statusPagamentoSelect = document.getElementById('editarStatusPagamento');
+                    for (const option of statusPagamentoSelect.options) {
+                        if (option.text === agendamento.statusPagamento) {
+                            statusPagamentoSelect.value = option.value;
+                            break;
+                        }
+                    }
+
+                    document.getElementById('editarPrecoTotal').value = agendamento.precoTotal.toFixed(2).replace('.', ',');
+                    modalEditar.show();
+                })
+                .catch(error => {
+                    console.error(error);
+                    showToast('Erro ao carregar o agendamento.', 'danger');
+                })
+                .finally(() => {
+                    if (loadingOverlay) {
+                        loadingOverlay.style.display = 'none';
+                    }
+                });
+        }
+
+        // Limpa eventos duplicados no modal sempre que ele é exibido
+        $('#editarAgendamentoModal').on('shown.bs.modal', function () {
+            console.log('Modal de edição exibido.');
+
+            // Remove eventos duplicados no formulário
+            $('#formEditarAgendamento').off('submit');
+
+            $('#formEditarAgendamento').off('submit').on('submit', function (e) {
+                e.preventDefault(); // Impede o comportamento padrão do formulário
+
+                $('#loadingSpinner').fadeIn(); // Exibe o spinner
+
+                // Captura os dados do formulário
+                const formData = {
+                    agendamentoId: parseInt($('#editarAgendamentoId').val()), // Deve ser um número
+                    dataHora: $('#editarDataHora').val(), // ISO Format: "YYYY-MM-DDTHH:mm"
+                    status: parseInt($('#editarStatus').val()), // Enum como número
+                    statusPagamento: $('#editarStatusPagamento').val(), // String
+                    precoTotal: parseFloat($('#editarPrecoTotal').val().replace(',', '.')), // Decimal
+                    formaPagamento: $('#editarFormaPagamento').val(), // String
+                    duracaoTotal: null // Pode ser ajustado conforme necessário
+                };
+
+                console.log('Dados capturados para envio:', formData);
+
+                // Faz a requisição AJAX
+                $.ajax({
+                    type: 'POST',
+                    url: '/Barbeiro/AtualizarAgendamentoMeuBarbeiro',
+                    data: JSON.stringify(formData), // Serializa os dados como JSON
+                    contentType: 'application/json',
+                    success: function (data) {
+                        $('#loadingSpinner').fadeOut();
+                        console.log('Resposta recebida do servidor:', data);
+
+                        if (data.success) {
+                            showToast('Agendamento atualizado com sucesso!', 'success');
+                            bootstrap.Modal.getInstance($('#editarAgendamentoModal')[0]).hide();
+                            enviarFiltro(1); // Atualiza a lista de agendamentos
+                        } else {
+                            showToast(data.message, 'danger');
+                            console.log('Erro retornado pelo servidor:', data.message);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Erro ao enviar requisição:', xhr.responseText);
+                        $('#loadingSpinner').fadeOut();
+                        showToast('Erro ao atualizar o agendamento.', 'danger');
+                    }
+                });
+            });
+
+        });
+
         function traduzirStatusAgendamento(status) {
             switch (status) {
                 case 0: return 'Pendente';
@@ -3519,7 +3691,6 @@
             }
         }
 
-        // Função para traduzir status de pagamento
         function traduzirStatusPagamento(statusPagamento) {
             switch (statusPagamento) {
                 case 0: return 'Pendente';
@@ -3528,9 +3699,107 @@
                 case 3: return 'Cancelado';
                 case 4: return 'Reembolsado';
                 case 5: return 'Em Processamento';
-                default: return 'Não Especificado';
+                case -1: return 'Não Especificado';
+                default: return 'Desconhecido';
             }
         }
+    }
+
+    const meusServicosBarbeiro = document.getElementById('meusServicosBarbeiro');
+
+    if (meusServicosBarbeiro) {
+        const vincularServicoBtns = document.querySelectorAll('.vincularServicoBtn');
+        const desvincularServicoBtns = document.querySelectorAll('.desvincularServicoBtn');
+
+        const vinculadosTableBody = document.querySelector('#vinculadosTable tbody'); // Tabela de serviços vinculados
+        const disponiveisTableBody = document.querySelector('#disponiveisTable tbody'); // Tabela de serviços disponíveis
+        // Vincular serviço
+        vincularServicoBtns.forEach((btn) => {
+            btn.addEventListener('click', function () {
+                const servicoId = this.getAttribute('data-id');
+                console.log('Servico ID recuperado:', servicoId);  // Verifica o valor de servicoId
+
+                if (!servicoId) {
+                    showToast('Erro: Serviço não encontrado.', 'danger');
+                    return; // Interrompe a execução se o ID não for encontrado
+                }
+
+                const data = { servicoId }; // Objeto com os dados a serem enviados
+
+                // Faz a requisição AJAX para vincular o serviço
+                $.ajax({
+                    type: 'POST',
+                    url: '/Barbeiro/VincularServicoMeuBarbeiro',  // Rota no Controller
+                    data: JSON.stringify(servicoId),  // Serializa os dados como JSON
+                    contentType: 'application/json',  // Define o tipo de conteúdo da requisição
+                    success: function (response) {
+                        if (response.success) {
+                            // Move o serviço da tabela "Disponíveis" para a tabela "Vinculados"
+                            const servicoRow = btn.closest('tr');
+                            vinculadosTableBody.appendChild(servicoRow);
+
+                            // Atualiza o botão para "Desvincular"
+                            btn.classList.remove('btn-success', 'vincularServicoBtn');
+                            btn.classList.add('btn-danger', 'desvincularServicoBtn');
+                            btn.textContent = 'Desvincular';
+
+                            // Exibe toast de sucesso
+                            showToast('Serviço vinculado com sucesso!', 'success');
+                        } else {
+                            showToast(response.message || 'Erro ao vincular serviço.', 'danger');
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Erro ao vincular serviço:', xhr.responseText);
+                        showToast('Erro ao vincular serviço. Tente novamente.', 'danger');
+                    }
+                });
+            });
+        });
+
+        // Desvincular serviço
+        desvincularServicoBtns.forEach((btn) => {
+            btn.addEventListener('click', function () {
+                const servicoId = this.getAttribute('data-id');
+                console.log('Servico ID recuperado para desvincular:', servicoId);  // Verifica o valor de servicoId
+
+                if (!servicoId) {
+                    showToast('Erro: Serviço não encontrado.', 'danger');
+                    return; // Interrompe a execução se o ID não for encontrado
+                }
+
+                const data = { servicoId }; // Objeto com os dados a serem enviados
+
+                // Faz a requisição AJAX para desvincular o serviço
+                $.ajax({
+                    type: 'POST',
+                    url: '/Barbeiro/DesvincularServicoMeuBarbeiro',  // Rota no Controller
+                    data: JSON.stringify(servicoId),  // Serializa os dados como JSON
+                    contentType: 'application/json',  // Define o tipo de conteúdo da requisição
+                    success: function (response) {
+                        if (response.success) {
+                            // Move o serviço da tabela "Vinculados" para a tabela "Disponíveis"
+                            const servicoRow = btn.closest('tr');
+                            disponiveisTableBody.appendChild(servicoRow);
+
+                            // Atualiza o botão para "Vincular"
+                            btn.classList.remove('btn-danger', 'desvincularServicoBtn');
+                            btn.classList.add('btn-success', 'vincularServicoBtn');
+                            btn.textContent = 'Vincular';
+
+                            // Exibe toast de sucesso
+                            showToast('Serviço desvinculado com sucesso!', 'success');
+                        } else {
+                            showToast(response.message || 'Erro ao desvincular serviço.', 'danger');
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Erro ao desvincular serviço:', xhr.responseText);
+                        showToast('Erro ao desvincular serviço. Tente novamente.', 'danger');
+                    }
+                });
+            });
+        });
     }
 
 

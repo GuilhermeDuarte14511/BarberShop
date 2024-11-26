@@ -6,6 +6,9 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using BarberShop.Application.DTOs;
+using BarberShop.Application.Dtos;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BarberShopMVC.Controllers
 {
@@ -16,6 +19,7 @@ namespace BarberShopMVC.Controllers
         private readonly IBarbeiroServicoService _barbeiroServicoService;
         private readonly IIndisponibilidadeService _indisponibilidadeService;
         private readonly IAgendamentoService _agendamentoService;
+        private readonly IServicoService _servicoService;
 
         public BarbeiroController(
             IBarbeiroRepository barbeiroRepository,
@@ -23,6 +27,7 @@ namespace BarberShopMVC.Controllers
             IBarbeiroServicoService barbeiroServicoService,
             IIndisponibilidadeService indisponibilidadeService,
             IAgendamentoService agendamentoService,
+            IServicoService servicoService,
             ILogService logService)
             : base(logService)
         {
@@ -31,6 +36,7 @@ namespace BarberShopMVC.Controllers
             _barbeiroServicoService = barbeiroServicoService;
             _indisponibilidadeService = indisponibilidadeService;
             _agendamentoService = agendamentoService;
+            _servicoService = servicoService;
         }
 
         public async Task<IActionResult> Index()
@@ -378,6 +384,16 @@ namespace BarberShopMVC.Controllers
                     return Unauthorized();
                 }
 
+                // Recuperar o urlSlug dos claims do usuário logado
+                var urlSlug = User.FindFirst("urlSlug")?.Value;
+
+                if (string.IsNullOrEmpty(urlSlug))
+                {
+                    return Unauthorized("UrlSlug não encontrado nos claims.");
+                }
+
+                ViewData["UrlSlug"] = urlSlug;
+
                 int barbeiroId = int.Parse(barbeiroIdClaim);
                 int barbeariaId = int.Parse(barbeariaIdClaim);
 
@@ -411,7 +427,7 @@ namespace BarberShopMVC.Controllers
                         a.FormaPagamento,
                         a.PrecoTotal
                     }),
-                    totalCount
+                    totalCount = totalCount > pageSize ? totalCount : 0
                 });
             }
             catch (Exception ex)
@@ -440,6 +456,16 @@ namespace BarberShopMVC.Controllers
                 int barbeiroId = int.Parse(barbeiroIdClaim);
                 int barbeariaId = int.Parse(barbeariaIdClaim);
 
+                // Recuperar o urlSlug dos claims do usuário logado
+                var urlSlug = User.FindFirst("urlSlug")?.Value;
+
+                if (string.IsNullOrEmpty(urlSlug))
+                {
+                    return Unauthorized("UrlSlug não encontrado nos claims.");
+                }
+
+                ViewData["UrlSlug"] = urlSlug;
+
                 // Obtem todos os agendamentos e aplica ordenação
                 var agendamentos = await _agendamentoService.ObterAgendamentosPorBarbeiroEBarbeariaAsync(barbeiroId, barbeariaId);
                 var totalCount = agendamentos.Count();
@@ -464,6 +490,175 @@ namespace BarberShopMVC.Controllers
                 return StatusCode(500, "Erro ao carregar os agendamentos.");
             }
         }
+
+        [HttpGet]
+        public async Task<IActionResult> DetailsAgendamento(int id)
+        {
+            var agendamento = await _agendamentoService.ObterAgendamentoPorIdAsync(id);
+
+            if (agendamento == null)
+                return NotFound();
+
+            var agendamentoDto = new AgendamentoDto
+            {
+                AgendamentoId = agendamento.AgendamentoId,
+                DataHora = agendamento.DataHora,
+                Status = agendamento.Status,
+                PrecoTotal = (decimal)agendamento.PrecoTotal,
+                StatusPagamento = agendamento.Pagamento?.StatusPagamento.ToString() ?? "Não Especificado",
+                FormaPagamento = agendamento.FormaPagamento,
+                Cliente = new ClienteDTO { Nome = agendamento.Cliente?.Nome }
+            };
+
+            return Json(agendamentoDto);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AtualizarAgendamentoMeuBarbeiro([FromBody] AgendamentoDto dto)
+        {
+            try
+            {
+                // Loga os dados recebidos para validação
+                Console.WriteLine("DTO Recebido: " + System.Text.Json.JsonSerializer.Serialize(dto));
+
+                // Validações básicas
+                if (!dto.AgendamentoId.HasValue || dto.AgendamentoId <= 0)
+                {
+                    return BadRequest(new { success = false, message = "ID do agendamento inválido." });
+                }
+
+                if (!dto.PrecoTotal.HasValue || dto.PrecoTotal <= 0)
+                {
+                    return BadRequest(new { success = false, message = "Preço total inválido." });
+                }
+
+                if (!dto.DataHora.HasValue)
+                {
+                    return BadRequest(new { success = false, message = "Data/hora inválida." });
+                }
+
+                // Lógica de atualização
+                var agendamentoExistente = await _agendamentoService.ObterAgendamentoCompletoPorIdAsync(dto.AgendamentoId.Value);
+                if (agendamentoExistente == null)
+                {
+                    return NotFound(new { success = false, message = "Agendamento não encontrado." });
+                }
+
+                await _agendamentoService.AtualizarAgendamentoAsync(dto.AgendamentoId.Value, dto);
+
+                return Ok(new { success = true, message = "Agendamento atualizado com sucesso." });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Erro ao atualizar agendamento: " + ex.Message);
+                return StatusCode(500, new { success = false, message = "Erro interno ao atualizar o agendamento." });
+            }
+        }
+
+
+        [HttpGet]
+        public async Task<IActionResult> MeusServicos()
+        {
+            // Recupera os claims do barbeiro logado
+            var claimsPrincipal = User;
+            var barbeiroIdClaim = claimsPrincipal.FindFirst("BarbeiroId")?.Value;
+            var barbeariaIdClaim = claimsPrincipal.FindFirst("BarbeariaId")?.Value;
+
+            // Verifica se os claims do barbeiro estão presentes
+            if (string.IsNullOrEmpty(barbeiroIdClaim) || string.IsNullOrEmpty(barbeariaIdClaim))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
+            int barbeiroId = int.Parse(barbeiroIdClaim);
+            int barbeariaId = int.Parse(barbeariaIdClaim);
+
+            // Obtém serviços vinculados e não vinculados
+            var servicosVinculados = await _barbeiroServicoService.ObterServicosPorBarbeiroIdAsync(barbeiroId);
+            var servicosNaoVinculados = await _barbeiroServicoService.ObterServicosNaoVinculadosAsync(barbeiroId);
+
+            // Monta o DTO
+            var model = new MeusServicosDto
+            {
+                BarbeiroId = barbeiroId,
+                BarbeariaId = barbeariaId,
+                ServicosVinculados = servicosVinculados.Select(s => new ServicoDto
+                {
+                    ServicoId = s.ServicoId,
+                    Nome = s.Nome,
+                    Preco = (decimal)s.Preco,
+                    Duracao = s.Duracao
+                }).ToList(), // Converte para lista para melhorar a performance de iteração
+                ServicosNaoVinculados = servicosNaoVinculados.Select(s => new ServicoDto
+                {
+                    ServicoId = s.ServicoId,
+                    Nome = s.Nome,
+                    Preco = (decimal)s.Preco,
+                    Duracao = s.Duracao
+                }).ToList() // Converte para lista
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> VincularServicoMeuBarbeiro([FromBody] int servicoId)
+        {
+            int barbeiroId = ObterBarbeiroIdLogado(); // Obtém o ID do barbeiro logado
+
+            try
+            {
+                // Chama o serviço para vincular o serviço ao barbeiro
+                await _barbeiroServicoService.VincularServicoAsync(barbeiroId, servicoId);
+
+                // Obtém o serviço recém vinculado
+                var servico = await _barbeiroServicoService.ObterServicoPorIdAsync(servicoId);
+
+                // Retorna os dados necessários do serviço
+                return Json(new
+                {
+                    success = true,
+                    message = "Serviço vinculado com sucesso!",
+                    servico = new
+                    {
+                        servico.ServicoId,
+                        servico.Nome,
+                        servico.Preco,
+                        servico.Duracao
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                // Retorna um erro caso algo falhe
+                return Json(new { success = false, message = $"Erro ao vincular serviço: {ex.Message}" });
+            }
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> DesvincularServicoMeuBarbeiro([FromBody] int servicoId)
+        {
+            int barbeiroId = ObterBarbeiroIdLogado();
+
+            try
+            {
+                bool result = await _barbeiroServicoService.DesvincularServicoAsync(barbeiroId, servicoId);
+                if (result)
+                    return Json(new { success = true, message = "Serviço desvinculado com sucesso!" });
+
+                return Json(new { success = false, message = "Serviço não encontrado para desvincular." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Erro ao desvincular serviço: {ex.Message}" });
+            }
+        }
+
+
+        
+
+
 
     }
 }

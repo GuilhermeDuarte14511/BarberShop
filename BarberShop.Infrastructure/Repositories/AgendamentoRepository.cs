@@ -387,6 +387,17 @@ namespace BarberShop.Infrastructure.Repositories
             return await query.ToListAsync();
         }
 
+        public async Task<Agendamento> ObterAgendamentoCompletoPorIdAsync(int id)
+        {
+            return await _context.Agendamentos
+                .AsNoTracking()
+                .Include(a => a.Cliente) // Inclui os dados do cliente
+                .Include(a => a.AgendamentoServicos) // Inclui os serviços do agendamento
+                    .ThenInclude(agendamentoServico => agendamentoServico.Servico) // Inclui os detalhes de cada serviço
+                .Include(a => a.Pagamento) // Inclui os dados do pagamento
+                .Include(a => a.Barbeiro) // Inclui os dados do barbeiro
+                .FirstOrDefaultAsync(a => a.AgendamentoId == id); // Filtra pelo ID específico
+        }
 
     }
 }
