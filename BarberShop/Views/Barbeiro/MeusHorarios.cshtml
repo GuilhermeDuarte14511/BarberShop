@@ -1,0 +1,137 @@
+﻿@model IEnumerable<BarberShop.Domain.Entities.IndisponibilidadeBarbeiro>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Meus Horários";
+
+}
+<div id="meusHorariosPage" class="container mt-5">
+    <h2 class="text-center mb-4">Gerenciar Meus Horários</h2>
+    <button class="btn btnAdicionarHorarioCustom mb-3"
+            id="btnAdicionarHorario"
+            data-bs-toggle="modal"
+            data-bs-target="#adicionarHorarioModal">
+        Adicionar Horário
+    </button>
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info text-center">
+            Bem-vindo! Não há horários cadastrados no momento.
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var horario in Model)
+            {
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="meusHorariosCard shadow-sm h-100">
+                        <div class="meusHorariosCardBody">
+                            <h5 class="meusHorariosCardTitle">Horário</h5>
+                            <p class="meusHorariosCardText"><strong>Início:</strong> @horario.DataInicio.ToString("dd/MM/yyyy HH:mm")</p>
+                            <p class="meusHorariosCardText"><strong>Fim:</strong> @horario.DataFim.ToString("dd/MM/yyyy HH:mm")</p>
+                            <p class="meusHorariosCardText"><strong>Motivo:</strong> @horario.Motivo</p>
+                            <div class="d-flex justify-content-center mt-3">
+                                <button class="btn btnEditarHorario btn-sm me-2"
+                                        data-id="@horario.IndisponibilidadeId"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#editarHorarioModal">
+                                    Editar
+                                </button>
+                                <button class="btn btnExcluirHorario btn-sm"
+                                        data-id="@horario.IndisponibilidadeId"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#excluirHorarioModal">
+                                    Excluir
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<!-- Modal para Adicionar Horário -->
+<div class="modal fade" id="adicionarHorarioModal" tabindex="-1" aria-labelledby="adicionarHorarioLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="formAdicionarHorario">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="adicionarHorarioLabel">Adicionar Horário</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="DataInicioHorario" class="form-label">Data Início</label>
+                        <input type="datetime-local" class="form-control" id="DataInicioHorario" name="DataInicio" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="DataFimHorario" class="form-label">Data Fim</label>
+                        <input type="datetime-local" class="form-control" id="DataFimHorario" name="DataFim" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="MotivoHorario" class="form-label">Motivo</label>
+                        <textarea class="form-control" id="MotivoHorario" name="Motivo" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Editar Horário -->
+<div class="modal fade" id="editarHorarioModal" tabindex="-1" aria-labelledby="editarHorarioLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="formEditarHorario">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editarHorarioLabel">Editar Horário</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editarHorarioId" name="IndisponibilidadeId">
+                    <div class="mb-3">
+                        <label for="DataInicioEditarHorario" class="form-label">Data Início</label>
+                        <input type="datetime-local" class="form-control" id="DataInicioEditarHorario" name="DataInicio" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="DataFimEditarHorario" class="form-label">Data Fim</label>
+                        <input type="datetime-local" class="form-control" id="DataFimEditarHorario" name="DataFim" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="MotivoEditarHorario" class="form-label">Motivo</label>
+                        <textarea class="form-control" id="MotivoEditarHorario" name="Motivo" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Excluir Horário -->
+<div class="modal fade" id="excluirHorarioModal" tabindex="-1" aria-labelledby="excluirHorarioLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="excluirHorarioLabel">Excluir Horário</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Você tem certeza de que deseja excluir este horário?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Não</button>
+                <button type="button" id="btnConfirmarExcluirHorario" class="btn btn-danger">Sim</button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -60,14 +60,149 @@ namespace BarberShopMVC.Controllers
         }
 
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string clienteNome = null,string barbeiroNome = null,int? barbeiroId = null,StatusAgendamento? status = null,StatusPagamento? statusPagamento = null,
+                                               DateTime? dataInicio = null,DateTime? dataFim = null,int page = 1,int pageSize = 10)
         {
             var barbeariaId = HttpContext.Session.GetInt32("BarbeariaId") ?? 0;
 
-            await LogAsync("INFO", nameof(AgendamentoController), "Index accessed", $"Listando agendamentos da barbearia: {barbeariaId}");
-            var agendamentos = await _agendamentoRepository.GetAgendamentosPorBarbeariaAsync(barbeariaId);
-            return View(agendamentos);
+            if (barbeariaId == 0)
+            {
+                return Unauthorized("Barbearia não encontrada.");
+            }
+
+            await LogAsync("INFO", nameof(Index), "Index accessed", $"Listando agendamentos da barbearia: {barbeariaId}");
+
+            // Verifica se existem filtros ativos
+            bool filtrosAtivos = !string.IsNullOrEmpty(clienteNome) ||
+                                 !string.IsNullOrEmpty(barbeiroNome) ||
+                                 barbeiroId.HasValue ||
+                                 status.HasValue ||
+                                 statusPagamento.HasValue ||
+                                 dataInicio.HasValue ||
+                                 dataFim.HasValue;
+
+            // Recupera os agendamentos filtrados ou padrões
+            var agendamentos = filtrosAtivos
+                ? await _agendamentoService.FiltrarAgendamentosAsync(
+                    barbeiroId: barbeiroId,
+                    barbeariaId: barbeariaId,
+                    clienteNome: clienteNome,
+                    dataInicio: dataInicio,
+                    dataFim: dataFim,
+                    formaPagamento: null, // Se necessário, adicionar filtro de forma de pagamento
+                    status: status,
+                    statusPagamento: statusPagamento,
+                    barbeiroNome: barbeiroNome
+                )
+                : await _agendamentoRepository.GetAgendamentosPorBarbeariaAsync(barbeariaId);
+
+            // Total de agendamentos para paginação
+            var totalCount = agendamentos.Count();
+
+            // Paginação
+            var pagedAgendamentos = agendamentos
+                .OrderByDescending(a => a.DataHora)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            // Preencher ViewBag com barbeiros para o filtro
+            var barbeiros = await _barbeiroRepository.GetAllByBarbeariaIdAsync(barbeariaId);
+            ViewBag.Barbeiros = barbeiros;
+
+            // Dados para a View
+            ViewData["CurrentPage"] = page;
+            ViewData["PageSize"] = pageSize;
+            ViewData["TotalPages"] = (int)Math.Ceiling((double)totalCount / pageSize);
+
+            return View(pagedAgendamentos);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> FiltrarAgendamentos(string clienteNome = null,string barbeiroNome = null,int? barbeiroId = null,StatusAgendamento? status = null,StatusPagamento? statusPagamento = null,DateTime? dataInicio = null,DateTime? dataFim = null,
+                                                             string formaPagamento = null, int page = 1,int pageSize = 10)
+        {
+            var barbeariaId = HttpContext.Session.GetInt32("BarbeariaId") ?? 0;
+
+            if (barbeariaId == 0)
+            {
+                return Unauthorized(new { success = false, message = "Barbearia não encontrada." });
+            }
+
+            try
+            {
+                // Busca agendamentos com filtros
+                var agendamentos = await _agendamentoService.FiltrarAgendamentosAsync(
+                    barbeiroId: barbeiroId,
+                    barbeariaId: barbeariaId,
+                    clienteNome: clienteNome,
+                    dataInicio: dataInicio,
+                    dataFim: dataFim,
+                    formaPagamento: formaPagamento, // Passa o parâmetro para o serviço
+                    status: status,
+                    statusPagamento: statusPagamento,
+                    barbeiroNome: barbeiroNome
+                );
+
+                if (!agendamentos.Any())
+                {
+                    return Ok(new
+                    {
+                        success = true,
+                        message = "Nenhum agendamento encontrado com os filtros aplicados.",
+                        totalCount = 0,
+                        page = page,
+                        pageSize = pageSize,
+                        agendamentos = Array.Empty<object>()
+                    });
+                }
+
+                // Total de registros
+                var totalCount = agendamentos.Count();
+
+                // Paginação
+                var pagedAgendamentos = agendamentos
+                    .OrderByDescending(a => a.DataHora)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList();
+
+                // Criação do retorno
+                var response = new
+                {
+                    success = true,
+                    message = "Agendamentos filtrados com sucesso.",
+                    totalCount = totalCount,
+                    page = page,
+                    pageSize = pageSize,
+                    agendamentos = pagedAgendamentos.Select(a => new
+                    {
+                        agendamentoId = a.AgendamentoId,
+                        cliente = new { nome = a.Cliente.Nome },
+                        barbeiro = new { nome = a.Barbeiro?.Nome ?? "Sem barbeiro" },
+                        dataHora = a.DataHora.ToString("o"),
+                        status = a.Status,
+                        pagamento = a.Pagamento != null ? new
+                        {
+                            statusPagamento = a.Pagamento.StatusPagamento,
+                            valorPago = a.Pagamento.ValorPago
+                        } : null,
+                        formaPagamento = a.FormaPagamento,
+                        precoTotal = a.PrecoTotal
+                    })
+                };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                await LogAsync("ERROR", nameof(FiltrarAgendamentos), "Erro ao filtrar agendamentos.", ex.Message);
+                return StatusCode(500, new { success = false, message = "Erro interno ao processar a requisição." });
+            }
+        }
+
+
+
 
 
         public async Task<IActionResult> Details(int id)
@@ -518,6 +653,8 @@ namespace BarberShopMVC.Controllers
                 return Json(new { success = false, message = "Erro ao inserir pagamento." });
             }
         }
+
+
 
 
     }

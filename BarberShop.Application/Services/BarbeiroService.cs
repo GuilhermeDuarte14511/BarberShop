@@ -1,4 +1,5 @@
-﻿using BarberShop.Domain.Entities;
+﻿using BarberShop.Application.DTOs;
+using BarberShop.Domain.Entities;
 using BarberShop.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -12,12 +13,14 @@ namespace BarberShop.Application.Services
         private readonly IBarbeiroRepository _barbeiroRepository;
         private readonly IAgendamentoRepository _agendamentoRepository;
         private readonly IServicoRepository _servicoRepository;
+        private readonly IUsuarioService _usuarioService;
 
-        public BarbeiroService(IBarbeiroRepository barbeiroRepository, IAgendamentoRepository agendamentoRepository, IServicoRepository servicoRepository)
+        public BarbeiroService(IBarbeiroRepository barbeiroRepository, IAgendamentoRepository agendamentoRepository, IServicoRepository servicoRepository, IUsuarioService usuarioService)
         {
             _barbeiroRepository = barbeiroRepository;
             _agendamentoRepository = agendamentoRepository;
-            _servicoRepository = servicoRepository; // Injeção do repositório de serviços
+            _servicoRepository = servicoRepository; 
+            _usuarioService = usuarioService;
         }
 
         public async Task<IEnumerable<Barbeiro>> ObterTodosBarbeirosAsync()
@@ -120,6 +123,39 @@ namespace BarberShop.Application.Services
            
             await _barbeiroRepository.DeleteAsync(id);
             return true;
+        }
+
+        public async Task<bool> AtualizarBarbeiroEUsuarioAsync(AtualizarBarbeiroUsuarioDto dto)
+        {
+            try
+            {
+                // Verificar se o barbeiro existe
+                var barbeiro = await _barbeiroRepository.GetByIdAsync(dto.BarbeiroId);
+                if (barbeiro == null)
+                    throw new KeyNotFoundException("Barbeiro não encontrado.");
+
+                // Verificar se o usuário existe
+                var usuario = await _usuarioService.ObterUsuarioPorIdAsync(dto.UsuarioId);
+                if (usuario == null)
+                    throw new KeyNotFoundException("Usuário não encontrado.");
+
+                barbeiro.Nome = dto.Nome;
+                barbeiro.Email = dto.Email;
+                barbeiro.Telefone = dto.Telefone;
+                await _barbeiroRepository.UpdateAsync(barbeiro);
+
+                usuario.Nome = dto.Nome;
+                usuario.Email = dto.Email;
+                usuario.Telefone = dto.Telefone;
+                await _usuarioService.AtualizarUsuarioAsync(usuario);
+
+                return true;
+            }
+            catch(Exception ex)
+            {
+                throw ex;
+            }
+           
         }
     }
 }

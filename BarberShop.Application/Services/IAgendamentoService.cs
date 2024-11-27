@@ -15,5 +15,15 @@ public interface IAgendamentoService
     Task AtualizarAgendamentoAsync(int id, AgendamentoDto agendamentoAtualizado);
     Task<AgendamentoDto> ObterAgendamentoCompletoPorIdAsync(int id);
 
-    Task<IEnumerable<Agendamento>> FiltrarAgendamentosAsync(int barbeiroId,int barbeariaId,string clienteNome = null,DateTime? dataInicio = null,DateTime? dataFim = null,string formaPagamento = null, StatusAgendamento? status = null, StatusPagamento? statusPagamento = null);
+    Task<IEnumerable<Agendamento>> FiltrarAgendamentosAsync(
+    int? barbeiroId,
+    int barbeariaId,
+    string clienteNome = null,
+    DateTime? dataInicio = null,
+    DateTime? dataFim = null,
+    string formaPagamento = null,
+    StatusAgendamento? status = null,
+    StatusPagamento? statusPagamento = null,
+    string barbeiroNome = null);
+
 }

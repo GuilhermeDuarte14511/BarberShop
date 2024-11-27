@@ -144,7 +144,7 @@ namespace BarberShop.Infrastructure.Repositories
             return disponibilidade;
         }
 
-        public async Task<IEnumerable<DateTime>> GetAvailableSlotsAsync( int barbeariaId,int barbeiroId, DateTime dataVisualizacao, int duracaoTotal, Dictionary<DayOfWeek, (TimeSpan abertura, TimeSpan fechamento)> horarioFuncionamento,HashSet<DateTime> feriados,
+        public async Task<IEnumerable<DateTime>> GetAvailableSlotsAsync(int barbeariaId, int barbeiroId, DateTime dataVisualizacao, int duracaoTotal, Dictionary<DayOfWeek, (TimeSpan abertura, TimeSpan fechamento)> horarioFuncionamento, HashSet<DateTime> feriados,
         List<(DateTime DataInicio, DateTime DataFim)> indisponibilidades)
         {
             var horariosDisponiveis = new List<DateTime>();
@@ -345,18 +345,28 @@ namespace BarberShop.Infrastructure.Repositories
 
         }
 
-        public async Task<IEnumerable<Agendamento>> FiltrarAgendamentosAsync(int barbeiroId,int barbeariaId,string clienteNome = null,DateTime? dataInicio = null,DateTime? dataFim = null,string formaPagamento = null,StatusAgendamento? status = null,
-                                                                             StatusPagamento? statusPagamento = null)
+        public async Task<IEnumerable<Agendamento>> FiltrarAgendamentosAsync(int? barbeiroId, int barbeariaId, string clienteNome, DateTime? dataInicio, DateTime? dataFim, string formaPagamento, StatusAgendamento? status, StatusPagamento? statusPagamento, string barbeiroNome)
         {
             var query = _context.Agendamentos
                 .Include(a => a.Cliente)
+                .Include(a => a.Barbeiro)
                 .Include(a => a.Pagamento)
-                .Where(a => a.BarbeiroId == barbeiroId && a.BarbeariaId == barbeariaId)
+                .Where(a => a.BarbeariaId == barbeariaId)
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(clienteNome))
             {
                 query = query.Where(a => a.Cliente.Nome.Contains(clienteNome));
+            }
+
+            if (barbeiroId.HasValue)
+            {
+                query = query.Where(a => a.BarbeiroId == barbeiroId.Value);
+            }
+
+            if (!string.IsNullOrEmpty(barbeiroNome))
+            {
+                query = query.Where(a => a.Barbeiro.Nome.Contains(barbeiroNome));
             }
 
             if (dataInicio.HasValue)
@@ -381,11 +391,12 @@ namespace BarberShop.Infrastructure.Repositories
 
             if (statusPagamento.HasValue)
             {
-                query = query.Where(a => a.Pagamento != null && a.Pagamento.StatusPagamento == statusPagamento.Value);
+                query = query.Where(a => a.Pagamento.StatusPagamento == statusPagamento.Value);
             }
 
             return await query.ToListAsync();
         }
+
 
         public async Task<Agendamento> ObterAgendamentoCompletoPorIdAsync(int id)
         {

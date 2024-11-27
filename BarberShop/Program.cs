@@ -6,6 +6,7 @@ using BarberShop.Domain.Entities;
 using BarberShop.Domain.Interfaces;
 using BarberShop.Infrastructure.Data;
 using BarberShop.Infrastructure.Repositories;
+using BarberShop.Middlewares; // Adicione o namespace para acessar o middleware
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Quartz;
@@ -50,11 +51,10 @@ builder.Services.AddScoped<IEmailService, EmailService>(provider =>
 {
     var logService = provider.GetRequiredService<ILogService>();
     var configuration = provider.GetRequiredService<IConfiguration>(); // Obtém o IConfiguration
-        var sendGridApiKey = configuration["SendGridApiKey"]; // Obtém a chave da configuração
+    var sendGridApiKey = configuration["SendGridApiKey"]; // Obtém a chave da configuração
 
     return new EmailService(sendGridApiKey, logService, configuration);
 });
-
 
 // Obter a PublishableKey do Stripe e definir para a ViewData na aplicação
 builder.Services.AddSingleton(provider =>
@@ -98,7 +98,6 @@ builder.Services.AddScoped<IBarbeiroServicoService, BarbeiroServicoService>();
 builder.Services.AddScoped<IRedefinirSenhaService, RedefinirSenhaService>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IPagamentoService, PagamentoService>();
-
 
 // Configurar autenticação com cookies (apenas uma vez)
 builder.Services.AddAuthentication(options =>
@@ -172,9 +171,10 @@ app.UseSwaggerUI(c =>
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
-app.UseSession();
-app.UseAuthentication();
-app.UseAuthorization();
+app.UseSession(); // Sessão deve vir antes
+app.UseAuthentication(); // Verifica e autentica o usuário
+app.UseMiddleware<AuthenticationMiddleware>(); // Middleware customizado deve ser depois do UseAuthentication
+app.UseAuthorization(); // Garante que o usuário autenticado tenha permissão
 
 app.UseStatusCodePagesWithReExecute("/Erro/BarbeariaNaoEncontrada");
 

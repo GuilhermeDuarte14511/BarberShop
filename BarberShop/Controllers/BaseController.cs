@@ -39,5 +39,9 @@ public class BaseController : Controller
         return int.Parse(barbeiroIdClaim ?? "0");
     }
 
+    public Dictionary<string, string> ObterTodosClaims()
+    {
+        return User.Claims.ToDictionary(c => c.Type, c => c.Value);
+    }
 
 }

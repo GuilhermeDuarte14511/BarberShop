@@ -1937,7 +1937,7 @@ h2, h3 {
     }
 
 
-    /*pagina dos barbeirosd*/
+/*pagina dos barbeirosd*/
 
 
 
@@ -2093,6 +2093,136 @@ h2, h3 {
     margin-top: 20px; /* Espaçamento superior da tabela */
 }
 
+/* Overlay para o spinner */
+.spinner-overlay-meusdadosbarbeiro {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7); /* Fundo semitransparente */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1050; /* Certifique-se de que está acima de outros elementos */
+}
+
+/* Conteúdo do spinner */
+.spinner-content-meusdadosbarbeiro {
+    text-align: center;
+    color: #fff;
+}
+
+
+/* Estilos para Meus Horários */
+
+/* Cards */
+.meusHorariosCard {
+    background: linear-gradient(to bottom, #1c1c1c, #333); /* Fundo escuro */
+    border-radius: 10px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.6);
+    padding: 20px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+    .meusHorariosCard:hover {
+        transform: scale(1.05);
+        box-shadow: 0px 6px 12px rgba(255, 0, 0, 0.6); /* Sombra com tom vermelho */
+    }
+
+.meusHorariosCardBody {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+}
+
+.meusHorariosCardTitle {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 1.25rem;
+    color: #ff4d4d; /* Vermelho */
+}
+
+.meusHorariosCardText {
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #444;
+    font-size: 0.95rem;
+    color: #ffffff; /* Texto branco */
+}
+
+/* Botão Adicionar */
+.btnAdicionarHorarioCustom {
+    background-color: #ff4d4d; /* Fundo vermelho */
+    color: #fff; /* Texto branco */
+    border: none;
+}
+
+    .btnAdicionarHorarioCustom:hover {
+        background-color: #cc0000; /* Vermelho escuro no hover */
+    }
+
+/* Botões de Editar e Excluir */
+.btnEditarHorario {
+    background-color: #ffcc00; /* Amarelo */
+    color: #000;
+    border: none;
+}
+
+    .btnEditarHorario:hover {
+        background-color: #e6b800; /* Amarelo escuro */
+    }
+
+.btnExcluirHorario {
+    background-color: #ff4d4d; /* Vermelho */
+    color: #fff;
+    border: none;
+}
+
+    .btnExcluirHorario:hover {
+        background-color: #cc0000; /* Vermelho escuro */
+    }
+
+/* Modais */
+.modal-content {
+    background-color: #1c1c1c; /* Fundo escuro */
+    color: #fff; /* Texto branco */
+    border-radius: 10px;
+}
+
+.modal-header {
+    border-bottom: 1px solid #444; /* Linha cinza escura */
+}
+
+.modal-footer {
+    border-top: 1px solid #444; /* Linha cinza escura */
+}
+
+    /* Botões nos Modais */
+    .modal-footer .btn-primary {
+        background-color: #ff4d4d; /* Botão vermelho */
+        border: none;
+    }
+
+        .modal-footer .btn-primary:hover {
+            background-color: #cc0000; /* Vermelho escuro */
+        }
+
+    .modal-footer .btn-secondary {
+        background-color: #444; /* Botão cinza escuro */
+        border: none;
+    }
+
+        .modal-footer .btn-secondary:hover {
+            background-color: #555; /* Cinza mais claro */
+        }
+
+#limparFiltroBtn, #filtrarBtn {
+    padding: 10px 20px !important;
+    margin-top: 5px !important;
+    display: inline-block !important;
+}
 
 
 

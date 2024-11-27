@@ -1,0 +1,76 @@
+﻿@model BarberShop.Domain.Entities.Barbeiro
+
+@{
+    ViewData["Title"] = "Meus Dados";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div id="meusdadosBarbeiroPage" class="container my-5 p-4 barbearia-dados-container">
+    <!-- Foto do Barbeiro e Upload -->
+    <div class="text-center mb-4">
+        <div class="position-relative d-inline-block">
+            <img src="@(ViewData["FotoBarbeiro"] ?? "~/images/default-profile.png")"
+                 alt="Foto do Barbeiro" class="barbearia-logo-img rounded-circle" />
+
+            <form id="uploadFotoForm" enctype="multipart/form-data" class="upload-logo-form">
+                <label for="file-upload" class="upload-icon">
+                    <i class="fas fa-camera"></i>
+                </label>
+                <input type="file" id="file-upload" name="Foto" class="d-none" />
+            </form>
+
+            <!-- Barra de progresso horizontal -->
+            <div id="uploadProgress" class="progress-container-horizontal d-none mt-3">
+                <div class="progress-bar-horizontal bg-success" role="progressbar" style="width: 0%;"></div>
+            </div>
+        </div>
+        <h2 class="mt-3">@Model.Nome</h2>
+    </div>
+
+    <!-- Formulário de Edição -->
+    <form id="salvarDadosForm">
+        <div class="row mt-4">
+            <div class="col-md-6 mb-3">
+                <div class="info-card p-3 rounded">
+                    <h5 class="text-danger">Dados Pessoais</h5>
+                    <input type="text"
+                           class="form-control"
+                           id="nome"
+                           name="Nome"
+                           value="@Model.Nome"
+                           required
+                           placeholder="Nome Completo" />
+                    <input type="email"
+                           class="form-control mt-2"
+                           id="email"
+                           name="Email"
+                           value="@Model.Email"
+                           required
+                           placeholder="Email" />
+                    <input type="text"
+                           class="form-control mt-2"
+                           id="telefone"
+                           name="Telefone"
+                           value="@Model.Telefone"
+                           required
+                           placeholder="Telefone" />
+                </div>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary mt-4">Salvar Alterações</button>
+    </form>
+</div>
+
+<!-- Spinner de carregamento -->
+<div id="loadingSpinnerMeusDadosBarbeiro" class="spinner-overlay-meusdadosbarbeiro" style="display: none;">
+    <div class="spinner-content-meusdadosbarbeiro">
+        <div class="spinner-border text-danger" role="status">
+            <span class="sr-only">Carregando...</span>
+        </div>
+        <p class="mt-2 text-light">Salvando dados...</p>
+    </div>
+</div>
+
+
+<!-- Toast Container -->
+<div id="toastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>

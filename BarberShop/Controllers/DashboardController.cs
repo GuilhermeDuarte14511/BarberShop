@@ -98,6 +98,7 @@ namespace BarberShopMVC.Controllers
             }
         }
 
+
         [HttpGet]
         public async Task<IActionResult> GetCustomReportData(string reportType, int periodDays)
         {

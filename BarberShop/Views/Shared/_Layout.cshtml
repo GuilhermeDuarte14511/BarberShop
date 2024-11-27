@@ -34,10 +34,11 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body>
-    <header class="header">
-        @if (User.Identity.IsAuthenticated && User.IsInRole("Cliente"))
-        {
-            var barbeariaUrl = ViewData["BarbeariaUrl"] as string ?? "";
+    @if (User.Identity.IsAuthenticated && User.IsInRole("Cliente") && !Context.Request.Path.Value.Contains("/admin"))
+    {
+        var barbeariaUrl = ViewData["BarbeariaUrl"] as string ?? "";
+        <header class="header">
+
             <h1 class="h4 text-white">BarberShop</h1>
             <div class="dropdown profile-menu">
                 <!-- Ícone de perfil -->
@@ -84,8 +85,8 @@
                     </li>
                 </ul>
             </div>
-        }
-    </header>
+        </header>
+    }
 
 
 

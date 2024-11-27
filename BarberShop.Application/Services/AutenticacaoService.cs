@@ -1,4 +1,5 @@
 ﻿using BarberShop.Domain.Entities;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -22,11 +23,10 @@ namespace BarberShop.Application.Services
                 new Claim(ClaimTypes.Email, cliente.Email ?? cliente.Telefone),
                 new Claim("Telefone", cliente.Telefone ?? string.Empty),
                 new Claim(ClaimTypes.Role, cliente.Role)
-
             };
 
             // Configurando a identidade e principal
-            var claimsIdentity = new ClaimsIdentity(claims, "Cookies");
+            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             return new ClaimsPrincipal(claimsIdentity);
         }
 

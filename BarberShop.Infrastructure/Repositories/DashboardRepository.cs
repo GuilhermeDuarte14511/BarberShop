@@ -163,12 +163,19 @@ namespace BarberShop.Infrastructure.Repositories
             return lucroDaSemana;
         }
 
-        public async Task<decimal[]> GetLucroDoMesAsync(int barbeariaId, int? barbeiroId = null)
+        public async Task<Dictionary<string, decimal>> GetLucroDoMesAsync(int barbeariaId, int? barbeiroId = null)
         {
+            // Obtém a data atual do sistema
+            var dataAtual = DateTime.Now;
+
+            // Define o primeiro e o último dia do mês atual
+            var primeiroDiaDoMes = new DateTime(dataAtual.Year, dataAtual.Month, 1);
+            var ultimoDiaDoMes = primeiroDiaDoMes.AddMonths(1).AddDays(-1).Date.AddHours(23).AddMinutes(59).AddSeconds(59);
+
             // Consulta base para buscar agendamentos concluídos no mês atual
             var query = _context.Agendamentos
-                .Where(a => a.DataHora.Month == DateTime.Now.Month
-                            && a.DataHora.Year == DateTime.Now.Year
+                .Where(a => a.DataHora >= primeiroDiaDoMes
+                            && a.DataHora <= ultimoDiaDoMes
                             && a.Status == StatusAgendamento.Concluido
                             && a.PrecoTotal.HasValue
                             && a.BarbeariaId == barbeariaId);
@@ -179,24 +186,37 @@ namespace BarberShop.Infrastructure.Repositories
                 query = query.Where(a => a.BarbeiroId == barbeiroId.Value);
             }
 
-            // Carrega os dados necessários para a memória
             var agendamentos = await query
                 .Select(a => new { a.DataHora, a.PrecoTotal })
                 .ToListAsync();
 
-            // Agrupa os lucros por semana do mês no lado do cliente
-            var lucroDoMes = agendamentos
-                .GroupBy(a => CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(
-                    a.DataHora,
-                    CalendarWeekRule.FirstDay,
-                    DayOfWeek.Monday))
-                .OrderBy(g => g.Key) // Ordena pelas semanas
-                .Select(g => g.Sum(a => a.PrecoTotal.Value)) // Soma o lucro por semana
-                .ToArray();
+            // Calcula o número total de semanas no mês atual
+            int totalSemanas = (int)Math.Ceiling((double)ultimoDiaDoMes.Day / 7);
 
-            // Retorna o resultado
-            return lucroDoMes;
+            // Agrupa os lucros por semanas dentro do mês atual
+            var lucroPorSemana = agendamentos
+                .GroupBy(a =>
+                {
+                    // Calcula a semana do mês em que a DataHora do agendamento se encontra
+                    var diferencaDias = (a.DataHora - primeiroDiaDoMes).Days;
+                    return (diferencaDias / 7) + 1; // Calcula a semana do mês atual (1, 2, 3, 4, 5...)
+                })
+                .ToDictionary(
+                    g => g.Key, // Chave representando a semana
+                    g => g.Sum(a => a.PrecoTotal.Value) // Soma o lucro por semana
+                );
+
+            // Preenche as semanas que não possuem agendamentos com lucro 0
+            var resultadoCompleto = new Dictionary<string, decimal>();
+            for (int i = 1; i <= totalSemanas; i++)
+            {
+                resultadoCompleto[$"Semana {i}"] = lucroPorSemana.ContainsKey(i) ? lucroPorSemana[i] : 0m;
+            }
+
+            return resultadoCompleto;
         }
+
+
 
 
         public async Task<Dictionary<string, decimal>> GetCustomReportDataAsync(int barbeariaId, string reportType, int periodDays, int? barbeiroId = null)

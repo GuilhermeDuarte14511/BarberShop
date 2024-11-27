@@ -1,14 +1,84 @@
-﻿@model IEnumerable<BarberShop.Domain.Entities.Agendamento>
+﻿@using BarberShop.Domain.Entities
+@model IEnumerable<BarberShop.Domain.Entities.Agendamento>
 
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var currentPage = (int)ViewData["CurrentPage"];
+    var totalPages = (int)ViewData["TotalPages"];
+    var pageSize = (int)ViewData["PageSize"];
+    ViewData["Title"] = "Gerenciar Agendamentos - Admin";
 }
 
 <div id="agendamentoPage" class="container-fluid">
-    <h2 class="text-center">Gerenciar Agendamentos</h2>
+    <h2 class="text-center mb-4">Gerenciar Agendamentos</h2>
+
+    <form id="filtroAgendamentosForm">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label for="clienteNome" class="form-label">Buscar por Cliente</label>
+                <input type="text" name="clienteNome" id="clienteNomeInput" class="form-control" placeholder="Ex.: João">
+            </div>
+            <div class="col-md-3">
+                <label for="barbeiroId" class="form-label">Barbeiro</label>
+                <select name="barbeiroId" id="barbeiroIdSelect" class="form-select">
+                    <option value="">Todos os barbeiros</option>
+                    @foreach (var barbeiro in ViewBag.Barbeiros)
+                    {
+                        <option value="@barbeiro.BarbeiroId">@barbeiro.Nome</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="dataInicio" class="form-label">Data Inicial</label>
+                <input type="date" name="dataInicio" id="dataInicioInput" class="form-control">
+            </div>
+            <div class="col-md-3">
+                <label for="dataFim" class="form-label">Data Final</label>
+                <input type="date" name="dataFim" id="dataFimInput" class="form-control">
+            </div>
+            <div class="col-md-3">
+                <label for="status" class="form-label">Status do Agendamento</label>
+                <select name="status" id="statusAgendamentoSelect" class="form-select">
+                    <option value="">Todos os status</option>
+                    <option value="0">Pendente</option>
+                    <option value="1">Confirmado</option>
+                    <option value="2">Cancelado</option>
+                    <option value="3">Concluído</option>
+                </select>
+            </div>           
+            <div class="col-md-3">
+                <label for="formaPagamento" class="form-label">Forma de Pagamento</label>
+                <select name="formaPagamento" id="formaPagamentoSelect" class="form-select">
+                    <option value="">Todas as formas</option>
+                    <option value="creditCard">Cartão de Crédito</option>
+                    <option value="store">Loja</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="statusPagamento" class="form-label">Status do Pagamento</label>
+                <select name="statusPagamento" id="statusPagamentoSelect" class="form-select">
+                    <option value="">Todos os status</option>
+                    <option value="-1">Não Especificado</option>
+                    <option value="0">Pendente</option>
+                    <option value="1">Aprovado</option>
+                    <option value="2">Recusado</option>
+                    <option value="3">Cancelado</option>
+                    <option value="4">Reembolsado</option>
+                    <option value="5">Em Processamento</option>
+                </select>
+            </div>
+            <!-- Botões ao lado esquerdo -->
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="button" id="limparFiltroBtn" class="btn btn-secondary me-2 px-4">Limpar</button>
+                <button type="submit" id="filtrarBtn" class="btn btn-primary px-4">Filtrar</button>
+            </div>
+        </div>
+    </form>
+
+
 
     <!-- Tabela exibida em telas maiores -->
-    <div class="table-responsive d-none d-md-block">
+    <div class="table-responsive d-none d-md-block mt-4">
         <table class="table table-dark table-striped" id="tabelaAgendamentos">
             <thead>
                 <tr>
@@ -17,6 +87,7 @@
                     <th>Data/Hora</th>
                     <th>Status Agendamento</th>
                     <th>Status Pagamento</th>
+                    <th>Forma de Pagamento</th>
                     <th>Valor Total</th>
                     <th>Ações</th>
                 </tr>
@@ -27,16 +98,21 @@
                     var dataHoraAjustada = TimeZoneInfo.ConvertTimeFromUtc(agendamento.DataHora.ToUniversalTime(),
                     TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time"));
 
-                    <tr data-id="@agendamento.AgendamentoId">
+                    <tr>
                         <td>@agendamento.Cliente.Nome</td>
                         <td>@agendamento.Barbeiro.Nome</td>
                         <td>@dataHoraAjustada.ToString("dd/MM/yyyy HH:mm")</td>
-                        <td>@agendamento.Status</td>
-                        <td>@(agendamento.Pagamento != null ? agendamento.Pagamento.StatusPagamento.ToString() : "Sem pagamento")</td>
+                        <td>@(Enum.GetName(typeof(StatusAgendamento), agendamento.Status))</td>
+                        <td>@(agendamento.Pagamento != null ? Enum.GetName(typeof(StatusPagamento), agendamento.Pagamento.StatusPagamento) : "Sem pagamento")</td>
+                        <td>@(agendamento.FormaPagamento == "creditCard" ? "Cartão de Crédito" : "Loja")</td>
                         <td>@agendamento.PrecoTotal?.ToString("C")</td>
                         <td>
-                            <button class="btn btn-warning btn-sm btnEditar" data-id="@agendamento.AgendamentoId" data-bs-toggle="modal" data-bs-target="#editarAgendamentoModal">Editar</button>
-                            <button class="btn btn-danger btn-sm btnExcluir" data-id="@agendamento.AgendamentoId" data-bs-toggle="modal" data-bs-target="#excluirAgendamentoModal">Excluir</button>
+                            <button class="btn btn-warning btn-sm btnEditar"
+                                    data-id="@agendamento.AgendamentoId"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#editarAgendamentoModal">
+                                Editar
+                            </button>
                         </td>
                     </tr>
                 }
@@ -44,29 +120,34 @@
         </table>
     </div>
 
-
-    <!-- Exibição em cards para telas menores -->
-    <div class="d-md-none">
+    <!-- Lista de agendamentos exibida em telas menores -->
+    <div class="agendamentos-list d-md-none mt-4">
         @foreach (var agendamento in Model)
         {
             var dataHoraAjustada = TimeZoneInfo.ConvertTimeFromUtc(agendamento.DataHora.ToUniversalTime(),
             TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time"));
 
-            <div class="servico-card mb-3">
-                <h5 class="card-title">Cliente: @agendamento.Cliente.Nome</h5>
-                <p class="card-text"><strong>Barbeiro:</strong> @agendamento.Barbeiro.Nome</p>
-                <p class="card-text"><strong>Data/Hora:</strong> @dataHoraAjustada.ToString("dd/MM/yyyy HH:mm")</p>
-                <p class="card-text"><strong>Status Agendamento:</strong> @agendamento.Status</p>
-                <p class="card-text"><strong>Status Pagamento:</strong> @(agendamento.Pagamento != null ? agendamento.Pagamento.StatusPagamento.ToString() : "Sem pagamento")</p>
-                <p class="card-text"><strong>Valor Total:</strong> @agendamento.PrecoTotal?.ToString("C")</p>
-                <div class="actions d-flex justify-content-between">
-                    <button class="btn btn-warning btn-sm btnEditar" data-id="@agendamento.AgendamentoId" data-bs-toggle="modal" data-bs-target="#editarAgendamentoModal">Editar</button>
-                    <button class="btn btn-danger btn-sm btnExcluir" data-id="@agendamento.AgendamentoId" data-bs-toggle="modal" data-bs-target="#excluirAgendamentoModal">Excluir</button>
+            <div class="agendamento-card" data-id="@agendamento.AgendamentoId">
+                <div class="agendamento-card-body">
+                    <p><strong>Cliente:</strong> @agendamento.Cliente.Nome</p>
+                    <p><strong>Barbeiro:</strong> @agendamento.Barbeiro.Nome</p>
+                    <p><strong>Data/Hora:</strong> @dataHoraAjustada.ToString("dd/MM/yyyy HH:mm")</p>
+                    <p><strong>Status Agendamento:</strong> @(Enum.GetName(typeof(StatusAgendamento), agendamento.Status))</p>
+                    <p><strong>Status Pagamento:</strong> @(agendamento.Pagamento != null ? Enum.GetName(typeof(StatusPagamento), agendamento.Pagamento.StatusPagamento) : "Sem pagamento")</p>
+                    <p><strong>Forma de Pagamento:</strong> @(agendamento.FormaPagamento == "creditCard" ? "Cartão de Crédito" : "Loja")</p>
+                    <p><strong>Valor Total:</strong> @agendamento.PrecoTotal?.ToString("C")</p>
+                    <div class="d-flex justify-content-end">
+                        <button class="btn btn-warning btn-sm btnEditar"
+                                data-id="@agendamento.AgendamentoId"
+                                data-bs-toggle="modal"
+                                data-bs-target="#editarAgendamentoModal">
+                            Editar
+                        </button>
+                    </div>
                 </div>
             </div>
         }
     </div>
-
 
     <!-- Modal para Edição do Agendamento -->
     <div class="modal fade" id="editarAgendamentoModal" tabindex="-1" aria-labelledby="editarAgendamentoModalLabel" aria-hidden="true">
@@ -126,23 +207,29 @@
         </div>
     </div>
 
-
-    <!-- Modal para Exclusão do Agendamento -->
-    <div class="modal fade" id="excluirAgendamentoModal" tabindex="-1" aria-labelledby="excluirAgendamentoModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="excluirAgendamentoModalLabel">Excluir Agendamento</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Tem certeza de que deseja excluir este agendamento?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Não</button>
-                    <button type="button" id="btnConfirmarExcluir" class="btn btn-danger">Sim</button>
-                </div>
-            </div>
-        </div>
+    <!-- Controles de Paginação -->
+    <div class="mt-4 d-flex justify-content-center">
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                @if (currentPage > 1)
+                {
+                    <li class="page-item">
+                        <a class="page-link" href="@Url.Action("GerenciarAgendamentos", new { page = currentPage - 1, pageSize })">Anterior</a>
+                    </li>
+                }
+                @for (int i = 1; i <= totalPages; i++)
+                {
+                    <li class="page-item @(i == currentPage ? "active" : "")">
+                        <a class="page-link" href="@Url.Action("GerenciarAgendamentos", new { page = i, pageSize })">@i</a>
+                    </li>
+                }
+                @if (currentPage < totalPages)
+                {
+                    <li class="page-item">
+                        <a class="page-link" href="@Url.Action("GerenciarAgendamentos", new { page = currentPage + 1, pageSize })">Próxima</a>
+                    </li>
+                }
+            </ul>
+        </nav>
     </div>
 </div>

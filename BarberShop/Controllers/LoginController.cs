@@ -260,7 +260,15 @@ namespace BarberShopMVC.Controllers
                     if (_autenticacaoService.VerifyPassword(passwordInputLogin, cliente.Senha))
                     {
                         var claimsPrincipal = _autenticacaoService.AutenticarCliente(cliente);
-                        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal);
+                        if (claimsPrincipal != null)
+                        {
+                            var authProperties = new AuthenticationProperties
+                            {
+                                IsPersistent = true,
+                                ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8)
+                            };
+                            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal, authProperties);
+                        }
 
                         HttpContext.Session.SetString("BarbeariaUrl", barbeariaUrl);
                         ViewData["BarbeariaUrl"] = barbeariaUrl;
@@ -494,33 +502,41 @@ namespace BarberShopMVC.Controllers
         {
             try
             {
-                // Faz o logout do administrador
-                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-
-                // Log do evento de logout administrativo
-                await LogAsync("Info", "LogoutAdmin", "Administrador deslogado com sucesso.", null);
-
-                // Recupera a URL da barbearia armazenada na sessão
-                var barbeariaUrl = HttpContext.Session.GetString("BarbeariaUrl");
-
-                // Verifica se existe a URL e redireciona para o formato simplificado
-                if (!string.IsNullOrEmpty(barbeariaUrl))
+                // Verifica se o usuário é Admin ou Barbeiro
+                if (User.IsInRole("Admin") || User.IsInRole("Barbeiro"))
                 {
-                    return Redirect($"/{barbeariaUrl}/admin");
+                    // Faz o logout do administrador/barbeiro
+                    await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+                    // Log do evento de logout administrativo
+                    await LogAsync("Info", "LogoutAdmin", "Administrador/Barbeiro deslogado com sucesso.", null);
+
+                    // Recupera a URL da barbearia armazenada na sessão
+                    var barbeariaUrl = HttpContext.Session.GetString("BarbeariaUrl");
+
+                    // Verifica se existe a URL e redireciona para o formato simplificado
+                    if (!string.IsNullOrEmpty(barbeariaUrl))
+                    {
+                        return Redirect($"/{barbeariaUrl}/admin");
+                    }
+
+                    // Caso não exista a URL, redireciona para uma página padrão
+                    return RedirectToAction("Index", "Home");
                 }
 
-                // Caso não exista a URL, redireciona para uma página padrão
-                return RedirectToAction("Index", "Home");
+                // Caso o usuário não tenha permissão, redireciona para a página de erro ou de login
+                return RedirectToAction("Login", "Login");
             }
             catch (Exception ex)
             {
                 // Log de erro
-                await LogAsync("Error", "LogoutAdmin", $"Erro ao deslogar administrador: {ex.Message}", null);
+                await LogAsync("Error", "LogoutAdmin", $"Erro ao deslogar administrador/barbeiro: {ex.Message}", null);
 
                 // Redireciona para página de erro
                 return RedirectToAction("Error", "Erro");
             }
         }
+
 
 
         [HttpPost]

@@ -220,6 +220,16 @@ namespace BarberShop.Application.Controllers
             }
         }
 
+        [HttpGet]
+        public IActionResult ObterClaims()
+        {
+            var claims = ObterTodosClaims();
+            return Json(new
+            {
+                UsuarioId = claims["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"],
+                BarbeiroId = claims["BarbeiroId"]
+            });
+        }
 
     }
 }

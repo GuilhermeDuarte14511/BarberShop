@@ -864,8 +864,7 @@
                 }
             });
 
-            console.log("Maior altura do card:", maxHeight);
-            console.log("Maior altura da lista de serviços:", maxServicesHeight);
+       
 
             // Aplica a altura máxima para todos os cards e ajusta a posição do botão
             cards.forEach((card) => {
@@ -918,7 +917,6 @@
                     duracaoTotal: selectedDuracaoTotal
                 },
                 success: function (data) {
-                    console.log("Horários recebidos do backend:", data); // Log dos horários recebidos do backend
 
                     horariosPorDia = {}; // Limpa o objeto antes de preencher
 
@@ -929,7 +927,6 @@
                         const horarioFim = dataHora.add(selectedDuracaoTotal, 'minute').format('HH:mm');
 
                         // Log para verificar cada horário processado com ajuste adicional
-                        console.log(`Processando horário ajustado: ${dataHora} (Início: ${horarioInicio} - Fim: ${horarioFim})`);
 
                         if (!horariosPorDia[dia]) {
                             horariosPorDia[dia] = []; // Cria o array de horários para o dia
@@ -938,7 +935,6 @@
                     });
 
                     // Log para verificar como ficou o objeto final
-                    console.log("Horários organizados por dia após ajuste:", horariosPorDia);
 
                     configurarCalendario(Object.keys(horariosPorDia));
                 },
@@ -1482,12 +1478,10 @@
 
         $('#btnAdicionarServicoEditar').on('click', function (e) {
             e.preventDefault(); // Impede o envio do formulário
-            console.log('Abrindo modal de adicionar serviço...');
             var barbeiroId = $(this).data('barbeiro-id');
             $('#servicosDisponiveisContainer').empty();
 
             $.get(`/Barbeiro/ObterServicosNaoVinculados`, { barbeiroId: barbeiroId }, function (data) {
-                console.log('Serviços recebidos:', data);
                 if (data && data.length > 0) {
                     data.forEach(function (servico) {
                         $('#servicosDisponiveisContainer').append(`
@@ -1580,7 +1574,6 @@
         // Submissão do formulário de edição via AJAX
         $('#formEditarBarbeiro').on('submit', function (e) {
             e.preventDefault();
-            console.log('Formulário de edição submetido');
             var formData = new FormData(this);
             var barbeiroId = $('#editarBarbeiroId').val();
             $('#loadingSpinner').show();
@@ -1592,7 +1585,6 @@
                 processData: false,
                 contentType: false,
                 success: function (response) {
-                    console.log('Edição bem-sucedida:', response);
                     $('#loadingSpinner').hide();
                     $('#editarModal').modal('hide');
                     showToast(response.message, response.success ? "success" : "danger");
@@ -1995,12 +1987,11 @@
             exportChartToExcel(chartId);
         });
 
-        // Função para obter a configuração do gráfico pelo ID
         function getChartConfigById(id) {
             const data = window.dashboardData;
             const chartConfigs = {
                 lucroSemanaChart: createChartConfig('line', data.lucroDaSemana, 'Lucro da Semana', ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']),
-                lucroMesChart: createChartConfig('line', data.lucroDoMes, 'Lucro do Mês', ['Semana 1', 'Semana 2']),
+                lucroMesChart: createChartConfig('line', Object.values(data.lucroDoMes), 'Lucro do Mês', Object.keys(data.lucroDoMes)), // Ajuste para lidar com o dicionário
                 agendamentosSemanaChart: createChartConfig('bar', data.agendamentosPorSemana, 'Agendamentos', ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']),
                 servicosMaisSolicitadosChart: createChartConfig('pie', Object.values(data.servicosMaisSolicitados), 'Serviços Mais Solicitados', Object.keys(data.servicosMaisSolicitados)),
                 lucroPorBarbeiroChart: createChartConfig('bar', Object.values(data.lucroPorBarbeiro), 'Lucro por Barbeiro', Object.keys(data.lucroPorBarbeiro)),
@@ -2131,12 +2122,11 @@
             return Array.from({ length: count }, (_, i) => colors[i % colors.length]);
         }
 
-        // Função para inicializar todos os gráficos no dashboard
         function initializeDashboardCharts(data) {
             window.dashboardData = data; // Armazena os dados globalmente para uso em restoreInitialPositions
             const chartConfigs = [
                 { id: 'lucroSemanaChart', data: data.lucroDaSemana, type: 'line', title: 'Lucro da Semana', labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'] },
-                { id: 'lucroMesChart', data: data.lucroDoMes, type: 'line', title: 'Lucro do Mês', labels: ['Semana 1', 'Semana 2'] },
+                { id: 'lucroMesChart', data: Object.values(data.lucroDoMes), type: 'line', title: 'Lucro do Mês', labels: Object.keys(data.lucroDoMes) }, // Ajuste necessário
                 { id: 'agendamentosSemanaChart', data: data.agendamentosPorSemana, type: 'bar', title: 'Agendamentos', labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'] },
                 { id: 'servicosMaisSolicitadosChart', data: Object.values(data.servicosMaisSolicitados), type: 'pie', title: 'Serviços Mais Solicitados', labels: Object.keys(data.servicosMaisSolicitados) },
                 { id: 'lucroPorBarbeiroChart', data: Object.values(data.lucroPorBarbeiro), type: 'bar', title: 'Lucro por Barbeiro', labels: Object.keys(data.lucroPorBarbeiro) },
@@ -2634,160 +2624,432 @@
     var agendamentosPage = document.getElementById('agendamentoPage');
 
     if (agendamentosPage) {
+        var formFiltro = document.getElementById('filtroAgendamentosForm');
+        var btnLimparFiltro = document.getElementById('limparFiltroBtn');
+        var modalEditarElement = document.getElementById('editarAgendamentoModal');
+        var modalEditar = modalEditarElement ? new bootstrap.Modal(modalEditarElement) : null;
+        var formEditar = document.getElementById('formEditarAgendamento');
 
-        // Função para aplicar máscara de valor
-        function aplicarMascaraPreco(input) {
-            input.on('input', function () {
-                let valor = $(this).val().replace(/\D/g, '');
-                valor = (valor / 100).toFixed(2) + '';
-                valor = valor.replace(".", ",");
-                $(this).val(valor);
+        let isSubmitting = false; // Controle para evitar submissão duplicada
+
+        // Função para criar overlay de carregamento dinamicamente
+        function criarLoadingOverlay() {
+            var loadingOverlay = document.createElement('div');
+            loadingOverlay.id = 'loadingOverlayAgendamento';
+            loadingOverlay.style.position = 'fixed';
+            loadingOverlay.style.top = '0';
+            loadingOverlay.style.left = '0';
+            loadingOverlay.style.width = '100%';
+            loadingOverlay.style.height = '100%';
+            loadingOverlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+            loadingOverlay.style.zIndex = '9999';
+            loadingOverlay.style.display = 'flex';
+            loadingOverlay.style.justifyContent = 'center';
+            loadingOverlay.style.alignItems = 'center';
+
+            var spinner = document.createElement('div');
+            spinner.className = 'spinner-border text-light';
+            spinner.role = 'status';
+
+            var visuallyHidden = document.createElement('span');
+            visuallyHidden.className = 'visually-hidden';
+            visuallyHidden.innerText = 'Carregando...';
+
+            spinner.appendChild(visuallyHidden);
+            loadingOverlay.appendChild(spinner);
+
+            document.body.appendChild(loadingOverlay);
+        }
+
+
+        // Função para formatar o valor como dinheiro
+        function formatarParaMoeda(valor) {
+            valor = valor.replace(/\D/g, ""); // Remove qualquer caractere que não seja número
+            if (valor === "") {
+                return "0,00"; // Retorna 0,00 se o valor for vazio
+            }
+            valor = (parseInt(valor) / 100).toFixed(2); // Divide por 100 e fixa 2 casas decimais
+            valor = valor.replace(".", ","); // Troca o ponto decimal por vírgula
+            return valor.replace(/\B(?=(\d{3})+(?!\d))/g, "."); // Adiciona pontos de milhar
+        }
+
+        // Função para aplicar a máscara ao campo de entrada
+        function aplicarMascaraDinheiro(event) {
+            const input = event.target; // Referência ao campo de entrada
+            const valorFormatado = formatarParaMoeda(input.value);
+            input.value = valorFormatado;
+        }
+
+        // Seleciona o campo de preço total no modal e aplica a máscara
+        const precoTotalInput = document.getElementById("editarPrecoTotal");
+
+        if (precoTotalInput) {
+            // Aplica a máscara ao digitar
+            precoTotalInput.addEventListener("input", aplicarMascaraDinheiro);
+
+            // Formata o valor ao focar fora do campo (garantia de formatação correta)
+            precoTotalInput.addEventListener("blur", aplicarMascaraDinheiro);
+
+            // Define o valor inicial como "0,00" caso esteja vazio
+            precoTotalInput.addEventListener("focus", function () {
+                if (precoTotalInput.value === "") {
+                    precoTotalInput.value = "0,00";
+                }
             });
         }
 
-        // Aplica a máscara de preço ao campo de edição
-        aplicarMascaraPreco($('#editarPrecoTotal'));
-
-        // Converte o preço formatado (string) para float
-        function converterPrecoParaFloat(precoFormatado) {
-            const valorFloat = parseFloat(precoFormatado.replace(/\./g, '').replace(',', '.'));
-            return valorFloat;
+        // Função para remover o overlay de carregamento
+        function removerLoadingOverlay() {
+            var loadingOverlay = document.getElementById('loadingOverlayAgendamento');
+            if (loadingOverlay) {
+                loadingOverlay.remove();
+            }
         }
 
+        // Função para mostrar overlay de carregamento
         function mostrarLoading() {
-            $('#loadingSpinnerAgendamento').show();
+            criarLoadingOverlay();
         }
 
+        // Função para ocultar overlay de carregamento
         function ocultarLoading() {
-            $('#loadingSpinnerAgendamento').hide();
+            removerLoadingOverlay();
         }
 
-        // Abrir modal de edição
-        $(document).on('click', '.btnEditar', function () {
-            const agendamentoId = $(this).data('id');
-            mostrarLoading();
-
-            $.get(`/Agendamento/Details/${agendamentoId}`, function (data) {
-                console.log("Dados do agendamento recebidos:", data);
-
-                $('#editarAgendamentoId').val(data.AgendamentoId);
-
-                // Ajustar DataHora para evitar alteração de fuso horário
-                if (data.DataHora) {
-                    const dataHora = new Date(data.DataHora);
-                    console.log("DataHora convertida (sem fuso horário):", dataHora);
-
-                    const dataLocal = `${dataHora.getFullYear()}-${(dataHora.getMonth() + 1).toString().padStart(2, '0')}-${dataHora.getDate().toString().padStart(2, '0')}`;
-                    const horaLocal = `${dataHora.getHours().toString().padStart(2, '0')}:${dataHora.getMinutes().toString().padStart(2, '0')}`;
-
-                    $('#editarDataHora').val(`${dataLocal}T${horaLocal}`);
-                } else {
-                    console.warn("Campo DataHora está nulo ou indefinido");
-                    $('#editarDataHora').val(''); // Limpa o campo ou insere um valor padrão
-                }
-
-                $('#editarStatus').val(data.Status);
-                $('#editarStatusPagamento').val(data.Pagamento ? data.Pagamento.StatusPagamento : -1);
-
-                // Verifica se PrecoTotal existe e é um número
-                if (data.PrecoTotal !== undefined && data.PrecoTotal !== null) {
-                    const precoFormatado = data.PrecoTotal.toFixed(2).replace('.', ',');
-                    $('#editarPrecoTotal').val(precoFormatado);
-                } else {
-                    console.warn("Campo PrecoTotal está nulo ou indefinido");
-                    $('#editarPrecoTotal').val('');
-                }
-
-                $('#editarAgendamentoModal').modal('show');
-            }).always(function () {
-                ocultarLoading();
+        // Submissão do formulário de filtros
+        if (formFiltro) {
+            formFiltro.addEventListener('submit', function (e) {
+                e.preventDefault();
+                mostrarLoading();
+                enviarFiltro(1);
             });
-        });
+        }
 
-        // Submeter formulário de edição
-        $('#formEditarAgendamento').on('submit', function (e) {
-            e.preventDefault(); // Impede o comportamento padrão do formulário
-            mostrarLoading();
-
-            // Formatar o preço corretamente
-            const precoFormatado = $('#editarPrecoTotal').val();
-            const precoFloat = converterPrecoParaFloat(precoFormatado);
-
-            // Criar o objeto de dados do formulário
-            const formData = {
-                AgendamentoId: parseInt($('#editarAgendamentoId').val()), // Garantir que seja inteiro
-                DataHora: $('#editarDataHora').val(), // Formato: YYYY-MM-DDTHH:mm
-                Status: parseInt($('#editarStatus').val()), // Garantir que seja inteiro
-                PrecoTotal: precoFloat, // Float para decimal no C#
-                Pagamento: { // Incluindo o pagamento como parte do objeto
-                    StatusPagamento: parseInt($('#editarStatusPagamento').val()), // Garantir que seja inteiro
-                    ValorPago: precoFloat // Passar o PrecoTotal como ValorPago
-                }
-            };
-
-
-            console.log("Enviando dados de edição:", formData); // Log para depuração
-
-            // Enviar os dados para o servidor via AJAX
-            $.ajax({
-                url: `/Agendamento/Edit/${formData.AgendamentoId}`, // O ID do agendamento na URL
-                type: 'POST',
-                contentType: 'application/json', // O corpo será JSON
-                data: JSON.stringify(formData), // Serializar os dados para JSON
-                success: function (response) {
-                    console.log("Resposta da edição:", response); // Log da resposta
-                    $('#editarAgendamentoModal').modal('hide'); // Fecha o modal de edição
-                    showToast('Agendamento editado com sucesso!', 'success'); // Exibe o toast de sucesso
-                    setTimeout(() => location.reload(), 1500); // Recarregar a página após 1,5s
-                },
-                error: function (jqXHR, textStatus, errorThrown) {
-                    console.error("Erro na edição:", textStatus, errorThrown); // Log do erro
-                    showToast('Erro ao editar o agendamento.', 'danger'); // Exibe toast de erro
-                },
-                complete: function () {
-                    ocultarLoading(); // Oculta o loading no final
-                }
+        // Evento para limpar filtros
+        if (btnLimparFiltro) {
+            btnLimparFiltro.addEventListener('click', function () {
+                mostrarLoading();
+                formFiltro.reset();
+                enviarFiltro(1);
+                showToast('Filtros limpos com sucesso!', 'info');
             });
-        });
+        }
 
-        // Abrir modal de exclusão
-        $(document).on('click', '.btnExcluir', function () {
-            const agendamentoId = $(this).data('id');
-            const clienteNome = $(this).closest('tr').find('td:first').text();
-            console.log("Abrindo modal de exclusão para o agendamento ID:", agendamentoId, "Cliente:", clienteNome); // Log do ID do agendamento e nome do cliente
-
-            $('#excluirAgendamentoNome').text(clienteNome);
-            $('#btnConfirmarExcluir').data('id', agendamentoId);
-            $('#excluirModal').modal('show');
-        });
-
-        // Confirmar exclusão
-        $('#btnConfirmarExcluir').on('click', function () {
-            const agendamentoId = $(this).data('id');
-            console.log("Confirmando exclusão para o agendamento ID:", agendamentoId); // Log do ID do agendamento para exclusão
+        // Função para enviar filtros via AJAX
+        function enviarFiltro(page) {
+            if (isSubmitting) return;
+            isSubmitting = true;
             mostrarLoading();
 
-            $.ajax({
-                url: '/Agendamento/DeleteConfirmed',
-                type: 'POST',
-                data: { id: agendamentoId },
-                success: function (response) {
-                    console.log("Resposta da exclusão:", response); // Log da resposta da exclusão
-                    $('#excluirModal').modal('hide');
-                    showToast(response.message, response.success ? 'success' : 'danger');
-                    if (response.success) {
-                        setTimeout(() => location.reload(), 1500);
+            var formData = new FormData(formFiltro);
+            formData.append('page', page);
+            formData.append('pageSize', 10);
+
+            var queryString = new URLSearchParams(formData).toString();
+
+            fetch(`/Agendamento/FiltrarAgendamentos?${queryString}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        atualizarTabela(data.agendamentos);
+                        atualizarCartoes(data.agendamentos);
+                        atualizarPaginacao(data.totalCount, 10, page);
+                        showToast(data.message || 'Agendamentos filtrados com sucesso!', 'success');
+                        ocultarLoading();
+                    } else {
+                        showToast(data.message || 'Erro ao filtrar os agendamentos.', 'warning');
+                        ocultarLoading();
                     }
-                },
-                error: function () {
-                    showToast('Erro ao excluir o agendamento.', 'danger');
-                },
-                complete: function () {
+                })
+                .catch(error => {
+                    console.error('Erro na requisição:', error);
+                    showToast('Erro ao filtrar os agendamentos.', 'danger');
+                })
+                .finally(() => {
                     ocultarLoading();
-                }
+                    isSubmitting = false;
+                });
+        }
+
+        // Captura todos os botões "Editar"
+        var botoesEditar = document.querySelectorAll('.btnEditar');
+        if (botoesEditar.length === 0) {
+            console.warn('Nenhum botão de edição encontrado na página.');
+        }
+
+        // Adiciona evento de clique para cada botão "Editar"
+        botoesEditar.forEach(function (botao) {
+            botao.addEventListener('click', function () {
+                const agendamentoId = this.getAttribute('data-id');
+                abrirModalEdicao(agendamentoId);
             });
         });
+
+        function abrirModalEdicao(agendamentoId) {
+            mostrarLoading();
+
+            fetch(`/Agendamento/Details/${agendamentoId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        console.error(`Erro na resposta da API: ${response.status}`);
+                        throw new Error('Erro ao carregar os dados do agendamento.');
+                    }
+                    return response.json();
+                })
+                .then(agendamento => {
+
+                    // Preenche os campos do modal com os dados do agendamento
+                    document.getElementById('editarAgendamentoId').value = agendamento.AgendamentoId;
+
+                    // Verifica se o campo DataHora é válido antes de convertê-lo
+                    const dataHora = new Date(agendamento.DataHora);
+                    if (!isNaN(dataHora)) {
+                        document.getElementById('editarDataHora').value = dataHora.toISOString().slice(0, 16);
+                    } else {
+                        console.warn('DataHora inválida:', agendamento.DataHora);
+                        document.getElementById('editarDataHora').value = '';
+                    }
+
+                    // Seleciona o Status do Agendamento no select
+                    const statusAgendamentoSelect = document.getElementById('editarStatus');
+                    if (statusAgendamentoSelect) {
+                        for (const option of statusAgendamentoSelect.options) {
+                            if (parseInt(option.value) === agendamento.Status) {
+                                statusAgendamentoSelect.value = option.value;
+                                break;
+                            }
+                        }
+                    }
+
+                    // Seleciona o Status do Pagamento no select
+                    const statusPagamentoSelect = document.getElementById('editarStatusPagamento');
+                    if (statusPagamentoSelect) {
+                        const statusPagamento = agendamento.Pagamento ? agendamento.Pagamento.StatusPagamento : -1;
+                        for (const option of statusPagamentoSelect.options) {
+                            if (parseInt(option.value) === statusPagamento) {
+                                statusPagamentoSelect.value = option.value;
+                                break;
+                            }
+                        }
+                    }
+
+                    // Preenche o campo de valor total
+                    document.getElementById('editarPrecoTotal').value = agendamento.PrecoTotal ? agendamento.PrecoTotal.toFixed(2).replace('.', ',') : '';
+
+                    modalEditar.show();
+                })
+                .catch(error => {
+                    showToast('Erro ao carregar os detalhes do agendamento.', 'danger');
+                })
+                .finally(() => {
+                    ocultarLoading();
+                });
+        }
+
+
+        // Submissão do formulário de edição
+        if (formEditar) {
+            formEditar.addEventListener('submit', function (e) {
+                e.preventDefault();
+                var agendamentoId = document.getElementById('editarAgendamentoId').value;
+
+                // Preparando os dados do pagamento
+                var pagamento = {
+                    PagamentoId: null, // Caso seja necessário preencher
+                    AgendamentoId: agendamentoId,
+                    ValorPago: parseFloat(document.getElementById('editarPrecoTotal').value.replace(',', '.')),
+                    StatusPagamento: parseInt(document.getElementById('editarStatusPagamento').value),
+                    PaymentId: null, // Opcional, caso tenha integração com gateway de pagamento
+                    DataPagamento: new Date().toISOString() // Define a data de pagamento atual
+                };
+
+                // Preparando os dados do agendamento com pagamento
+                var data = {
+                    AgendamentoId: agendamentoId,
+                    DataHora: document.getElementById('editarDataHora').value,
+                    Status: parseInt(document.getElementById('editarStatus').value),
+                    PrecoTotal: pagamento.ValorPago,
+                    Pagamento: pagamento // Inclui o pagamento no objeto agendamento
+                };
+
+                mostrarLoading();
+
+                fetch(`/Agendamento/Edit/${agendamentoId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data), // Envia o agendamento completo com o pagamento
+                })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.success) {
+                            showToast(result.message, 'success');
+                            modalEditar.hide();
+                            enviarFiltro(1); // Atualiza a listagem após edição
+                        } else {
+                            showToast(result.message, 'danger');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro ao editar o agendamento:', error);
+                        showToast('Erro ao editar o agendamento.', 'danger');
+                    })
+                    .finally(() => ocultarLoading());
+            });
+        }
+
+        // Funções para tabela, cartões e paginação (iguais às anteriores)
+        function atualizarTabela(agendamentos) {
+            var tabelaCorpo = document.querySelector('#tabelaAgendamentos tbody');
+            if (tabelaCorpo) {
+                tabelaCorpo.innerHTML = '';
+
+                agendamentos.forEach(agendamento => {
+                    var linha = `
+                    <tr>
+                        <td>${agendamento.cliente.nome}</td>
+                        <td>${agendamento.barbeiro ? agendamento.barbeiro.nome : 'Sem barbeiro'}</td>
+                        <td>${new Date(agendamento.dataHora).toLocaleString('pt-BR')}</td>
+                        <td>${traduzirStatusAgendamento(agendamento.status)}</td>
+                        <td>${agendamento.pagamento ? traduzirStatusPagamento(agendamento.pagamento.statusPagamento) : 'Sem pagamento'}</td>
+                        <td>${agendamento.formaPagamento === 'creditCard' ? 'Cartão de Crédito' : 'Loja'}</td>
+                        <td>${agendamento.precoTotal ? agendamento.precoTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : ''}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm btnEditar" data-id="${agendamento.agendamentoId}">Editar</button>
+                        </td>
+                    </tr>`;
+                    tabelaCorpo.innerHTML += linha;
+                });
+
+                tabelaCorpo.querySelectorAll('.btnEditar').forEach(button => {
+                    button.addEventListener('click', function () {
+                        const agendamentoId = this.getAttribute('data-id');
+                        abrirModalEdicao(agendamentoId);
+                    });
+                });
+            }
+        }
+
+        function atualizarCartoes(agendamentos) {
+            var listaCartoes = document.querySelector('.agendamentos-list');
+            if (listaCartoes) {
+                listaCartoes.innerHTML = '';
+
+                agendamentos.forEach(agendamento => {
+                    var dataHoraFormatada = new Date(agendamento.dataHora).toLocaleString('pt-BR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+
+                    var card = `
+                    <div class="agendamento-card" data-id="${agendamento.agendamentoId}">
+                        <div class="agendamento-card-body">
+                            <div class="agendamento-card-line"><p><strong>Cliente:</strong> ${agendamento.cliente.nome}</p></div>
+                            <div class="agendamento-card-line"><p><strong>Barbeiro:</strong> ${agendamento.barbeiro ? agendamento.barbeiro.nome : 'Sem barbeiro'}</p></div>
+                            <div class="agendamento-card-line"><p><strong>Data/Hora:</strong> ${dataHoraFormatada}</p></div>
+                            <div class="agendamento-card-line"><p><strong>Status Agendamento:</strong> ${traduzirStatusAgendamento(agendamento.status)}</p></div>
+                            <div class="agendamento-card-line"><p><strong>Status Pagamento:</strong> ${agendamento.pagamento ? traduzirStatusPagamento(agendamento.pagamento.statusPagamento) : 'Sem pagamento'}</p></div>
+                            <div class="agendamento-card-line"><p><strong>Forma de Pagamento:</strong> ${agendamento.formaPagamento === 'creditCard' ? 'Cartão de Crédito' : 'Loja'}</p></div>
+                            <div class="agendamento-card-line"><p><strong>Valor Total:</strong> ${agendamento.precoTotal ? agendamento.precoTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : ''}</p></div>
+                            <div class="d-flex justify-content-end">
+                                <button class="btn btn-warning btn-sm btnEditar" data-id="${agendamento.agendamentoId}">Editar</button>
+                            </div>
+                        </div>
+                    </div>`;
+                    listaCartoes.innerHTML += card;
+                });
+
+                listaCartoes.querySelectorAll('.btnEditar').forEach(button => {
+                    button.addEventListener('click', function () {
+                        const agendamentoId = this.getAttribute('data-id');
+                        abrirModalEdicao(agendamentoId);
+                    });
+                });
+            }
+        }
+
+        function atualizarPaginacao(totalCount, pageSize, currentPage) {
+            var paginationContainer = document.querySelector('.pagination');
+            if (!paginationContainer) return;
+
+            paginationContainer.innerHTML = '';
+
+            if (totalCount > pageSize) {
+                var totalPages = Math.ceil(totalCount / pageSize);
+
+                if (currentPage > 1) {
+                    var prev = document.createElement('li');
+                    prev.className = 'page-item';
+                    prev.innerHTML = `<a class="page-link" href="#" data-page="${currentPage - 1}">Anterior</a>`;
+                    paginationContainer.appendChild(prev);
+                }
+
+                for (let i = 1; i <= totalPages; i++) {
+                    var pageItem = document.createElement('li');
+                    pageItem.className = `page-item ${i === currentPage ? 'active' : ''}`;
+                    pageItem.innerHTML = `<a class="page-link" href="#" data-page="${i}">${i}</a>`;
+                    paginationContainer.appendChild(pageItem);
+                }
+
+                if (currentPage < totalPages) {
+                    var next = document.createElement('li');
+                    next.className = 'page-item';
+                    next.innerHTML = `<a class="page-link" href="#" data-page="${currentPage + 1}">Próxima</a>`;
+                    paginationContainer.appendChild(next);
+                }
+            }
+
+            paginationContainer.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    var page = parseInt(this.getAttribute('data-page'));
+                    enviarFiltro(page);
+                });
+            });
+        }
+
+        function traduzirStatusAgendamento(status) {
+            switch (status) {
+                case 0:
+                    return 'Pendente';
+                case 1:
+                    return 'Confirmado';
+                case 2:
+                    return 'Cancelado';
+                case 3:
+                    return 'Concluído';
+                default:
+                    return 'Desconhecido';
+            }
+        }
+
+        function traduzirStatusPagamento(statusPagamento) {
+            switch (statusPagamento) {
+                case 0:
+                    return 'Pendente';
+                case 1:
+                    return 'Aprovado';
+                case 2:
+                    return 'Recusado';
+                case 3:
+                    return 'Cancelado';
+                case 4:
+                    return 'Reembolsado';
+                case 5:
+                    return 'Em Processamento';
+                case -1:
+                    return 'Não Especificado';
+                default:
+                    return 'Desconhecido';
+            }
+        }
     }
+
+
+
+
 
     const meusDadosPage = document.getElementById('meusdadosPage');
 
@@ -3627,9 +3889,7 @@
                 });
         }
 
-        // Limpa eventos duplicados no modal sempre que ele é exibido
         $('#editarAgendamentoModal').on('shown.bs.modal', function () {
-            console.log('Modal de edição exibido.');
 
             // Remove eventos duplicados no formulário
             $('#formEditarAgendamento').off('submit');
@@ -3650,7 +3910,6 @@
                     duracaoTotal: null // Pode ser ajustado conforme necessário
                 };
 
-                console.log('Dados capturados para envio:', formData);
 
                 // Faz a requisição AJAX
                 $.ajax({
@@ -3660,7 +3919,6 @@
                     contentType: 'application/json',
                     success: function (data) {
                         $('#loadingSpinner').fadeOut();
-                        console.log('Resposta recebida do servidor:', data);
 
                         if (data.success) {
                             showToast('Agendamento atualizado com sucesso!', 'success');
@@ -3668,7 +3926,6 @@
                             enviarFiltro(1); // Atualiza a lista de agendamentos
                         } else {
                             showToast(data.message, 'danger');
-                            console.log('Erro retornado pelo servidor:', data.message);
                         }
                     },
                     error: function (xhr, status, error) {
@@ -3711,22 +3968,20 @@
         const vincularServicoBtns = document.querySelectorAll('.vincularServicoBtn');
         const desvincularServicoBtns = document.querySelectorAll('.desvincularServicoBtn');
 
-        const vinculadosTableBody = document.querySelector('#vinculadosTable tbody'); // Tabela de serviços vinculados
-        const disponiveisTableBody = document.querySelector('#disponiveisTable tbody'); // Tabela de serviços disponíveis
+        const vinculadosTableBody = document.querySelector('#vinculadosTable tbody');
+        const disponiveisTableBody = document.querySelector('#disponiveisTable tbody');
         // Vincular serviço
         vincularServicoBtns.forEach((btn) => {
             btn.addEventListener('click', function () {
                 const servicoId = this.getAttribute('data-id');
-                console.log('Servico ID recuperado:', servicoId);  // Verifica o valor de servicoId
 
                 if (!servicoId) {
                     showToast('Erro: Serviço não encontrado.', 'danger');
-                    return; // Interrompe a execução se o ID não for encontrado
+                    return; 
                 }
 
-                const data = { servicoId }; // Objeto com os dados a serem enviados
+                const data = { servicoId };
 
-                // Faz a requisição AJAX para vincular o serviço
                 $.ajax({
                     type: 'POST',
                     url: '/Barbeiro/VincularServicoMeuBarbeiro',  // Rota no Controller
@@ -3761,7 +4016,6 @@
         desvincularServicoBtns.forEach((btn) => {
             btn.addEventListener('click', function () {
                 const servicoId = this.getAttribute('data-id');
-                console.log('Servico ID recuperado para desvincular:', servicoId);  // Verifica o valor de servicoId
 
                 if (!servicoId) {
                     showToast('Erro: Serviço não encontrado.', 'danger');
@@ -3802,6 +4056,258 @@
         });
     }
 
+    const meusdadosBarbeiroPage = document.getElementById('meusdadosBarbeiroPage');
 
+    if (meusdadosBarbeiroPage) {
+        const salvarDadosForm = document.getElementById('salvarDadosForm');
+        const uploadInput = document.getElementById('file-upload');
+        const uploadForm = document.getElementById('uploadFotoForm');
+        const fotoImage = document.querySelector(".barbearia-logo-img");
+        const progressContainer = document.getElementById("uploadProgress");
+        const progressBar = document.querySelector(".progress-bar-horizontal");
+        const telefoneInput = document.getElementById("telefone");
+
+        // Máscara de Telefone ((xx) xxxxx-xxxx)
+        telefoneInput.addEventListener('input', function () {
+            let telefone = this.value.replace(/\D/g, ''); // Remove caracteres não numéricos
+
+            if (telefone.length > 2) {
+                telefone = '(' + telefone.slice(0, 2) + ') ' + telefone.slice(2); // Adiciona parênteses e espaço após DDD
+            }
+            if (telefone.length > 9) {
+                telefone = telefone.slice(0, 10) + '-' + telefone.slice(10); // Adiciona hífen na posição correta
+            }
+            if (telefone.length > 15) {
+                telefone = telefone.slice(0, 15); // Limita o comprimento a 15 caracteres
+            }
+
+            this.value = telefone; // Atualiza o valor do input
+        });
+
+        // Upload da foto com barra de progresso horizontal
+        uploadInput.addEventListener("change", function (event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append("Foto", file);
+
+            // Exibe a barra de progresso horizontal e reinicia a largura
+            progressContainer.classList.remove("d-none");
+            progressBar.style.width = "0%";
+
+            const fotoPreview = document.querySelector(".barbearia-logo-img");
+            fotoPreview.src = URL.createObjectURL(file);
+
+            $.ajax({
+                url: '/Barbeiro/UploadFotoMeusDadosBarbeiro',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                xhr: function () {
+                    const xhr = new window.XMLHttpRequest();
+                    xhr.upload.addEventListener("progress", function (evt) {
+                        if (evt.lengthComputable) {
+                            const percentComplete = (evt.loaded / evt.total) * 100;
+                            progressBar.style.width = `${percentComplete}%`;
+                        }
+                    }, false);
+                    return xhr;
+                },
+                success: function (response) {
+                    if (response.success) {
+                        fotoPreview.src = "data:image/png;base64," + response.newFotoBase64;
+                        showToast("Foto atualizada com sucesso!", "success");
+                    } else {
+                        showToast(response.message || "Erro ao atualizar a foto.", "danger");
+                    }
+                },
+                error: function () {
+                    showToast("Erro ao atualizar a foto.", "danger");
+                },
+                complete: function () {
+                    setTimeout(function () {
+                        progressContainer.classList.add("d-none");
+                    }, 500);
+                }
+            });
+        });
+
+        // Mostrar spinner
+        function showLoadingSpinner() {
+            document.getElementById('loadingSpinnerMeusDadosBarbeiro').style.display = 'flex';
+        }
+
+        // Ocultar spinner
+        function hideLoadingSpinner() {
+            document.getElementById('loadingSpinnerMeusDadosBarbeiro').style.display = 'none';
+        }
+
+        // Atualizar o salvamento dos dados com o spinner
+        salvarDadosForm.addEventListener('submit', function (e) {
+            e.preventDefault(); // Evita o comportamento padrão do formulário
+
+            showLoadingSpinner(); // Mostra o spinner
+
+            fetch('/Usuario/ObterClaims', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(response => response.json())
+                .then(claims => {
+                    const dto = {
+                        UsuarioId: claims.usuarioId,
+                        BarbeiroId: claims.barbeiroId,
+                        Nome: document.getElementById("nome").value,
+                        Email: document.getElementById("email").value,
+                        Telefone: document.getElementById("telefone").value
+                    };
+
+                    fetch('/Barbeiro/AtualizarMeusDados', {
+                        method: 'POST',
+                        body: JSON.stringify(dto),
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            hideLoadingSpinner(); // Esconde o spinner
+
+                            if (data.sucesso) {
+                                showToast(data.mensagem, "success");
+                            } else {
+                                showToast(data.mensagem, "danger");
+                            }
+                        })
+                        .catch(error => {
+                            hideLoadingSpinner(); // Esconde o spinner
+                            showToast("Erro ao atualizar os dados. Tente novamente mais tarde.", "danger");
+                            console.error("Erro:", error);
+                        });
+                })
+                .catch(error => {
+                    hideLoadingSpinner(); // Esconde o spinner
+                    showToast("Erro ao obter informações do usuário. Tente novamente.", "danger");
+                    console.error("Erro ao obter claims:", error);
+                });
+        });
+    }
+
+
+    if ($('#meusHorariosPage').length > 0) {
+        // Adicionar horário
+        $('#btnAdicionarHorario').on('click', function () {
+            $('#adicionarHorarioModal input, #adicionarHorarioModal textarea').val('');
+            $('#adicionarHorarioModal').modal('show');
+        });
+
+        $('#formAdicionarHorario').on('submit', function (e) {
+            e.preventDefault();
+
+            const horario = {
+                DataInicio: $('#DataInicioHorario').val(),
+                DataFim: $('#DataFimHorario').val(),
+                Motivo: $('#MotivoHorario').val()
+            };
+
+            $.ajax({
+                url: '/Barbeiro/AdicionarHorario',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(horario),
+                success: function (response) {
+                    $('#adicionarHorarioModal').modal('hide');
+                    showToast(response.message, response.success ? "success" : "danger");
+                    if (response.success) {
+                        location.reload();
+                    }
+                },
+                error: function (xhr) {
+                    const message = xhr.responseJSON?.message || "Erro ao adicionar o horário.";
+                    showToast(message, "danger");
+                }
+            });
+        });
+
+        // Editar horário
+        $('.btnEditarHorario').on('click', function () {
+            const id = $(this).data('id');
+
+            $.get(`/Barbeiro/ObterHorario/${id}`, function (data) {
+                $('#editarHorarioId').val(data.indisponibilidadeId);
+                $('#DataInicioEditarHorario').val(data.dataInicio.replace(' ', 'T'));
+                $('#DataFimEditarHorario').val(data.dataFim.replace(' ', 'T'));
+                $('#MotivoEditarHorario').val(data.motivo);
+                $('#editarHorarioModal').modal('show');
+            });
+        });
+
+        $('#formEditarHorario').on('submit', function (e) {
+            e.preventDefault();
+
+            const horario = {
+                IndisponibilidadeId: $('#editarHorarioId').val(),
+                DataInicio: $('#DataInicioEditarHorario').val(),
+                DataFim: $('#DataFimEditarHorario').val(),
+                Motivo: $('#MotivoEditarHorario').val()
+            };
+
+            $.ajax({
+                url: '/Barbeiro/EditarHorario',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(horario),
+                success: function (response) {
+                    $('#editarHorarioModal').modal('hide');
+                    showToast(response.message, response.success ? "success" : "danger");
+                    if (response.success) {
+                        location.reload();
+                    }
+                },
+                error: function (xhr) {
+                    const message = xhr.responseJSON?.message || "Erro ao editar o horário.";
+                    showToast(message, "danger");
+                }
+            });
+        });
+
+        // Excluir horário
+        $('.btnExcluirHorario').on('click', function () {
+            const id = $(this).data('id');
+            $('#btnConfirmarExcluirHorario').data('id', id);
+            $('#excluirHorarioModal').modal('show');
+        });
+
+        $('#btnConfirmarExcluirHorario').on('click', function () {
+            const id = $(this).data('id');
+
+            $.ajax({
+                url: '/Barbeiro/ExcluirHorario',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(id),
+                success: function (response) {
+                    $('#excluirHorarioModal').modal('hide');
+                    showToast(response.message, response.success ? "success" : "danger");
+                    if (response.success) {
+                        location.reload();
+                    }
+                },
+                error: function (xhr) {
+                    const message = xhr.responseJSON?.message || "Erro ao excluir o horário.";
+                    showToast(message, "danger");
+                }
+            });
+        });
+
+    }
 
 });
+
+
