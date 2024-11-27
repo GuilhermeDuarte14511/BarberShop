@@ -14,20 +14,24 @@ namespace BarberShop.Middlewares
 
         public async Task InvokeAsync(HttpContext context)
         {
-            // Verifica se o usuário está autenticado
             if (context.User.Identity.IsAuthenticated)
             {
                 var barbeariaUrl = context.Session.GetString("BarbeariaUrl");
+                var currentPath = context.Request.Path.Value.ToLower();
 
-                // Verifica se a URL da barbearia está disponível na sessão
                 if (!string.IsNullOrEmpty(barbeariaUrl))
                 {
-                    var currentPath = context.Request.Path.Value.ToLower();
-
-                    // Redireciona para o MenuPrincipal caso esteja na página inicial da barbearia
                     if (currentPath == $"/{barbeariaUrl}".ToLower())
                     {
                         context.Response.Redirect($"/{barbeariaUrl}/Cliente/MenuPrincipal");
+                        return;
+                    }
+
+                    // Redirecionar admins e barbeiros para a página administrativa
+                    if (currentPath == $"/{barbeariaUrl}/admin".ToLower() &&
+                        (context.User.IsInRole("Admin") || context.User.IsInRole("Barbeiro")))
+                    {
+                        context.Response.Redirect($"/{barbeariaUrl}/Admin/Index");
                         return;
                     }
                 }
@@ -35,5 +39,6 @@ namespace BarberShop.Middlewares
 
             await _next(context);
         }
+
     }
 }

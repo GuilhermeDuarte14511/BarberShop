@@ -86,7 +86,7 @@ namespace BarberShopMVC.Controllers
         {
             try
             {
-                if (User.Identity.IsAuthenticated && User.IsInRole("Admin") || User.IsInRole("Admin"))
+                if (User.Identity.IsAuthenticated && (User.IsInRole("Admin") || User.IsInRole("Barbeiro")))
                 {
                     var barbeariaUrlSession = HttpContext.Session.GetString("BarbeariaUrl");
                     if (!string.IsNullOrEmpty(barbeariaUrlSession) && barbeariaUrlSession == barbeariaUrl)
