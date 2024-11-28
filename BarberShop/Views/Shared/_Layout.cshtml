@@ -37,8 +37,9 @@
     @if (User.Identity.IsAuthenticated && User.IsInRole("Cliente") && !Context.Request.Path.Value.Contains("/admin"))
     {
         var barbeariaUrl = ViewData["BarbeariaUrl"] as string ?? "";
-        <header class="header">
+        var currentPath = Context.Request.Path.Value?.ToLower() ?? "";
 
+        <header class="header">
             <h1 class="h4 text-white">BarberShop</h1>
             <div class="dropdown profile-menu">
                 <!-- Ícone de perfil -->
@@ -48,30 +49,27 @@
                 <!-- Menu suspenso -->
                 <ul class="dropdown-menu dropdown-menu-end profile-menu-dropdown" aria-labelledby="profileDropdown">
                     <li>
-                        <a class="dropdown-item" href="@Url.Action("MenuPrincipal", "Cliente", new { barbeariaUrl })">
+                        <a class="dropdown-item @(currentPath.Contains("/cliente/menuprincipal") ? "active" : "")" href="@Url.Action("MenuPrincipal", "Cliente", new { barbeariaUrl })">
                             <i class="fas fa-home"></i> Menu Principal
                         </a>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="@Url.Action("SolicitarServico", "Cliente", new { barbeariaUrl })">
+                        <a class="dropdown-item @(currentPath.Contains("/cliente/solicitarservico") ? "active" : "")" href="@Url.Action("SolicitarServico", "Cliente", new { barbeariaUrl })">
                             <i class="fas fa-cut"></i> Solicitar Serviço
                         </a>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="@Url.Action("Historico", "Agendamento", new { barbeariaUrl })">
+                        <a class="dropdown-item @(currentPath.Contains("/agendamento/historico") ? "active" : "")" href="@Url.Action("Historico", "Agendamento", new { barbeariaUrl })">
                             <i class="fas fa-history"></i> Histórico
                         </a>
                     </li>
-
                     <li>
-                        <a class="dropdown-item" href="@Url.Action("MeusDadosCliente", "Cliente", new { barbeariaUrl })">
+                        <a class="dropdown-item @(currentPath.Contains("/cliente/meusdadoscliente") ? "active" : "")" href="@Url.Action("MeusDadosCliente", "Cliente", new { barbeariaUrl })">
                             <i class="fas fa-user-edit"></i> Meus Dados
                         </a>
                     </li>
-
-
                     <li>
-                        <a class="dropdown-item" href="@Url.Action("AlterarSenhaCliente", "Cliente", new { barbeariaUrl })">
+                        <a class="dropdown-item @(currentPath.Contains("/cliente/alterarsenhacliente") ? "active" : "")" href="@Url.Action("AlterarSenhaCliente", "Cliente", new { barbeariaUrl })">
                             <i class="fas fa-lock"></i> Alterar Senha
                         </a>
                     </li>
@@ -87,6 +85,7 @@
             </div>
         </header>
     }
+
 
 
 

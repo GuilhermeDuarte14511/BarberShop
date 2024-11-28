@@ -192,7 +192,7 @@ namespace BarberShopMVC.Controllers
                     new Claim(ClaimTypes.Role, usuario.Role),
                     new Claim("BarbeariaId", usuario.BarbeariaId.ToString()),
                     new Claim("BarbeariaNome", barbearia.Nome),
-                    new Claim("urlSlug", barbearia.UrlSlug)
+                    new Claim("urlSlug", barbearia.UrlSlug) // Adicionar o urlSlug como claim
                 };
 
                 // Adicionar o claim de BarbeiroId, se aplicável
@@ -215,8 +215,13 @@ namespace BarberShopMVC.Controllers
                 // Realizar o login
                 await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal, authProperties);
 
-                // Recuperar a URL da barbearia da sessão
-                var barbeariaUrl = HttpContext.Session.GetString("BarbeariaUrl");
+                // Recuperar o urlSlug da barbearia dos claims
+                var barbeariaUrl = claims.FirstOrDefault(c => c.Type == "urlSlug")?.Value;
+                if (!string.IsNullOrEmpty(barbeariaUrl))
+                {
+                    HttpContext.Session.SetString("BarbeariaUrl", barbeariaUrl);
+                    HttpContext.Session.SetInt32("BarbeariaId", barbearia.BarbeariaId);
+                }
 
                 // Registrar log de sucesso
                 await LogAsync("Info", nameof(VerificarAdminCodigo), $"Administrador {usuarioId} autenticado com sucesso.", $"UsuarioId: {usuarioId}");
@@ -229,6 +234,7 @@ namespace BarberShopMVC.Controllers
                 return Json(new { success = false, message = "Erro ao verificar código." });
             }
         }
+
 
 
         [HttpPost]
