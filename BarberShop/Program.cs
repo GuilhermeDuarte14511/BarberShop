@@ -83,6 +83,7 @@ builder.Services.AddScoped<IFeriadoBarbeariaRepository, FeriadoBarbeariaReposito
 builder.Services.AddScoped<IIndisponibilidadeRepository, IndisponibilidadeRepository>();
 builder.Services.AddScoped<IBarbeiroServicoRepository, BarbeiroServicoRepository>();
 builder.Services.AddScoped<IPagamentoRepository, PagamentoRepository>();
+builder.Services.AddScoped<INotificacaoRepository, NotificacaoRepository>();
 
 // Registrar serviços da camada de aplicação
 builder.Services.AddScoped<IClienteService, ClienteService>();
@@ -98,6 +99,7 @@ builder.Services.AddScoped<IBarbeiroServicoService, BarbeiroServicoService>();
 builder.Services.AddScoped<IRedefinirSenhaService, RedefinirSenhaService>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IPagamentoService, PagamentoService>();
+builder.Services.AddScoped<INotificacaoService, NotificacaoService>();
 
 // Configurar autenticação com cookies (apenas uma vez)
 builder.Services.AddAuthentication(options =>
@@ -126,24 +128,44 @@ builder.Services.AddSession(options =>
 // Configura o Quartz.NET
 builder.Services.AddQuartz(config =>
 {
-    var jobKey = new JobKey("EnviarEmailAvaliacaoJob");
+    // Configuração do Job para Enviar Emails de Avaliação
+    var jobKeyAvaliacao = new JobKey("EnviarEmailAvaliacaoJob");
 
     config.AddJob<EnviarEmailAvaliacaoJob>(opts =>
     {
-        opts.WithIdentity(jobKey);
+        opts.WithIdentity(jobKeyAvaliacao);
     });
 
     config.AddTrigger(opts =>
     {
-        opts.ForJob(jobKey)
+        opts.ForJob(jobKeyAvaliacao)
             .WithIdentity("EnviarEmailAvaliacaoTrigger")
             .StartNow()
             .WithSimpleSchedule(schedule =>
-                schedule.WithIntervalInMinutes(10)
+                schedule.WithIntervalInMinutes(10) // A cada 10 minutos
+                        .RepeatForever());
+    });
+
+    // Configuração do Job para Gerar Notificações de Agendamentos Próximos
+    var jobKeyNotificacoes = new JobKey("GerarNotificacoesAgendamentosJob");
+
+    config.AddJob<GerarNotificacoesAgendamentosJob>(opts =>
+    {
+        opts.WithIdentity(jobKeyNotificacoes);
+    });
+
+    config.AddTrigger(opts =>
+    {
+        opts.ForJob(jobKeyNotificacoes)
+            .WithIdentity("GerarNotificacoesTrigger")
+            .StartNow()
+            .WithSimpleSchedule(schedule =>
+                schedule.WithIntervalInMinutes(30) // A cada 30 minutos
                         .RepeatForever());
     });
 });
 
+// Adiciona o Quartz Hosted Service
 builder.Services.AddQuartzHostedService(options =>
 {
     options.WaitForJobsToComplete = true;

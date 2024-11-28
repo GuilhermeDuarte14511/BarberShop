@@ -9,7 +9,7 @@ namespace BarberShop.Domain.Interfaces
     {
         Task<IEnumerable<Agendamento>> GetByClienteIdWithServicosAsync(int clienteId, int? barbeariaId);
         Task<IEnumerable<Agendamento>> GetByClienteIdAsync(int clienteId);
-        Task<IEnumerable<DateTime>> GetAvailableSlotsAsync(int barbeariaId,int barbeiroId,DateTime date,int duracaoTotal,Dictionary<DayOfWeek, (TimeSpan abertura, TimeSpan fechamento)> horarioFuncionamento,HashSet<DateTime> feriados,List<(DateTime DataInicio, DateTime DataFim)> indisponibilidades);
+        Task<IEnumerable<DateTime>> GetAvailableSlotsAsync(int barbeariaId, int barbeiroId, DateTime date, int duracaoTotal, Dictionary<DayOfWeek, (TimeSpan abertura, TimeSpan fechamento)> horarioFuncionamento, HashSet<DateTime> feriados, List<(DateTime DataInicio, DateTime DataFim)> indisponibilidades);
         Task<IEnumerable<Agendamento>> ObterAgendamentosPorBarbeiroIdAsync(int barbeiroId, DateTime data);
         Task<IEnumerable<Agendamento>> ObterAgendamentosPorBarbeiroEHorarioAsync(int barbeiroId, DateTime dataHoraInicio, DateTime dataHoraFim);
         Task AtualizarStatusPagamentoAsync(int agendamentoId, StatusPagamento statusPagamento, string paymentId = null);
@@ -20,7 +20,9 @@ namespace BarberShop.Domain.Interfaces
         Task<Agendamento> GetByIdAndBarbeariaIdAsync(int id, int barbeariaId);
         Task<IEnumerable<Agendamento>> ObterAgendamentosConcluidosSemEmailAsync();
         Task<IEnumerable<Agendamento>> ObterAgendamentosPorBarbeiroEBarbeariaAsync(int barbeiroId, int barbeariaId);
-        Task<IEnumerable<Agendamento>> FiltrarAgendamentosAsync(int? barbeiroId,int barbeariaId, string clienteNome = null,DateTime? dataInicio = null,DateTime? dataFim = null,string formaPagamento = null,StatusAgendamento? status = null,StatusPagamento? statusPagamento = null, string barbeiroNome = null);
+        Task<IEnumerable<Agendamento>> FiltrarAgendamentosAsync(int? barbeiroId, int barbeariaId, string clienteNome = null, DateTime? dataInicio = null, DateTime? dataFim = null, string formaPagamento = null,
+                                                                StatusAgendamento? status = null, StatusPagamento? statusPagamento = null, string barbeiroNome = null, int? agendamentoId = null);
+
         Task<Agendamento> ObterAgendamentoCompletoPorIdAsync(int id);
 
     }

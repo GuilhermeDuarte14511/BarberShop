@@ -2233,6 +2233,114 @@ h2, h3 {
     display: inline-block !important;
 }
 
+/* Estilização do sininho */
+#notificationBell {
+    font-size: 1.8rem; /* Maior para destacar */
+    cursor: pointer;
+    margin-right: 15px;
+    color: #fff; /* Branco para contraste */
+    position: relative; /* Para o contador fixar no sino */
+}
+
+/* Estilização do contador */
+#notificationCounter {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    transform: translate(50%, -50%);
+    background-color: #dc3545; /* Vermelho forte */
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: bold;
+    border-radius: 50%;
+    padding: 0.3em 0.5em;
+    display: none; /* Oculto por padrão */
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5); /* Sombra */
+}
+
+/* Animação de vibração */
+#notificationBellIcon.vibrate {
+    animation: vibrate 0.7s infinite; /* Vibração mais longa */
+}
+
+@keyframes vibrate {
+    0%, 100% {
+        transform: rotate(0deg);
+    }
+
+    25% {
+        transform: rotate(-10deg);
+    }
+
+    50% {
+        transform: rotate(10deg);
+    }
+
+    75% {
+        transform: rotate(-7deg);
+    }
+}
+
+/* Estilização da lista de notificações */
+#notificationListUnread,
+#notificationListRead {
+    max-height: 200px; /* Altura máxima */
+    overflow-y: auto; /* Scroll se ultrapassar o limite */
+    padding: 0;
+    margin: 0;
+}
+
+    /* Estilo para notificações não lidas */
+    #notificationListUnread li {
+        padding: 0.7rem 1rem;
+        background-color: #f8f9fa; /* Fundo claro */
+        border-bottom: 1px solid #dee2e6; /* Divisores */
+        font-weight: bold; /* Destaque */
+        color: #000; /* Texto mais escuro */
+        transition: background-color 0.3s;
+    }
+
+        #notificationListUnread li:hover {
+            background-color: #e9ecef; /* Fundo ao passar o mouse */
+        }
+
+    /* Estilo para notificações lidas */
+    #notificationListRead li {
+        padding: 0.7rem 1rem;
+        background-color: #f8f9fa; /* Fundo claro */
+        border-bottom: 1px solid #dee2e6; /* Divisores */
+        font-weight: normal; /* Sem destaque */
+        color: #6c757d; /* Texto apagado */
+        transition: background-color 0.3s;
+    }
+
+        #notificationListRead li:hover {
+            background-color: #e9ecef; /* Fundo ao passar o mouse */
+        }
+
+/* Estilização do título das seções */
+.dropdown-header {
+    font-size: 1rem;
+    color: #6c757d; /* Texto mais apagado */
+    padding: 0.5rem 1rem;
+}
+
+/* Estilização do botão "Ver todas as notificações" */
+#viewAllNotifications {
+    display: block;
+    text-align: center;
+    padding: 0.7rem;
+    background-color: #f8f9fa;
+    color: #007bff;
+    text-decoration: none;
+    transition: background-color 0.3s;
+}
+
+    #viewAllNotifications:hover {
+        background-color: #e2e6ea; /* Fundo mais escuro ao passar o mouse */
+        color: #0056b3; /* Azul mais escuro */
+    }
+
 
 
 /* CSS Responsivo para Dispositivos Móveis */

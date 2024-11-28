@@ -278,10 +278,20 @@ namespace BarberShop.Application.Services
             return await _agendamentoRepository.ObterAgendamentosPorBarbeiroEBarbeariaAsync(barbeiroId, barbeariaId);
         }
 
-        public async Task<IEnumerable<Agendamento>> FiltrarAgendamentosAsync(int? barbeiroId,int barbeariaId,string clienteNome = null,DateTime? dataInicio = null,DateTime? dataFim = null,string formaPagamento = null,
-                                                                            StatusAgendamento? status = null, StatusPagamento? statusPagamento = null, string barbeiroNome = null) // Adicionado
+        public async Task<IEnumerable<Agendamento>> FiltrarAgendamentosAsync(int? barbeiroId, int barbeariaId, string clienteNome = null, DateTime? dataInicio = null, DateTime? dataFim = null, string formaPagamento = null,
+                                                                             StatusAgendamento? status = null, StatusPagamento? statusPagamento = null, string barbeiroNome = null, int? agendamentoId = null) // Adicionado agendamentoId
         {
-            return await _agendamentoRepository.FiltrarAgendamentosAsync(barbeiroId,barbeariaId,clienteNome,dataInicio,dataFim,formaPagamento,status,statusPagamento,barbeiroNome); 
+            return await _agendamentoRepository.FiltrarAgendamentosAsync(
+                barbeiroId,
+                barbeariaId,
+                clienteNome,
+                dataInicio,
+                dataFim,
+                formaPagamento,
+                status,
+                statusPagamento,
+                barbeiroNome,
+                agendamentoId);
         }
 
         public async Task AtualizarAgendamentoAsync(int id, AgendamentoDto agendamentoAtualizadoDto)

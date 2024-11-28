@@ -75,7 +75,6 @@
                                 <a href="@Url.Action("Index", "IndisponibilidadeBarbeiro")" class="list-group-item list-group-item-action bg-dark text-white ml-3">
                                     <i class="fas fa-user-clock mr-2"></i> Indisponibilidade
                                 </a>
-
                                 <hr class="sidebar-divider">
                             </div>
                         </div>
@@ -136,6 +135,42 @@
                     <i class="fas fa-bars"></i>
                 </button>
                 <h5 class="text-white ml-3">Bem-vindo ao Sistema de Barbearias</h5>
+
+                <div class="ms-auto d-flex align-items-center" id="notificationBell">
+                    <div class="position-relative">
+                        <a href="#" class="text-white" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i id="notificationBellIcon" class="fas fa-bell fa-lg"></i>
+                            <span id="notificationCounter" class="badge bg-danger rounded-circle"></span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown">
+                            <li>
+                                <h6 class="dropdown-header">Notificações</h6>
+                            </li>
+                            <li>
+                                <h6 class="text-primary px-3">Novas Notificações</h6>
+                                <ul id="notificationListUnread" class="list-unstyled m-0 p-0">
+                                    <!-- Notificações não lidas serão carregadas dinamicamente -->
+                                </ul>
+                            </li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                <h6 class="text-secondary px-3">Notificações Lidas</h6>
+                                <ul id="notificationListRead" class="list-unstyled m-0 p-0">
+                                    <!-- Notificações lidas serão carregadas dinamicamente -->
+                                </ul>
+                            </li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                <a id="viewAllNotifications" class="dropdown-item text-center" href="/Notificacao/Todas">Ver todas as notificações</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
             </nav>
 
             <div class="container-fluid mt-4">
@@ -149,24 +184,17 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.2.0/exceljs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-
-
     <script src="~/js/site.js" asp-append-version="true"></script>
 
     <script>
         $(document).ready(function () {
-            // Verifica se a tela é de um dispositivo móvel e esconde o menu lateral
             if (window.innerWidth < 768) {
                 $("#wrapper").addClass("toggled");
             }
-
-            // Toggle do menu lateral com animação suave
             $("#menu-toggle").click(function (e) {
                 e.preventDefault();
                 $("#wrapper").toggleClass("toggled");
             });
-
-            // Reajusta o estado do menu ao redimensionar a janela
             $(window).resize(function () {
                 if (window.innerWidth < 768) {
                     $("#wrapper").addClass("toggled");

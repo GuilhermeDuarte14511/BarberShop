@@ -864,7 +864,7 @@
                 }
             });
 
-       
+
 
             // Aplica a altura máxima para todos os cards e ajusta a posição do botão
             cards.forEach((card) => {
@@ -3977,7 +3977,7 @@
 
                 if (!servicoId) {
                     showToast('Erro: Serviço não encontrado.', 'danger');
-                    return; 
+                    return;
                 }
 
                 const data = { servicoId };
@@ -4307,6 +4307,123 @@
         });
 
     }
+
+    // Notificação aos admin e barbeiro
+    var notificacaoPopup = document.getElementById('notificationDropdown');
+    if (notificacaoPopup) {
+        // Função para buscar notificações agrupadas por dia via AJAX
+        function fetchNotifications() {
+            console.log("Buscando notificações...");
+            $.ajax({
+                url: '/Notificacao/ObterNotificacoesPorDia', // Endpoint correto
+                method: 'GET',
+                success: function (data) {
+                    console.log("Resposta recebida do servidor:", data); // Log completo do retorno do servidor
+
+                    const notificationListUnread = $('#notificationListUnread'); // Elemento para notificações não lidas
+                    const notificationListRead = $('#notificationListRead'); // Elemento para notificações lidas
+                    const counter = $('#notificationCounter');
+                    const notificationBellIcon = $('#notificationBellIcon'); // Ícone específico do sino
+
+                    // Limpa as listas de notificações
+                    notificationListUnread.empty();
+                    notificationListRead.empty();
+
+                    if (data && data.length > 0) {
+                        console.log(`Notificações agrupadas por dia encontradas: ${data.length}`);
+
+                        // Soma notificações não lidas para o contador
+                        const totalNaoLidas = data.reduce((acc, dia) => {
+                            const naoLidas = dia.naoLidas || []; // Garante que naoLidas seja definido
+                            console.log(`Dia ${new Date(dia.data).toLocaleDateString()} - Notificações não lidas: ${naoLidas.length}, Lidas: ${dia.lidas.length}`);
+                            return acc + naoLidas.length;
+                        }, 0);
+
+                        // Atualiza o contador de notificações
+                        console.log("Total de notificações não lidas:", totalNaoLidas);
+                        counter.text(totalNaoLidas).toggle(totalNaoLidas > 0);
+                        if (totalNaoLidas > 0) {
+                            notificationBellIcon.addClass('vibrate'); // Vibra se houver notificações não lidas
+                        } else {
+                            notificationBellIcon.removeClass('vibrate');
+                        }
+
+                        // Popula notificações por dia
+                        data.forEach(dia => {
+                            const dataFormatada = new Date(dia.data).toLocaleDateString();
+
+                            // Adiciona notificações não lidas
+                            const naoLidas = dia.naoLidas || [];
+                            if (naoLidas.length > 0) {
+                                notificationListUnread.append(`<li class="dropdown-header">${dataFormatada}</li>`);
+                                naoLidas.forEach(notification => {
+                                    notificationListUnread.append(`
+                                        <li>
+                                            <a href="${notification.link}" class="dropdown-item font-weight-bold text-primary">
+                                                ${notification.mensagem}
+                                            </a>
+                                        </li>
+                                    `);
+                                });
+                            }
+
+                            // Adiciona notificações lidas
+                            const lidas = dia.lidas || [];
+                            if (lidas.length > 0) {
+                                notificationListRead.append(`<li class="dropdown-header">${dataFormatada}</li>`);
+                                lidas.forEach(notification => {
+                                    notificationListRead.append(`
+                                        <li>
+                                            <a href="${notification.link}" class="dropdown-item text-muted">
+                                                ${notification.mensagem}
+                                            </a>
+                                        </li>
+                                    `);
+                                });
+                            }
+                        });
+                    } else {
+                        console.log("Sem notificações para exibir.");
+                        counter.hide(); // Esconde o contador
+                        notificationBellIcon.removeClass('vibrate'); // Remove a vibração
+                        notificationListUnread.append('<li class="dropdown-item text-center">Sem notificações para o dia</li>');
+                    }
+                },
+                error: function (err) {
+                    console.error('Erro ao buscar notificações:', err);
+                }
+            });
+        }
+
+        // Atualizar notificações periodicamente
+        setInterval(fetchNotifications, 6000660); // Atualiza notificações a cada 60 segundos
+        fetchNotifications(); // Carrega notificações ao iniciar
+
+        // Evento de clique no sininho para marcar notificações como lidas
+        $(document).on('click', '#notificationDropdown', function () {
+            console.log("Usuário clicou no sininho.");
+            $.ajax({
+                url: '/Notificacao/MarcarTodasComoLidas', // Endpoint para marcar notificações como lidas
+                method: 'POST',
+                success: function () {
+                    console.log("Notificações marcadas como lidas no banco de dados.");
+                    $('#notificationCounter').hide(); // Esconde o contador
+                    console.log("Contador zerado visualmente.");
+                    $('#notificationBellIcon').removeClass('vibrate'); // Remove a vibração do sino
+                    console.log("Vibração do sino parada.");
+                    fetchNotifications(); // Recarrega as notificações para refletir as mudanças
+                },
+                error: function (err) {
+                    console.error('Erro ao marcar notificações como lidas:', err);
+                }
+            });
+        });
+    }
+
+
+
+
+
 
 });
 

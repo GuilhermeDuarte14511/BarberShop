@@ -29,6 +29,7 @@ namespace BarberShop.Infrastructure.Data
         public DbSet<GraficoPosicao> GraficoPosicao { get; set; }
         public DbSet<Avaliacao> Avaliacao { get; set; }
         public DbSet<Barbearia> Barbearias { get; set; }
+        public DbSet<Notificacao> Notificacoes { get; set; }
 
         // DbSets para as novas entidades
         public DbSet<PlanoAssinaturaSistema> PlanoAssinaturaSistema { get; set; }
@@ -203,6 +204,29 @@ namespace BarberShop.Infrastructure.Data
                 .WithMany(ag => ag.Avaliacoes)
                 .HasForeignKey(a => a.AgendamentoId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Configuração da tabela Notificacoes
+            modelBuilder.Entity<Notificacao>(entity =>
+            {
+                entity.HasKey(n => n.NotificacaoId);
+                entity.Property(n => n.Mensagem).IsRequired().HasMaxLength(500);
+                entity.Property(n => n.Link).HasMaxLength(255);
+                entity.Property(n => n.Lida).HasDefaultValue(false);
+                entity.Property(n => n.DataHora).IsRequired();
+
+                // Relacionamento com Usuario
+                entity.HasOne(n => n.Usuario)
+                      .WithMany()
+                      .HasForeignKey(n => n.UsuarioId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                // Relacionamento com Barbearia
+                entity.HasOne(n => n.Barbearia)
+                      .WithMany()
+                      .HasForeignKey(n => n.BarbeariaId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
         }
     }
 }

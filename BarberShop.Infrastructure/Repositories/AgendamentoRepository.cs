@@ -345,7 +345,8 @@ namespace BarberShop.Infrastructure.Repositories
 
         }
 
-        public async Task<IEnumerable<Agendamento>> FiltrarAgendamentosAsync(int? barbeiroId, int barbeariaId, string clienteNome, DateTime? dataInicio, DateTime? dataFim, string formaPagamento, StatusAgendamento? status, StatusPagamento? statusPagamento, string barbeiroNome)
+        public async Task<IEnumerable<Agendamento>> FiltrarAgendamentosAsync(int? barbeiroId, int barbeariaId, string clienteNome = null, DateTime? dataInicio = null, DateTime? dataFim = null, string formaPagamento = null, StatusAgendamento? status = null, StatusPagamento? statusPagamento = null,
+                                                                             string barbeiroNome = null, int? agendamentoId = null)
         {
             var query = _context.Agendamentos
                 .Include(a => a.Cliente)
@@ -353,6 +354,12 @@ namespace BarberShop.Infrastructure.Repositories
                 .Include(a => a.Pagamento)
                 .Where(a => a.BarbeariaId == barbeariaId)
                 .AsQueryable();
+
+            if (agendamentoId.HasValue)
+            {
+                query = query.Where(a => a.AgendamentoId == agendamentoId.Value);
+                return await query.ToListAsync(); // Retorna imediatamente quando agendamentoId é fornecido
+            }
 
             if (!string.IsNullOrEmpty(clienteNome))
             {
@@ -396,6 +403,7 @@ namespace BarberShop.Infrastructure.Repositories
 
             return await query.ToListAsync();
         }
+
 
 
         public async Task<Agendamento> ObterAgendamentoCompletoPorIdAsync(int id)

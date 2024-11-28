@@ -60,8 +60,8 @@ namespace BarberShopMVC.Controllers
         }
 
 
-        public async Task<IActionResult> Index(string clienteNome = null,string barbeiroNome = null,int? barbeiroId = null,StatusAgendamento? status = null,StatusPagamento? statusPagamento = null,
-                                               DateTime? dataInicio = null,DateTime? dataFim = null,int page = 1,int pageSize = 10)
+        public async Task<IActionResult> Index(string clienteNome = null, string barbeiroNome = null, int? barbeiroId = null, StatusAgendamento? status = null, StatusPagamento? statusPagamento = null,
+                                       DateTime? dataInicio = null, DateTime? dataFim = null, int page = 1, int pageSize = 10, int? agendamentoId = null)
         {
             var barbeariaId = HttpContext.Session.GetInt32("BarbeariaId") ?? 0;
 
@@ -72,31 +72,32 @@ namespace BarberShopMVC.Controllers
 
             await LogAsync("INFO", nameof(Index), "Index accessed", $"Listando agendamentos da barbearia: {barbeariaId}");
 
-            // Verifica se existem filtros ativos
-            bool filtrosAtivos = !string.IsNullOrEmpty(clienteNome) ||
-                                 !string.IsNullOrEmpty(barbeiroNome) ||
-                                 barbeiroId.HasValue ||
-                                 status.HasValue ||
-                                 statusPagamento.HasValue ||
-                                 dataInicio.HasValue ||
-                                 dataFim.HasValue;
-
-            // Recupera os agendamentos filtrados ou padrões
-            var agendamentos = filtrosAtivos
+            // Filtrar pelo agendamentoId se fornecido
+            var agendamentos = agendamentoId.HasValue
                 ? await _agendamentoService.FiltrarAgendamentosAsync(
+                    agendamentoId: agendamentoId.Value,
+                    barbeiroId: null,
+                    barbeariaId: barbeariaId,
+                    clienteNome: null,
+                    dataInicio: null,
+                    dataFim: null,
+                    formaPagamento: null,
+                    status: null,
+                    statusPagamento: null,
+                    barbeiroNome: null
+                )
+                : await _agendamentoService.FiltrarAgendamentosAsync(
                     barbeiroId: barbeiroId,
                     barbeariaId: barbeariaId,
                     clienteNome: clienteNome,
                     dataInicio: dataInicio,
                     dataFim: dataFim,
-                    formaPagamento: null, // Se necessário, adicionar filtro de forma de pagamento
+                    formaPagamento: null,
                     status: status,
                     statusPagamento: statusPagamento,
                     barbeiroNome: barbeiroNome
-                )
-                : await _agendamentoRepository.GetAgendamentosPorBarbeariaAsync(barbeariaId);
+                );
 
-            // Total de agendamentos para paginação
             var totalCount = agendamentos.Count();
 
             // Paginação
@@ -106,17 +107,16 @@ namespace BarberShopMVC.Controllers
                 .Take(pageSize)
                 .ToList();
 
-            // Preencher ViewBag com barbeiros para o filtro
             var barbeiros = await _barbeiroRepository.GetAllByBarbeariaIdAsync(barbeariaId);
             ViewBag.Barbeiros = barbeiros;
 
-            // Dados para a View
             ViewData["CurrentPage"] = page;
             ViewData["PageSize"] = pageSize;
             ViewData["TotalPages"] = (int)Math.Ceiling((double)totalCount / pageSize);
 
             return View(pagedAgendamentos);
         }
+
 
         [HttpGet]
         public async Task<IActionResult> FiltrarAgendamentos(string clienteNome = null,string barbeiroNome = null,int? barbeiroId = null,StatusAgendamento? status = null,StatusPagamento? statusPagamento = null,DateTime? dataInicio = null,DateTime? dataFim = null,
