@@ -10,7 +10,12 @@
 }
 
 <div id="agendamentoPage" class="container-fluid">
-    <h2 class="text-center mb-4">Gerenciar Agendamentos</h2>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Gerenciar Agendamentos</h2>
+        <button id="btnToggleView" class="btn btn-outline-primary">
+            <span id="btnIcon">📅</span> <span id="btnText">Exibir como Calendário</span>
+        </button>
+    </div>
 
     <form id="filtroAgendamentosForm">
         <div class="row g-3">
@@ -119,6 +124,26 @@
             </tbody>
         </table>
     </div>
+
+    <div id="calendarContainer" style="display: none;">
+        <div id="calendarHeader">
+            <button id="prevMonthBtn">&lt;</button>
+            <h2 id="monthYear"></h2>
+            <button id="nextMonthBtn">&gt;</button>
+        </div>
+        <div id="calendarDaysHeader">
+            <span>Dom</span>
+            <span>Seg</span>
+            <span>Ter</span>
+            <span>Qua</span>
+            <span>Qui</span>
+            <span>Sex</span>
+            <span>Sáb</span>
+        </div>
+        <div id="calendarDays"></div>
+    </div>
+
+
 
     <!-- Lista de agendamentos exibida em telas menores -->
     <div class="agendamentos-list d-md-none mt-4">

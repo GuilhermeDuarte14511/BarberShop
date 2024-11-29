@@ -3045,6 +3045,129 @@
                     return 'Desconhecido';
             }
         }
+
+
+        // Seleção dos elementos
+        const tabelaAgendamentos = document.getElementById("tabelaAgendamentos");
+        const calendarioContainer = document.getElementById("calendarContainer");
+        const btnToggleView = document.getElementById("btnToggleView");
+        const btnText = document.getElementById("btnText");
+        const btnIcon = document.getElementById("btnIcon");
+
+        let currentDate = new Date();
+        let calendarioInicializado = false; // Flag para inicialização do calendário
+
+        // Função para alternar entre tabela e calendário
+        btnToggleView.addEventListener("click", function () {
+            if (tabelaAgendamentos.style.display !== "none") {
+                // Esconde a tabela e exibe o calendário
+                tabelaAgendamentos.style.display = "none";
+                calendarioContainer.style.display = "block";
+                btnText.textContent = "Exibir como Tabela";
+                btnIcon.textContent = "🗂️";
+
+                // Inicializa o calendário apenas na primeira vez
+                if (!calendarioInicializado) {
+                    renderCalendar(currentDate);
+                    calendarioInicializado = true;
+                }
+            } else {
+                // Exibe a tabela e esconde o calendário
+                tabelaAgendamentos.style.display = "block";
+                calendarioContainer.style.display = "none";
+                btnText.textContent = "Exibir como Calendário";
+                btnIcon.textContent = "📅";
+            }
+        });
+
+        // Função para carregar eventos do servidor
+        async function fetchEvents(start, end) {
+            try {
+                const response = await fetch(`/Agendamento/ObterEventosCalendario?dataInicio=${start}&dataFim=${end}`);
+                if (!response.ok) throw new Error("Erro ao buscar eventos");
+                return await response.json();
+            } catch (error) {
+                console.error("Erro ao carregar eventos:", error);
+                return [];
+            }
+        }
+
+        // Função para renderizar o calendário
+        async function renderCalendar(date) {
+            const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+            const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+            const startOfWeek = new Date(startOfMonth);
+            startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+            const endOfWeek = new Date(endOfMonth);
+            endOfWeek.setDate(endOfWeek.getDate() + (6 - endOfWeek.getDay()));
+
+            // Atualiza o cabeçalho do calendário
+            document.getElementById("monthYear").textContent = `${startOfMonth.toLocaleString("pt-BR", {
+                month: "long",
+            })} ${startOfMonth.getFullYear()}`;
+
+            // Limpa os dias do calendário
+            const calendarDays = document.getElementById("calendarDays");
+            calendarDays.innerHTML = "";
+
+            // Busca os eventos do servidor
+            const eventos = await fetchEvents(startOfWeek.toISOString(), endOfWeek.toISOString());
+
+            let currentDay = new Date(startOfWeek);
+            while (currentDay <= endOfWeek) {
+                const cell = document.createElement("div");
+                cell.className = "calendar-cell";
+
+                // Adiciona a data
+                const dateDiv = document.createElement("div");
+                dateDiv.className = "date";
+                dateDiv.textContent = currentDay.getDate();
+                cell.appendChild(dateDiv);
+
+                // Adiciona os eventos do dia
+                const eventosDia = eventos.filter(event => {
+                    const eventDate = new Date(event.start);
+                    return eventDate.toDateString() === currentDay.toDateString();
+                });
+
+                eventosDia.forEach(event => {
+                    const eventDiv = document.createElement("div");
+                    eventDiv.className = "calendar-event";
+                    eventDiv.style.backgroundColor = event.color || "#007bff";
+                    eventDiv.textContent = event.title;
+
+                    // Adiciona um tooltip ao passar o mouse
+                    eventDiv.setAttribute(
+                        "title",
+                        `Horário: ${new Date(event.start).toLocaleTimeString("pt-BR", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                        })}\nDuração: ${event.duration || "30 minutos"}\nBarbeiro: ${event.barbeiro || "Não definido"}`
+                    );
+
+                    cell.appendChild(eventDiv);
+                });
+
+                // Adiciona a célula ao calendário
+                calendarDays.appendChild(cell);
+
+                // Avança para o próximo dia
+                currentDay.setDate(currentDay.getDate() + 1);
+            }
+        }
+
+        // Navegação entre meses
+        document.getElementById("prevMonthBtn").addEventListener("click", function () {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar(currentDate);
+        });
+
+        document.getElementById("nextMonthBtn").addEventListener("click", function () {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar(currentDate);
+        });
+
+
     }
 
 

@@ -202,6 +202,47 @@ namespace BarberShopMVC.Controllers
         }
 
 
+        [HttpGet]
+        public async Task<IActionResult> ObterEventosCalendario(string clienteNome = null, string barbeiroNome = null,int? barbeiroId = null,StatusAgendamento? status = null,StatusPagamento? statusPagamento = null,DateTime? dataInicio = null,
+                                                                DateTime? dataFim = null,string formaPagamento = null,int? agendamentoId = null)
+        {
+            var barbeariaId = HttpContext.Session.GetInt32("BarbeariaId") ?? 0;
+
+            if (barbeariaId == 0)   
+            {
+                return Unauthorized("Barbearia não encontrada.");
+            }
+
+            var agendamentos = await _agendamentoService.FiltrarAgendamentosAsync(
+                barbeiroId: barbeiroId,
+                barbeariaId: barbeariaId,
+                clienteNome: clienteNome,
+                barbeiroNome: barbeiroNome,
+                dataInicio: dataInicio,
+                dataFim: dataFim,
+                formaPagamento: formaPagamento,
+                status: status,
+                statusPagamento: statusPagamento,
+                agendamentoId: agendamentoId
+            );
+
+            var eventos = agendamentos.Select(a => new
+            {
+                id = a.AgendamentoId,
+                title = $"{a.Cliente.Nome} - {a.Barbeiro?.Nome ?? "Sem barbeiro"}",
+                start = a.DataHora.ToString("o"),
+                end = a.DataHora.AddMinutes(a.DuracaoTotal ?? 30).ToString("o"), // Assume 30 minutos se a duração for nula
+                color = a.Status == StatusAgendamento.Confirmado ? "green" : "red",
+                barbeiro = a.Barbeiro != null ? new
+                {
+                    a.Barbeiro.BarbeiroId,
+                    a.Barbeiro.Nome
+                } : null
+            });
+
+            return Json(eventos);
+        }
+
 
 
 
