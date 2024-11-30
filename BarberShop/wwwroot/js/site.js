@@ -4431,7 +4431,7 @@
 
     }
 
-    // Notificação aos admin e barbeiro
+    // Notificações aos admin e barbeiro
     var notificacaoPopup = document.getElementById('notificationDropdown');
     if (notificacaoPopup) {
         // Função para buscar notificações agrupadas por dia via AJAX
@@ -4481,12 +4481,12 @@
                                 notificationListUnread.append(`<li class="dropdown-header">${dataFormatada}</li>`);
                                 naoLidas.forEach(notification => {
                                     notificationListUnread.append(`
-                                        <li>
-                                            <a href="${notification.link}" class="dropdown-item font-weight-bold text-primary">
-                                                ${notification.mensagem}
-                                            </a>
-                                        </li>
-                                    `);
+                                    <li>
+                                        <a href="${notification.link}" class="dropdown-item font-weight-bold text-primary">
+                                            ${notification.mensagem}
+                                        </a>
+                                    </li>
+                                `);
                                 });
                             }
 
@@ -4496,12 +4496,12 @@
                                 notificationListRead.append(`<li class="dropdown-header">${dataFormatada}</li>`);
                                 lidas.forEach(notification => {
                                     notificationListRead.append(`
-                                        <li>
-                                            <a href="${notification.link}" class="dropdown-item text-muted">
-                                                ${notification.mensagem}
-                                            </a>
-                                        </li>
-                                    `);
+                                    <li>
+                                        <a href="${notification.link}" class="dropdown-item text-muted">
+                                            ${notification.mensagem}
+                                        </a>
+                                    </li>
+                                `);
                                 });
                             }
                         });
@@ -4519,7 +4519,7 @@
         }
 
         // Atualizar notificações periodicamente
-        setInterval(fetchNotifications, 6000660); // Atualiza notificações a cada 60 segundos
+        setInterval(fetchNotifications, 60000); // Atualiza notificações a cada 60 segundos
         fetchNotifications(); // Carrega notificações ao iniciar
 
         // Evento de clique no sininho para marcar notificações como lidas
@@ -4541,6 +4541,39 @@
                 }
             });
         });
+    }
+
+    // Registro de Service Worker e Notificações Push
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/js/service-worker.js')
+            .then(async registration => {
+                console.log('Service Worker registrado:', registration);
+
+                // Solicitar permissão para notificações
+                const permission = await Notification.requestPermission();
+                if (permission !== 'granted') {
+                    console.error('Permissão para notificações foi negada.');
+                    return;
+                }
+
+                // Inscrever o navegador no Push Service
+                const subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: 'BFAb29jRZDa3O4RuCPfX_UoYreH3DUecJgfPPk7kwh3Os77M_vN4_2eZEiT1axF4GpywgXa7oV9ucgDZh56OslQ'
+                });
+
+                console.log('Usuário inscrito no Push Service:', subscription);
+
+                // Enviar a inscrição para o servidor
+                await fetch('/Notificacao/RegistrarInscricao', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(subscription)
+                });
+            })
+            .catch(err => {
+                console.error('Erro ao registrar o Service Worker:', err);
+            });
     }
 
 

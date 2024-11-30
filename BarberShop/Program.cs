@@ -100,6 +100,7 @@ builder.Services.AddScoped<IRedefinirSenhaService, RedefinirSenhaService>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IPagamentoService, PagamentoService>();
 builder.Services.AddScoped<INotificacaoService, NotificacaoService>();
+builder.Services.AddScoped<IPushSubscriptionService, PushSubscriptionService>();
 
 // Configurar autenticação com cookies (apenas uma vez)
 builder.Services.AddAuthentication(options =>

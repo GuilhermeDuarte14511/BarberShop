@@ -40,6 +40,7 @@ namespace BarberShop.Infrastructure.Data
         public DbSet<FeriadoBarbearia> FeriadosBarbearias { get; set; }
         public DbSet<IndisponibilidadeBarbeiro> IndisponibilidadesBarbeiros { get; set; }
         public DbSet<BarbeiroServico> BarbeiroServicos { get; set; } // Adicionado
+        public DbSet<PushSubscription> PushSubscriptions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
