@@ -4542,45 +4542,6 @@
             });
         });
     }
-
-    // Registro de Service Worker e Notificações Push
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/js/service-worker.js')
-            .then(async registration => {
-                console.log('Service Worker registrado:', registration);
-
-                // Solicitar permissão para notificações
-                const permission = await Notification.requestPermission();
-                if (permission !== 'granted') {
-                    console.error('Permissão para notificações foi negada.');
-                    return;
-                }
-
-                // Inscrever o navegador no Push Service
-                const subscription = await registration.pushManager.subscribe({
-                    userVisibleOnly: true,
-                    applicationServerKey: 'BFAb29jRZDa3O4RuCPfX_UoYreH3DUecJgfPPk7kwh3Os77M_vN4_2eZEiT1axF4GpywgXa7oV9ucgDZh56OslQ'
-                });
-
-                console.log('Usuário inscrito no Push Service:', subscription);
-
-                // Enviar a inscrição para o servidor
-                await fetch('/Notificacao/RegistrarInscricao', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(subscription)
-                });
-            })
-            .catch(err => {
-                console.error('Erro ao registrar o Service Worker:', err);
-            });
-    }
-
-
-
-
-
-
 });
 
 
