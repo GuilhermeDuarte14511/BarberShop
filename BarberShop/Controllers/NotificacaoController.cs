@@ -181,5 +181,31 @@ namespace BarberShop.Controllers
             var webPushClient = new WebPushClient();
             webPushClient.SendNotification(pushSubscription, System.Text.Json.JsonSerializer.Serialize(payload), vapidDetails);
         }
+
+        [HttpGet]
+        public IActionResult Index()
+        {
+            try
+            {
+                var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+                if (string.IsNullOrEmpty(userId) || !int.TryParse(userId, out var id))
+                    return Unauthorized("Usuário não identificado ou ID inválido.");
+
+                var notificacoes = _notificacaoService.ObterPorUsuario(id);
+
+                // Separar notificações
+                ViewData["NotificacoesNaoLidas"] = notificacoes.Where(n => !n.Lida).ToList();
+                ViewData["NotificacoesLidas"] = notificacoes.Where(n => n.Lida).ToList();
+
+                return View(notificacoes);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Erro ao carregar notificações.", detalhe = ex.Message });
+            }
+        }
+
+
     }
 }

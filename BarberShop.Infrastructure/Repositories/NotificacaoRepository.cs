@@ -88,6 +88,14 @@ namespace BarberShop.Infrastructure.Repositories
             return _context.Barbearias.FirstOrDefault(b => b.BarbeariaId == barbeariaId);
         }
 
+        public Agendamento ObterAgendamentoPorId(int agendamentoId)
+        {
+            return _context.Agendamentos
+                .Include(a => a.Cliente)
+                .Include(a => a.Barbeiro)
+                .FirstOrDefault(a => a.AgendamentoId == agendamentoId);
+        }
+
 
     }
 }

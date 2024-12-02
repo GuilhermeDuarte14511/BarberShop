@@ -19,7 +19,7 @@ namespace BarberShop.Domain.Interfaces
         Task<IEnumerable<Agendamento>> GetAgendamentosPorBarbeariaAsync(int barbeariaId);
         Task<Agendamento> GetByIdAndBarbeariaIdAsync(int id, int barbeariaId);
         Task<IEnumerable<Agendamento>> ObterAgendamentosConcluidosSemEmailAsync();
-        Task<IEnumerable<Agendamento>> ObterAgendamentosPorBarbeiroEBarbeariaAsync(int barbeiroId, int barbeariaId);
+        Task<IEnumerable<Agendamento>> ObterAgendamentosPorBarbeiroEBarbeariaAsync(int barbeiroId, int barbeariaId, int? agendamentoId = null);
         Task<IEnumerable<Agendamento>> FiltrarAgendamentosAsync(int? barbeiroId, int barbeariaId, string clienteNome = null, DateTime? dataInicio = null, DateTime? dataFim = null, string formaPagamento = null,
                                                                 StatusAgendamento? status = null, StatusPagamento? statusPagamento = null, string barbeiroNome = null, int? agendamentoId = null);
 

@@ -49,5 +49,23 @@ namespace BarberShop.Application.Services
             return await _avaliacaoRepository.ObterAvaliacaoPorAgendamentoIdAsync(agendamentoId);
         }
 
+        public async Task<IEnumerable<Avaliacao>> ObterAvaliacoesFiltradasAsync(int? barbeariaId = null,int? barbeiroId = null,string? dataInicio = null,string? dataFim = null,int? notaServico = null,int? notaBarbeiro = null,string? observacao = null)
+        {
+            return await _avaliacaoRepository.ObterAvaliacoesFiltradasAsync(
+                barbeariaId,
+                barbeiroId,
+                dataInicio,
+                dataFim,
+                notaServico,
+                notaBarbeiro,
+                observacao);
+        }
+
+        public async Task<IEnumerable<Avaliacao>> ObterAvaliacoesPorBarbeiroIdAsync(int barbeiroId, int? avaliacaoId = null)
+        {
+            return await _avaliacaoRepository.ObterAvaliacoesPorBarbeiroIdAsync(barbeiroId, avaliacaoId);
+        }
+
+
     }
 }

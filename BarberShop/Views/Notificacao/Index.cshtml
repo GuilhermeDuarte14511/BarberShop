@@ -1,0 +1,80 @@
+﻿@model IEnumerable<BarberShop.Application.DTOs.NotificacaoDTO>
+
+@{
+    ViewData["Title"] = "Notificações";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var notificacoesNaoLidas = ViewData["NotificacoesNaoLidas"] as List<BarberShop.Application.DTOs.NotificacaoDTO>;
+    var notificacoesLidas = ViewData["NotificacoesLidas"] as List<BarberShop.Application.DTOs.NotificacaoDTO>;
+}
+
+<div id="notificacoesPage">
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="text-danger">Notificações</h2>
+            <button id="marcarTodasComoLidasBtn" class="btn btn-primary">Marcar todas como lidas</button>
+        </div>
+
+        <!-- Seção de Não Lidas -->
+        <div id="naoLidasSection" class="mb-4">
+            <h4 class="text-warning mb-3">Não Lidas</h4>
+            <div id="naoLidasContainer">
+                @if (notificacoesNaoLidas == null || !notificacoesNaoLidas.Any())
+                {
+                    <div class="alert alert-warning text-center">
+                        <i class="fas fa-info-circle"></i> Você não possui notificações não lidas.
+                    </div>
+                }
+                else
+                {
+                    @foreach (var notificacao in notificacoesNaoLidas)
+                    {
+                        <div class="servico-card">
+                            <h5><i class="fas fa-bell text-warning"></i> @notificacao.Mensagem</h5>
+                            <p class="text-muted">Recebida em: @notificacao.DataHoraFormatada</p>
+                            @if (!string.IsNullOrEmpty(notificacao.Link))
+                            {
+                                <div class="actions">
+                                    <a href="@notificacao.Link" class="btn btnEditar">Ver mais</a>
+                                </div>
+                            }
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+
+        <!-- Seção de Lidas -->
+        <div id="lidasSection">
+            <h4 class="text-secondary mb-3">Lidas</h4>
+            <div id="lidasContainer">
+                @if (notificacoesLidas == null || !notificacoesLidas.Any())
+                {
+                    <div class="alert alert-warning text-center">
+                        <i class="fas fa-info-circle"></i> Você não possui notificações lidas.
+                    </div>
+                }
+                else
+                {
+                    @foreach (var notificacao in notificacoesLidas)
+                    {
+                        <div class="servico-card">
+                            <h5><i class="fas fa-check-circle text-success"></i> @notificacao.Mensagem</h5>
+                            <p class="text-muted">Recebida em: @notificacao.DataHoraFormatada</p>
+                            @if (!string.IsNullOrEmpty(notificacao.Link))
+                            {
+                                <div class="actions">
+                                    <a href="@notificacao.Link" class="btn btnEditar">Ver mais</a>
+                                </div>
+                            }
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+
+    </div>
+
+    <div id="loadingIndicator" style="display: none; text-align: center;">
+        <i class="fas fa-spinner fa-spin"></i> Carregando notificações...
+    </div>
+</div>

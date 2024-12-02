@@ -19,6 +19,7 @@ namespace BarberShop.Domain.Interfaces
         void SalvarAlteracoes();
         IEnumerable<Notificacao> ObterNotificacoes(int usuarioId, int agendamentoId);
         Barbearia ObterBarbeariaPorId(int barbeariaId);
+        Agendamento ObterAgendamentoPorId(int agendamentoId);
 
 
     }

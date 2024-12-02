@@ -84,6 +84,10 @@
                             <i class="fas fa-users mr-2"></i> Usuários
                         </a>
                         <hr class="sidebar-divider">
+                        <a href="@Url.Action("AvaliacoesBarbearia", "Admin")" class="list-group-item list-group-item-action bg-dark text-white">
+                            <i class="fas fa-star mr-2"></i> Avaliações
+                        </a>
+                        <hr class="sidebar-divider">
                         break;
 
                     case "Barbeiro":
@@ -105,6 +109,10 @@
                         <hr class="sidebar-divider">
                         <a href="@Url.Action("MeusDadosBarbeiro", "Barbeiro")" class="list-group-item list-group-item-action bg-dark text-white">
                             <i class="fas fa-user mr-2"></i> Meus Dados
+                        </a>
+                        <hr class="sidebar-divider">
+                        <a href="@Url.Action("MinhasAvaliacoes", "Barbeiro")" class="list-group-item list-group-item-action bg-dark text-white">
+                            <i class="fas fa-star mr-2"></i> Minhas Avaliações
                         </a>
                         <hr class="sidebar-divider">
                         break;
@@ -176,6 +184,36 @@
 
             <div class="container-fluid mt-4">
                 @RenderBody()
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Notificações -->
+    <div class="modal fade" id="notificationModal" tabindex="-1" aria-labelledby="notificationModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <!-- Cabeçalho do modal -->
+                <div class="modal-header">
+                    <h5 class="modal-title" id="notificationModalLabel">Notificações</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <!-- Corpo do modal -->
+                <div class="modal-body">
+                    <h6>Novas Notificações</h6>
+                    <ul id="modalNotificationListUnread" class="list-unstyled">
+                        <!-- Notificações não lidas irão aqui -->
+                    </ul>
+                    <hr>
+                    <h6>Notificações Lidas</h6>
+                    <ul id="modalNotificationListRead" class="list-unstyled">
+                        <!-- Notificações lidas irão aqui -->
+                    </ul>
+                </div>
+                <!-- Rodapé do modal -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <a href="/Notificacao/Todas" class="btn btn-primary">Ver todas as notificações</a>
+                </div>
             </div>
         </div>
     </div>

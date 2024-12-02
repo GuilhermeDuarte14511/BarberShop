@@ -412,9 +412,36 @@ namespace BarberShopMVC.Controllers
                 return BadRequest("Erro ao identificar a barbearia.");
             }
 
-            var horariosDisponiveis = await _agendamentoService.ObterHorariosDisponiveisAsync(barbeariaId.Value, barbeiroId, DateTime.Now, duracaoTotal);
-            return Json(horariosDisponiveis);
+            try
+            {
+                // Obter os horários disponíveis e o horário de funcionamento
+                var (horariosDisponiveis, horarioFuncionamento) = await _agendamentoService.ObterHorariosDisponiveisAsync(
+                    barbeariaId.Value,
+                    barbeiroId,
+                    DateTime.Now,
+                    duracaoTotal
+                );
+
+                // Transformar o horário de funcionamento em formato serializável
+                var horarioFuncionamentoSerializavel = horarioFuncionamento.ToDictionary(
+                    h => h.Key.ToString(),
+                    h => new { Abertura = h.Value.abertura.ToString(@"hh\:mm"), Fechamento = h.Value.fechamento.ToString(@"hh\:mm") }
+                );
+
+                // Retornar JSON com os horários disponíveis e o horário de funcionamento
+                return Json(new
+                {
+                    HorariosDisponiveis = horariosDisponiveis,
+                    HorarioFuncionamento = horarioFuncionamentoSerializavel
+                });
+            }
+            catch (Exception ex)
+            {
+                await LogAsync("ERROR", nameof(ObterHorariosDisponiveis), "Erro ao obter horários disponíveis", ex.Message);
+                return StatusCode(500, "Erro interno ao obter horários disponíveis.");
+            }
         }
+
 
 
         public async Task<IActionResult> ResumoAgendamento(int barbeiroId, DateTime dataHora, string servicoIds, string barbeariaUrl, int barbeariaId)

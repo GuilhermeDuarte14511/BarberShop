@@ -20,6 +20,7 @@ namespace BarberShopMVC.Controllers
         private readonly IIndisponibilidadeService _indisponibilidadeService;
         private readonly IAgendamentoService _agendamentoService;
         private readonly IServicoService _servicoService;
+        private readonly IAvaliacaoService _avaliacaoService;
 
         public BarbeiroController(
             IBarbeiroRepository barbeiroRepository,
@@ -28,6 +29,7 @@ namespace BarberShopMVC.Controllers
             IIndisponibilidadeService indisponibilidadeService,
             IAgendamentoService agendamentoService,
             IServicoService servicoService,
+            IAvaliacaoService avaliacaoService,
             ILogService logService)
             : base(logService)
         {
@@ -37,6 +39,7 @@ namespace BarberShopMVC.Controllers
             _indisponibilidadeService = indisponibilidadeService;
             _agendamentoService = agendamentoService;
             _servicoService = servicoService;
+            _avaliacaoService = avaliacaoService;
         }
 
         public async Task<IActionResult> Index()
@@ -369,7 +372,7 @@ namespace BarberShopMVC.Controllers
 
 
         [HttpGet]
-        public async Task<IActionResult> FiltrarAgendamentos(int page = 1, int pageSize = 10,string clienteNome = null, DateTime? dataInicio = null,DateTime? dataFim = null,string formaPagamento = null,StatusAgendamento? status = null,StatusPagamento? statusPagamento = null,
+        public async Task<IActionResult> FiltrarAgendamentos(int page = 1, int pageSize = 10, string clienteNome = null, DateTime? dataInicio = null, DateTime? dataFim = null, string formaPagamento = null, StatusAgendamento? status = null, StatusPagamento? statusPagamento = null,
                                                              bool isAdmin = false, string barbeiroNome = null)
         {
             try
@@ -442,7 +445,7 @@ namespace BarberShopMVC.Controllers
 
 
 
-        public async Task<IActionResult> MeusAgendamentos(int page = 1, int pageSize = 10)
+        public async Task<IActionResult> MeusAgendamentos(int page = 1, int pageSize = 10, int? agendamentoId = null)
         {
             try
             {
@@ -468,7 +471,8 @@ namespace BarberShopMVC.Controllers
 
                 ViewData["UrlSlug"] = urlSlug;
 
-                var agendamentos = await _agendamentoService.ObterAgendamentosPorBarbeiroEBarbeariaAsync(barbeiroId, barbeariaId);
+                // Busca agendamentos com base no barbeiro, barbearia e opcionalmente no agendamentoId
+                var agendamentos = await _agendamentoService.ObterAgendamentosPorBarbeiroEBarbeariaAsync(barbeiroId, barbeariaId, agendamentoId);
                 var totalCount = agendamentos.Count();
 
                 // Aplica paginação
@@ -490,6 +494,7 @@ namespace BarberShopMVC.Controllers
                 return StatusCode(500, "Erro ao carregar os agendamentos.");
             }
         }
+
 
         [HttpGet]
         public async Task<IActionResult> DetailsAgendamento(int id)
@@ -582,14 +587,14 @@ namespace BarberShopMVC.Controllers
                     Nome = s.Nome,
                     Preco = (decimal)s.Preco,
                     Duracao = s.Duracao
-                }).ToList(), 
+                }).ToList(),
                 ServicosNaoVinculados = servicosNaoVinculados.Select(s => new ServicoDto
                 {
                     ServicoId = s.ServicoId,
                     Nome = s.Nome,
                     Preco = (decimal)s.Preco,
                     Duracao = s.Duracao
-                }).ToList() 
+                }).ToList()
             };
 
             return View(model);
@@ -866,6 +871,134 @@ namespace BarberShopMVC.Controllers
                 return StatusCode(500, "Erro ao excluir o horário.");
             }
         }
+
+        [HttpGet]
+        public async Task<IActionResult> MinhasAvaliacoes(int page = 1, int pageSize = 10, int? avaliacaoId = null, string? dataInicio = null, string? dataFim = null, int? notaServico = null, int? notaBarbeiro = null, string? observacao = null)
+        {
+            try
+            {
+                // Obtém o ID do barbeiro logado
+                var barbeiroId = ObterBarbeiroIdLogado();
+                if (barbeiroId <= 0)
+                {
+                    return RedirectToAction("Login", "Login");
+                }
+
+                // Obtém o ID da barbearia da sessão
+                var barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
+                if (!barbeariaId.HasValue)
+                {
+                    return RedirectToAction("Login", "Login");
+                }
+
+                // Busca avaliações com filtros aplicados
+                var avaliacoes = await _avaliacaoService.ObterAvaliacoesFiltradasAsync(
+                    barbeariaId: barbeariaId.Value,
+                    barbeiroId: barbeiroId,
+                    dataInicio: dataInicio,
+                    dataFim: dataFim,
+                    notaServico: notaServico,
+                    notaBarbeiro: notaBarbeiro,
+                    observacao: observacao);
+
+                // Total de registros para paginação
+                var totalCount = avaliacoes.Count();
+
+                // Paginação
+                var pagedAvaliacoes = avaliacoes
+                    .OrderByDescending(a => a.DataAvaliado)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .Select(a => new AvaliacaoDTO
+                    {
+                        AvaliacaoId = a.AvaliacaoId,
+                        AgendamentoId = a.AgendamentoId,
+                        NotaBarbeiro = a.NotaBarbeiro,
+                        NotaServico = a.NotaServico,
+                        Observacao = a.Observacao,
+                        DataAvaliado = a.DataAvaliado
+                    })
+                    .ToList();
+
+                // Adiciona dados de paginação ao ViewData
+                ViewData["CurrentPage"] = page;
+                ViewData["PageSize"] = pageSize;
+                ViewData["TotalPages"] = (int)Math.Ceiling((double)totalCount / pageSize);
+
+                return View("MinhasAvaliacoes", pagedAvaliacoes);
+            }
+            catch (Exception ex)
+            {
+                await LogAsync("Error", nameof(BarbeiroController), ex.Message, ex.ToString());
+                return StatusCode(500, "Erro ao carregar as avaliações.");
+            }
+        }
+
+
+        [HttpGet]
+        public async Task<IActionResult> FiltrarAvaliacoes(int page = 1,int pageSize = 10,int? avaliacaoId = null, string? dataInicio = null,string? dataFim = null,int? notaServico = null,int? notaBarbeiro = null,string? observacao = null)
+        {
+            try
+            {
+                // Obtém o ID do barbeiro logado
+                var barbeiroId = ObterBarbeiroIdLogado();
+                if (barbeiroId <= 0)
+                {
+                    return Unauthorized("Usuário não autenticado.");
+                }
+
+                // Obtém o ID da barbearia da sessão
+                var barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
+                if (!barbeariaId.HasValue)
+                {
+                    return Unauthorized("Barbearia não encontrada na sessão.");
+                }
+
+                // Busca avaliações filtradas
+                var avaliacoes = await _avaliacaoService.ObterAvaliacoesFiltradasAsync(
+                    barbeariaId: barbeariaId.Value,
+                    barbeiroId: barbeiroId,
+                    dataInicio: dataInicio,
+                    dataFim: dataFim,
+                    notaServico: notaServico,
+                    notaBarbeiro: notaBarbeiro,
+                    observacao: observacao);
+
+                // Total de registros
+                var totalCount = avaliacoes.Count();
+
+                // Paginação
+                var pagedAvaliacoes = avaliacoes
+                    .OrderByDescending(a => a.DataAvaliado)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .Select(a => new AvaliacaoDTO
+                    {
+                        AvaliacaoId = a.AvaliacaoId,
+                        AgendamentoId = a.AgendamentoId,
+                        NotaBarbeiro = a.NotaBarbeiro,
+                        NotaServico = a.NotaServico,
+                        Observacao = a.Observacao,
+                        DataAvaliado = a.DataAvaliado
+                    })
+                    .ToList();
+
+                return Json(new
+                {
+                    avaliacoes = pagedAvaliacoes,
+                    totalCount
+                });
+            }
+            catch (Exception ex)
+            {
+                await LogAsync("Error", nameof(FiltrarAvaliacoes), ex.Message, ex.ToString());
+                return StatusCode(500, "Erro ao filtrar as avaliações.");
+            }
+        }
+
+
+
+
 
 
     }

@@ -1,0 +1,164 @@
+﻿@model IEnumerable<BarberShop.Application.DTOs.AvaliacaoDTO>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Minhas Avaliações - Barber Shop";
+}
+
+<div id="minhasAvaliacoesBarbeiro" class="container-fluid">
+    <h2 class="text-center my-4">Minhas Avaliações</h2>
+
+    <!-- Filtros -->
+    <form id="filtroAvaliacoesForm" class="mb-4">
+        <div class="row g-3">
+            <!-- Filtro por Data de Avaliação -->
+            <div class="col-md-3">
+                <label for="dataInicio" class="form-label">Data Inicial</label>
+                <input type="date" name="dataInicio" id="dataInicioInput" class="form-control">
+            </div>
+            <div class="col-md-3">
+                <label for="dataFim" class="form-label">Data Final</label>
+                <input type="date" name="dataFim" id="dataFimInput" class="form-control">
+            </div>
+            <!-- Filtro por Nota do Serviço -->
+            <div class="col-md-3">
+                <label for="notaServico" class="form-label">Nota do Serviço</label>
+                <select name="notaServico" id="notaServicoSelect" class="form-select">
+                    <option value="">Todas</option>
+                    @for (int i = 5; i >= 1; i--)
+                    {
+                        <option value="@i">@i Estrela(s)</option>
+                    }
+                </select>
+            </div>
+            <!-- Filtro por Nota do Barbeiro -->
+            <div class="col-md-3">
+                <label for="notaBarbeiro" class="form-label">Nota do Barbeiro</label>
+                <select name="notaBarbeiro" id="notaBarbeiroSelect" class="form-select">
+                    <option value="">Todas</option>
+                    @for (int i = 5; i >= 1; i--)
+                    {
+                        <option value="@i">@i Estrela(s)</option>
+                    }
+                </select>
+            </div>
+            <!-- Filtro por Observação -->
+            <div class="col-md-6">
+                <label for="observacao" class="form-label">Buscar por Observação</label>
+                <input type="text" name="observacao" id="observacaoInput" class="form-control" placeholder="Ex.: excelente, rápido">
+            </div>
+            <!-- Botões de Filtro -->
+            <div class="col-md-6 d-flex align-items-end">
+                <button type="submit" id="filtrarBtn" class="btn btn-primary me-2 px-4">Filtrar</button>
+                <button type="button" id="limparFiltroBtn" class="btn btn-secondary px-4">Limpar</button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Tabela para exibição em telas maiores -->
+    <div class="table-responsive d-none d-md-block">
+        <table class="table table-dark table-striped">
+            <thead>
+                <tr>
+                    <th>ID Avaliação</th>
+                    <th>ID Agendamento</th>
+                    <th>Nota do Serviço</th>
+                    <th>Nota do Barbeiro</th>
+                    <th>Comentário</th>
+                    <th>Data Avaliação</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Any())
+                {
+                    foreach (var avaliacao in Model)
+                    {
+                        <tr>
+                            <td>@avaliacao.AvaliacaoId</td>
+                            <td>@avaliacao.AgendamentoId</td>
+                            <td>
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <i class="fa fa-star @(i <= avaliacao.NotaServico ? "text-warning" : "text-secondary")"></i>
+                                }
+                            </td>
+                            <td>
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <i class="fa fa-star @(i <= avaliacao.NotaBarbeiro ? "text-warning" : "text-secondary")"></i>
+                                }
+                            </td>
+                            <td>@avaliacao.Observacao</td>
+                            <td>@avaliacao.DataAvaliado.ToString("dd/MM/yyyy HH:mm")</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="text-center">Nenhuma avaliação encontrada.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Cards para exibição em telas menores -->
+    <div class="d-md-none">
+        @if (Model.Any())
+        {
+            foreach (var avaliacao in Model)
+            {
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Avaliação #@avaliacao.AvaliacaoId</h5>
+                        <p><strong>ID Agendamento:</strong> @avaliacao.AgendamentoId</p>
+                        <p>
+                            <strong>Nota do Serviço:</strong>
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                <i class="fa fa-star @(i <= avaliacao.NotaServico ? "text-warning" : "text-secondary")"></i>
+                            }
+                        </p>
+                        <p>
+                            <strong>Nota do Barbeiro:</strong>
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                <i class="fa fa-star @(i <= avaliacao.NotaBarbeiro ? "text-warning" : "text-secondary")"></i>
+                            }
+                        </p>
+                        <p><strong>Comentário:</strong> @avaliacao.Observacao</p>
+                        <p><strong>Data Avaliação:</strong> @avaliacao.DataAvaliado.ToString("dd/MM/yyyy HH:mm")</p>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <p class="text-center">Nenhuma avaliação encontrada.</p>
+        }
+    </div>
+
+    <div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 9999;">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+            <div class="spinner-border text-light" role="status">
+                <span class="visually-hidden">Carregando...</span>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Adicionar Font Awesome -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
+<!-- Estilo para Estrelas -->
+<style>
+    .text-warning {
+        color: #ffc107 !important; /* Amarelo para estrelas preenchidas */
+    }
+
+    .text-secondary {
+        color: #e4e5e9 !important; /* Cinza para estrelas vazias */
+    }
+</style>
