@@ -1,4 +1,5 @@
 ﻿using BarberShop.Application.DTOs;
+using BarberShop.Application.Interfaces;
 using BarberShop.Domain.Entities;
 using BarberShop.Domain.Interfaces;
 using System;
@@ -10,11 +11,13 @@ namespace BarberShop.Application.Services
     {
         private readonly IAvaliacaoRepository _avaliacaoRepository;
         private readonly IAgendamentoRepository _agendamentoRepository;
+        private readonly INotificacaoService _notificacaoService;
 
-        public AvaliacaoService(IAvaliacaoRepository avaliacaoRepository, IAgendamentoRepository agendamentoRepository)
+        public AvaliacaoService(IAvaliacaoRepository avaliacaoRepository, IAgendamentoRepository agendamentoRepository, INotificacaoService notificacaoService)
         {
             _avaliacaoRepository = avaliacaoRepository;
             _agendamentoRepository = agendamentoRepository;
+            _notificacaoService = notificacaoService;
         }
 
         public async Task<Avaliacao> AdicionarAvaliacaoAsync(Avaliacao avaliacao)
@@ -34,8 +37,14 @@ namespace BarberShop.Application.Services
             }
 
             // Adiciona a avaliação ao banco
-            return await _avaliacaoRepository.AdicionarAvaliacaoAsync(avaliacao);
+            var novaAvaliacao = await _avaliacaoRepository.AdicionarAvaliacaoAsync(avaliacao);
+
+            // Notificar admins e barbeiro sobre a nova avaliação
+            _notificacaoService.NotificarAvaliacaoRecebida(novaAvaliacao);
+
+            return novaAvaliacao;
         }
+
 
         public async Task<Agendamento> ObterAgendamentoPorIdAsync(int agendamentoId)
         {
