@@ -27,8 +27,8 @@ namespace BarberShop.Application.Services
             {
                 // Verifica se já existe uma notificação para este admin e agendamento
                 var notificacaoJaEnviada = _notificacaoRepository
-                    .ObterNotificacoes(admin.UsuarioId, agendamento.AgendamentoId)
-                    .Any(n => n.DataHora == agendamento.DataHora);
+                .ObterNotificacoes(admin.UsuarioId, agendamento.AgendamentoId)
+                .Any(n => n.UsuarioId == admin.UsuarioId && n.AgendamentoId == agendamento.AgendamentoId && n.BarbeariaId == barbeariaId);
 
                 if (!notificacaoJaEnviada)
                 {
@@ -58,6 +58,7 @@ namespace BarberShop.Application.Services
         {
             var barbeiros = _notificacaoRepository.ObterBarbeirosPorBarbearia(agendamento.BarbeariaId);
             var barbeiro = barbeiros.FirstOrDefault(b => b.BarbeiroId == agendamento.BarbeiroId);
+            var barbearia = _notificacaoRepository.ObterBarbeariaPorId(agendamento.BarbeariaId);
 
             if (barbeiro != null)
             {
@@ -81,7 +82,7 @@ namespace BarberShop.Application.Services
                         BarbeariaId = agendamento.BarbeariaId,
                         AgendamentoId = agendamento.AgendamentoId,
                         Mensagem = $"Você tem um agendamento às {agendamento.DataHora:HH:mm} com o cliente {agendamento.Cliente.Nome}.",
-                        Link = $"/Agendamentos/Detalhes/{agendamento.AgendamentoId}",
+                        Link = $"/{barbearia.UrlSlug}/Barbeiro/MeusAgendamentos?agendamentoId={agendamento.AgendamentoId}",
                         Lida = false,
                         DataHora = referencia // Apenas uma notificação 1 hora antes
                     };
@@ -198,5 +199,48 @@ namespace BarberShop.Application.Services
 
             _notificacaoRepository.Criar(notificacao);
         }
+
+        public void NotificarAvaliacaoRecebida(Avaliacao avaliacao)
+        {
+            var agendamento = _notificacaoRepository.ObterAgendamentoPorId(avaliacao.AgendamentoId);
+            var barbearia = _notificacaoRepository.ObterBarbeariaPorId(agendamento.BarbeariaId);
+
+            // Notificar todos os admins da barbearia
+            var admins = _notificacaoRepository.ObterAdminsPorBarbearia(agendamento.BarbeariaId);
+            foreach (var admin in admins)
+            {
+                var notificacao = new Notificacao
+                {
+                    UsuarioId = admin.UsuarioId,
+                    BarbeariaId = agendamento.BarbeariaId,
+                    AgendamentoId = agendamento.AgendamentoId,
+                    Mensagem = $"Uma nova avaliação foi recebida para o agendamento em {agendamento.DataHora:dd/MM/yyyy HH:mm}.",
+                    Link = $"/{barbearia.UrlSlug}/Avaliacao/Detalhes?avaliacaoId={avaliacao.AvaliacaoId}",
+                    Lida = false,
+                    DataHora = DateTime.Now
+                };
+                _notificacaoRepository.Criar(notificacao);
+            }
+
+            // Notificar o barbeiro responsável
+            var barbeiro = _notificacaoRepository.ObterBarbeiroPorId(agendamento.BarbeiroId);
+            if (barbeiro != null)
+            {
+                var notificacao = new Notificacao
+                {
+                    UsuarioId = barbeiro.UsuarioId,
+                    BarbeariaId = agendamento.BarbeariaId,
+                    AgendamentoId = agendamento.AgendamentoId,
+                    Mensagem = $"Você recebeu uma nova avaliação para o agendamento em {agendamento.DataHora:dd/MM/yyyy HH:mm}.",
+                    Link = $"/{barbearia.UrlSlug}/Barbeiro/Avaliacoes?avaliacaoId={avaliacao.AvaliacaoId}",
+                    Lida = false,
+                    DataHora = DateTime.Now
+                };
+                _notificacaoRepository.Criar(notificacao);
+            }
+        }
+
+
+
     }
 }

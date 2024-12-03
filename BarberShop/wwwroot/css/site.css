@@ -2342,10 +2342,395 @@ h2, h3 {
     }
 
 
+/* Contêiner principal do calendário */
+#calendarContainer {
+    max-width: 900px;
+    margin: 20px auto;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+    background-color: #fff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
 
-/* CSS Responsivo para Dispositivos Móveis */
+/* Cabeçalho do calendário */
+#calendarHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background-color: #007bff;
+    color: #fff;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+    #calendarHeader button {
+        background-color: #0056b3;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        padding: 8px 12px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background-color 0.3s;
+    }
+
+        #calendarHeader button:hover {
+            background-color: #003f8f;
+        }
+
+/* Cabeçalho dos dias da semana */
+#calendarDaysHeader {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background-color: #f9f9f9;
+    padding: 10px 0;
+    text-align: center;
+    font-weight: bold;
+    border-bottom: 1px solid #ddd;
+    font-size: 14px;
+    color: #555;
+}
+
+/* Corpo do calendário */
+#calendarDays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+    background-color: #eee;
+}
+
+/* Célula do calendário (um dia) */
+.calendar-cell {
+    background-color: #fff;
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    padding: 10px;
+    border: 1px solid #ddd;
+    position: relative;
+    overflow: hidden;
+    transition: background-color 0.3s;
+}
+
+    .calendar-cell:hover {
+        background-color: #f9f9f9;
+        box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Data no canto superior da célula */
+    .calendar-cell .date {
+        font-size: 14px;
+        font-weight: bold;
+        margin-bottom: 8px;
+        color: #333;
+    }
+
+/* Estilo dos eventos no calendário */
+.calendar-event {
+    font-size: 12px;
+    background-color: #007bff;
+    color: #fff;
+    border-radius: 4px;
+    padding: 4px 6px;
+    margin-bottom: 4px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+    .calendar-event:hover {
+        background-color: #0056b3;
+    }
+
+    /* Tooltip para eventos */
+    .calendar-event[title]:hover::after {
+        content: attr(title);
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #333;
+        color: #fff;
+        padding: 5px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        white-space: pre-line;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+        white-space: nowrap;
+        margin-top: 5px;
+    }
+
+/* Estilo geral da página de notificações */
+#notificacoesPage .container {
+    font-family: 'Poppins', sans-serif;
+    color: #fff;
+}
+
+/* Título principal */
+#notificacoesPage h2 {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 1.5rem;
+}
+
+/* Títulos das seções */
+#notificacoesPage h4 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.3); /* Suaviza o divisor */
+    padding-bottom: 10px; /* Espaço entre o texto e a linha */
+}
+
+/* Card com estilo de notificações */
+#notificacoesPage .servico-card {
+    background: #1c1c1c; /* Fundo escuro */
+    border-radius: 10px; /* Cantos arredondados */
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.6); /* Sombra */
+    padding: 20px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Transições suaves */
+}
+
+    #notificacoesPage .servico-card:hover {
+        transform: scale(1.02); /* Leve aumento no hover */
+        box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.8); /* Sombra mais intensa */
+    }
+
+    #notificacoesPage .servico-card h5 {
+        font-size: 1rem;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    #notificacoesPage .servico-card p {
+        font-size: 0.9rem;
+        color: #bbb;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2); /* Linha separadora */
+        padding-bottom: 10px;
+    }
+
+        /* Estilo específico para texto de data/hora */
+        #notificacoesPage .servico-card p.text-muted {
+            color: rgba(255, 255, 255, 0.6); /* Cinza mais claro */
+            font-size: 0.85rem;
+            margin-top: 5px;
+        }
+
+/* Botões */
+#notificacoesPage .actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px; /* Espaço maior acima dos botões */
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2); /* Linha separadora acima */
+}
+
+#notificacoesPage .btnEditar {
+    background-color: #ffc107; /* Amarelo vibrante */
+    color: #000; /* Texto preto */
+    border: none;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    font-size: 0.9rem;
+    padding: 8px 12px; /* Tamanho do botão */
+    border-radius: 5px;
+    margin-top: 10px; /* Adicionado para separação no layout normal */
+}
+
+    #notificacoesPage .btnEditar:hover {
+        background-color: #e6a800; /* Amarelo mais escuro */
+        transform: scale(1.1); /* Leve aumento no hover */
+    }
+
+/* Alertas */
+#notificacoesPage .alert {
+    background-color: #2c2f33; /* Fundo mais escuro */
+    color: #ffc107; /* Texto amarelo */
+    border: 1px solid #3a3f44; /* Borda suave */
+    font-size: 0.95rem;
+    border-radius: 10px; /* Bordas arredondadas */
+    padding: 15px;
+    box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.4); /* Sombra leve */
+}
+
+/* Botão "Marcar todas como lidas" */
+#marcarTodasComoLidasBtn {
+    font-size: 0.9rem;
+    padding: 8px 12px;
+    border-radius: 5px;
+    background-color: #007bff; /* Azul padrão */
+    color: #fff; /* Texto branco */
+    border: none;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+    #marcarTodasComoLidasBtn:hover {
+        background-color: #0056b3; /* Azul mais escuro no hover */
+        transform: scale(1.05); /* Leve aumento no hover */
+    }
+
+
+
+/* Card com estilo de linhas horizontais para Avaliações */
+.avaliacao-card {
+    background: #1c1c1c;
+    border-radius: 10px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.6);
+    padding: 20px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Corpo do cartão */
+.avaliacao-card-body {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Linhas do cartão */
+.avaliacao-card-line {
+    margin-bottom: 10px;
+    color: #ffffff !important;
+    font-size: 0.95rem !important;
+    padding: 10px 0 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important; /* Linha separadora */
+    margin: 0 !important;
+}
+
+/* Botões */
+.avaliacao-card .btn {
+    font-size: 0.9rem;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+/* Botão de ação genérico */
+.avaliacao-card .btnAcao {
+    background-color: #007bff; /* Azul padrão */
+    color: #fff;
+    border: none;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+    .avaliacao-card .btnAcao:hover {
+        background-color: #0056b3; /* Azul mais escuro */
+        transform: scale(1.05);
+    }
+
+/* Estilo para estrelas */
+.avaliacao-card .estrelas {
+    display: flex;
+    gap: 3px;
+}
+
+.avaliacao-card .fa-star {
+    font-size: 1rem !important;
+    margin-right: 2px !important;
+}
+
+    .avaliacao-card .fa-star.text-warning {
+        color: #ffc107 !important; /* Amarelo para estrelas preenchidas */
+    }
+
+    .avaliacao-card .fa-star.text-secondary {
+        color: #e4e5e9 !important; /* Cinza para estrelas vazias */
+    }
+
+/* Ajuste para o overlay de carregamento */
+#loadingOverlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+}
+
+    #loadingOverlay .spinner-border {
+        width: 3rem;
+        height: 3rem;
+    }
+
+        #loadingOverlay .spinner-border .visually-hidden {
+            font-size: 1.2rem;
+        }
+
+
+/* Responsividade */
 @media (max-width: 768px) {
 
+    #marcarTodasComoLidasBtn {
+        width: 100%; /* Botão ocupa toda a largura no mobile */
+        font-size: 1rem; /* Aumenta o texto no mobile */
+        margin-bottom: 15px; /* Espaçamento abaixo do botão */
+    }
+
+    #notificacoesPage .d-flex {
+        flex-direction: column; /* Coloca o título e botão em coluna */
+        align-items: flex-start; /* Alinha à esquerda */
+    }
+
+        #notificacoesPage .d-flex h2 {
+            margin-bottom: 10px; /* Adiciona espaçamento entre o título e o botão */
+        }
+
+    #notificacoesPage .servico-card {
+        padding: 15px;
+        font-size: 0.9rem;
+    }
+
+    #notificacoesPage .btnEditar {
+        font-size: 0.8rem;
+        padding: 5px 10px;
+        margin-top: 10px; /* Espaço consistente no mobile */
+    }
+
+    #notificacoesPage .actions {
+        margin-top: 25px; /* Aumenta o espaço acima do botão em telas menores */
+    }
+
+    #notificacoesPage h2 {
+        font-size: 1.8rem; /* Reduz o tamanho do título no mobile */
+    }
+
+    #notificacoesPage h4 {
+        font-size: 1.3rem; /* Ajusta tamanho dos subtítulos no mobile */
+    }
+
+    #notificacoesPage h2 {
+        font-size: 1.8rem; /* Reduz o tamanho do título no mobile */
+    }
+
+    #notificacoesPage h4 {
+        font-size: 1.3rem; /* Ajusta tamanho dos subtítulos no mobile */
+    }
+
+    #calendarContainer {
+        max-width: 100%;
+        margin: 10px;
+    }
+
+    .calendar-cell {
+        min-height: 80px;
+        padding: 8px;
+    }
+
+    .calendar-event {
+        font-size: 10px;
+        padding: 2px 4px;
+    }
 
     /* Esconde gráficos e botões no mobile */
     #buttonContainer,
@@ -2467,6 +2852,20 @@ h2, h3 {
         flex-wrap: wrap;
         gap: 20px;
     }
+
+    #calendarHeader {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .calendar-cell {
+        min-height: 70px;
+    }
+
+    .calendar-event {
+        font-size: 9px;
+    }
+
 
     .dashboard-card {
         flex: 0 0 30%;

@@ -13,6 +13,7 @@ namespace BarberShop.Application.Interfaces
         IEnumerable<object> ObterNotificacoesAgrupadasPorDia(int usuarioId); // Agrupa notificações por dia
         void MarcarTodasComoLidas(int usuarioId); // Marca todas as notificações como lidas
         void CriarNotificacao(NotificacaoDTO notificacao); // Cria uma nova notificação
+        void NotificarAvaliacaoRecebida(Avaliacao avaliacao);
 
     }
 }

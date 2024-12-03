@@ -15,6 +15,7 @@
     <PackageReference Include="RabbitMQ.Client" />
     <PackageReference Include="SendGrid" />
     <PackageReference Include="Stripe.net" />
+    <PackageReference Include="WebPush" />
     <PackageReference Include="X.PagedList.Mvc.Core" />
   </ItemGroup>
   <ItemGroup>

@@ -24,6 +24,7 @@
     <PackageReference Include="Swashbuckle.AspNetCore.Swagger" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" />
+    <PackageReference Include="WebPush" />
     <PackageReference Include="X.PagedList.Mvc.Core" />
   </ItemGroup>
   <ItemGroup>

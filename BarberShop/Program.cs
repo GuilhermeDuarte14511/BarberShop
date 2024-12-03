@@ -100,6 +100,7 @@ builder.Services.AddScoped<IRedefinirSenhaService, RedefinirSenhaService>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IPagamentoService, PagamentoService>();
 builder.Services.AddScoped<INotificacaoService, NotificacaoService>();
+builder.Services.AddScoped<IPushSubscriptionService, PushSubscriptionService>();
 
 // Configurar autenticação com cookies (apenas uma vez)
 builder.Services.AddAuthentication(options =>
@@ -120,15 +121,14 @@ builder.Services.AddAuthentication(options =>
 // Configurar sessões
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(30); // Tempo de expiração da sessão
-    options.Cookie.HttpOnly = true; // Acesso apenas via HTTP
-    options.Cookie.IsEssential = true; // Necessário para o funcionamento da aplicação
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
 });
 
 // Configura o Quartz.NET
 builder.Services.AddQuartz(config =>
 {
-    // Configuração do Job para Enviar Emails de Avaliação
     var jobKeyAvaliacao = new JobKey("EnviarEmailAvaliacaoJob");
 
     config.AddJob<EnviarEmailAvaliacaoJob>(opts =>
@@ -142,7 +142,7 @@ builder.Services.AddQuartz(config =>
             .WithIdentity("EnviarEmailAvaliacaoTrigger")
             .StartNow()
             .WithSimpleSchedule(schedule =>
-                schedule.WithIntervalInMinutes(10) // A cada 10 minutos
+                schedule.WithIntervalInMinutes(10)
                         .RepeatForever());
     });
 
@@ -160,7 +160,7 @@ builder.Services.AddQuartz(config =>
             .WithIdentity("GerarNotificacoesTrigger")
             .StartNow()
             .WithSimpleSchedule(schedule =>
-                schedule.WithIntervalInMinutes(30) // A cada 30 minutos
+                schedule.WithIntervalInMinutes(30)
                         .RepeatForever());
     });
 });
@@ -171,7 +171,6 @@ builder.Services.AddQuartzHostedService(options =>
     options.WaitForJobsToComplete = true;
 });
 
-// Adicionar serviços MVC e configurar o Swagger
 builder.Services.AddControllersWithViews();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -179,7 +178,6 @@ builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
-// Configuração de middleware
 app.UseExceptionHandler("/Home/Error");
 app.UseHsts();
 
@@ -187,16 +185,16 @@ app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "BarberShop API V1");
-    c.RoutePrefix = "swagger"; // Swagger disponível em /swagger
+    c.RoutePrefix = "swagger";
 });
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
-app.UseSession(); // Sessão deve vir antes
-app.UseAuthentication(); // Verifica e autentica o usuário
-app.UseMiddleware<AuthenticationMiddleware>(); // Middleware customizado deve ser depois do UseAuthentication
-app.UseAuthorization(); // Garante que o usuário autenticado tenha permissão
+app.UseSession();
+app.UseAuthentication();
+app.UseMiddleware<AuthenticationMiddleware>();
+app.UseAuthorization(); 
 
 app.UseStatusCodePagesWithReExecute("/Erro/BarbeariaNaoEncontrada");
 

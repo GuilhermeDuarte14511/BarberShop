@@ -56,7 +56,7 @@ namespace BarberShop.Application.Services
             return await _servicoRepository.GetAllAsync();
         }
 
-        public async Task<IEnumerable<DateTime>> ObterHorariosDisponiveisAsync(int barbeariaId, int barbeiroId, DateTime data, int duracaoTotal)
+        public async Task<(IEnumerable<DateTime> HorariosDisponiveis, Dictionary<DayOfWeek, (TimeSpan abertura, TimeSpan fechamento)> HorarioFuncionamento)> ObterHorariosDisponiveisAsync(int barbeariaId, int barbeiroId, DateTime data, int duracaoTotal)
         {
             var barbearia = await _barbeariaRepository.GetByIdAsync(barbeariaId);
             if (barbearia == null || string.IsNullOrEmpty(barbearia.HorarioFuncionamento))
@@ -77,7 +77,7 @@ namespace BarberShop.Application.Services
                 .Concat(datasFeriadosBarbearia)
                 .ToHashSet();
 
-            // Obter indisponibilidades do barbeiro e converter para o formato esperado
+            // Obter indisponibilidades do barbeiro
             var indisponibilidades = (await _indisponibilidadeRepository.ObterIndisponibilidadesPorBarbeiroAsync(barbeiroId))
                 .Select(i => (i.DataInicio, i.DataFim))
                 .ToList();
@@ -93,8 +93,10 @@ namespace BarberShop.Application.Services
                 indisponibilidades
             );
 
-            return horariosDisponiveis;
+            // Retorna os horários disponíveis e o horário de funcionamento
+            return (horariosDisponiveis, horarioFuncionamento);
         }
+
 
 
 
@@ -273,9 +275,9 @@ namespace BarberShop.Application.Services
             return agendamentosFuturos.ToList();
         }
 
-        public async Task<IEnumerable<Agendamento>> ObterAgendamentosPorBarbeiroEBarbeariaAsync(int barbeiroId, int barbeariaId)
+        public async Task<IEnumerable<Agendamento>> ObterAgendamentosPorBarbeiroEBarbeariaAsync(int barbeiroId, int barbeariaId, int? agendamentoId = null)
         {
-            return await _agendamentoRepository.ObterAgendamentosPorBarbeiroEBarbeariaAsync(barbeiroId, barbeariaId);
+            return await _agendamentoRepository.ObterAgendamentosPorBarbeiroEBarbeariaAsync(barbeiroId, barbeariaId, agendamentoId);
         }
 
         public async Task<IEnumerable<Agendamento>> FiltrarAgendamentosAsync(int? barbeiroId, int barbeariaId, string clienteNome = null, DateTime? dataInicio = null, DateTime? dataFim = null, string formaPagamento = null,

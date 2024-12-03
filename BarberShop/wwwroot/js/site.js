@@ -893,7 +893,6 @@
         var horarioSelecionado = null; // Armazena o horário selecionado
         var horariosPorDia = {}; // Objeto para armazenar os horários disponíveis por dia
 
-
         // Evento de clique no botão de cada barbeiro
         $('.barbeiro-btn').on('click', function () {
             selectedBarbeiroId = $(this).data('barbeiro-id');
@@ -916,25 +915,67 @@
                     barbeiroId: selectedBarbeiroId,
                     duracaoTotal: selectedDuracaoTotal
                 },
-                success: function (data) {
+                success: function (response) {
+                    const horarios = response.horariosDisponiveis;
+                    const horarioFuncionamento = response.horarioFuncionamento;
 
-                    horariosPorDia = {}; // Limpa o objeto antes de preencher
+                    console.log("Horários disponíveis recebidos:", horarios);
+                    console.log("Horário de funcionamento recebido:", horarioFuncionamento);
 
-                    data.forEach(function (horario) {
-                        const dataHora = dayjs(horario).add(3, 'hour'); // Ajuste para UTC+3
+                    const diaSemanaMap = {
+                        "segunda-feira": "Monday",
+                        "terça-feira": "Tuesday",
+                        "quarta-feira": "Wednesday",
+                        "quinta-feira": "Thursday",
+                        "sexta-feira": "Friday",
+                        "sábado": "Saturday",
+                        "domingo": "Sunday"
+                    };
+
+                    horariosPorDia = {};
+
+                    horarios.forEach(function (horario) {
+                        const dataHora = dayjs(horario); // Removido ajuste de UTC+3
                         const dia = dataHora.format('YYYY-MM-DD');
                         const horarioInicio = dataHora.format('HH:mm');
                         const horarioFim = dataHora.add(selectedDuracaoTotal, 'minute').format('HH:mm');
 
-                        // Log para verificar cada horário processado com ajuste adicional
+                        const diaSemana = dataHora.format('dddd');
+                        const diaSemanaEmIngles = diaSemanaMap[diaSemana]; // Mapeia para o inglês
+
+                        if (!diaSemanaEmIngles) {
+                            console.warn(`Dia da semana inválido: ${diaSemana}`);
+                            return;
+                        }
+
+                        const horarioDia = horarioFuncionamento[diaSemanaEmIngles];
+
+                        if (!horarioDia || !horarioDia.abertura || !horarioDia.fechamento) {
+                            console.warn(`Horário de funcionamento não encontrado para ${diaSemana}`);
+                            return;
+                        }
+
+                        const abertura = dayjs(`${dia} ${horarioDia.abertura}`, 'YYYY-MM-DD HH:mm');
+                        const fechamento = dayjs(`${dia} ${horarioDia.fechamento}`, 'YYYY-MM-DD HH:mm');
+
+                        if (!abertura.isValid() || !fechamento.isValid()) {
+                            console.error(`Horário inválido detectado para ${diaSemana}:`, horarioDia);
+                            return;
+                        }
+
+                        if (dataHora.isBefore(abertura) || dataHora.add(selectedDuracaoTotal, 'minute').isAfter(fechamento)) {
+                            console.warn(`Horário fora do intervalo: ${horarioInicio} - ${horarioFim}`);
+                            return;
+                        }
 
                         if (!horariosPorDia[dia]) {
-                            horariosPorDia[dia] = []; // Cria o array de horários para o dia
+                            horariosPorDia[dia] = [];
                         }
-                        horariosPorDia[dia].push(`${horarioInicio} - ${horarioFim}`); // Adiciona o horário formatado ao dia
+                        horariosPorDia[dia].push(`${horarioInicio} - ${horarioFim}`);
+                        console.log(`Horário válido: ${horarioInicio} - ${horarioFim}`);
                     });
 
-                    // Log para verificar como ficou o objeto final
+                    console.log("Horários organizados por dia:", horariosPorDia);
 
                     configurarCalendario(Object.keys(horariosPorDia));
                 },
@@ -946,8 +987,9 @@
 
 
 
-
         function configurarCalendario(diasDisponiveis) {
+            console.log("Dias disponíveis para o calendário:", diasDisponiveis);
+
             flatpickr("#calendarioInput", {
                 inline: true,
                 dateFormat: "Y-m-d",
@@ -962,6 +1004,7 @@
                 onDayCreate: function (dObj, dStr, fp, dayElem) {
                     // Verifica se o dia está disponível
                     const isAvailable = diasDisponiveis.includes(dayElem.dateObj.toISOString().split("T")[0]);
+                    console.log(`Dia criado: ${dayElem.dateObj.toISOString().split("T")[0]}, Disponível: ${isAvailable}`);
                     if (!isAvailable) {
                         // Se o dia não estiver disponível, adiciona evento de clique para mostrar o toast
                         dayElem.classList.add("disabled");
@@ -974,10 +1017,8 @@
             });
         }
 
-
         // Função para exibir os horários disponíveis para o dia selecionado
         function mostrarHorariosParaDia(diaSelecionado) {
-            // Formata o título com a data no formato "Horários disponíveis em [dia] de [mês] de [ano]"
             const dataFormatada = dayjs(diaSelecionado).format('DD [de] MMMM [de] YYYY');
             $('#horariosModalLabel').text(`Horários disponíveis em ${dataFormatada}`);
 
@@ -985,7 +1026,6 @@
 
             if (horariosPorDia[diaSelecionado]) {
                 horariosPorDia[diaSelecionado].forEach(function (horario) {
-                    // Cria um botão para cada horário disponível no formato "início - fim"
                     let horarioBtn = `<button class="btn btn-outline-light m-1 horario-btn" data-horario="${horario}">${horario}</button>`;
                     $('#horariosContainer').append(horarioBtn);
                 });
@@ -995,6 +1035,7 @@
 
             $('#horariosModal').modal('show'); // Abre o modal de horários
         }
+
 
         // Evento de clique para cada horário disponível
         $(document).on('click', '.horario-btn', function () {
@@ -3045,6 +3086,129 @@
                     return 'Desconhecido';
             }
         }
+
+
+        // Seleção dos elementos
+        const tabelaAgendamentos = document.getElementById("tabelaAgendamentos");
+        const calendarioContainer = document.getElementById("calendarContainer");
+        const btnToggleView = document.getElementById("btnToggleView");
+        const btnText = document.getElementById("btnText");
+        const btnIcon = document.getElementById("btnIcon");
+
+        let currentDate = new Date();
+        let calendarioInicializado = false; // Flag para inicialização do calendário
+
+        // Função para alternar entre tabela e calendário
+        btnToggleView.addEventListener("click", function () {
+            if (tabelaAgendamentos.style.display !== "none") {
+                // Esconde a tabela e exibe o calendário
+                tabelaAgendamentos.style.display = "none";
+                calendarioContainer.style.display = "block";
+                btnText.textContent = "Exibir como Tabela";
+                btnIcon.textContent = "🗂️";
+
+                // Inicializa o calendário apenas na primeira vez
+                if (!calendarioInicializado) {
+                    renderCalendar(currentDate);
+                    calendarioInicializado = true;
+                }
+            } else {
+                // Exibe a tabela e esconde o calendário
+                tabelaAgendamentos.style.display = "block";
+                calendarioContainer.style.display = "none";
+                btnText.textContent = "Exibir como Calendário";
+                btnIcon.textContent = "📅";
+            }
+        });
+
+        // Função para carregar eventos do servidor
+        async function fetchEvents(start, end) {
+            try {
+                const response = await fetch(`/Agendamento/ObterEventosCalendario?dataInicio=${start}&dataFim=${end}`);
+                if (!response.ok) throw new Error("Erro ao buscar eventos");
+                return await response.json();
+            } catch (error) {
+                console.error("Erro ao carregar eventos:", error);
+                return [];
+            }
+        }
+
+        // Função para renderizar o calendário
+        async function renderCalendar(date) {
+            const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+            const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+            const startOfWeek = new Date(startOfMonth);
+            startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+            const endOfWeek = new Date(endOfMonth);
+            endOfWeek.setDate(endOfWeek.getDate() + (6 - endOfWeek.getDay()));
+
+            // Atualiza o cabeçalho do calendário
+            document.getElementById("monthYear").textContent = `${startOfMonth.toLocaleString("pt-BR", {
+                month: "long",
+            })} ${startOfMonth.getFullYear()}`;
+
+            // Limpa os dias do calendário
+            const calendarDays = document.getElementById("calendarDays");
+            calendarDays.innerHTML = "";
+
+            // Busca os eventos do servidor
+            const eventos = await fetchEvents(startOfWeek.toISOString(), endOfWeek.toISOString());
+
+            let currentDay = new Date(startOfWeek);
+            while (currentDay <= endOfWeek) {
+                const cell = document.createElement("div");
+                cell.className = "calendar-cell";
+
+                // Adiciona a data
+                const dateDiv = document.createElement("div");
+                dateDiv.className = "date";
+                dateDiv.textContent = currentDay.getDate();
+                cell.appendChild(dateDiv);
+
+                // Adiciona os eventos do dia
+                const eventosDia = eventos.filter(event => {
+                    const eventDate = new Date(event.start);
+                    return eventDate.toDateString() === currentDay.toDateString();
+                });
+
+                eventosDia.forEach(event => {
+                    const eventDiv = document.createElement("div");
+                    eventDiv.className = "calendar-event";
+                    eventDiv.style.backgroundColor = event.color || "#007bff";
+                    eventDiv.textContent = event.title;
+
+                    // Adiciona um tooltip ao passar o mouse
+                    eventDiv.setAttribute(
+                        "title",
+                        `Horário: ${new Date(event.start).toLocaleTimeString("pt-BR", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                        })}\nDuração: ${event.duration || "30 minutos"}\nBarbeiro: ${event.barbeiro || "Não definido"}`
+                    );
+
+                    cell.appendChild(eventDiv);
+                });
+
+                // Adiciona a célula ao calendário
+                calendarDays.appendChild(cell);
+
+                // Avança para o próximo dia
+                currentDay.setDate(currentDay.getDate() + 1);
+            }
+        }
+
+        // Navegação entre meses
+        document.getElementById("prevMonthBtn").addEventListener("click", function () {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar(currentDate);
+        });
+
+        document.getElementById("nextMonthBtn").addEventListener("click", function () {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar(currentDate);
+        });
+
+
     }
 
 
@@ -4308,22 +4472,24 @@
 
     }
 
-    // Notificação aos admin e barbeiro
+    // Verifica se o elemento de notificações existe
     var notificacaoPopup = document.getElementById('notificationDropdown');
     if (notificacaoPopup) {
+        console.log("Sininho de notificações detectado.");
+
         // Função para buscar notificações agrupadas por dia via AJAX
         function fetchNotifications() {
             console.log("Buscando notificações...");
             $.ajax({
-                url: '/Notificacao/ObterNotificacoesPorDia', // Endpoint correto
+                url: '/Notificacao/ObterNotificacoesPorDia', // Endpoint para buscar notificações
                 method: 'GET',
                 success: function (data) {
-                    console.log("Resposta recebida do servidor:", data); // Log completo do retorno do servidor
+                    console.log("Resposta recebida do servidor:", data); // Log completo do retorno
 
-                    const notificationListUnread = $('#notificationListUnread'); // Elemento para notificações não lidas
-                    const notificationListRead = $('#notificationListRead'); // Elemento para notificações lidas
-                    const counter = $('#notificationCounter');
-                    const notificationBellIcon = $('#notificationBellIcon'); // Ícone específico do sino
+                    const notificationListUnread = $('#notificationListUnread'); // Lista de notificações não lidas
+                    const notificationListRead = $('#notificationListRead'); // Lista de notificações lidas
+                    const counter = $('#notificationCounter'); // Contador de notificações
+                    const notificationBellIcon = $('#notificationBellIcon'); // Ícone do sino
 
                     // Limpa as listas de notificações
                     notificationListUnread.empty();
@@ -4334,7 +4500,7 @@
 
                         // Soma notificações não lidas para o contador
                         const totalNaoLidas = data.reduce((acc, dia) => {
-                            const naoLidas = dia.naoLidas || []; // Garante que naoLidas seja definido
+                            const naoLidas = dia.naoLidas || [];
                             console.log(`Dia ${new Date(dia.data).toLocaleDateString()} - Notificações não lidas: ${naoLidas.length}, Lidas: ${dia.lidas.length}`);
                             return acc + naoLidas.length;
                         }, 0);
@@ -4358,12 +4524,12 @@
                                 notificationListUnread.append(`<li class="dropdown-header">${dataFormatada}</li>`);
                                 naoLidas.forEach(notification => {
                                     notificationListUnread.append(`
-                                        <li>
-                                            <a href="${notification.link}" class="dropdown-item font-weight-bold text-primary">
-                                                ${notification.mensagem}
-                                            </a>
-                                        </li>
-                                    `);
+                                    <li>
+                                        <a href="${notification.link}" class="dropdown-item font-weight-bold text-primary">
+                                            ${notification.mensagem}
+                                        </a>
+                                    </li>
+                                `);
                                 });
                             }
 
@@ -4373,19 +4539,19 @@
                                 notificationListRead.append(`<li class="dropdown-header">${dataFormatada}</li>`);
                                 lidas.forEach(notification => {
                                     notificationListRead.append(`
-                                        <li>
-                                            <a href="${notification.link}" class="dropdown-item text-muted">
-                                                ${notification.mensagem}
-                                            </a>
-                                        </li>
-                                    `);
+                                    <li>
+                                        <a href="${notification.link}" class="dropdown-item text-muted">
+                                            ${notification.mensagem}
+                                        </a>
+                                    </li>
+                                `);
                                 });
                             }
                         });
                     } else {
                         console.log("Sem notificações para exibir.");
                         counter.hide(); // Esconde o contador
-                        notificationBellIcon.removeClass('vibrate'); // Remove a vibração
+                        notificationBellIcon.removeClass('vibrate'); // Remove a vibração do sino
                         notificationListUnread.append('<li class="dropdown-item text-center">Sem notificações para o dia</li>');
                     }
                 },
@@ -4396,12 +4562,19 @@
         }
 
         // Atualizar notificações periodicamente
-        setInterval(fetchNotifications, 6000660); // Atualiza notificações a cada 60 segundos
+        setInterval(fetchNotifications, 60000); // Atualiza notificações a cada 60 segundos
         fetchNotifications(); // Carrega notificações ao iniciar
 
         // Evento de clique no sininho para marcar notificações como lidas
-        $(document).on('click', '#notificationDropdown', function () {
-            console.log("Usuário clicou no sininho.");
+        $(document).on('click', '#notificationDropdown', function (e) {
+            if ($(window).width() < 768) {
+                // No modo responsivo, redireciona para a página de notificações
+                e.preventDefault();
+                window.location.href = '/Notificacao/Index';
+                return;
+            }
+
+            console.log("Usuário clicou no sininho (desktop).");
             $.ajax({
                 url: '/Notificacao/MarcarTodasComoLidas', // Endpoint para marcar notificações como lidas
                 method: 'POST',
@@ -4411,7 +4584,7 @@
                     console.log("Contador zerado visualmente.");
                     $('#notificationBellIcon').removeClass('vibrate'); // Remove a vibração do sino
                     console.log("Vibração do sino parada.");
-                    fetchNotifications(); // Recarrega as notificações para refletir as mudanças
+                    fetchNotifications(); // Recarrega as notificações
                 },
                 error: function (err) {
                     console.error('Erro ao marcar notificações como lidas:', err);
@@ -4421,8 +4594,426 @@
     }
 
 
+    // Verifica se estamos na página de notificações
+    const notificacoesPage = document.getElementById('notificacoesPage');
+    if (notificacoesPage) {
+        console.log("Página de Notificações detectada.");
+
+        // Função para atualizar notificações
+        function updateNotificationPage() {
+            console.log("Atualizando notificações na página...");
+
+            $.ajax({
+                url: '/Notificacao/ObterNotificacoesPorDia', // Endpoint para buscar notificações
+                method: 'GET',
+                success: function (data) {
+                    console.log("Resposta recebida do servidor:", data);
+
+                    // Selecionar os containers de notificações
+                    const naoLidasContainer = $('#naoLidasContainer');
+                    const lidasContainer = $('#lidasContainer');
+
+                    // Limpa os containers
+                    naoLidasContainer.empty();
+                    lidasContainer.empty();
+
+                    if (data && data.length > 0) {
+                        data.forEach(dia => {
+                            const dataFormatada = new Date(dia.data).toLocaleDateString();
+
+                            // Adiciona notificações não lidas
+                            const naoLidas = dia.naoLidas || [];
+                            if (naoLidas.length > 0) {
+                                naoLidasContainer.append(`<h5>${dataFormatada}</h5>`);
+                                naoLidas.forEach(notification => {
+                                    naoLidasContainer.append(`
+                                    <div class="servico-card">
+                                        <h5><i class="fas fa-bell text-warning"></i> ${notification.mensagem}</h5>
+                                        <p class="text-muted">Recebida em: ${new Date(notification.dataHora).toLocaleString()}</p>
+                                        ${notification.link ? `<a href="${notification.link}" class="btn btnEditar">Ver mais</a>` : ''}
+                                    </div>
+                                `);
+                                });
+                            }
+
+                            // Adiciona notificações lidas
+                            const lidas = dia.lidas || [];
+                            if (lidas.length > 0) {
+                                lidasContainer.append(`<h5>${dataFormatada}</h5>`);
+                                lidas.forEach(notification => {
+                                    lidasContainer.append(`
+                                    <div class="servico-card">
+                                        <h5><i class="fas fa-check-circle text-success"></i> ${notification.mensagem}</h5>
+                                        <p class="text-muted">Recebida em: ${new Date(notification.dataHora).toLocaleString()}</p>
+                                        ${notification.link ? `<a href="${notification.link}" class="btn btnEditar">Ver mais</a>` : ''}
+                                    </div>
+                                `);
+                                });
+                            }
+                        });
+                    } else {
+                        naoLidasContainer.html('<div class="alert alert-warning text-center">Você não possui notificações não lidas.</div>');
+                        lidasContainer.html('<div class="alert alert-warning text-center">Você não possui notificações lidas.</div>');
+                    }
+                },
+                error: function (err) {
+                    console.error("Erro ao atualizar notificações na página:", err);
+                }
+            });
+        }
+
+        // Função para marcar todas as notificações como lidas
+        function marcarTodasComoLidas() {
+            console.log("Marcando todas as notificações como lidas...");
+
+            $.ajax({
+                url: '/Notificacao/MarcarTodasComoLidas', // Endpoint para marcar notificações como lidas
+                method: 'POST',
+                success: function () {
+                    console.log("Todas as notificações foram marcadas como lidas.");
+                    // Atualiza a lista de notificações
+                    updateNotificationPage();
+                },
+                error: function (err) {
+                    console.error("Erro ao marcar todas como lidas:", err);
+                }
+            });
+        }
+
+        // Evento de clique no botão "Marcar todas como lidas"
+        $(document).on('click', '#marcarTodasComoLidasBtn', function () {
+            marcarTodasComoLidas();
+        });
+
+        // Atualiza as notificações na página ao carregar
+        updateNotificationPage();
+
+        // Configura a atualização automática a cada 60 segundos
+        setInterval(updateNotificationPage, 60000);
+    } else {
+        console.log("Página de Notificações não detectada. Script não será executado.");
+    }
+
+    var minhasAvaliacoesBarbeiro = document.getElementById('minhasAvaliacoesBarbeiro');
+
+    if (minhasAvaliacoesBarbeiro) {
+        var formFiltro = document.getElementById('filtroAvaliacoesForm');
+        var loadingOverlay = document.getElementById('loadingOverlay');
+        var btnLimparFiltro = document.getElementById('limparFiltroBtn');
+
+        // Evento de submissão do formulário de filtros
+        if (formFiltro) {
+            formFiltro.addEventListener('submit', function (e) {
+                e.preventDefault();
+                exibirLoading(); // Mostra o loading
+                enviarFiltro(1); // Sempre começa na página 1 ao filtrar
+            });
+        }
+
+        // Evento para o botão de "Limpar Filtro"
+        if (btnLimparFiltro) {
+            btnLimparFiltro.addEventListener('click', function () {
+                exibirLoading(); // Mostra o loading
+                formFiltro.reset(); // Reseta os campos do formulário
+                enviarFiltro(1); // Reenvia a requisição com filtros limpos
+            });
+        }
+
+        // Função para exibir o loading overlay
+        function exibirLoading() {
+            if (loadingOverlay) {
+                loadingOverlay.style.display = 'block';
+            }
+        }
+
+        // Função para esconder o loading overlay
+        function ocultarLoading() {
+            if (loadingOverlay) {
+                loadingOverlay.style.display = 'none';
+            }
+        }
+
+        // Função para enviar os filtros
+        function enviarFiltro(page) {
+            var formData = new FormData(formFiltro);
+            formData.append('page', page);
+            formData.append('pageSize', 10);
+
+            var queryString = new URLSearchParams(formData).toString();
+
+            fetch(`/Barbeiro/FiltrarAvaliacoes?${queryString}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erro ao buscar as avaliações.');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    atualizarTabela(data.avaliacoes);
+                    atualizarCartoes(data.avaliacoes);
+                    atualizarPaginacao(data.totalCount, 10, page);
+                    showToast('Avaliações filtradas com sucesso!', 'success');
+                })
+                .catch(error => {
+                    console.error(error);
+                    showToast('Erro ao filtrar as avaliações. Tente novamente.', 'danger');
+                })
+                .finally(() => {
+                    ocultarLoading(); // Oculta o loading ao final do processamento
+                });
+        }
+
+        function atualizarTabela(avaliacoes) {
+            var tabelaCorpo = document.querySelector('.table-responsive tbody');
+            if (tabelaCorpo) {
+                tabelaCorpo.innerHTML = '';
+
+                avaliacoes.forEach(avaliacao => {
+                    var linha = `
+                <tr>
+                    <td>${avaliacao.avaliacaoId}</td>
+                    <td>${avaliacao.agendamentoId}</td>
+                    <td>${renderEstrelas(avaliacao.notaServico)}</td>
+                    <td>${renderEstrelas(avaliacao.notaBarbeiro)}</td>
+                    <td>${avaliacao.observacao || 'Sem observação'}</td>
+                    <td>${new Date(avaliacao.dataAvaliado).toLocaleString('pt-BR')}</td>
+                </tr>
+            `;
+                    tabelaCorpo.innerHTML += linha;
+                });
+            }
+        }
+
+        function atualizarCartoes(avaliacoes) {
+            var listaCartoes = document.querySelector('.d-md-none');
+            if (listaCartoes) {
+                listaCartoes.innerHTML = '';
+
+                avaliacoes.forEach(avaliacao => {
+                    var card = `
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Avaliação #${avaliacao.avaliacaoId}</h5>
+                        <p><strong>ID Agendamento:</strong> ${avaliacao.agendamentoId}</p>
+                        <p><strong>Nota do Serviço:</strong> ${renderEstrelas(avaliacao.notaServico)}</p>
+                        <p><strong>Nota do Barbeiro:</strong> ${renderEstrelas(avaliacao.notaBarbeiro)}</p>
+                        <p><strong>Comentário:</strong> ${avaliacao.observacao || 'Sem observação'}</p>
+                        <p><strong>Data Avaliação:</strong> ${new Date(avaliacao.dataAvaliado).toLocaleString('pt-BR')}</p>
+                    </div>
+                </div>
+            `;
+                    listaCartoes.innerHTML += card;
+                });
+            }
+        }
+
+        // Função para atualizar a paginação
+        function atualizarPaginacao(totalCount, pageSize, currentPage) {
+            var paginationContainer = document.querySelector('.pagination');
+            if (!paginationContainer) return;
+
+            paginationContainer.innerHTML = ''; // Limpa a paginação atual
+
+            if (totalCount > pageSize) {
+                var totalPages = Math.ceil(totalCount / pageSize);
+
+                // Botão "Anterior"
+                if (currentPage > 1) {
+                    var prev = document.createElement('li');
+                    prev.className = 'page-item';
+                    prev.innerHTML = `<a class="page-link" href="#" data-page="${currentPage - 1}">Anterior</a>`;
+                    paginationContainer.appendChild(prev);
+                }
+
+                // Páginas numeradas
+                for (let i = 1; i <= totalPages; i++) {
+                    var pageItem = document.createElement('li');
+                    pageItem.className = `page-item ${i === currentPage ? 'active' : ''}`;
+                    pageItem.innerHTML = `<a class="page-link" href="#" data-page="${i}">${i}</a>`;
+                    paginationContainer.appendChild(pageItem);
+                }
+
+                // Botão "Próxima"
+                if (currentPage < totalPages) {
+                    var next = document.createElement('li');
+                    next.className = 'page-item';
+                    next.innerHTML = `<a class="page-link" href="#" data-page="${currentPage + 1}">Próxima</a>`;
+                    paginationContainer.appendChild(next);
+                }
+            }
+        }
+
+        // Função para renderizar estrelas
+        function renderEstrelas(nota) {
+            let estrelas = '';
+            for (let i = 1; i <= 5; i++) {
+                estrelas += `<i class="fa fa-star ${i <= nota ? 'text-warning' : 'text-secondary'}"></i>`;
+            }
+            return estrelas;
+        }
+    }
 
 
+    var avaliacoesBarbeariaAdmin = document.getElementById('avaliacoesBarbeariaAdmin');
+
+    if (avaliacoesBarbeariaAdmin) {
+        var formFiltro = document.getElementById('filtroAvaliacoesBarbeariaForm');
+        var loadingOverlay = document.getElementById('loadingOverlay'); // Novo ID específico
+        var btnLimparFiltro = document.getElementById('limparFiltroBtn');
+
+        // Evento de submissão do formulário de filtros
+        if (formFiltro) {
+            formFiltro.addEventListener('submit', function (e) {
+                e.preventDefault();
+                exibirLoading(); // Mostra o loading
+                enviarFiltro(1); // Sempre começa na página 1 ao filtrar
+            });
+        }
+
+        // Evento para o botão de "Limpar Filtro"
+        if (btnLimparFiltro) {
+            btnLimparFiltro.addEventListener('click', function () {
+                exibirLoading(); // Mostra o loading
+                formFiltro.reset(); // Reseta os campos do formulário
+                enviarFiltro(1); // Reenvia a requisição com filtros limpos
+            });
+        }
+
+        // Função para exibir o loading overlay
+        function exibirLoading() {
+            if (loadingOverlay) {
+                loadingOverlay.classList.remove('d-none');
+            }
+        }
+
+        // Função para esconder o loading overlay
+        function ocultarLoading() {
+            if (loadingOverlay) {
+                loadingOverlay.classList.add('d-none');
+            }
+        }
+
+        // Função para enviar os filtros
+        function enviarFiltro(page) {
+            var formData = new FormData(formFiltro);
+            formData.append('page', page);
+            formData.append('pageSize', 10);
+
+            var queryString = new URLSearchParams(formData).toString();
+
+            fetch(`/Admin/FiltrarAvaliacoesBarbearia?${queryString}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erro ao buscar as avaliações.');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    atualizarTabela(data.avaliacoes);
+                    atualizarCartoes(data.avaliacoes);
+                    atualizarPaginacao(data.totalCount, 10, page);
+                    showToast('Avaliações filtradas com sucesso!', 'success');
+                })
+                .catch(error => {
+                    console.error(error);
+                    showToast('Erro ao filtrar as avaliações. Tente novamente.', 'danger');
+                })
+                .finally(() => {
+                    ocultarLoading(); // Oculta o loading ao final do processamento
+                });
+        }
+
+        function atualizarTabela(avaliacoes) {
+            var tabelaCorpo = document.querySelector('.table-responsive tbody');
+            if (tabelaCorpo) {
+                tabelaCorpo.innerHTML = '';
+
+                avaliacoes.forEach(avaliacao => {
+                    var linha = `
+                <tr>
+                    <td>${avaliacao.avaliacaoId}</td>
+                    <td>${avaliacao.barbeiroNome || 'Sem barbeiro'}</td>
+                    <td>${avaliacao.agendamentoId}</td>
+                    <td>${renderEstrelas(avaliacao.notaServico)}</td>
+                    <td>${renderEstrelas(avaliacao.notaBarbeiro)}</td>
+                    <td>${avaliacao.observacao || 'Sem observação'}</td>
+                    <td>${new Date(avaliacao.dataAvaliado).toLocaleString('pt-BR')}</td>
+                </tr>
+                `;
+                    tabelaCorpo.innerHTML += linha;
+                });
+            }
+        }
+
+        function atualizarCartoes(avaliacoes) {
+            var listaCartoes = document.querySelector('.d-md-none');
+            if (listaCartoes) {
+                listaCartoes.innerHTML = '';
+
+                avaliacoes.forEach(avaliacao => {
+                    var card = `
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Avaliação #${avaliacao.avaliacaoId}</h5>
+                        <p><strong>Barbeiro:</strong> ${avaliacao.barbeiroNome || 'Sem barbeiro'}</p>
+                        <p><strong>ID Agendamento:</strong> ${avaliacao.agendamentoId}</p>
+                        <p><strong>Nota do Serviço:</strong> ${renderEstrelas(avaliacao.notaServico)}</p>
+                        <p><strong>Nota do Barbeiro:</strong> ${renderEstrelas(avaliacao.notaBarbeiro)}</p>
+                        <p><strong>Comentário:</strong> ${avaliacao.observacao || 'Sem observação'}</p>
+                        <p><strong>Data Avaliação:</strong> ${new Date(avaliacao.dataAvaliado).toLocaleString('pt-BR')}</p>
+                    </div>
+                </div>
+                `;
+                    listaCartoes.innerHTML += card;
+                });
+            }
+        }
+
+        // Função para atualizar a paginação
+        function atualizarPaginacao(totalCount, pageSize, currentPage) {
+            var paginationContainer = document.querySelector('.pagination');
+            if (!paginationContainer) return;
+
+            paginationContainer.innerHTML = ''; // Limpa a paginação atual
+
+            if (totalCount > pageSize) {
+                var totalPages = Math.ceil(totalCount / pageSize);
+
+                // Botão "Anterior"
+                if (currentPage > 1) {
+                    var prev = document.createElement('li');
+                    prev.className = 'page-item';
+                    prev.innerHTML = `<a class="page-link" href="#" data-page="${currentPage - 1}">Anterior</a>`;
+                    paginationContainer.appendChild(prev);
+                }
+
+                // Páginas numeradas
+                for (let i = 1; i <= totalPages; i++) {
+                    var pageItem = document.createElement('li');
+                    pageItem.className = `page-item ${i === currentPage ? 'active' : ''}`;
+                    pageItem.innerHTML = `<a class="page-link" href="#" data-page="${i}">${i}</a>`;
+                    paginationContainer.appendChild(pageItem);
+                }
+
+                // Botão "Próxima"
+                if (currentPage < totalPages) {
+                    var next = document.createElement('li');
+                    next.className = 'page-item';
+                    next.innerHTML = `<a class="page-link" href="#" data-page="${currentPage + 1}">Próxima</a>`;
+                    paginationContainer.appendChild(next);
+                }
+            }
+        }
+
+        // Função para renderizar estrelas
+        function renderEstrelas(nota) {
+            let estrelas = '';
+            for (let i = 1; i <= 5; i++) {
+                estrelas += `<i class="fa fa-star ${i <= nota ? 'text-warning' : 'text-secondary'}"></i>`;
+            }
+            return estrelas;
+        }
+    }
 
 
 });

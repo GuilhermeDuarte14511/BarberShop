@@ -207,7 +207,10 @@ namespace BarberShop.Infrastructure.Repositories
                     }
 
                     // Ajustar o horário atual para o fim do agendamento
-                    horarioAtual = fimAgendamento;
+                    if (horarioAtual < fimAgendamento)
+                    {
+                        horarioAtual = fimAgendamento;
+                    }
                 }
 
                 // Adicionar horários disponíveis após o último agendamento até o horário de fechamento
@@ -322,27 +325,30 @@ namespace BarberShop.Infrastructure.Repositories
 
         public async Task<IEnumerable<Agendamento>> ObterAgendamentosConcluidosSemEmailAsync()
         {
-            var dataLimite = DateTime.UtcNow.AddDays(-1);
-
             return await _context.Agendamentos
                 .Where(a => a.Status == StatusAgendamento.Concluido &&
-                            a.DataHora <= dataLimite &&
                             (a.EmailEnviado == null || a.EmailEnviado == false))
                 .Include(a => a.Cliente)
                 .Include(a => a.Barbearia)
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<Agendamento>> ObterAgendamentosPorBarbeiroEBarbeariaAsync(int barbeiroId, int barbeariaId)
-        {
-            return await _context.Agendamentos
-            .AsNoTracking()
-            .Include(a => a.Cliente)
-            .Include(a => a.AgendamentoServicos)
-            .Include(a => a.Pagamento)
-            .Where(a => a.BarbeiroId == barbeiroId && a.BarbeariaId == barbeariaId)
-            .ToListAsync();
 
+        public async Task<IEnumerable<Agendamento>> ObterAgendamentosPorBarbeiroEBarbeariaAsync(int barbeiroId, int barbeariaId, int? agendamentoId = null)
+        {
+            var query = _context.Agendamentos
+                .AsNoTracking()
+                .Include(a => a.Cliente)
+                .Include(a => a.AgendamentoServicos)
+                .Include(a => a.Pagamento)
+                .Where(a => a.BarbeiroId == barbeiroId && a.BarbeariaId == barbeariaId);
+
+            if (agendamentoId.HasValue)
+            {
+                query = query.Where(a => a.AgendamentoId == agendamentoId.Value);
+            }
+
+            return await query.ToListAsync();
         }
 
         public async Task<IEnumerable<Agendamento>> FiltrarAgendamentosAsync(int? barbeiroId, int barbeariaId, string clienteNome = null, DateTime? dataInicio = null, DateTime? dataFim = null, string formaPagamento = null, StatusAgendamento? status = null, StatusPagamento? statusPagamento = null,
