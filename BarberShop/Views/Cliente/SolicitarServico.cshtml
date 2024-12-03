@@ -4,9 +4,46 @@
     ViewData["Title"] = "Solicitar Novo Serviço";
     var barbeariaUrl = ViewData["BarbeariaUrl"] as string ?? "NomeBarbearia";
     int? barbeariaId = ViewData["BarbeariaId"] as int?;
+    int currentStep = (int)(ViewData["CurrentStep"] ?? 1); // Garante que o valor padrão seja 1
+
 }
 
 <div class="body-with-header">
+    <input type="hidden" id="currentStep" value="@currentStep">
+
+    <div class="progress-bar-wrapper">
+        <div id="progressBarContainer">
+            <div class="progress-container">
+                <div class="step" data-step="1">
+                    <div class="progress-icon">
+                        <i class="fas fa-cut"></i>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-bar-fill"></div>
+                    </div>
+                    <div class="label">Selecionar Serviço</div>
+                </div>
+                <div class="step" data-step="2">
+                    <div class="progress-icon">
+                        <i class="fas fa-user-clock"></i>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-bar-fill"></div>
+                    </div>
+                    <div class="label">Escolher Barbeiro</div>
+                </div>
+                <div class="step" data-step="3">
+                    <div class="progress-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-bar-fill"></div>
+                    </div>
+                    <div class="label">Resumo</div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Div com ID para identificação -->
     <div id="solicitarServicoPage">

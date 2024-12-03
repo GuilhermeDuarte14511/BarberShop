@@ -216,6 +216,7 @@ namespace BarberShopMVC.Controllers
                 ViewData["ServicoIds"] = servicoIds;
                 ViewData["BarbeariaUrl"] = barbeariaUrl;
                 ViewData["BarbeariaId"] = barbeariaId;
+                ViewData["CurrentStep"] = 2;
 
                 return View("EscolherBarbeiro", barbeiros);
             }

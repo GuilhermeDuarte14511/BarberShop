@@ -265,7 +265,7 @@ namespace BarberShopMVC.Controllers
                 {
                     if (_autenticacaoService.VerifyPassword(passwordInputLogin, cliente.Senha))
                     {
-                        var claimsPrincipal = _autenticacaoService.AutenticarCliente(cliente);
+                        var claimsPrincipal = _autenticacaoService.AutenticarCliente(cliente, barbeariaUrl);
                         if (claimsPrincipal != null)
                         {
                             var authProperties = new AuthenticationProperties

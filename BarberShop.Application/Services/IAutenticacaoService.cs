@@ -10,7 +10,7 @@ namespace BarberShop.Application.Services
 {
     public interface IAutenticacaoService
     {
-        ClaimsPrincipal AutenticarCliente(Cliente cliente);
+        ClaimsPrincipal AutenticarCliente(Cliente cliente, string barbeariaUrl = null);
         string HashPassword(string senha);
         bool VerifyPassword(string senha, string senhaHash);
     }

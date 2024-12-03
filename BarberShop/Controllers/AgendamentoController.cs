@@ -485,6 +485,8 @@ namespace BarberShopMVC.Controllers
                 ViewData["ClienteEmail"] = cliente.Email;
             }
 
+            ViewData["CurrentStep"] = 3;
+
             // Passar a PublishableKey do Stripe para a View
             ViewData["StripePublishableKey"] = Environment.GetEnvironmentVariable("Stripe__PublishableKey")
                                                ?? _configuration["Stripe:PublishableKey"];

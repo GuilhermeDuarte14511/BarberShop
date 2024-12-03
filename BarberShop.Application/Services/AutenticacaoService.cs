@@ -8,7 +8,7 @@ namespace BarberShop.Application.Services
 {
     public class AutenticacaoService : IAutenticacaoService
     {
-        public ClaimsPrincipal AutenticarCliente(Cliente cliente)
+        public ClaimsPrincipal AutenticarCliente(Cliente cliente, string barbeariaUrl)
         {
             if (cliente == null)
             {
@@ -22,13 +22,15 @@ namespace BarberShop.Application.Services
                 new Claim(ClaimTypes.Name, cliente.Nome),
                 new Claim(ClaimTypes.Email, cliente.Email ?? cliente.Telefone),
                 new Claim("Telefone", cliente.Telefone ?? string.Empty),
-                new Claim(ClaimTypes.Role, cliente.Role)
+                new Claim(ClaimTypes.Role, cliente.Role),
+                new Claim("BarbeariaUrl", barbeariaUrl) // Adiciona o UrlSlug da barbearia
             };
 
             // Configurando a identidade e principal
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             return new ClaimsPrincipal(claimsIdentity);
         }
+
 
         public string HashPassword(string senha)
         {

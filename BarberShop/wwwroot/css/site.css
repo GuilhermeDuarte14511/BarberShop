@@ -2667,9 +2667,137 @@ h2, h3 {
             font-size: 1.2rem;
         }
 
+/* Wrapper para a barra de progresso */
+.progress-bar-wrapper {
+    padding: 10px 20px;
+    background-color: #1c1c1c; /* Fundo escuro para combinar com o layout */
+    margin-bottom: 20px;
+    border-bottom: 1px solid #444; /* Linha separadora abaixo da barra */
+}
+
+/* Container principal da barra de progresso */
+.progress-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Cada passo individual */
+.step {
+    position: relative;
+    flex: 1; /* Todos os passos ocupam tamanhos iguais */
+    text-align: center;
+    color: #ecf0f1; /* Texto claro para contraste */
+}
+
+    /* Passos ativos */
+    .step.active .progress-bar-fill {
+        background-color: #e74c3c; /* Cor do preenchimento do passo ativo */
+        width: 100%; /* Preenchimento completo para os passos ativos */
+    }
+
+    .step.active .progress-icon {
+        background-color: #e74c3c; /* Ícone ativo */
+        color: #ffffff;
+        box-shadow: 0 0 10px rgba(231, 76, 60, 0.8);
+    }
+
+/* Barra de progresso (linha horizontal) */
+.progress-bar {
+    position: relative;
+    width: 100%; /* Largura total do passo */
+    height: 4px; /* Altura da barra */
+    background-color: #444; /* Cor base para os passos inativos */
+    margin-bottom: 5px;
+}
+
+/* Preenchimento da barra */
+.progress-bar-fill {
+    height: 100%;
+    width: 0;
+    background-color: #e74c3c; /* Cor do passo ativo */
+    transition: width 0.3s ease; /* Suaviza a transição */
+}
+
+/* Ícones de cada passo */
+.progress-icon {
+    width: 30px;
+    height: 30px;
+    background-color: #444; /* Ícone inativo */
+    color: #ecf0f1; /* Cor do ícone */
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto 10px auto; /* Centraliza o ícone */
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+/* Rótulos abaixo dos passos */
+.step .label {
+    margin-top: 5px;
+    font-size: 0.9rem;
+    text-transform: uppercase; /* Texto em maiúsculas */
+    font-weight: bold;
+}
+
+/* Passos concluídos */
+.step.completed .progress-icon {
+    background-color: #2ecc71; /* Verde para passos concluídos */
+    color: #ffffff;
+}
+
+.step.completed .progress-bar-fill {
+    background-color: #2ecc71; /* Barra preenchida */
+}
+
+/* Personalização para o último passo (remoção do espaçamento lateral) */
+.step:last-child .progress-bar {
+    margin-right: 0;
+}
+
+/* Passos futuros (inativos) */
+.step:not(.active):not(.completed) .progress-bar-fill {
+    background-color: transparent; /* Sem preenchimento */
+}
+
+.step:not(.active):not(.completed) .progress-icon {
+    background-color: #444; /* Ícone inativo */
+    color: #777;
+}
 
 /* Responsividade */
 @media (max-width: 768px) {
+    .progress-bar-wrapper {
+        padding: 10px;
+    }
+
+    .progress-container {
+        flex-direction: column; /* Coloca os passos em coluna */
+        gap: 10px;
+    }
+
+    .step {
+        flex: none; /* Remove a largura igual entre os passos */
+    }
+
+    .progress-bar {
+        height: 3px; /* Altura reduzida em telas menores */
+    }
+
+    .progress-icon {
+        width: 24px;
+        height: 24px;
+        font-size: 12px; /* Ícones menores em telas pequenas */
+    }
+
+    .step .label {
+        font-size: 0.8rem; /* Texto menor */
+    }
 
     #marcarTodasComoLidasBtn {
         width: 100%; /* Botão ocupa toda a largura no mobile */

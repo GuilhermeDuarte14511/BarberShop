@@ -34,11 +34,12 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body>
-    @if (User.Identity.IsAuthenticated && User.IsInRole("Cliente") && !Context.Request.Path.Value.Contains("/admin"))
+    @if (User.Identity.IsAuthenticated && User.IsInRole("Cliente") && User.HasClaim(c => c.Type == "BarbeariaUrl") && !string.IsNullOrEmpty(Context.Request.Path.Value.Split('/').Skip(1).FirstOrDefault()) && !string.IsNullOrEmpty(Context.Request.Path.Value.Split('/').Skip(2).FirstOrDefault()))
     {
         var barbeariaUrl = ViewData["BarbeariaUrl"] as string ?? "";
         var currentPath = Context.Request.Path.Value?.ToLower() ?? "";
 
+        <!-- Header -->
         <header class="header">
             <h1 class="h4 text-white">BarberShop</h1>
             <div class="dropdown profile-menu">

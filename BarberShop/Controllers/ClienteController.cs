@@ -229,6 +229,7 @@ namespace BarberShopMVC.Controllers
                 }
                 ViewData["BarbeariaUrl"] = barbeariaUrl;
                 ViewData["BarbeariaId"] = barbeariaId; // Passa o barbeariaId para a ViewData
+                ViewData["CurrentStep"] = 1;
 
 
                 var servicos = await _servicoRepository.ObterServicosPorBarbeariaIdAsync(barbeariaId.Value);
@@ -240,6 +241,7 @@ namespace BarberShopMVC.Controllers
                 throw;
             }
         }
+
 
         // GET: Exibe a página de alteração de senha
         [HttpGet]
