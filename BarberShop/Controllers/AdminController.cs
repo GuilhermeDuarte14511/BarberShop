@@ -108,20 +108,22 @@ namespace BarberShopMVC.Controllers
                 var totalCount = avaliacoes.Count();
 
                 var pagedAvaliacoes = avaliacoes
-                    .OrderByDescending(a => a.DataAvaliado)
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .Select(a => new AvaliacaoDTO
-                    {
-                        AvaliacaoId = a.AvaliacaoId,
-                        AgendamentoId = a.AgendamentoId,
-                        NotaServico = a.NotaServico,
-                        NotaBarbeiro = a.NotaBarbeiro,
-                        Observacao = a.Observacao,
-                        DataAvaliado = a.DataAvaliado,
-                        BarbeiroNome = a.Agendamento.Barbeiro?.Nome
-                    })
-                    .ToList();
+                .OrderByDescending(a => a.DataAvaliado)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(a => new AvaliacaoDTO
+                {
+                    AvaliacaoId = a.AvaliacaoId,
+                    AgendamentoId = a.AgendamentoId,
+                    NotaServico = a.NotaServico,
+                    NotaBarbeiro = a.NotaBarbeiro,
+                    Observacao = a.Observacao,
+                    DataAvaliado = a.DataAvaliado,
+                    BarbeiroNome = a.Agendamento.Barbeiro?.Nome,
+                    ClienteNome = a.Agendamento.Cliente.Nome,
+                    ClienteEmail = a.Agendamento.Cliente.Email
+                })
+                .ToList();
 
                 var barbeiros = await _barbeiroService.ObterBarbeirosPorBarbeariaIdAsync(barbeariaId.Value);
                 var barbeirosDto = barbeiros.Select(b => new BarbeiroDto
@@ -170,20 +172,22 @@ namespace BarberShopMVC.Controllers
                 var totalCount = avaliacoes.Count();
 
                 var pagedAvaliacoes = avaliacoes
-                    .OrderByDescending(a => a.DataAvaliado)
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .Select(a => new AvaliacaoDTO
-                    {
-                        AvaliacaoId = a.AvaliacaoId,
-                        AgendamentoId = a.AgendamentoId,
-                        NotaServico = a.NotaServico,
-                        NotaBarbeiro = a.NotaBarbeiro,
-                        Observacao = a.Observacao,
-                        DataAvaliado = a.DataAvaliado,
-                        BarbeiroNome = a.Agendamento.Barbeiro?.Nome
-                    })
-                    .ToList();
+                .OrderByDescending(a => a.DataAvaliado)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(a => new AvaliacaoDTO
+                {
+                    AvaliacaoId = a.AvaliacaoId,
+                    AgendamentoId = a.AgendamentoId,
+                    NotaServico = a.NotaServico,
+                    NotaBarbeiro = a.NotaBarbeiro,
+                    Observacao = a.Observacao,
+                    DataAvaliado = a.DataAvaliado,
+                    BarbeiroNome = a.Agendamento.Barbeiro?.Nome,
+                    ClienteNome = a.Agendamento.Cliente.Nome,
+                    ClienteEmail = a.Agendamento.Cliente.Email
+                })
+                .ToList();
 
                 await LogAsync("INFO", nameof(FiltrarAvaliacoesBarbearia), "Filtro de avaliações aplicado com sucesso", $"BarbeariaId: {barbeariaId}, TotalCount: {totalCount}");
                 return Json(new

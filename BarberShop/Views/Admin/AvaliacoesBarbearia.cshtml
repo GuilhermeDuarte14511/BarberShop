@@ -84,6 +84,7 @@
             <thead>
                 <tr>
                     <th>ID Avaliação</th>
+                    <th>Cliente</th>
                     <th>Barbeiro</th>
                     <th>ID Agendamento</th>
                     <th>Nota do Serviço</th>
@@ -99,6 +100,7 @@
                     {
                         <tr>
                             <td>@avaliacao.AvaliacaoId</td>
+                            <td>@avaliacao.ClienteNome</td>
                             <td>@avaliacao.BarbeiroNome</td>
                             <td>@avaliacao.AgendamentoId</td>
                             <td>
@@ -121,7 +123,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="7" class="text-center">Nenhuma avaliação encontrada.</td>
+                        <td colspan="9" class="text-center">Nenhuma avaliação encontrada.</td>
                     </tr>
                 }
             </tbody>
@@ -137,6 +139,7 @@
                 <div class="avaliacao-card">
                     <div class="avaliacao-card-body">
                         <h5 class="card-title">Avaliação #@avaliacao.AvaliacaoId</h5>
+                        <p class="avaliacao-card-line"><strong>Cliente:</strong> @avaliacao.ClienteNome</p>
                         <p class="avaliacao-card-line"><strong>Barbeiro:</strong> @avaliacao.BarbeiroNome</p>
                         <p class="avaliacao-card-line"><strong>ID Agendamento:</strong> @avaliacao.AgendamentoId</p>
                         <p class="avaliacao-card-line">

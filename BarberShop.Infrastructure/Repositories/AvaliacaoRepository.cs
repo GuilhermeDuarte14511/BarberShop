@@ -90,9 +90,11 @@ public class AvaliacaoRepository : IAvaliacaoRepository
     public async Task<IEnumerable<Avaliacao>> ObterAvaliacoesFiltradasAsync(int? barbeariaId = null, int? barbeiroId = null, string? dataInicio = null, string? dataFim = null, int? notaServico = null, int? notaBarbeiro = null, string? observacao = null)
     {
         var query = _context.Avaliacao
-            .Include(a => a.Agendamento)
-            .ThenInclude(ag => ag.Barbeiro)
-            .AsQueryable();
+          .AsNoTracking()
+          .Include(a => a.Agendamento)
+          .ThenInclude(ag => ag.Barbeiro)
+          .Include(a => a.Agendamento.Cliente) 
+          .AsQueryable();
 
         if (barbeariaId.HasValue)
         {

@@ -15,6 +15,8 @@ namespace BarberShop.Application.DTOs
         public string Observacao { get; set; }
         public DateTime DataAvaliado { get; set; }
         public string? BarbeiroNome { get; set; }
+        public string? ClienteNome { get; set; }
+        public string? ClienteEmail { get; set; }
     }
 
 }
