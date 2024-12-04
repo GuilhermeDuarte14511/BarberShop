@@ -1,73 +1,195 @@
 ﻿@using X.PagedList
 @using X.PagedList.Mvc.Core
 @model IEnumerable<BarberShop.Domain.Entities.Agendamento>
+@{
+    ViewData["Title"] = "Histórico de agendamentos";
 
-<div class="body-with-header">
+}
+<div id="historicoAgendamentosPageContainer" class="pagina-historico">
 
-    <h2 class="text-light">Histórico de Agendamentos</h2>
+    <div class="body-with-header">
 
-    <div class="container-fluid" style="padding: 20px;">
-        <!-- Tabela para telas maiores -->
-        <div class="table-responsive d-none d-md-block" style="max-height: 400px; overflow-y: auto;">
-            <table class="table table-bordered table-dark table-striped table-hover table-sm">
-                <thead class="text-center">
-                    <tr>
-                        <th>Data e Hora</th>
-                        <th>Barbeiro</th>
-                        <th>Serviços</th>
-                        <th>Valor Total</th>
-                        <th>Status do Agendamento</th>
-                        <th>Status do Pagamento</th>
-                        <th>Forma de Pagamento</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var agendamento in Model)
-                    {
+        <h2 class="text-light">Histórico de Agendamentos</h2>
+
+        <div class="container-fluid" style="padding: 20px;">
+            <!-- Tabela para telas maiores -->
+            <div class="table-responsive d-none d-md-block" style="max-height: 400px; overflow-y: auto;">
+                <table class="table table-bordered table-dark table-striped table-hover table-sm">
+                    <thead class="text-center">
                         <tr>
-                            <td class="align-middle text-center">@agendamento.DataHora.ToString("dd/MM/yyyy HH:mm")</td>
-                            <td class="align-middle text-center">@agendamento.Barbeiro.Nome</td>
-                            <td class="align-middle">
-                                <ul class="list-unstyled">
-                                    @foreach (var servico in agendamento.AgendamentoServicos)
+                            <th>Data e Hora</th>
+                            <th>Barbeiro</th>
+                            <th>Serviços</th>
+                            <th>Valor Total</th>
+                            <th>Status do Agendamento</th>
+                            <th>Status do Pagamento</th>
+                            <th>Forma de Pagamento</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var agendamento in Model)
+                        {
+                            <tr>
+                                <td class="align-middle text-center">@agendamento.DataHora.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td class="align-middle text-center">@agendamento.Barbeiro.Nome</td>
+                                <td class="align-middle">
+                                    <ul class="list-unstyled">
+                                        @foreach (var servico in agendamento.AgendamentoServicos)
+                                        {
+                                            <li>@servico.Servico.Nome - @servico.Servico.Preco.ToString("C")</li>
+                                        }
+                                    </ul>
+                                </td>
+                                <td class="align-middle text-center">@agendamento.PrecoTotal.GetValueOrDefault().ToString("C")</td>
+                                <td class="align-middle text-center">
+                                    @if (agendamento.Status == BarberShop.Domain.Entities.StatusAgendamento.Pendente)
                                     {
-                                        <li>@servico.Servico.Nome - @servico.Servico.Preco.ToString("C")</li>
+                                        <span data-bs-toggle="tooltip" title="Pendente">
+                                            <i class="fas fa-clock text-warning"></i>
+                                        </span>
                                     }
-                                </ul>
-                            </td>
-                            <td class="align-middle text-center">@agendamento.PrecoTotal.GetValueOrDefault().ToString("C")</td>
-                            <td class="align-middle text-center">
+                                    else if (agendamento.Status == BarberShop.Domain.Entities.StatusAgendamento.Confirmado)
+                                    {
+                                        <span data-bs-toggle="tooltip" title="Confirmado">
+                                            <i class="fas fa-check text-success"></i>
+                                        </span>
+                                    }
+                                    else if (agendamento.Status == BarberShop.Domain.Entities.StatusAgendamento.Cancelado)
+                                    {
+                                        <span data-bs-toggle="tooltip" title="Cancelado">
+                                            <i class="fas fa-times text-danger"></i>
+                                        </span>
+                                    }
+                                    else if (agendamento.Status == BarberShop.Domain.Entities.StatusAgendamento.Concluido)
+                                    {
+                                        <span data-bs-toggle="tooltip" title="Concluído">
+                                            <i class="fas fa-check-circle text-info"></i>
+                                        </span>
+                                    }
+                                </td>
+                                <td class="align-middle text-center">
+                                    @if (agendamento.Pagamento == null)
+                                    {
+                                        <span data-bs-toggle="tooltip" title="Sem Pagamento">
+                                            <i class="fas fa-question text-secondary"></i>
+                                        </span>
+                                    }
+                                    else if (agendamento.Pagamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.Pendente)
+                                    {
+                                        <i class="fas fa-clock text-warning" title="Pendente"></i>
+                                    }
+                                    else if (agendamento.Pagamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.Aprovado)
+                                    {
+                                        <i class="fas fa-check-circle text-success" title="Aprovado"></i>
+                                    }
+                                    else if (agendamento.Pagamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.Recusado)
+                                    {
+                                        <i class="fas fa-times-circle text-danger" title="Recusado"></i>
+                                    }
+                                    else if (agendamento.Pagamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.Cancelado)
+                                    {
+                                        <i class="fas fa-ban text-danger" title="Cancelado"></i>
+                                    }
+                                    else if (agendamento.Pagamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.Reembolsado)
+                                    {
+                                        <i class="fas fa-undo text-info" title="Reembolsado"></i>
+                                    }
+                                    else if (agendamento.Pagamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.EmProcessamento)
+                                    {
+                                        <i class="fas fa-spinner text-primary" title="Em Processamento"></i>
+                                    }
+                                </td>
+                                <td class="align-middle text-center">
+                                    @if (agendamento.FormaPagamento == "creditCard")
+                                    {
+                                        <i class="fas fa-credit-card text-primary"></i>
+                                    }
+                                    else if (agendamento.FormaPagamento == "pix")
+                                    {
+                                        <i class="fas fa-qrcode text-success"></i>
+                                    }
+                                    else if (agendamento.FormaPagamento == "transfer")
+                                    {
+                                        <i class="fas fa-university text-info"></i>
+                                    }
+                                    else if (agendamento.FormaPagamento == "naLoja" || agendamento.FormaPagamento == "store")
+                                    {
+                                        <i class="fas fa-store text-warning"></i>
+                                    }
+                                    else
+                                    {
+                                        @agendamento.FormaPagamento
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Cards para dispositivos móveis -->
+            <div class="d-md-none">
+                @foreach (var agendamento in Model)
+                {
+                    <div class="card bg-dark text-light mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">@agendamento.DataHora.ToString("dd/MM/yyyy HH:mm")</h5>
+                            <p class="card-text"><strong>Barbeiro:</strong> @agendamento.Barbeiro.Nome</p>
+                            <p class="card-text"><strong>Serviços:</strong></p>
+                            <ul>
+                                @foreach (var servico in agendamento.AgendamentoServicos)
+                                {
+                                    <li>@servico.Servico.Nome - @servico.Servico.Preco.ToString("C")</li>
+                                }
+                            </ul>
+                            <p class="card-text"><strong>Valor Total:</strong> @agendamento.AgendamentoServicos.Sum(s => s.Servico.Preco).ToString("C")</p>
+                            <p class="card-text">
+                                <strong>Forma de Pagamento:</strong>
+                                @if (agendamento.FormaPagamento == "creditCard")
+                                {
+                                    <i class="fas fa-credit-card text-primary"></i>
+                                }
+                                else if (agendamento.FormaPagamento == "pix")
+                                {
+                                    <i class="fas fa-qrcode text-success"></i>
+                                }
+                                else if (agendamento.FormaPagamento == "transfer")
+                                {
+                                    <i class="fas fa-university text-info"></i>
+                                }
+                                else if (agendamento.FormaPagamento == "naLoja" || agendamento.FormaPagamento == "store")
+                                {
+                                    <i class="fas fa-store text-warning"></i>
+                                }
+                                else
+                                {
+                                    @agendamento.FormaPagamento
+                                }
+                            </p>
+                            <p class="card-text">
+                                <strong>Status do Agendamento:</strong>
                                 @if (agendamento.Status == BarberShop.Domain.Entities.StatusAgendamento.Pendente)
                                 {
-                                    <span data-bs-toggle="tooltip" title="Pendente">
-                                        <i class="fas fa-clock text-warning"></i>
-                                    </span>
+                                    <span><i class="fas fa-clock text-warning"></i> Pendente</span>
                                 }
                                 else if (agendamento.Status == BarberShop.Domain.Entities.StatusAgendamento.Confirmado)
                                 {
-                                    <span data-bs-toggle="tooltip" title="Confirmado">
-                                        <i class="fas fa-check text-success"></i>
-                                    </span>
+                                    <span><i class="fas fa-check text-success"></i> Confirmado</span>
                                 }
                                 else if (agendamento.Status == BarberShop.Domain.Entities.StatusAgendamento.Cancelado)
                                 {
-                                    <span data-bs-toggle="tooltip" title="Cancelado">
-                                        <i class="fas fa-times text-danger"></i>
-                                    </span>
+                                    <span><i class="fas fa-times text-danger"></i> Cancelado</span>
                                 }
                                 else if (agendamento.Status == BarberShop.Domain.Entities.StatusAgendamento.Concluido)
                                 {
-                                    <span data-bs-toggle="tooltip" title="Concluído">
-                                        <i class="fas fa-check-circle text-info"></i>
-                                    </span>
+                                    <span><i class="fas fa-check-circle text-info"></i> Concluído</span>
                                 }
-                            </td>
-                            <td class="align-middle text-center">
+                            </p>
+                            <p class="card-text">
+                                <strong>Status do Pagamento:</strong>
                                 @if (agendamento.Pagamento == null)
                                 {
-                                    <span data-bs-toggle="tooltip" title="Sem Pagamento">
-                                        <i class="fas fa-question text-secondary"></i>
-                                    </span>
+                                    <i class="fas fa-question text-secondary" title="Sem Pagamento"></i>
                                 }
                                 else if (agendamento.Pagamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.Pendente)
                                 {
@@ -93,187 +215,71 @@
                                 {
                                     <i class="fas fa-spinner text-primary" title="Em Processamento"></i>
                                 }
-                            </td>
-                            <td class="align-middle text-center">
-                                @if (agendamento.FormaPagamento == "creditCard")
-                                {
-                                    <i class="fas fa-credit-card text-primary"></i>
-                                }
-                                else if (agendamento.FormaPagamento == "pix")
-                                {
-                                    <i class="fas fa-qrcode text-success"></i>
-                                }
-                                else if (agendamento.FormaPagamento == "transfer")
-                                {
-                                    <i class="fas fa-university text-info"></i>
-                                }
-                                else if (agendamento.FormaPagamento == "naLoja" || agendamento.FormaPagamento == "store")
-                                {
-                                    <i class="fas fa-store text-warning"></i>
-                                }
-                                else
-                                {
-                                    @agendamento.FormaPagamento
-                                }
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Cards para dispositivos móveis -->
-        <div class="d-md-none">
-            @foreach (var agendamento in Model)
-            {
-                <div class="card bg-dark text-light mb-3">
-                    <div class="card-body">
-                        <h5 class="card-title">@agendamento.DataHora.ToString("dd/MM/yyyy HH:mm")</h5>
-                        <p class="card-text"><strong>Barbeiro:</strong> @agendamento.Barbeiro.Nome</p>
-                        <p class="card-text"><strong>Serviços:</strong></p>
-                        <ul>
-                            @foreach (var servico in agendamento.AgendamentoServicos)
-                            {
-                                <li>@servico.Servico.Nome - @servico.Servico.Preco.ToString("C")</li>
-                            }
-                        </ul>
-                        <p class="card-text"><strong>Valor Total:</strong> @agendamento.AgendamentoServicos.Sum(s => s.Servico.Preco).ToString("C")</p>
-                        <p class="card-text">
-                            <strong>Forma de Pagamento:</strong>
-                            @if (agendamento.FormaPagamento == "creditCard")
-                            {
-                                <i class="fas fa-credit-card text-primary"></i>
-                            }
-                            else if (agendamento.FormaPagamento == "pix")
-                            {
-                                <i class="fas fa-qrcode text-success"></i>
-                            }
-                            else if (agendamento.FormaPagamento == "transfer")
-                            {
-                                <i class="fas fa-university text-info"></i>
-                            }
-                            else if (agendamento.FormaPagamento == "naLoja" || agendamento.FormaPagamento == "store")
-                            {
-                                <i class="fas fa-store text-warning"></i>
-                            }
-                            else
-                            {
-                                @agendamento.FormaPagamento
-                            }
-                        </p>
-                        <p class="card-text">
-                            <strong>Status do Agendamento:</strong>
-                            @if (agendamento.Status == BarberShop.Domain.Entities.StatusAgendamento.Pendente)
-                            {
-                                <span><i class="fas fa-clock text-warning"></i> Pendente</span>
-                            }
-                            else if (agendamento.Status == BarberShop.Domain.Entities.StatusAgendamento.Confirmado)
-                            {
-                                <span><i class="fas fa-check text-success"></i> Confirmado</span>
-                            }
-                            else if (agendamento.Status == BarberShop.Domain.Entities.StatusAgendamento.Cancelado)
-                            {
-                                <span><i class="fas fa-times text-danger"></i> Cancelado</span>
-                            }
-                            else if (agendamento.Status == BarberShop.Domain.Entities.StatusAgendamento.Concluido)
-                            {
-                                <span><i class="fas fa-check-circle text-info"></i> Concluído</span>
-                            }
-                        </p>
-                        <p class="card-text">
-                            <strong>Status do Pagamento:</strong>
-                            @if (agendamento.Pagamento == null)
-                            {
-                                <i class="fas fa-question text-secondary" title="Sem Pagamento"></i>
-                            }
-                            else if (agendamento.Pagamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.Pendente)
-                            {
-                                <i class="fas fa-clock text-warning" title="Pendente"></i>
-                            }
-                            else if (agendamento.Pagamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.Aprovado)
-                            {
-                                <i class="fas fa-check-circle text-success" title="Aprovado"></i>
-                            }
-                            else if (agendamento.Pagamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.Recusado)
-                            {
-                                <i class="fas fa-times-circle text-danger" title="Recusado"></i>
-                            }
-                            else if (agendamento.Pagamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.Cancelado)
-                            {
-                                <i class="fas fa-ban text-danger" title="Cancelado"></i>
-                            }
-                            else if (agendamento.Pagamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.Reembolsado)
-                            {
-                                <i class="fas fa-undo text-info" title="Reembolsado"></i>
-                            }
-                            else if (agendamento.Pagamento.StatusPagamento == BarberShop.Domain.Entities.StatusPagamento.EmProcessamento)
-                            {
-                                <i class="fas fa-spinner text-primary" title="Em Processamento"></i>
-                            }
-                        </p>
+                            </p>
+                        </div>
                     </div>
-                </div>
-            }
+                }
+            </div>
         </div>
-    </div>
 
-    <!-- Controles de Paginação -->
-    <div class="mt-4 d-flex justify-content-center">
-        @{
-            var currentPage = (int)ViewData["CurrentPage"];
-            var totalPages = (int)ViewData["TotalPages"];
-            var pageSize = (int)ViewData["PageSize"];
-        }
+        <!-- Controles de Paginação -->
+        <div class="mt-4 d-flex justify-content-center">
+            @{
+                var currentPage = (int)ViewData["CurrentPage"];
+                var totalPages = (int)ViewData["TotalPages"];
+                var pageSize = (int)ViewData["PageSize"];
+            }
 
-        <nav aria-label="Page navigation">
-            <ul class="pagination">
-                @if (currentPage > 1)
-                {
-                    <li class="page-item">
-                        <a class="page-link" href="@Url.Action("Historico", new { page = currentPage - 1, pageSize })">Anterior</a>
-                    </li>
-                }
+            <nav aria-label="Page navigation">
+                <ul class="pagination">
+                    @if (currentPage > 1)
+                    {
+                        <li class="page-item">
+                            <a class="page-link" href="@Url.Action("Historico", new { page = currentPage - 1, pageSize })">Anterior</a>
+                        </li>
+                    }
 
-                @for (int i = 1; i <= totalPages; i++)
-                {
-                    <li class="page-item @(i == currentPage ? "active" : "")">
-                        <a class="page-link" href="@Url.Action("Historico", new { page = i, pageSize })">@i</a>
-                    </li>
-                }
+                    @for (int i = 1; i <= totalPages; i++)
+                    {
+                        <li class="page-item @(i == currentPage ? "active" : "")">
+                            <a class="page-link" href="@Url.Action("Historico", new { page = i, pageSize })">@i</a>
+                        </li>
+                    }
 
-                @if (currentPage < totalPages)
-                {
-                    <li class="page-item">
-                        <a class="page-link" href="@Url.Action("Historico", new { page = currentPage + 1, pageSize })">Próxima</a>
-                    </li>
-                }
+                    @if (currentPage < totalPages)
+                    {
+                        <li class="page-item">
+                            <a class="page-link" href="@Url.Action("Historico", new { page = currentPage + 1, pageSize })">Próxima</a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        </div>
+
+
+        <!-- Legenda para os ícones -->
+        <div class="mt-4">
+            <h5 class="text-light">Legenda:</h5>
+            <ul class="list-inline">
+                <li class="list-inline-item"><i class="fas fa-clock text-warning"></i> Pendente</li>
+                <li class="list-inline-item"><i class="fas fa-check text-success"></i> Confirmado</li>
+                <li class="list-inline-item"><i class="fas fa-times text-danger"></i> Cancelado</li>
+                <li class="list-inline-item"><i class="fas fa-check-circle text-info"></i> Concluído</li>
+                <li class="list-inline-item"><i class="fas fa-credit-card text-primary"></i> Cartão de Crédito</li>
+                <li class="list-inline-item"><i class="fas fa-qrcode text-success"></i> PIX</li>
+                <li class="list-inline-item"><i class="fas fa-university text-info"></i> Transferência Bancária</li>
+                <li class="list-inline-item"><i class="fas fa-store text-warning"></i> Na Loja</li>
+                <li class="list-inline-item"><i class="fas fa-check-circle text-success"></i> Aprovado</li>
+                <li class="list-inline-item"><i class="fas fa-times-circle text-danger"></i> Recusado</li>
+                <li class="list-inline-item"><i class="fas fa-ban text-danger"></i> Cancelado</li>
+                <li class="list-inline-item"><i class="fas fa-undo text-info"></i> Reembolsado</li>
+                <li class="list-inline-item"><i class="fas fa-spinner text-primary"></i> Em Processamento</li>
             </ul>
-        </nav>
-    </div>
+        </div>
 
-
-    <!-- Legenda para os ícones -->
-    <div class="mt-4">
-        <h5 class="text-light">Legenda:</h5>
-        <ul class="list-inline">
-            <li class="list-inline-item"><i class="fas fa-clock text-warning"></i> Pendente</li>
-            <li class="list-inline-item"><i class="fas fa-check text-success"></i> Confirmado</li>
-            <li class="list-inline-item"><i class="fas fa-times text-danger"></i> Cancelado</li>
-            <li class="list-inline-item"><i class="fas fa-check-circle text-info"></i> Concluído</li>
-            <li class="list-inline-item"><i class="fas fa-credit-card text-primary"></i> Cartão de Crédito</li>
-            <li class="list-inline-item"><i class="fas fa-qrcode text-success"></i> PIX</li>
-            <li class="list-inline-item"><i class="fas fa-university text-info"></i> Transferência Bancária</li>
-            <li class="list-inline-item"><i class="fas fa-store text-warning"></i> Na Loja</li>
-            <li class="list-inline-item"><i class="fas fa-check-circle text-success"></i> Aprovado</li>
-            <li class="list-inline-item"><i class="fas fa-times-circle text-danger"></i> Recusado</li>
-            <li class="list-inline-item"><i class="fas fa-ban text-danger"></i> Cancelado</li>
-            <li class="list-inline-item"><i class="fas fa-undo text-info"></i> Reembolsado</li>
-            <li class="list-inline-item"><i class="fas fa-spinner text-primary"></i> Em Processamento</li>
-        </ul>
-    </div>
-
-    <!-- Botão de Voltar -->
-    <div class="mt-4">
-        <a href="@Url.Action("MenuPrincipal", "Cliente", new { barbeariaUrl = ViewData["BarbeariaUrl"] })" class="btn btn-secondary">Voltar</a>
+        <!-- Botão de Voltar -->
+        <div class="mt-4">
+            <a href="@Url.Action("MenuPrincipal", "Cliente", new { barbeariaUrl = ViewData["BarbeariaUrl"] })" class="btn btn-secondary">Voltar</a>
+        </div>
     </div>
 </div>

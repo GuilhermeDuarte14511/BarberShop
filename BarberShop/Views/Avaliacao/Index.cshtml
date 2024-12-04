@@ -1,5 +1,8 @@
 ﻿@model BarberShop.Domain.Entities.Agendamento
+@{
+    ViewData["Title"] = "Faça sua avaliação";
 
+}
 <div id="avaliacaoPage" class="avaliacao-container">
     <h2>Avaliação do Atendimento</h2>
     <input type="hidden" id="agendamentoId" value="@Model.AgendamentoId" />

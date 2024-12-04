@@ -7,127 +7,131 @@
     int currentStep = (int)(ViewData["CurrentStep"] ?? 2); // Garante que o valor padrão seja 1
 
 }
-<div class="body-with-header">
-    <input type="hidden" id="currentStep" value="@currentStep">
+<div id="escolherBarbeiroPageContainer" class="pagina-barbeiro">
+    <div class="body-with-header">
+        <input type="hidden" id="currentStep" value="@currentStep">
 
-    <!-- Inputs Hidden para armazenar barbeariaUrl e barbeariaId -->
-    <input type="hidden" id="barbeariaUrl" value="@ViewData["BarbeariaUrl"]" />
-    <input type="hidden" id="barbeariaId" value="@ViewData["BarbeariaId"]" />
+        <!-- Inputs Hidden para armazenar barbeariaUrl e barbeariaId -->
+        <input type="hidden" id="barbeariaUrl" value="@ViewData["BarbeariaUrl"]" />
+        <input type="hidden" id="barbeariaId" value="@ViewData["BarbeariaId"]" />
 
-    <div class="progress-bar-wrapper">
-        <div id="progressBarContainer">
-            <div class="progress-container">
-                <div class="step" data-step="1">
-                    <div class="progress-icon">
-                        <i class="fas fa-cut"></i>
+        <div class="progress-bar-wrapper">
+            <div id="progressBarContainer">
+                <div class="progress-container">
+                    <div class="step @((currentStep > 1 ? "completed" : "active"))">
+                        <div class="progress-icon">
+                            <i class="fas fa-cut"></i>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-bar-fill"></div>
+                        </div>
+                        <div class="label">Selecionar Serviço</div>
                     </div>
-                    <div class="progress-bar">
-                        <div class="progress-bar-fill"></div>
+                    <div class="step @((currentStep > 2 ? "completed" : currentStep == 2 ? "active" : ""))">
+                        <div class="progress-icon">
+                            <i class="fas fa-user-clock"></i>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-bar-fill"></div>
+                        </div>
+                        <div class="label">Escolher Barbeiro</div>
                     </div>
-                    <div class="label">Selecionar Serviço</div>
-                </div>
-                <div class="step" data-step="2">
-                    <div class="progress-icon">
-                        <i class="fas fa-user-clock"></i>
+                    <div class="step @((currentStep == 3 ? "active" : ""))">
+                        <div class="progress-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-bar-fill"></div>
+                        </div>
+                        <div class="label">Resumo</div>
                     </div>
-                    <div class="progress-bar">
-                        <div class="progress-bar-fill"></div>
-                    </div>
-                    <div class="label">Escolher Barbeiro</div>
-                </div>
-                <div class="step" data-step="3">
-                    <div class="progress-icon">
-                        <i class="fas fa-check-circle"></i>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-bar-fill"></div>
-                    </div>
-                    <div class="label">Resumo</div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div id="escolherBarbeiroPage" class="container mt-5"
-         data-servico-ids="@ViewData["ServicoIds"]"
-         data-duracao-total="@ViewData["DuracaoTotal"]">
-        <h2 class="text-danger text-center mb-4">Escolha o Barbeiro</h2>
 
-        <!-- Lista de Barbeiros Disponíveis -->
-        <h3 class="text-success mt-4">Barbeiros Disponíveis</h3>
-        <div class="row">
-            @if (!barbeirosDisponiveis.Any())
-            {
-                <p class="text-light text-center">Nenhum barbeiro disponível para todos os serviços selecionados.</p>
-            }
-            else
-            {
-                @foreach (var barbeiro in barbeirosDisponiveis)
+
+        <div id="escolherBarbeiroPage" class="container mt-5"
+             data-servico-ids="@ViewData["ServicoIds"]"
+             data-duracao-total="@ViewData["DuracaoTotal"]">
+            <h2 class="text-danger text-center mb-4">Escolha o Barbeiro</h2>
+
+            <!-- Lista de Barbeiros Disponíveis -->
+            <h3 class="text-success mt-4">Barbeiros Disponíveis</h3>
+            <div class="row">
+                @if (!barbeirosDisponiveis.Any())
                 {
-                    <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4">
-                        <div class="card bg-dark text-light barber-card">
-                            <div class="card-body text-center" id="cardBodyBarbeiro-@barbeiro.BarbeiroId">
-                                <div class="photo-container">
-                                    <img src="@(barbeiro.Foto != null ? "data:image/png;base64," + Convert.ToBase64String(barbeiro.Foto) : "https://via.placeholder.com/100")"
-                                         alt="Foto do @barbeiro.Nome"
-                                         class="rounded-circle mb-3 photo-preview">
+                    <p class="text-light text-center">Nenhum barbeiro disponível para todos os serviços selecionados.</p>
+                }
+                else
+                {
+                    @foreach (var barbeiro in barbeirosDisponiveis)
+                    {
+                        <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4">
+                            <div class="card bg-dark text-light barber-card">
+                                <div class="card-body text-center" id="cardBodyBarbeiro-@barbeiro.BarbeiroId">
+                                    <div class="photo-container">
+                                        <img src="@(barbeiro.Foto != null ? "data:image/png;base64," + Convert.ToBase64String(barbeiro.Foto) : "https://via.placeholder.com/100")"
+                                             alt="Foto do @barbeiro.Nome"
+                                             class="rounded-circle mb-3 photo-preview">
+                                    </div>
+                                    <h5 class="card-title text-warning">@barbeiro.Nome</h5>
+                                    <button id="btnEscolherHorario-@barbeiro.BarbeiroId" class="btn btn-danger barbeiro-btn" data-barbeiro-id="@barbeiro.BarbeiroId">
+                                        Escolher Horário
+                                    </button>
                                 </div>
-                                <h5 class="card-title text-warning">@barbeiro.Nome</h5>
-                                <button id="btnEscolherHorario-@barbeiro.BarbeiroId" class="btn btn-danger barbeiro-btn" data-barbeiro-id="@barbeiro.BarbeiroId">
-                                    Escolher Horário
-                                </button>
                             </div>
                         </div>
-                    </div>
+                    }
                 }
-            }
-        </div>
+            </div>
 
-        <!-- Linha divisória estilizada -->
-        <hr class="my-4 divider">
+            <!-- Linha divisória estilizada -->
+            <hr class="my-4 divider">
 
-        <!-- Lista de Barbeiros Indisponíveis -->
-        <h3 class="text-danger mt-5">Barbeiros Indisponíveis</h3>
-        <div class="row">
-            @if (!barbeirosIndisponiveis.Any())
-            {
-                <p class="text-light text-center">Todos os barbeiros estão disponíveis para os serviços selecionados.</p>
-            }
-            else
-            {
-                @foreach (var barbeiro in barbeirosIndisponiveis)
+            <!-- Lista de Barbeiros Indisponíveis -->
+            <h3 class="text-danger mt-5">Barbeiros Indisponíveis</h3>
+            <div class="row">
+                @if (!barbeirosIndisponiveis.Any())
                 {
-                    <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4">
-                        <div class="card bg-dark text-light barber-card">
-                            <div class="card-body text-center">
-                                <div class="photo-container">
-                                    <img src="@(barbeiro.Foto != null ? "data:image/png;base64," + Convert.ToBase64String(barbeiro.Foto) : "https://via.placeholder.com/100")"
-                                         alt="Foto do @barbeiro.Nome"
-                                         class="rounded-circle mb-3 photo-preview">
-                                </div>
-                                <h5 class="card-title text-warning">@barbeiro.Nome</h5>
-                                <div class="services-container text-start">
-                                    <strong>Não realiza:</strong>
-                                    <ul class="text-danger">
-                                        @foreach (var servico in barbeiro.ServicosNaoRealizados)
-                                        {
-                                            <li>@servico</li>
-                                        }
-                                    </ul>
-                                </div>
-                                <button id="btn-@barbeiro.BarbeiroId" class="btn btn-danger barbeiro-btn disabled mt-3" disabled>
-                                    Indisponível
-                                </button>
+                    <p class="text-light text-center">Todos os barbeiros estão disponíveis para os serviços selecionados.</p>
+                }
+                else
+                {
+                    @foreach (var barbeiro in barbeirosIndisponiveis)
+                    {
+                        <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4">
+                            <div class="card bg-dark text-light barber-card">
+                                <div class="card-body text-center">
+                                    <div class="photo-container">
+                                        <img src="@(barbeiro.Foto != null ? "data:image/png;base64," + Convert.ToBase64String(barbeiro.Foto) : "https://via.placeholder.com/100")"
+                                             alt="Foto do @barbeiro.Nome"
+                                             class="rounded-circle mb-3 photo-preview">
+                                    </div>
+                                    <h5 class="card-title text-warning">@barbeiro.Nome</h5>
+                                    <div class="services-container text-start">
+                                        <strong>Não realiza:</strong>
+                                        <ul class="text-danger">
+                                            @foreach (var servico in barbeiro.ServicosNaoRealizados)
+                                            {
+                                                <li>@servico</li>
+                                            }
+                                        </ul>
+                                    </div>
+                                    <button id="btn-@barbeiro.BarbeiroId" class="btn btn-danger barbeiro-btn disabled mt-3" disabled>
+                                        Indisponível
+                                    </button>
 
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    }
                 }
-            }
-        </div>
+            </div>
 
-        <div class="mt-4 text-center">
-            <button class="btn btn-secondary" onclick="history.back()">Voltar</button>
+            <div class="mt-4 text-center">
+                <button class="btn btn-secondary" onclick="history.back()">Voltar</button>
+            </div>
         </div>
     </div>
 

@@ -5015,35 +5015,33 @@
         }
     }
 
-    // Obtém o container da barra de progresso
-    const progressBarContainer = document.getElementById('progressBarContainer');
+    // Obtém os elementos necessários
     const steps = document.querySelectorAll('.progress-container .step');
     const currentStepInput = document.getElementById('currentStep');
 
-    // Verifica se os elementos necessários estão presentes na página
-    if (progressBarContainer && steps.length > 0 && currentStepInput) {
+    // Se os elementos necessários existirem
+    if (steps.length > 0 && currentStepInput) {
         const currentStep = parseInt(currentStepInput.value || 0);
 
-        if (currentStep > 0) {
-            progressBarContainer.style.display = 'block'; // Mostra a barra de progresso
+        // Itera sobre os passos e atualiza o estado de cada um
+        steps.forEach((step, index) => {
+            const progressFill = step.querySelector('.progress-bar-fill');
 
-            // Atualiza os passos com base no passo atual
-            steps.forEach((step, index) => {
-                const progressFill = step.querySelector('.progress-bar-fill');
-
-                if (index < currentStep) {
-                    step.classList.add('active'); // Marca o passo como ativo
-                    progressFill.style.width = '100%'; // Preenche a barra
-                } else {
-                    step.classList.remove('active'); // Remove o status ativo
-                    progressFill.style.width = '0'; // Esvazia a barra
-                }
-            });
-        } else {
-            console.warn("O passo atual (currentStep) é inválido ou igual a zero.");
-        }
+            if (index + 1 < currentStep) {
+                step.classList.add('completed'); // Passos anteriores
+                step.classList.remove('active');
+                progressFill.style.width = '100%';
+            } else if (index + 1 === currentStep) {
+                step.classList.add('active'); // Passo atual
+                step.classList.remove('completed');
+                progressFill.style.width = '100%';
+            } else {
+                step.classList.remove('completed', 'active'); // Passos futuros
+                progressFill.style.width = '0';
+            }
+        });
     } else {
-        console.warn("Elementos necessários para a barra de progresso não foram encontrados.");
+        console.warn('Elementos da barra de progresso não encontrados.');
     }
 
 

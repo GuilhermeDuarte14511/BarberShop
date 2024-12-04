@@ -279,6 +279,44 @@ body {
         border-radius: 5px;
     }
 
+/* Estilo da lista de Serviços Selecionados */
+#solicitarServicoPage #servicosSelecionados {
+    max-height: 300px; /* Define a altura máxima com scroll */
+    overflow-y: auto; /* Habilita o scroll vertical */
+    background-color: #2b2b2b; /* Fundo escuro consistente com o tema */
+    border-radius: 8px; /* Bordas arredondadas */
+    padding: 10px; /* Espaçamento interno */
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3); /* Sombra para destaque */
+}
+
+    /* Itens da lista de Serviços Selecionados */
+    #solicitarServicoPage #servicosSelecionados .list-group-item {
+        background-color: #34495e; /* Fundo dos itens */
+        color: #ecf0f1; /* Texto claro */
+        border: none; /* Remove as bordas padrão */
+        margin-bottom: 5px; /* Espaçamento entre os itens */
+        border-radius: 5px; /* Bordas arredondadas */
+        padding: 10px; /* Espaçamento interno */
+    }
+
+    /* Scrollbar personalizada para Serviços Selecionados */
+    #solicitarServicoPage #servicosSelecionados::-webkit-scrollbar {
+        width: 8px; /* Largura da barra de rolagem */
+    }
+
+    #solicitarServicoPage #servicosSelecionados::-webkit-scrollbar-track {
+        background: #2b2b2b; /* Fundo da barra de rolagem */
+    }
+
+    #solicitarServicoPage #servicosSelecionados::-webkit-scrollbar-thumb {
+        background-color: #e74c3c; /* Cor do polegar da barra de rolagem */
+        border-radius: 4px; /* Bordas arredondadas na barra de rolagem */
+    }
+
+        #solicitarServicoPage #servicosSelecionados::-webkit-scrollbar-thumb:hover {
+            background-color: #c0392b; /* Cor mais escura ao passar o mouse */
+        }
+
 /* Ajustes de layout responsivo */
 @media (max-width: 768px) {
     #solicitarServicoPage .containe {
@@ -2670,9 +2708,10 @@ h2, h3 {
 /* Wrapper para a barra de progresso */
 .progress-bar-wrapper {
     padding: 10px 20px;
-    background-color: #1c1c1c; /* Fundo escuro para combinar com o layout */
+    background-color: #2b2b2b; /* Mesmo fundo da página */
     margin-bottom: 20px;
-    border-bottom: 1px solid #444; /* Linha separadora abaixo da barra */
+    border-radius: 8px; /* Bordas arredondadas */
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.4); /* Sombra elegante */
 }
 
 /* Container principal da barra de progresso */
@@ -2693,25 +2732,14 @@ h2, h3 {
     color: #ecf0f1; /* Texto claro para contraste */
 }
 
-    /* Passos ativos */
-    .step.active .progress-bar-fill {
-        background-color: #e74c3c; /* Cor do preenchimento do passo ativo */
-        width: 100%; /* Preenchimento completo para os passos ativos */
-    }
-
-    .step.active .progress-icon {
-        background-color: #e74c3c; /* Ícone ativo */
-        color: #ffffff;
-        box-shadow: 0 0 10px rgba(231, 76, 60, 0.8);
-    }
-
 /* Barra de progresso (linha horizontal) */
 .progress-bar {
     position: relative;
-    width: 100%; /* Largura total do passo */
+    width: 100%; /* Largura total */
     height: 4px; /* Altura da barra */
     background-color: #444; /* Cor base para os passos inativos */
     margin-bottom: 5px;
+    border-radius: 2px; /* Bordas arredondadas */
 }
 
 /* Preenchimento da barra */
@@ -2720,29 +2748,7 @@ h2, h3 {
     width: 0;
     background-color: #e74c3c; /* Cor do passo ativo */
     transition: width 0.3s ease; /* Suaviza a transição */
-}
-
-/* Ícones de cada passo */
-.progress-icon {
-    width: 30px;
-    height: 30px;
-    background-color: #444; /* Ícone inativo */
-    color: #ecf0f1; /* Cor do ícone */
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 0 auto 10px auto; /* Centraliza o ícone */
-    font-size: 16px;
-    transition: all 0.3s ease;
-}
-
-/* Rótulos abaixo dos passos */
-.step .label {
-    margin-top: 5px;
-    font-size: 0.9rem;
-    text-transform: uppercase; /* Texto em maiúsculas */
-    font-weight: bold;
+    border-radius: 2px;
 }
 
 /* Passos concluídos */
@@ -2755,258 +2761,849 @@ h2, h3 {
     background-color: #2ecc71; /* Barra preenchida */
 }
 
+/* Passos ativos */
+.step.active .progress-icon {
+    background-color: #e74c3c; /* Vermelho para passo ativo */
+    color: #ffffff; /* Texto branco */
+    box-shadow: 0px 0px 10px rgba(231, 76, 60, 0.8); /* Realce */
+}
+
+.step.active .progress-bar-fill {
+    background-color: #e74c3c; /* Vermelho para preenchimento do passo ativo */
+    width: 100%; /* Preenchimento total */
+}
+
+/* Passos futuros (inativos) */
+.step:not(.active):not(.completed) .progress-icon {
+    background-color: #444; /* Ícone inativo */
+    color: #777; /* Texto cinza claro */
+}
+
+.step:not(.active):not(.completed) .progress-bar-fill {
+    background-color: transparent; /* Sem preenchimento */
+}
+
+/* Ícones de cada passo */
+.progress-icon {
+    width: 35px;
+    height: 35px;
+    background-color: #444; /* Ícone inativo */
+    color: #ecf0f1; /* Cor do ícone */
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto 10px auto; /* Centraliza o ícone */
+    font-size: 16px;
+    transition: all 0.3s ease;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.4); /* Sombra leve */
+}
+
+/* Rótulos abaixo dos passos */
+.step .label {
+    margin-top: 5px;
+    font-size: 0.9rem;
+    text-transform: uppercase; /* Texto em maiúsculas */
+    font-weight: bold;
+}
+
 /* Personalização para o último passo (remoção do espaçamento lateral) */
 .step:last-child .progress-bar {
     margin-right: 0;
 }
 
-/* Passos futuros (inativos) */
-.step:not(.active):not(.completed) .progress-bar-fill {
-    background-color: transparent; /* Sem preenchimento */
+
+/* Estilização da página de solicitação de serviço */
+.pagina-servico {
+    background-color: #2b2b2b; /* Fundo interno */
+    border-radius: 15px; /* Cantos arredondados */
+    padding: 30px; /* Espaçamento interno */
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.5); /* Sombra elegante */
+    max-width: 1200px; /* Limita a largura */
+    margin: 100px auto; /* Centraliza na página */
 }
 
-.step:not(.active):not(.completed) .progress-icon {
-    background-color: #444; /* Ícone inativo */
-    color: #777;
-}
+    /* Margens entre as colunas */
+    .pagina-servico .row {
+        margin-bottom: 20px;
+    }
 
-/* Responsividade */
-@media (max-width: 768px) {
-    .progress-bar-wrapper {
+    /* Títulos estilizados */
+    .pagina-servico h4 {
+        color: #e74c3c; /* Vermelho para destacar */
+        font-size: 1.5rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-bottom: 1.5rem;
+        border-bottom: 2px solid rgba(231, 76, 60, 0.5);
+        padding-bottom: 5px;
+    }
+
+    /* Botões alinhados ao tema */
+    .pagina-servico .btn-primary {
+        background-color: #3498db;
+        border-color: #2980b9;
+        font-size: 1rem;
+        padding: 10px;
+        transition: transform 0.3s ease, background-color 0.3s ease;
+    }
+
+        .pagina-servico .btn-primary:hover {
+            background-color: #2980b9;
+            transform: scale(1.05); /* Leve zoom no hover */
+        }
+
+    /* Bordas e fundo dos serviços selecionados */
+    .pagina-servico #servicosSelecionados {
+        background-color: #34495e;
+        border-radius: 8px;
+        padding: 10px;
+        max-height: 300px; /* Limita a altura */
+        overflow-y: auto; /* Adiciona rolagem se necessário */
+    }
+
+        /* Scroll customizado */
+        .pagina-servico #servicosSelecionados::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .pagina-servico #servicosSelecionados::-webkit-scrollbar-thumb {
+            background: #e74c3c;
+            border-radius: 4px;
+        }
+
+    /* Ajustes do botão de voltar */
+    .pagina-servico .btn-secondary {
+        background-color: #7f8c8d;
+        border-color: #6c7a7a;
+        font-size: 1rem;
+        width: 100%;
         padding: 10px;
     }
 
-    .progress-container {
-        flex-direction: column; /* Coloca os passos em coluna */
-        gap: 10px;
-    }
-
-    .step {
-        flex: none; /* Remove a largura igual entre os passos */
-    }
-
-    .progress-bar {
-        height: 3px; /* Altura reduzida em telas menores */
-    }
-
-    .progress-icon {
-        width: 24px;
-        height: 24px;
-        font-size: 12px; /* Ícones menores em telas pequenas */
-    }
-
-    .step .label {
-        font-size: 0.8rem; /* Texto menor */
-    }
-
-    #marcarTodasComoLidasBtn {
-        width: 100%; /* Botão ocupa toda a largura no mobile */
-        font-size: 1rem; /* Aumenta o texto no mobile */
-        margin-bottom: 15px; /* Espaçamento abaixo do botão */
-    }
-
-    #notificacoesPage .d-flex {
-        flex-direction: column; /* Coloca o título e botão em coluna */
-        align-items: flex-start; /* Alinha à esquerda */
-    }
-
-        #notificacoesPage .d-flex h2 {
-            margin-bottom: 10px; /* Adiciona espaçamento entre o título e o botão */
+        .pagina-servico .btn-secondary:hover {
+            background-color: #6c7a7a;
+            border-color: #5a6a6a;
         }
 
-    #notificacoesPage .servico-card {
-        padding: 15px;
-        font-size: 0.9rem;
+    /* Sombra para os itens de serviço */
+    .pagina-servico .list-group-item {
+        box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.3); /* Sombra nos itens */
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
 
-    #notificacoesPage .btnEditar {
-        font-size: 0.8rem;
-        padding: 5px 10px;
-        margin-top: 10px; /* Espaço consistente no mobile */
-    }
+        .pagina-servico .list-group-item:hover {
+            transform: translateY(-3px); /* Efeito de elevação */
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.4); /* Aumenta a sombra no hover */
+        }
 
-    #notificacoesPage .actions {
-        margin-top: 25px; /* Aumenta o espaço acima do botão em telas menores */
-    }
+/* Container principal para a página de escolha de barbeiro */
+.pagina-barbeiro {
+    background-color: #2b2b2b; /* Fundo principal */
+    border-radius: 15px; /* Cantos arredondados */
+    padding: 30px; /* Espaçamento interno */
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.5); /* Sombra elegante */
+    max-width: 1200px; /* Limita a largura */
+    margin: 80px auto; /* Centraliza na página */
+}
 
-    #notificacoesPage h2 {
-        font-size: 1.8rem; /* Reduz o tamanho do título no mobile */
-    }
+/* Estilização principal para a página de resumo */
+.pagina-resumo {
+    background-color: #2b2b2b; /* Fundo interno */
+    border-radius: 15px; /* Cantos arredondados */
+    padding: 30px; /* Espaçamento interno */
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.5); /* Sombra elegante */
+    max-width: 1200px; /* Limita a largura */
+    margin: 80px auto; /* Centraliza na página */
+}
 
-    #notificacoesPage h4 {
-        font-size: 1.3rem; /* Ajusta tamanho dos subtítulos no mobile */
-    }
-
-    #notificacoesPage h2 {
-        font-size: 1.8rem; /* Reduz o tamanho do título no mobile */
-    }
-
-    #notificacoesPage h4 {
-        font-size: 1.3rem; /* Ajusta tamanho dos subtítulos no mobile */
-    }
-
-    #calendarContainer {
-        max-width: 100%;
-        margin: 10px;
-    }
-
-    .calendar-cell {
-        min-height: 80px;
-        padding: 8px;
-    }
-
-    .calendar-event {
-        font-size: 10px;
-        padding: 2px 4px;
-    }
-
-    /* Esconde gráficos e botões no mobile */
-    #buttonContainer,
-    #dashboard-container {
-        display: none;
-    }
-
-    /* Mensagem no mobile */
-    #mobileMessage {
-        display: block;
+    /* Títulos estilizados */
+    .pagina-resumo h2 {
+        color: #e74c3c; /* Vermelho para destaque */
+        font-size: 2rem;
+        font-weight: bold;
         text-align: center;
-        background-color: #ffcc00;
-        color: #000;
-        padding: 15px;
-        font-size: 1rem;
+        margin-bottom: 30px;
+        text-transform: uppercase;
+    }
+
+    /* Títulos secundários */
+    .pagina-resumo h4, .pagina-resumo h5 {
+        color: #f1c40f; /* Amarelo para subtítulos */
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 15px;
+    }
+
+    /* Cartão principal */
+    .pagina-resumo .card {
+        background-color: #34495e;
+        border: none;
         border-radius: 10px;
-        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-        margin-bottom: 20px;
+        padding: 20px;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.5); /* Sombra suave */
     }
 
-    /* Ajustes no cabeçalho do dashboard */
-    .dashboard-header {
+    /* Lista de serviços */
+    .pagina-resumo .list-group {
+        background-color: #2b2b2b;
+        border-radius: 8px;
+        padding: 10px;
+        max-height: 300px; /* Limita a altura */
+        overflow-y: auto; /* Adiciona rolagem quando necessário */
+    }
+
+    /* Itens da lista de serviços */
+    .pagina-resumo .list-group-item {
+        background-color: #34495e;
+        border: none;
+        color: #ecf0f1;
+        margin-bottom: 10px;
+        border-radius: 5px;
+        padding: 15px;
         display: flex;
-        flex-direction: column;
-        align-items: center; /* Centraliza no mobile */
-        gap: 10px;
-        margin-bottom: 20px;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.3);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
 
-        .dashboard-header h2 {
+        .pagina-resumo .list-group-item:hover {
+            transform: translateY(-3px); /* Efeito de elevação */
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.4); /* Aumenta a sombra no hover */
+        }
+
+    /* Scroll customizado */
+    .pagina-resumo .list-group::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .pagina-resumo .list-group::-webkit-scrollbar-thumb {
+        background: #e74c3c;
+        border-radius: 4px;
+    }
+
+    /* Botões de pagamento */
+    .pagina-resumo .payment-option {
+        background-color: #34495e;
+        border: 2px solid #7f8c8d;
+        border-radius: 10px;
+        padding: 15px;
+        text-align: center;
+        cursor: pointer;
+        transition: transform 0.3s ease, background-color 0.3s ease;
+    }
+
+        .pagina-resumo .payment-option:hover {
+            background-color: #2ecc71;
+            transform: scale(1.05);
+            border-color: #27ae60;
+        }
+
+        .pagina-resumo .payment-option i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+    /* Botão de voltar */
+    .pagina-resumo .btn-secondary {
+        background-color: #7f8c8d;
+        border-color: #7f8c8d;
+        font-size: 1rem;
+        width: 100%;
+        padding: 10px;
+        transition: transform 0.3s ease, background-color 0.3s ease;
+    }
+
+        .pagina-resumo .btn-secondary:hover {
+            background-color: #6c7a7a;
+            border-color: #5a6a6a;
+            transform: scale(1.05); /* Leve zoom no hover */
+        }
+
+    /* Botão de pagamento */
+    .pagina-resumo .btn-success {
+        background-color: #2ecc71;
+        border-color: #27ae60;
+        font-size: 1.1rem;
+        padding: 10px 20px;
+        font-weight: bold;
+        text-transform: uppercase;
+        width: 100%;
+    }
+
+        .pagina-resumo .btn-success:hover {
+            background-color: #27ae60;
+            border-color: #229954;
+            transform: scale(1.05);
+        }
+
+    /* Ajustes para spinner de carregamento */
+    .pagina-resumo #loadingSpinner {
+        margin-top: 20px;
+    }
+
+        .pagina-resumo #loadingSpinner .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+
+    /* Modais */
+    .pagina-resumo .modal-content {
+        background-color: #2b2b2b;
+        border-radius: 15px;
+        padding: 20px;
+        color: #ecf0f1;
+    }
+
+    /* Modais: cabeçalhos */
+    .pagina-resumo .modal-header {
+        border-bottom: 1px solid #444;
+    }
+
+        .pagina-resumo .modal-header h5 {
+            font-weight: bold;
             font-size: 1.5rem;
+        }
+
+    /* Modais: botões */
+    .pagina-resumo .modal-footer .btn {
+        font-size: 1rem;
+        padding: 10px 15px;
+    }
+
+
+    /* Botões na página de resumo - Layout desktop */
+    .pagina-resumo .button-container {
+        display: flex;
+        flex-wrap: wrap; /* Permite quebra para telas menores */
+        justify-content: space-between; /* Distribui os botões */
+        gap: 15px; /* Espaçamento horizontal/vertical entre os botões */
+        margin-top: 20px;
+    }
+
+        /* Botões individuais - Ajuste de tamanho */
+        .pagina-resumo .button-container .btn {
+            flex: 1; /* Faz os botões ocuparem espaço proporcional */
+            max-width: 48%; /* Limita a largura para caber lado a lado */
+        }
+
+    /* Botão de "Mudar Forma de Pagamento" */
+    .pagina-resumo .btn-payment-change {
+        background-color: #f39c12; /* Laranja para destacar */
+        border-color: #e67e22;
+        color: #ffffff;
+        font-size: 1rem;
+        font-weight: bold;
+        padding: 10px 20px;
+        text-transform: uppercase;
+        width: 100%;
+        transition: transform 0.3s ease, background-color 0.3s ease;
+    }
+
+        .pagina-resumo .btn-payment-change:hover {
+            background-color: #e67e22; /* Laranja mais escuro no hover */
+            border-color: #d35400;
+            transform: scale(1.05); /* Leve zoom no hover */
+        }
+
+
+/* Página do Histórico de Agendamentos */
+.pagina-historico {
+    background-color: #2b2b2b; /* Fundo escuro */
+    border-radius: 15px; /* Cantos arredondados */
+    padding: 30px; /* Espaçamento interno */
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.5); /* Sombra elegante */
+    max-width: 1200px; /* Limite da largura */
+    margin: 80px auto; /* Centraliza a página */
+}
+
+    /* Títulos estilizados */
+    .pagina-historico h2 {
+        color: #e74c3c; /* Vermelho para destaque */
+        font-size: 2rem;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 30px;
+        text-transform: uppercase;
+    }
+
+    /* Tabelas */
+    .pagina-historico .table {
+        border-collapse: collapse;
+        width: 100%;
+        background-color: #34495e; /* Fundo da tabela */
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+        .pagina-historico .table th, .pagina-historico .table td {
+            padding: 10px;
+            text-align: center;
+            color: #ecf0f1; /* Texto claro */
+        }
+
+    /* Paginação */
+    .pagina-historico .pagination .page-link {
+        background-color: #34495e;
+        color: #ffffff;
+        border: 1px solid #7f8c8d;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+        .pagina-historico .pagination .page-link:hover {
+            background-color: #2ecc71; /* Verde no hover */
+            color: #ffffff;
+        }
+
+    /* Cartões para dispositivos móveis */
+    .pagina-historico .card {
+        background-color: #34495e;
+        border: none;
+        border-radius: 10px;
+        padding: 15px;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Botão de voltar */
+    .pagina-historico .btn-secondary {
+        background-color: #7f8c8d;
+        color: #ffffff;
+        border: none;
+        transition: transform 0.3s ease, background-color 0.3s ease;
+    }
+
+        .pagina-historico .btn-secondary:hover {
+            background-color: #6c7a7a;
+            transform: scale(1.05);
+        }
+
+    /* Página ativa na paginação */
+    .pagina-historico .pagination .page-item.active .page-link {
+        background-color: #e74c3c; /* Cor de fundo destacada */
+        color: #ffffff; /* Texto branco */
+        font-weight: bold; /* Texto em negrito */
+        border: 1px solid #e74c3c; /* Cor igual à do fundo */
+        box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.3); /* Adiciona sombra */
+        cursor: default; /* Cursor padrão, já que não é clicável */
+    }
+
+    /* Hover para os demais links */
+    .pagina-historico .pagination .page-link:hover {
+        background-color: #2ecc71; /* Verde no hover */
+        color: #ffffff;
+        border: 1px solid #27ae60;
+    }
+
+/* Container principal da página Meus Dados */
+.pagina-meus-dados {
+    background-color: #2b2b2b; /* Fundo da página */
+    border-radius: 15px; /* Bordas arredondadas */
+    padding: 30px; /* Espaçamento interno */
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.5); /* Sombra elegante */
+    max-width: 800px; /* Largura máxima */
+    margin: 30px auto; /* Centraliza na página */
+}
+
+    /* Títulos estilizados */
+    .pagina-meus-dados h2 {
+        color: #e74c3c;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+
+    .pagina-meus-dados p {
+        color: #bdc3c7;
+        font-size: 1rem;
+    }
+
+    /* Cards das informações */
+    .pagina-meus-dados .info-card {
+        background-color: #34495e;
+        box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.4); /* Sombra nos campos */
+        border-radius: 10px;
+    }
+
+        .pagina-meus-dados .info-card h5 {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+    /* Inputs do formulário */
+    .pagina-meus-dados .form-control {
+        background-color: #2b2b2b;
+        color: #ecf0f1;
+        border: 1px solid #7f8c8d;
+        border-radius: 5px;
+    }
+
+        .pagina-meus-dados .form-control:focus {
+            background-color: #34495e;
+            border-color: #e74c3c;
+            box-shadow: none;
+        }
+
+    /* Botões */
+    .pagina-meus-dados .btn-danger {
+        background-color: #e74c3c;
+        border-color: #e74c3c;
+        font-weight: bold;
+    }
+
+        .pagina-meus-dados .btn-danger:hover {
+            background-color: #c0392b;
+            border-color: #c0392b;
+        }
+
+    .pagina-meus-dados .btn-secondary {
+        background-color: #7f8c8d;
+        border-color: #7f8c8d;
+        font-weight: bold;
+    }
+
+        .pagina-meus-dados .btn-secondary:hover {
+            background-color: #6c7a7a;
+            border-color: #5a6a6a;
+        }
+
+
+    /* Responsividade */
+    @media (max-width: 768px) {
+
+        /* Reduzir tamanho das colunas para dispositivos menores */
+        .pagina-servico .col-md-6 {
+            flex: 0 0 100%; /* Cada coluna ocupa 100% da largura */
+            max-width: 100%;
+            margin-bottom: 20px; /* Espaço entre as seções */
+        }
+
+        /* Ajustar os itens da lista para melhor alinhamento */
+        .pagina-servico .list-group-item {
+            display: flex;
+            flex-direction: column; /* Elementos empilhados verticalmente */
+            align-items: flex-start; /* Alinhar ao início */
+            padding: 15px; /* Ajustar espaçamento interno */
+        }
+
+        /* Ajustar botão de adicionar para ocupar o espaço total */
+        .pagina-servico .btn-success {
+            width: 100%; /* Botão ocupa a largura total */
+            margin-top: 10px; /* Adicionar espaço acima */
+        }
+
+        /* Reduzir tamanhos de texto para caber melhor na tela */
+        .pagina-servico h4 {
+            font-size: 1.2rem; /* Reduzir tamanho do título */
+        }
+
+        .pagina-servico .list-group-item span {
+            font-size: 0.9rem; /* Texto menor para serviços */
+        }
+
+        /* Ajustar título de serviços selecionados */
+        .pagina-servico #servicosSelecionados {
+            max-height: 40vh; /* Diminuir altura máxima */
+        }
+
+        /* Ajustar botão de confirmação */
+        .pagina-servico .btn-primary {
+            font-size: 0.9rem; /* Reduzir tamanho da fonte */
+        }
+
+        /* Botão de voltar */
+        .pagina-servico .btn-secondary {
+            font-size: 0.9rem; /* Ajustar tamanho da fonte */
+        }
+
+        /* Centraliza os elementos principais */
+        .pagina-resumo {
+            padding: 20px;
+        }
+
+            /* Ajusta os títulos */
+            .pagina-resumo h2 {
+                font-size: 1.5rem;
+                margin-bottom: 20px;
+            }
+
+            .pagina-resumo h4, .pagina-resumo h5 {
+                font-size: 1.2rem;
+                margin-bottom: 10px;
+            }
+
+            /* Lista de serviços no modo responsivo */
+            .pagina-resumo .list-group {
+                max-height: 200px; /* Reduz a altura para telas menores */
+                overflow-y: auto;
+            }
+
+            /* Ajusta os itens da lista */
+            .pagina-resumo .list-group-item {
+                font-size: 0.9rem;
+                padding: 10px;
+            }
+
+            /* Alinha os botões de pagamento no centro */
+            .pagina-resumo .payment-options {
+                flex-direction: column; /* Empilha os botões verticalmente */
+                gap: 15px; /* Adiciona espaçamento entre os botões */
+            }
+
+            .pagina-resumo .payment-option {
+                width: 100%; /* Faz os botões ocuparem toda a largura */
+            }
+
+            /* Botão de voltar ajustado */
+            .pagina-resumo .btn-secondary {
+                font-size: 0.9rem;
+                padding: 10px;
+                width: 100%;
+            }
+
+            .pagina-resumo .button-container {
+                flex-direction: column; /* Empilha os botões no mobile */
+                gap: 20px; /* Aumenta o espaçamento no mobile */
+            }
+
+                .pagina-resumo .button-container .btn {
+                    max-width: 100%; /* Botões ocupam toda a largura no mobile */
+                }
+
+        .progress-bar-wrapper {
+            padding: 10px;
+        }
+
+        .progress-container {
+            flex-direction: column; /* Coloca os passos em coluna */
+            gap: 10px;
+        }
+
+        .step {
+            flex: none; /* Remove a largura igual entre os passos */
+        }
+
+        .progress-bar {
+            height: 3px; /* Altura reduzida em telas menores */
+        }
+
+        .progress-icon {
+            width: 24px;
+            height: 24px;
+            font-size: 12px; /* Ícones menores em telas pequenas */
+        }
+
+        .step .label {
+            font-size: 0.8rem; /* Texto menor */
+        }
+
+        #marcarTodasComoLidasBtn {
+            width: 100%; /* Botão ocupa toda a largura no mobile */
+            font-size: 1rem; /* Aumenta o texto no mobile */
+            margin-bottom: 15px; /* Espaçamento abaixo do botão */
+        }
+
+        #notificacoesPage .d-flex {
+            flex-direction: column; /* Coloca o título e botão em coluna */
+            align-items: flex-start; /* Alinha à esquerda */
+        }
+
+            #notificacoesPage .d-flex h2 {
+                margin-bottom: 10px; /* Adiciona espaçamento entre o título e o botão */
+            }
+
+        #notificacoesPage .servico-card {
+            padding: 15px;
+            font-size: 0.9rem;
+        }
+
+        #notificacoesPage .btnEditar {
+            font-size: 0.8rem;
+            padding: 5px 10px;
+            margin-top: 10px; /* Espaço consistente no mobile */
+        }
+
+        #notificacoesPage .actions {
+            margin-top: 25px; /* Aumenta o espaço acima do botão em telas menores */
+        }
+
+        #notificacoesPage h2 {
+            font-size: 1.8rem; /* Reduz o tamanho do título no mobile */
+        }
+
+        #notificacoesPage h4 {
+            font-size: 1.3rem; /* Ajusta tamanho dos subtítulos no mobile */
+        }
+
+        #notificacoesPage h2 {
+            font-size: 1.8rem; /* Reduz o tamanho do título no mobile */
+        }
+
+        #notificacoesPage h4 {
+            font-size: 1.3rem; /* Ajusta tamanho dos subtítulos no mobile */
+        }
+
+        #calendarContainer {
+            max-width: 100%;
+            margin: 10px;
+        }
+
+        .calendar-cell {
+            min-height: 80px;
+            padding: 8px;
+        }
+
+        .calendar-event {
+            font-size: 10px;
+            padding: 2px 4px;
+        }
+
+        /* Esconde gráficos e botões no mobile */
+        #buttonContainer,
+        #dashboard-container {
+            display: none;
+        }
+
+        /* Mensagem no mobile */
+        #mobileMessage {
+            display: block;
+            text-align: center;
+            background-color: #ffcc00;
+            color: #000;
+            padding: 15px;
+            font-size: 1rem;
+            border-radius: 10px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+        }
+
+        /* Ajustes no cabeçalho do dashboard */
+        .dashboard-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Centraliza no mobile */
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+            .dashboard-header h2 {
+                font-size: 1.5rem;
+                text-align: center;
+            }
+
+            .dashboard-header button {
+                font-size: 1rem;
+                padding: 10px 15px;
+                width: 100%;
+            }
+
+        /* Configuração dos cards */
+        .dashboard-card {
+            width: 100%;
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        .card {
+            background-color: #1c1c1c;
+            border-radius: 10px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+            padding: 15px;
+        }
+
+        .card-header h5 {
+            font-size: 1.1rem;
+            font-weight: bold;
             text-align: center;
         }
 
-        .dashboard-header button {
-            font-size: 1rem;
-            padding: 10px 15px;
-            width: 100%;
+        /* Ajuste dos gráficos */
+        .card-body canvas {
+            width: 100% !important;
+            height: 250px !important;
         }
 
-    /* Configuração dos cards */
-    .dashboard-card {
-        width: 100%;
-        max-width: 100%;
-        margin: 0 auto;
+        /* Menus dropdown */
+        .dropdown-menu {
+            font-size: 0.9rem;
+        }
+
+        /* Controle de overflow */
+        body {
+            overflow-x: hidden; /* Evita rolagem horizontal indesejada */
+        }
     }
 
-    .card {
-        background-color: #1c1c1c;
-        border-radius: 10px;
-        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-        padding: 15px;
+    /* CSS para Tablets */
+    @media (min-width: 768px) and (max-width: 991px) {
+
+        /* No tablet, as tabelas ainda devem se comportar bem */
+        #meusServicosBarbeiro table {
+            font-size: 1rem;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .col-md-6 {
+            width: 50%; /* Em tablets, as colunas devem ocupar metade da tela */
+            padding: 10px;
+        }
+
+        #dashboard-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .dashboard-card {
+            flex: 0 0 50%;
+            max-width: 50%;
+        }
+
+        .card {
+            border-radius: 10px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-body canvas {
+            width: 100% !important;
+            height: 250px !important;
+        }
     }
 
-    .card-header h5 {
-        font-size: 1.1rem;
-        font-weight: bold;
-        text-align: center;
+    /* CSS para Desktops */
+    @media (min-width: 992px) {
+        #dashboard-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        #calendarHeader {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .calendar-cell {
+            min-height: 70px;
+        }
+
+        .calendar-event {
+            font-size: 9px;
+        }
+
+
+        .dashboard-card {
+            flex: 0 0 30%;
+            max-width: 30%;
+        }
+
+        .card {
+            border-radius: 10px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-body canvas {
+            width: 100% !important;
+            height: 300px !important;
+        }
     }
-
-    /* Ajuste dos gráficos */
-    .card-body canvas {
-        width: 100% !important;
-        height: 250px !important;
-    }
-
-    /* Menus dropdown */
-    .dropdown-menu {
-        font-size: 0.9rem;
-    }
-
-    /* Controle de overflow */
-    body {
-        overflow-x: hidden; /* Evita rolagem horizontal indesejada */
-    }
-}
-
-/* CSS para Tablets */
-@media (min-width: 768px) and (max-width: 991px) {
-
-    /* No tablet, as tabelas ainda devem se comportar bem */
-    #meusServicosBarbeiro table {
-        font-size: 1rem;
-        width: 100%;
-        margin-bottom: 20px;
-    }
-
-    .col-md-6 {
-        width: 50%; /* Em tablets, as colunas devem ocupar metade da tela */
-        padding: 10px;
-    }
-
-    #dashboard-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 20px;
-    }
-
-    .dashboard-card {
-        flex: 0 0 50%;
-        max-width: 50%;
-    }
-
-    .card {
-        border-radius: 10px;
-        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-    }
-
-    .card-body canvas {
-        width: 100% !important;
-        height: 250px !important;
-    }
-}
-
-/* CSS para Desktops */
-@media (min-width: 992px) {
-    #dashboard-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 20px;
-    }
-
-    #calendarHeader {
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .calendar-cell {
-        min-height: 70px;
-    }
-
-    .calendar-event {
-        font-size: 9px;
-    }
-
-
-    .dashboard-card {
-        flex: 0 0 30%;
-        max-width: 30%;
-    }
-
-    .card {
-        border-radius: 10px;
-        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-    }
-
-    .card-body canvas {
-        width: 100% !important;
-        height: 300px !important;
-    }
-}
