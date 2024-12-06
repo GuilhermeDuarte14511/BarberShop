@@ -3266,272 +3266,347 @@ h2, h3 {
             border-color: #5a6a6a;
         }
 
+/* Estilo para o destaque no onboarding */
+.highlight {
+    position: relative;
+    z-index: 9999 !important;
+    box-shadow: 0 0 10px 4px rgba(255, 0, 0, 0.8); /* Sombra vermelha sutil */
+    border-radius: 8px;
+    border: 3px solid rgba(255, 0, 0, 0.9); /* Borda vermelha sólida */
+    animation: pulse 1.5s infinite; /* Animação de pulsação */
+}
 
-    /* Responsividade */
-    @media (max-width: 768px) {
+/* Efeito de pulsação na borda */
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 10px 2px rgba(255, 0, 0, 0.7);
+    }
 
-        /* Reduzir tamanho das colunas para dispositivos menores */
-        .pagina-servico .col-md-6 {
-            flex: 0 0 100%; /* Cada coluna ocupa 100% da largura */
-            max-width: 100%;
-            margin-bottom: 20px; /* Espaço entre as seções */
+    50% {
+        box-shadow: 0 0 15px 4px rgba(255, 0, 0, 1);
+    }
+
+    100% {
+        box-shadow: 0 0 10px 2px rgba(255, 0, 0, 0.7);
+    }
+}
+
+.onboarding-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7); /* Escurece o fundo */
+    z-index: 9998;
+}
+
+
+/* Estilo do modal de informações no onboarding */
+.onboarding-modal {
+    position: absolute;
+    background: #fff; /* Fundo branco */
+    color: #000; /* Texto preto */
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* Sombra leve */
+    z-index: 9999;
+    width: 300px;
+    text-align: center;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+    /* Botão "Próximo" no modal */
+    .onboarding-modal .btn-next {
+        margin-top: 10px;
+        background-color: #007bff; /* Azul padrão */
+        color: #fff;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+
+        /* Efeito ao passar o mouse sobre o botão */
+        .onboarding-modal .btn-next:hover {
+            background-color: #0056b3; /* Azul mais escuro */
+            transform: scale(1.05); /* Leve aumento ao passar o mouse */
         }
 
-        /* Ajustar os itens da lista para melhor alinhamento */
-        .pagina-servico .list-group-item {
-            display: flex;
-            flex-direction: column; /* Elementos empilhados verticalmente */
-            align-items: flex-start; /* Alinhar ao início */
-            padding: 15px; /* Ajustar espaçamento interno */
+/* Estilo responsivo para o modal */
+@media (max-width: 768px) {
+
+
+
+
+    .onboarding-modal {
+        width: 90%; /* Ajusta o modal para telas menores */
+    }
+    /* Reduzir tamanho das colunas para dispositivos menores */
+    .pagina-servico .col-md-6 {
+        flex: 0 0 100%; /* Cada coluna ocupa 100% da largura */
+        max-width: 100%;
+        margin-bottom: 20px; /* Espaço entre as seções */
+    }
+
+    /* Ajustar os itens da lista para melhor alinhamento */
+    .pagina-servico .list-group-item {
+        display: flex;
+        flex-direction: column; /* Elementos empilhados verticalmente */
+        align-items: flex-start; /* Alinhar ao início */
+        padding: 15px; /* Ajustar espaçamento interno */
+    }
+
+    /* Ajustar botão de adicionar para ocupar o espaço total */
+    .pagina-servico .btn-success {
+        width: 100%; /* Botão ocupa a largura total */
+        margin-top: 10px; /* Adicionar espaço acima */
+    }
+
+    /* Reduzir tamanhos de texto para caber melhor na tela */
+    .pagina-servico h4 {
+        font-size: 1.2rem; /* Reduzir tamanho do título */
+    }
+
+    .pagina-servico .list-group-item span {
+        font-size: 0.9rem; /* Texto menor para serviços */
+    }
+
+    /* Ajustar título de serviços selecionados */
+    .pagina-servico #servicosSelecionados {
+        max-height: 40vh; /* Diminuir altura máxima */
+    }
+
+    /* Ajustar botão de confirmação */
+    .pagina-servico .btn-primary {
+        font-size: 0.9rem; /* Reduzir tamanho da fonte */
+    }
+
+    /* Botão de voltar */
+    .pagina-servico .btn-secondary {
+        font-size: 0.9rem; /* Ajustar tamanho da fonte */
+    }
+
+    /* Centraliza os elementos principais */
+    .pagina-resumo {
+        padding: 20px;
+    }
+
+        /* Ajusta os títulos */
+        .pagina-resumo h2 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
         }
 
-        /* Ajustar botão de adicionar para ocupar o espaço total */
-        .pagina-servico .btn-success {
-            width: 100%; /* Botão ocupa a largura total */
-            margin-top: 10px; /* Adicionar espaço acima */
+        .pagina-resumo h4, .pagina-resumo h5 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
         }
 
-        /* Reduzir tamanhos de texto para caber melhor na tela */
-        .pagina-servico h4 {
-            font-size: 1.2rem; /* Reduzir tamanho do título */
+        /* Lista de serviços no modo responsivo */
+        .pagina-resumo .list-group {
+            max-height: 200px; /* Reduz a altura para telas menores */
+            overflow-y: auto;
         }
 
-        .pagina-servico .list-group-item span {
-            font-size: 0.9rem; /* Texto menor para serviços */
-        }
-
-        /* Ajustar título de serviços selecionados */
-        .pagina-servico #servicosSelecionados {
-            max-height: 40vh; /* Diminuir altura máxima */
-        }
-
-        /* Ajustar botão de confirmação */
-        .pagina-servico .btn-primary {
-            font-size: 0.9rem; /* Reduzir tamanho da fonte */
-        }
-
-        /* Botão de voltar */
-        .pagina-servico .btn-secondary {
-            font-size: 0.9rem; /* Ajustar tamanho da fonte */
-        }
-
-        /* Centraliza os elementos principais */
-        .pagina-resumo {
-            padding: 20px;
-        }
-
-            /* Ajusta os títulos */
-            .pagina-resumo h2 {
-                font-size: 1.5rem;
-                margin-bottom: 20px;
-            }
-
-            .pagina-resumo h4, .pagina-resumo h5 {
-                font-size: 1.2rem;
-                margin-bottom: 10px;
-            }
-
-            /* Lista de serviços no modo responsivo */
-            .pagina-resumo .list-group {
-                max-height: 200px; /* Reduz a altura para telas menores */
-                overflow-y: auto;
-            }
-
-            /* Ajusta os itens da lista */
-            .pagina-resumo .list-group-item {
-                font-size: 0.9rem;
-                padding: 10px;
-            }
-
-            /* Alinha os botões de pagamento no centro */
-            .pagina-resumo .payment-options {
-                flex-direction: column; /* Empilha os botões verticalmente */
-                gap: 15px; /* Adiciona espaçamento entre os botões */
-            }
-
-            .pagina-resumo .payment-option {
-                width: 100%; /* Faz os botões ocuparem toda a largura */
-            }
-
-            /* Botão de voltar ajustado */
-            .pagina-resumo .btn-secondary {
-                font-size: 0.9rem;
-                padding: 10px;
-                width: 100%;
-            }
-
-            .pagina-resumo .button-container {
-                flex-direction: column; /* Empilha os botões no mobile */
-                gap: 20px; /* Aumenta o espaçamento no mobile */
-            }
-
-                .pagina-resumo .button-container .btn {
-                    max-width: 100%; /* Botões ocupam toda a largura no mobile */
-                }
-
-        .progress-bar-wrapper {
+        /* Ajusta os itens da lista */
+        .pagina-resumo .list-group-item {
+            font-size: 0.9rem;
             padding: 10px;
         }
 
-        .progress-container {
-            flex-direction: column; /* Coloca os passos em coluna */
-            gap: 10px;
+        /* Alinha os botões de pagamento no centro */
+        .pagina-resumo .payment-options {
+            flex-direction: column; /* Empilha os botões verticalmente */
+            gap: 15px; /* Adiciona espaçamento entre os botões */
         }
 
-        .step {
-            flex: none; /* Remove a largura igual entre os passos */
+        .pagina-resumo .payment-option {
+            width: 100%; /* Faz os botões ocuparem toda a largura */
         }
 
-        .progress-bar {
-            height: 3px; /* Altura reduzida em telas menores */
-        }
-
-        .progress-icon {
-            width: 24px;
-            height: 24px;
-            font-size: 12px; /* Ícones menores em telas pequenas */
-        }
-
-        .step .label {
-            font-size: 0.8rem; /* Texto menor */
-        }
-
-        #marcarTodasComoLidasBtn {
-            width: 100%; /* Botão ocupa toda a largura no mobile */
-            font-size: 1rem; /* Aumenta o texto no mobile */
-            margin-bottom: 15px; /* Espaçamento abaixo do botão */
-        }
-
-        #notificacoesPage .d-flex {
-            flex-direction: column; /* Coloca o título e botão em coluna */
-            align-items: flex-start; /* Alinha à esquerda */
-        }
-
-            #notificacoesPage .d-flex h2 {
-                margin-bottom: 10px; /* Adiciona espaçamento entre o título e o botão */
-            }
-
-        #notificacoesPage .servico-card {
-            padding: 15px;
+        /* Botão de voltar ajustado */
+        .pagina-resumo .btn-secondary {
             font-size: 0.9rem;
-        }
-
-        #notificacoesPage .btnEditar {
-            font-size: 0.8rem;
-            padding: 5px 10px;
-            margin-top: 10px; /* Espaço consistente no mobile */
-        }
-
-        #notificacoesPage .actions {
-            margin-top: 25px; /* Aumenta o espaço acima do botão em telas menores */
-        }
-
-        #notificacoesPage h2 {
-            font-size: 1.8rem; /* Reduz o tamanho do título no mobile */
-        }
-
-        #notificacoesPage h4 {
-            font-size: 1.3rem; /* Ajusta tamanho dos subtítulos no mobile */
-        }
-
-        #notificacoesPage h2 {
-            font-size: 1.8rem; /* Reduz o tamanho do título no mobile */
-        }
-
-        #notificacoesPage h4 {
-            font-size: 1.3rem; /* Ajusta tamanho dos subtítulos no mobile */
-        }
-
-        #calendarContainer {
-            max-width: 100%;
-            margin: 10px;
-        }
-
-        .calendar-cell {
-            min-height: 80px;
-            padding: 8px;
-        }
-
-        .calendar-event {
-            font-size: 10px;
-            padding: 2px 4px;
-        }
-
-        /* Esconde gráficos e botões no mobile */
-        #buttonContainer,
-        #dashboard-container {
-            display: none;
-        }
-
-        /* Mensagem no mobile */
-        #mobileMessage {
-            display: block;
-            text-align: center;
-            background-color: #ffcc00;
-            color: #000;
-            padding: 15px;
-            font-size: 1rem;
-            border-radius: 10px;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-            margin-bottom: 20px;
-        }
-
-        /* Ajustes no cabeçalho do dashboard */
-        .dashboard-header {
-            display: flex;
-            flex-direction: column;
-            align-items: center; /* Centraliza no mobile */
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-            .dashboard-header h2 {
-                font-size: 1.5rem;
-                text-align: center;
-            }
-
-            .dashboard-header button {
-                font-size: 1rem;
-                padding: 10px 15px;
-                width: 100%;
-            }
-
-        /* Configuração dos cards */
-        .dashboard-card {
+            padding: 10px;
             width: 100%;
-            max-width: 100%;
-            margin: 0 auto;
         }
 
-        .card {
-            background-color: #1c1c1c;
-            border-radius: 10px;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-            padding: 15px;
+        .pagina-resumo .button-container {
+            flex-direction: column; /* Empilha os botões no mobile */
+            gap: 20px; /* Aumenta o espaçamento no mobile */
         }
 
-        .card-header h5 {
-            font-size: 1.1rem;
-            font-weight: bold;
+            .pagina-resumo .button-container .btn {
+                max-width: 100%; /* Botões ocupam toda a largura no mobile */
+            }
+
+    .progress-bar-wrapper {
+        padding: 10px;
+    }
+
+    .progress-container {
+        flex-direction: column; /* Coloca os passos em coluna */
+        gap: 10px;
+    }
+
+    .step {
+        flex: none; /* Remove a largura igual entre os passos */
+    }
+
+    .progress-bar {
+        height: 3px; /* Altura reduzida em telas menores */
+    }
+
+    .progress-icon {
+        width: 24px;
+        height: 24px;
+        font-size: 12px; /* Ícones menores em telas pequenas */
+    }
+
+    .step .label {
+        font-size: 0.8rem; /* Texto menor */
+    }
+
+    #marcarTodasComoLidasBtn {
+        width: 100%; /* Botão ocupa toda a largura no mobile */
+        font-size: 1rem; /* Aumenta o texto no mobile */
+        margin-bottom: 15px; /* Espaçamento abaixo do botão */
+    }
+
+    #notificacoesPage .d-flex {
+        flex-direction: column; /* Coloca o título e botão em coluna */
+        align-items: flex-start; /* Alinha à esquerda */
+    }
+
+        #notificacoesPage .d-flex h2 {
+            margin-bottom: 10px; /* Adiciona espaçamento entre o título e o botão */
+        }
+
+    #notificacoesPage .servico-card {
+        padding: 15px;
+        font-size: 0.9rem;
+    }
+
+    #notificacoesPage .btnEditar {
+        font-size: 0.8rem;
+        padding: 5px 10px;
+        margin-top: 10px; /* Espaço consistente no mobile */
+    }
+
+    #notificacoesPage .actions {
+        margin-top: 25px; /* Aumenta o espaço acima do botão em telas menores */
+    }
+
+    #notificacoesPage h2 {
+        font-size: 1.8rem; /* Reduz o tamanho do título no mobile */
+    }
+
+    #notificacoesPage h4 {
+        font-size: 1.3rem; /* Ajusta tamanho dos subtítulos no mobile */
+    }
+
+    #notificacoesPage h2 {
+        font-size: 1.8rem; /* Reduz o tamanho do título no mobile */
+    }
+
+    #notificacoesPage h4 {
+        font-size: 1.3rem; /* Ajusta tamanho dos subtítulos no mobile */
+    }
+
+    #calendarContainer {
+        max-width: 100%;
+        margin: 10px;
+    }
+
+    .calendar-cell {
+        min-height: 80px;
+        padding: 8px;
+    }
+
+    .calendar-event {
+        font-size: 10px;
+        padding: 2px 4px;
+    }
+
+    /* Esconde gráficos e botões no mobile */
+    #buttonContainer,
+    #dashboard-container {
+        display: none;
+    }
+
+    /* Mensagem no mobile */
+    #mobileMessage {
+        display: block;
+        text-align: center;
+        background-color: #ffcc00;
+        color: #000;
+        padding: 15px;
+        font-size: 1rem;
+        border-radius: 10px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        margin-bottom: 20px;
+    }
+
+    /* Ajustes no cabeçalho do dashboard */
+    .dashboard-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center; /* Centraliza no mobile */
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+        .dashboard-header h2 {
+            font-size: 1.5rem;
             text-align: center;
         }
 
-        /* Ajuste dos gráficos */
-        .card-body canvas {
-            width: 100% !important;
-            height: 250px !important;
+        .dashboard-header button {
+            font-size: 1rem;
+            padding: 10px 15px;
+            width: 100%;
         }
 
-        /* Menus dropdown */
-        .dropdown-menu {
-            font-size: 0.9rem;
-        }
-
-        /* Controle de overflow */
-        body {
-            overflow-x: hidden; /* Evita rolagem horizontal indesejada */
-        }
+    /* Configuração dos cards */
+    .dashboard-card {
+        width: 100%;
+        max-width: 100%;
+        margin: 0 auto;
     }
+
+    .card {
+        background-color: #1c1c1c;
+        border-radius: 10px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        padding: 15px;
+    }
+
+    .card-header h5 {
+        font-size: 1.1rem;
+        font-weight: bold;
+        text-align: center;
+    }
+
+    /* Ajuste dos gráficos */
+    .card-body canvas {
+        width: 100% !important;
+        height: 250px !important;
+    }
+
+    /* Menus dropdown */
+    .dropdown-menu {
+        font-size: 0.9rem;
+    }
+
+    /* Controle de overflow */
+    body {
+        overflow-x: hidden; /* Evita rolagem horizontal indesejada */
+    }
+}
 
     /* CSS para Tablets */
     @media (min-width: 768px) and (max-width: 991px) {

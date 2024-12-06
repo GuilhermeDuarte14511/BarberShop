@@ -49,5 +49,37 @@ namespace BarberShop.Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        public async Task<bool> MarcarOnboardingComoCompletoAsync(int usuarioId, string tela)
+        {
+            var usuario = await GetByIdAsync(usuarioId);
+            if (usuario == null) return false;
+
+            // Atualizar o progresso do onboarding para a tela
+            var progresso = await _context.OnboardingProgresso
+                .FirstOrDefaultAsync(p => p.UsuarioId == usuarioId && p.Tela == tela);
+
+            if (progresso == null)
+            {
+                progresso = new OnboardingProgresso
+                {
+                    UsuarioId = usuarioId,
+                    Tela = tela,
+                    Concluido = true,
+                    DataConclusao = DateTime.UtcNow
+                };
+                await _context.OnboardingProgresso.AddAsync(progresso);
+            }
+            else
+            {
+                progresso.Concluido = true;
+                progresso.DataConclusao = DateTime.UtcNow;
+                _context.OnboardingProgresso.Update(progresso);
+            }
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+
     }
 }

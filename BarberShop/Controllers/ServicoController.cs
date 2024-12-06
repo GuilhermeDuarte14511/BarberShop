@@ -11,11 +11,12 @@ namespace BarberShopMVC.Controllers
     public class ServicoController : BaseController
     {
         private readonly IServicoService _servicoService;
-
-        public ServicoController(IServicoService servicoService, ILogService logService)
+        private readonly IOnboardingService _onboardingService;
+        public ServicoController(IServicoService servicoService, ILogService logService, IOnboardingService onboardingService)
             : base(logService)
         {
             _servicoService = servicoService;
+            _onboardingService = onboardingService;
         }
 
         public async Task<IActionResult> Index()
@@ -29,7 +30,14 @@ namespace BarberShopMVC.Controllers
                 }
 
                 var servicos = await _servicoService.ObterTodosPorBarbeariaIdAsync(barbeariaId.Value);
-                await LogAsync("INFO", nameof(ServicoController), "Carregando lista de serviços", "");
+
+                // Verificar progresso de onboarding para a tela de serviços
+                var usuarioId = ObterUsuarioIdLogado();
+                bool isOnboardingComplete = await _onboardingService.VerificarProgressoAsync(usuarioId, "Servicos");
+
+                // Define se o onboarding deve ser mostrado
+                ViewData["ShowOnboarding"] = !isOnboardingComplete ? "True" : "False";
+
                 return View(servicos);
             }
             catch (Exception ex)
@@ -38,6 +46,7 @@ namespace BarberShopMVC.Controllers
                 return Json(new { success = false, message = "Erro ao carregar serviços.", error = ex.Message });
             }
         }
+
 
         public async Task<IActionResult> Details(int id)
         {

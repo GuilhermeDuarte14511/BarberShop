@@ -1,12 +1,16 @@
-﻿@{
+﻿@using System.Security.Claims
+@{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = "Ambiente Administrativo";
-
+    var isOnboardingComplete = ViewData["ShowOnboarding"]?.ToString() ?? "false";
 }
 
 <div id="adminDashboard" class="container-fluid p-4">
     <input type="hidden" id="UserIdAdm" value="@ViewData["UserId"]" />
-    <!-- Cabeçalho do dashboard -->
+    <input type="hidden" id="ShowOnboarding" value="@(ViewData["ShowOnboarding"]?.ToString() ?? "False")" />
+    <input type="hidden" id="UserRole" value="@User.FindFirst(ClaimTypes.Role)?.Value">
+    <input type="hidden" id="CurrentScreen" value="Dashboard" />
+
     <div id="headerContainer" class="mb-4">
         <h2 class="text-red mb-1">Bem-vindo ao Dashboard Administrativo</h2>
         <p class="mb-0">Esse é o painel principal do sistema administrativo da barbearia.</p>

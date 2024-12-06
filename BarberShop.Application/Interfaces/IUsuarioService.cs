@@ -12,6 +12,7 @@ namespace BarberShop.Application.Services
         Task<bool> DeletarUsuarioAsync(int usuarioId);
         Task<Usuario> ObterUsuarioPorIdAsync(int usuarioId);
         Task<List<Usuario>> ObterUsuariosPorEmailOuTelefoneAsync(string email, string telefone);
+        Task<bool> MarcarOnboardingComoCompletoAsync(int usuarioId, string tela);
 
 
     }

@@ -18,6 +18,7 @@ namespace BarberShop.Application.Controllers
         private readonly IAutenticacaoService _autenticacaoService;
         private readonly IAgendamentoService _agendamentoService;
         private readonly IIndisponibilidadeService _indisponibilidadeService;
+        private readonly IOnboardingService _onboardingService;
 
         public UsuarioController(
             IUsuarioService usuarioService,
@@ -27,6 +28,7 @@ namespace BarberShop.Application.Controllers
             IAutenticacaoService autenticacaoService,
             IIndisponibilidadeService indisponibilidadeService,
             IAgendamentoService agendamentoService,
+            IOnboardingService onboardingService,
             ILogService logService)
             : base(logService)
         {
@@ -37,6 +39,7 @@ namespace BarberShop.Application.Controllers
             _autenticacaoService = autenticacaoService;
             _indisponibilidadeService = indisponibilidadeService;
             _agendamentoService = agendamentoService;
+            _onboardingService = onboardingService;
         }
 
         public async Task<IActionResult> Index()
@@ -80,12 +83,14 @@ namespace BarberShop.Application.Controllers
         {
             try
             {
+                // Obtém o ID da barbearia da sessão
                 int barbeariaId = HttpContext.Session.GetInt32("BarbeariaId").Value;
+
+                // Verifica se já existe usuário com o mesmo e-mail ou telefone
                 var usuariosExistentes = await _usuarioService.ObterUsuariosPorEmailOuTelefoneAsync(request.Email, request.Telefone);
                 if (usuariosExistentes != null && usuariosExistentes.Any())
                 {
                     string mensagemErro = "Já existe um cadastro com ";
-
                     if (usuariosExistentes.Any(u => u.Email == request.Email))
                         mensagemErro += "esse e-mail";
                     if (usuariosExistentes.Any(u => u.Telefone == request.Telefone))
@@ -94,6 +99,7 @@ namespace BarberShop.Application.Controllers
                     return Json(new { success = false, message = mensagemErro });
                 }
 
+                // Cria a entidade do usuário
                 var usuario = new Usuario
                 {
                     Nome = request.Nome,
@@ -104,11 +110,13 @@ namespace BarberShop.Application.Controllers
                     BarbeariaId = barbeariaId
                 };
 
+                // Gera a senha aleatória e realiza o hash
                 var senhaAleatoria = GerarSenhaAleatoria();
                 var senhaAleatoriaDescriptografada = senhaAleatoria;
                 senhaAleatoria = _autenticacaoService.HashPassword(senhaAleatoria);
                 usuario.SenhaHash = senhaAleatoria;
 
+                // Se for barbeiro, cria o registro na tabela de barbeiros
                 if (request.TipoUsuario == "Barbeiro")
                 {
                     var barbeiro = new Barbeiro
@@ -123,7 +131,32 @@ namespace BarberShop.Application.Controllers
                     usuario.BarbeiroId = barbeiro.BarbeiroId;
                 }
 
+                // Salva o usuário no banco de dados
                 var usuarioCriado = await _usuarioService.CriarUsuarioAsync(usuario);
+
+                // Define as telas do onboarding de acordo com o tipo de usuário
+                var telasOnboarding = new List<string>();
+                if (request.TipoUsuario == "Admin")
+                {
+                    telasOnboarding = new List<string>
+                    {
+                        "Dashboard", "Barbeiros", "Servicos", "Pagamentos", "Agendamentos",
+                        "Meus Dados", "Horarios", "Feriados", "Indisponibilidade", "Usuarios", "Avaliacoes"
+                    };
+                        }
+                        else if (request.TipoUsuario == "Barbeiro")
+                        {
+                            telasOnboarding = new List<string>
+                    {
+                        "Dashboard", "Meus Agendamentos", "Meus Servicos", "Minhas Datas",
+                        "Meus Dados", "Minhas Avaliacoes"
+                    };
+                }
+
+                // Registra os passos iniciais do onboarding
+                await _onboardingService.RegistrarPassosIniciaisAsync(usuarioCriado.UsuarioId, telasOnboarding);
+
+                // Envia o e-mail de boas-vindas com as credenciais
                 var nomeBarbearia = User.FindFirst("BarbeariaNome")?.Value;
                 var urlSlug = User.FindFirst("urlSlug")?.Value;
 
@@ -136,15 +169,20 @@ namespace BarberShop.Application.Controllers
                     urlSlug
                 );
 
+                // Log de sucesso
                 await LogAsync("Information", nameof(UsuarioController), "Usuário criado com sucesso", $"UsuarioId: {usuarioCriado.UsuarioId}");
+
                 return Json(new { success = true, message = "Usuário criado com sucesso e credenciais enviadas por e-mail!", data = usuarioCriado });
             }
             catch (Exception ex)
             {
+                // Log de erro
                 await LogAsync("Error", nameof(UsuarioController), "Erro ao criar usuário", ex.Message);
                 return Json(new { success = false, message = "Erro ao criar usuário." });
             }
         }
+
+
 
         [HttpDelete]
         public async Task<IActionResult> Deletar(int id)
@@ -229,6 +267,70 @@ namespace BarberShop.Application.Controllers
                 UsuarioId = claims["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"],
                 BarbeiroId = claims["BarbeiroId"]
             });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CompletarOnboarding(string tela)
+        {
+            try
+            {
+                // Obter o ID do usuário logado a partir dos claims
+                var usuarioId = ObterUsuarioIdLogado();
+
+                // Marcar o onboarding como completo para a tela específica
+                var sucesso = await _usuarioService.MarcarOnboardingComoCompletoAsync(usuarioId, tela);
+
+                if (!sucesso)
+                    return BadRequest(new { message = "Erro ao atualizar o status do onboarding para a tela." });
+
+                return Ok(new { message = "Onboarding concluído com sucesso!" });
+            }
+            catch (Exception ex)
+            {
+                await LogAsync("Error", nameof(UsuarioController), "Erro ao completar onboarding", ex.Message);
+                return StatusCode(500, new { message = "Erro interno ao completar o onboarding." });
+            }
+        }
+
+
+        [HttpGet]
+        public async Task<IActionResult> VerificarProgresso(string tela)
+        {
+            try
+            {
+                // Obtém o ID do usuário logado
+                var usuarioId = ObterUsuarioIdLogado();
+
+                // Verifica o progresso para a tela especificada
+                var progresso = await _onboardingService.VerificarProgressoAsync(usuarioId, tela);
+
+                return Json(new { concluido = progresso });
+            }
+            catch (Exception ex)
+            {
+                await LogAsync("Error", nameof(UsuarioController), "Erro ao verificar progresso do onboarding", ex.Message);
+                return StatusCode(500, new { message = "Erro ao verificar o progresso do onboarding." });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SalvarProgresso(string tela)
+        {
+            try
+            {
+                // Obtém o ID do usuário logado
+                var usuarioId = ObterUsuarioIdLogado();
+
+                // Salva o progresso para a tela especificada
+                await _onboardingService.SalvarProgressoAsync(usuarioId, tela);
+
+                return Ok(new { message = "Progresso salvo com sucesso!" });
+            }
+            catch (Exception ex)
+            {
+                await LogAsync("Error", nameof(UsuarioController), "Erro ao salvar progresso do onboarding", ex.Message);
+                return StatusCode(500, new { message = "Erro ao salvar o progresso do onboarding." });
+            }
         }
 
     }

@@ -6,6 +6,8 @@
 }
 
 <div id="barbeiroPage" class="container mt-5">
+    <input type="hidden" id="ShowOnboarding" value="@ViewData["ShowOnboarding"]?.ToString()">
+    <input type="hidden" id="CurrentScreen" value="Barbeiros">
     <h2 class="text-center">Gerenciar Barbeiros</h2>
     <button class="btn mb-3 btnAdicionarCustom" id="btnAdicionarBarbeiro">
         Adicionar Barbeiro

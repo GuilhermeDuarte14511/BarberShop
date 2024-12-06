@@ -84,6 +84,7 @@ builder.Services.AddScoped<IIndisponibilidadeRepository, IndisponibilidadeReposi
 builder.Services.AddScoped<IBarbeiroServicoRepository, BarbeiroServicoRepository>();
 builder.Services.AddScoped<IPagamentoRepository, PagamentoRepository>();
 builder.Services.AddScoped<INotificacaoRepository, NotificacaoRepository>();
+builder.Services.AddScoped<IOnboardingProgressoRepository, OnboardingProgressoRepository>(); // Repositório do Onboarding
 
 // Registrar serviços da camada de aplicação
 builder.Services.AddScoped<IClienteService, ClienteService>();
@@ -101,6 +102,7 @@ builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IPagamentoService, PagamentoService>();
 builder.Services.AddScoped<INotificacaoService, NotificacaoService>();
 builder.Services.AddScoped<IPushSubscriptionService, PushSubscriptionService>();
+builder.Services.AddScoped<IOnboardingService, OnboardingService>(); // Serviço do Onboarding
 
 // Configurar autenticação com cookies (apenas uma vez)
 builder.Services.AddAuthentication(options =>

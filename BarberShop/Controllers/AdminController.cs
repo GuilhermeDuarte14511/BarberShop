@@ -1,4 +1,5 @@
 ﻿using BarberShop.Application.DTOs;
+using BarberShop.Application.Interfaces;
 using BarberShop.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,26 +11,32 @@ namespace BarberShopMVC.Controllers
     {
         private readonly IAvaliacaoService _avaliacaoService;
         private readonly IBarbeiroService _barbeiroService;
+        private readonly IOnboardingService _onboardingService;
 
-        public AdminController(ILogService logService, IAvaliacaoService avaliacaoService, IBarbeiroService barbeiroService)
+        public AdminController(ILogService logService, IAvaliacaoService avaliacaoService, IBarbeiroService barbeiroService, IOnboardingService onboardingService)
             : base(logService) // Passa o logService para a BaseController
         {
             _avaliacaoService = avaliacaoService;
             _barbeiroService = barbeiroService;
+            _onboardingService = onboardingService;
         }
 
-        // Dashboard Administrativo
         public async Task<IActionResult> IndexAsync(string barbeariaUrl)
         {
             try
             {
                 var clienteId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier).Value);
-                ViewData["UserId"] = clienteId;
-
                 var barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
+
+                // Verifica o progresso do onboarding
+                bool isOnboardingComplete = await _onboardingService.IsOnboardingComplete(clienteId, "Dashboard");
+
+                // Define dados para a View
+                ViewData["UserId"] = clienteId;
                 ViewData["BarbeariaId"] = barbeariaId;
                 ViewData["BarbeariaUrl"] = barbeariaUrl;
                 ViewData["Title"] = "Dashboard Administrativo";
+                ViewData["ShowOnboarding"] = !isOnboardingComplete ? "True" : "False"; // Ajuste para refletir o progresso do onboarding
 
                 await LogAsync("INFO", nameof(IndexAsync), "Dashboard acessado com sucesso", $"ClienteId: {clienteId}, BarbeariaId: {barbeariaId}");
                 return View();
@@ -40,6 +47,9 @@ namespace BarberShopMVC.Controllers
                 return StatusCode(500, "Erro ao carregar o dashboard.");
             }
         }
+
+
+
 
         public async Task<IActionResult> GerenciarBarbeirosAsync()
         {

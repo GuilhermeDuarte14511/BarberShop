@@ -1,5 +1,6 @@
 ﻿using BarberShop.Application.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -37,6 +38,12 @@ public class BaseController : Controller
     {
         var barbeiroIdClaim = User.FindFirst("BarbeiroId")?.Value;
         return int.Parse(barbeiroIdClaim ?? "0");
+    }
+
+    public int ObterUsuarioIdLogado()
+    {
+        var usuarioIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return int.Parse(usuarioIdClaim ?? "0");
     }
 
     public Dictionary<string, string> ObterTodosClaims()

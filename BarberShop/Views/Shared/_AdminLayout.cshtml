@@ -39,79 +39,79 @@
                 @switch (role)
                 {
                     case "Admin":
-                        <a href="@Url.Action("Index", "Admin")" class="list-group-item list-group-item-action bg-dark text-white">
+                        <a href="@Url.Action("Index", "Admin")" id="menuDashboard" class="list-group-item list-group-item-action bg-dark text-white">
                             <i class="fas fa-chart-line mr-2"></i> Dashboards
                         </a>
                         <hr class="sidebar-divider">
-                        <a href="@Url.Action("Index", "Barbeiro")" class="list-group-item list-group-item-action bg-dark text-white">
+                        <a href="@Url.Action("Index", "Barbeiro")" id="menuBarbeiros" class="list-group-item list-group-item-action bg-dark text-white">
                             <i class="fas fa-user-friends mr-2"></i> Barbeiros
                         </a>
                         <hr class="sidebar-divider">
-                        <a href="@Url.Action("Index", "Servico")" class="list-group-item list-group-item-action bg-dark text-white">
+                        <a href="@Url.Action("Index", "Servico")" id="menuServicos" class="list-group-item list-group-item-action bg-dark text-white">
                             <i class="fas fa-cut mr-2"></i> Serviços
                         </a>
                         <hr class="sidebar-divider">
-                        <a href="@Url.Action("Index", "Pagamento")" class="list-group-item list-group-item-action bg-dark text-white">
+                        <a href="@Url.Action("Index", "Pagamento")" id="menuPagamentos" class="list-group-item list-group-item-action bg-dark text-white">
                             <i class="fas fa-credit-card mr-2"></i> Pagamentos
                         </a>
                         <hr class="sidebar-divider">
-                        <a href="@Url.Action("Index", "Agendamento")" class="list-group-item list-group-item-action bg-dark text-white">
+                        <a href="@Url.Action("Index", "Agendamento")" id="menuAgendamentos" class="list-group-item list-group-item-action bg-dark text-white">
                             <i class="fas fa-calendar-alt mr-2"></i> Agendamentos
                         </a>
                         <hr class="sidebar-divider">
-                        <a href="@Url.Action("Index", "Barbearia")" class="list-group-item list-group-item-action bg-dark text-white">
+                        <a href="@Url.Action("Index", "Barbearia")" id="menuMeusDados" class="list-group-item list-group-item-action bg-dark text-white">
                             <i class="fas fa-info-circle mr-2"></i> Meus Dados
                         </a>
                         <hr class="sidebar-divider">
                         <!-- Dropdown "Horários" -->
                         <div class="list-group-item bg-dark text-white">
-                            <a href="#submenuHorarios" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="collapse" aria-expanded="false">
+                            <a href="#submenuHorarios" id="menuHorarios" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="collapse" aria-expanded="false">
                                 <i class="fas fa-clock mr-2"></i> Horários
                             </a>
                             <div class="collapse" id="submenuHorarios">
-                                <a href="@Url.Action("Index", "Feriado")" class="list-group-item list-group-item-action bg-dark text-white ml-3">
+                                <a href="@Url.Action("Index", "Feriado")" id="menuFeriados" class="list-group-item list-group-item-action bg-dark text-white ml-3">
                                     <i class="fas fa-calendar-alt mr-2"></i> Feriados
                                 </a>
                                 <hr class="sidebar-divider">
-                                <a href="@Url.Action("Index", "IndisponibilidadeBarbeiro")" class="list-group-item list-group-item-action bg-dark text-white ml-3">
+                                <a href="@Url.Action("Index", "IndisponibilidadeBarbeiro")" id="menuIndisponibilidade" class="list-group-item list-group-item-action bg-dark text-white ml-3">
                                     <i class="fas fa-user-clock mr-2"></i> Indisponibilidade
                                 </a>
                                 <hr class="sidebar-divider">
                             </div>
                         </div>
                         <hr class="sidebar-divider">
-                        <a href="@Url.Action("Index", "Usuario")" class="list-group-item list-group-item-action bg-dark text-white">
+                        <a href="@Url.Action("Index", "Usuario")" id="menuUsuarios" class="list-group-item list-group-item-action bg-dark text-white">
                             <i class="fas fa-users mr-2"></i> Usuários
                         </a>
                         <hr class="sidebar-divider">
-                        <a href="@Url.Action("AvaliacoesBarbearia", "Admin")" class="list-group-item list-group-item-action bg-dark text-white">
+                        <a href="@Url.Action("AvaliacoesBarbearia", "Admin")" id="menuAvaliacoes" class="list-group-item list-group-item-action bg-dark text-white">
                             <i class="fas fa-star mr-2"></i> Avaliações
                         </a>
                         <hr class="sidebar-divider">
                         break;
 
                     case "Barbeiro":
-                        <a href="@Url.Action("Index", "Admin")" class="list-group-item list-group-item-action bg-dark text-white">
+                        <a href="@Url.Action("Index", "Admin")" id="menuDashboardBarbeiro" class="list-group-item list-group-item-action bg-dark text-white">
                             <i class="fas fa-chart-line mr-2"></i> Dashboards
                         </a>
                         <hr class="sidebar-divider">
-                        <a href="@Url.Action("MeusAgendamentos", "Barbeiro")" class="list-group-item list-group-item-action bg-dark text-white">
+                        <a href="@Url.Action("MeusAgendamentos", "Barbeiro")" id="menuMeusAgendamentosBarbeiro" class="list-group-item list-group-item-action bg-dark text-white">
                             <i class="fas fa-calendar-alt mr-2"></i> Meus Agendamentos
                         </a>
                         <hr class="sidebar-divider">
-                        <a href="@Url.Action("MeusServicos", "Barbeiro")" class="list-group-item list-group-item-action bg-dark text-white">
+                        <a href="@Url.Action("MeusServicos", "Barbeiro")" id="menuMeusServicosBarbeiro" class="list-group-item list-group-item-action bg-dark text-white">
                             <i class="fas fa-cut mr-2"></i> Meus Serviços
                         </a>
                         <hr class="sidebar-divider">
-                        <a href="@Url.Action("MeusHorarios", "Barbeiro")" class="list-group-item list-group-item-action bg-dark text-white">
+                        <a href="@Url.Action("MeusHorarios", "Barbeiro")" id="menuMeusHorariosBarbeiro" class="list-group-item list-group-item-action bg-dark text-white">
                             <i class="fas fa-clock mr-2"></i> Minhas Datas
                         </a>
                         <hr class="sidebar-divider">
-                        <a href="@Url.Action("MeusDadosBarbeiro", "Barbeiro")" class="list-group-item list-group-item-action bg-dark text-white">
+                        <a href="@Url.Action("MeusDadosBarbeiro", "Barbeiro")" id="menuMeusDadosBarbeiro" class="list-group-item list-group-item-action bg-dark text-white">
                             <i class="fas fa-user mr-2"></i> Meus Dados
                         </a>
                         <hr class="sidebar-divider">
-                        <a href="@Url.Action("MinhasAvaliacoes", "Barbeiro")" class="list-group-item list-group-item-action bg-dark text-white">
+                        <a href="@Url.Action("MinhasAvaliacoes", "Barbeiro")" id="menuMinhasAvaliacoesBarbeiro" class="list-group-item list-group-item-action bg-dark text-white">
                             <i class="fas fa-star mr-2"></i> Minhas Avaliações
                         </a>
                         <hr class="sidebar-divider">
@@ -123,7 +123,7 @@
                 }
 
                 <!-- Logout -->
-                <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="list-group-item list-group-item-action bg-dark text-white">
+                <a href="#" id="menuLogout" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="list-group-item list-group-item-action bg-dark text-white">
                     <i class="fas fa-sign-out-alt mr-2"></i> Logout
                 </a>
                 <hr class="sidebar-divider">
@@ -133,6 +133,7 @@
                     @Html.AntiForgeryToken()
                 </form>
             </div>
+
         </div>
 
         <div id="toastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>

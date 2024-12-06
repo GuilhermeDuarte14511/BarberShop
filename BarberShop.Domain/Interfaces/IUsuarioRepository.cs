@@ -9,5 +9,7 @@ namespace BarberShop.Domain.Interfaces
         Task UpdateCodigoVerificacaoAsync(int usuarioId, string codigoVerificacao, DateTime? expiracao);
         Task DeleteAsync(Usuario usuario);
         Task<List<Usuario>> ObterPorEmailOuTelefoneAsync(string email, string telefone);
+        Task<bool> MarcarOnboardingComoCompletoAsync(int usuarioId, string tela);
+
     }
 }

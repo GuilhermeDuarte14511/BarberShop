@@ -1669,6 +1669,109 @@
                 }
             });
         });
+
+        // Verifica se o onboarding deve ser iniciado
+        const showOnboarding = $('#ShowOnboarding').val().toLowerCase() === "true";
+
+        if (showOnboarding) {
+            console.log("Iniciando o onboarding para a lista de barbeiros.");
+            iniciarOnboarding();
+        } else {
+            console.log("Onboarding para a lista de barbeiros já foi concluído.");
+        }
+
+        function iniciarOnboarding() {
+            let steps = [
+                {
+                    element: "h2.text-center",
+                    text: "Bem-vindo à tela de gerenciamento de barbeiros! Aqui você pode visualizar, editar e adicionar barbeiros.",
+                },
+                {
+                    element: "#btnAdicionarBarbeiro",
+                    text: "Clique neste botão para adicionar um novo barbeiro ao sistema.",
+                },
+                {
+                    element: ".card:first .photo-preview",
+                    text: "Esta é a foto do barbeiro. Clique na foto para visualizá-la em tamanho maior.",
+                },
+                {
+                    element: ".card:first .btnEditar",
+                    text: "Use este botão para editar as informações do barbeiro, como nome, email, telefone e serviços vinculados.",
+                },
+                {
+                    element: ".card:first .btnExcluirBarbeiro",
+                    text: "Clique aqui para excluir um barbeiro do sistema.",
+                },
+            ];
+
+            let currentStep = 0;
+
+            function showStep(stepIndex) {
+                if (stepIndex >= steps.length) {
+                    finalizarOnboarding();
+                    return;
+                }
+
+                const step = steps[stepIndex];
+                const el = $(step.element);
+
+                // Remove destaques e tooltips de passos anteriores
+                $(".highlight").removeClass("highlight");
+                $(".tooltip").remove();
+                $(".onboarding-overlay").remove();
+
+                // Cria uma sobreposição escura para destacar o elemento
+                const overlay = $('<div class="onboarding-overlay"></div>');
+                $("body").append(overlay);
+
+                if (el.length) {
+                    el[0].scrollIntoView({ behavior: "smooth", block: "center" });
+                    el.addClass("highlight");
+
+                    const tooltip = $(`<div class="onboarding-modal">
+                    <div>${step.text}</div>
+                    <button class="btn-next btn btn-primary mt-2">Próximo</button>
+                </div>`);
+                    $("body").append(tooltip);
+
+                    const offset = el.offset();
+                    const tooltipWidth = tooltip.outerWidth();
+                    const tooltipHeight = tooltip.outerHeight();
+                    const windowWidth = $(window).width();
+
+                    let top = offset.top + el.outerHeight() / 2 - tooltipHeight / 2;
+                    let left = offset.left + el.outerWidth() + 20;
+
+                    if (left + tooltipWidth > windowWidth) {
+                        left = offset.left - tooltipWidth - 20;
+                    }
+
+                    tooltip.css({ top, left });
+
+                    // Botão de próximo passo
+                    $(".btn-next").on("click", function () {
+                        tooltip.remove();
+                        overlay.remove();
+                        el.removeClass("highlight");
+                        showStep(stepIndex + 1);
+                    });
+                } else {
+                    // Se o elemento não for encontrado, pula para o próximo passo
+                    showStep(stepIndex + 1);
+                }
+            }
+
+            function finalizarOnboarding() {
+                console.log("Finalizando o onboarding.");
+                $.post("/Usuario/CompletarOnboarding", { tela: "Barbeiros" }, function () {
+                    location.reload();
+                }).fail(function () {
+                    alert("Erro ao finalizar o onboarding.");
+                });
+            }
+
+            showStep(currentStep);
+        }
     }
 
 
@@ -2186,6 +2289,270 @@
             $('#addReportButton').on('click', addCustomReport);
             initializeDashboard();
         });
+        $(document).ready(function () {
+            // Verifica o status do onboarding
+            const onboardingIncompleto = $('#ShowOnboarding').val().toLowerCase() === "true";
+            const userRole = $('#UserRole').val();
+            const currentScreen = $('#CurrentScreen').val(); // Tela atual
+
+            console.log("Onboarding Incompleto:", onboardingIncompleto);
+            console.log("Role do Usuário:", userRole);
+            console.log("Tela Atual:", currentScreen);
+
+            // Se o onboarding não foi concluído, inicia o processo
+            if (onboardingIncompleto) {
+                console.log("Iniciando o processo de onboarding...");
+                iniciarOnboarding(userRole, currentScreen);
+            } else {
+                console.log("Onboarding já concluído para a tela:", currentScreen);
+            }
+
+            // Função para iniciar o onboarding com base no papel do usuário
+            function iniciarOnboarding(role, screen) {
+                const steps = getSteps(role);
+
+                let currentStep = 0;
+
+                function showStep(stepIndex) {
+                    if (stepIndex >= steps.length) {
+                        console.log("Finalizando o onboarding...");
+                        finalizarOnboarding(screen); // Passar a tela atual para o backend
+                        return;
+                    }
+
+                    const step = steps[stepIndex];
+                    if (step.action) step.action();
+
+                    const el = $(step.element);
+
+                    console.log("Exibindo passo:", stepIndex, "Elemento:", step.element, "Texto:", step.text);
+
+                    $(".highlight").removeClass("highlight");
+                    $(".tooltip").remove();
+                    $(".onboarding-overlay").remove();
+
+                    const overlay = $('<div class="onboarding-overlay"></div>');
+                    $("body").append(overlay);
+
+                    if (step.sidebarHighlight) {
+                        $("#sidebar-wrapper").addClass("highlight");
+                    } else {
+                        $("#sidebar-wrapper").removeClass("highlight");
+                    }
+
+                    if (el.length) {
+                        el[0].scrollIntoView({ behavior: "smooth", block: "center" });
+
+                        el.addClass("highlight");
+
+                        const tooltip = $(`<div class="onboarding-modal">
+                    <div>${step.text}</div>
+                    <button class="btn-next btn btn-primary mt-2">Próximo</button>
+                </div>`);
+                        $("body").append(tooltip);
+
+                        const offset = el.offset();
+                        const tooltipWidth = tooltip.outerWidth();
+                        const tooltipHeight = tooltip.outerHeight();
+                        const windowWidth = $(window).width();
+
+                        let top = offset.top + el.outerHeight() / 2 - tooltipHeight / 2;
+                        let left = offset.left + el.outerWidth() + 20;
+
+                        if (left + tooltipWidth > windowWidth) {
+                            left = offset.left - tooltipWidth - 20;
+                        }
+
+                        tooltip.css({ top, left });
+
+                        $(".btn-next").on("click", function () {
+                            tooltip.remove();
+                            overlay.remove();
+                            el.removeClass("highlight");
+                            showStep(stepIndex + 1);
+                        });
+                    } else {
+                        showStep(stepIndex + 1);
+                    }
+                }
+
+                function finalizarOnboarding(screen) {
+                    $.post("/Usuario/CompletarOnboarding", { tela: screen }, function () {
+                        location.reload();
+                    }).fail(function () {
+                        alert("Erro ao finalizar o onboarding. Tente novamente.");
+                    });
+                }
+
+                showStep(currentStep);
+            }
+
+            // Função para obter os passos do onboarding com base no papel do usuário
+            function getSteps(role) {
+                if (role === "Admin") {
+                    return [
+                        {
+                            element: "#sidebar-wrapper",
+                            text: "Este é o menu lateral, onde você pode acessar todas as funcionalidades administrativas.",
+                            sidebarHighlight: true,
+                        },
+                        {
+                            element: "#menuDashboard",
+                            text: "Aqui está o link para o painel principal do sistema administrativo.",
+                            sidebarHighlight: true,
+                        },
+                        {
+                            element: "#menuBarbeiros",
+                            text: "Nesta seção, você pode gerenciar os barbeiros cadastrados no sistema.",
+                            sidebarHighlight: true,
+                        },
+                        {
+                            element: "#menuServicos",
+                            text: "Aqui você pode configurar os serviços oferecidos pela barbearia.",
+                            sidebarHighlight: true,
+                        },
+                        {
+                            element: "#menuPagamentos",
+                            text: "Nesta área, você pode acompanhar os pagamentos realizados.",
+                            sidebarHighlight: true,
+                        },
+                        {
+                            element: "#menuAgendamentos",
+                            text: "Aqui estão os agendamentos realizados pelos clientes.",
+                            sidebarHighlight: true,
+                        },
+                        {
+                            element: "#menuMeusDados",
+                            text: "Nesta seção, você pode gerenciar as informações da barbearia.",
+                            sidebarHighlight: true,
+                        },
+                        {
+                            element: "#menuHorarios",
+                            text: "Aqui você pode acessar o menu de horários.",
+                            sidebarHighlight: true,
+                            action: () => {
+                                if (!$('#submenuHorarios').hasClass('show')) {
+                                    $('#submenuHorarios').collapse('show');
+                                }
+                            },
+                        },
+                        {
+                            element: "#menuFeriados",
+                            text: "Nesta seção, você pode gerenciar os feriados configurados no sistema.",
+                            sidebarHighlight: true,
+                        },
+                        {
+                            element: "#menuIndisponibilidade",
+                            text: "Aqui você pode configurar a indisponibilidade dos barbeiros.",
+                            sidebarHighlight: true,
+                        },
+                        {
+                            element: "#menuUsuarios",
+                            text: "Nesta seção, você pode gerenciar os usuários do sistema.",
+                            sidebarHighlight: true,
+                        },
+                        {
+                            element: "#menuAvaliacoes",
+                            text: "Aqui você pode visualizar as avaliações recebidas pela barbearia.",
+                            sidebarHighlight: true,
+                        },
+                        {
+                            element: "#headerContainer",
+                            text: "Bem-vindo ao painel principal! Aqui você encontra informações gerais sobre o sistema.",
+                        },
+                        {
+                            element: "#agendamentosSemanaChartCard",
+                            text: "Este gráfico mostra os agendamentos realizados durante a semana.",
+                        },
+                        {
+                            element: "#servicosMaisSolicitadosChartCard",
+                            text: "Aqui você pode visualizar os serviços mais solicitados pelos clientes.",
+                        },
+                        {
+                            element: "#lucroPorBarbeiroChartCard",
+                            text: "Este gráfico exibe o lucro gerado por cada barbeiro.",
+                        },
+                        {
+                            element: "#atendimentosPorBarbeiroChartCard",
+                            text: "Aqui estão os atendimentos realizados por cada barbeiro.",
+                        },
+                        {
+                            element: "#lucroSemanaChartCard",
+                            text: "Este gráfico apresenta o lucro semanal da barbearia.",
+                        },
+                        {
+                            element: "#lucroMesChartCard",
+                            text: "Aqui você pode visualizar o lucro mensal da barbearia.",
+                        },
+                    ];
+                }
+
+                if (role === "Barbeiro") {
+                    return [
+                        {
+                            element: "#sidebar-wrapper",
+                            text: "Este é o menu lateral, onde você pode acessar todas as funcionalidades relacionadas aos barbeiros.",
+                            sidebarHighlight: true,
+                        },
+                        {
+                            element: "#menuDashboardBarbeiro",
+                            text: "Aqui está o link para o painel principal do sistema.",
+                            sidebarHighlight: true,
+                        },
+                        {
+                            element: "#menuMeusAgendamentosBarbeiro",
+                            text: "Nesta seção, você pode visualizar seus agendamentos.",
+                            sidebarHighlight: true,
+                        },
+                        {
+                            element: "#menuMeusServicosBarbeiro",
+                            text: "Aqui estão os serviços que você realiza.",
+                            sidebarHighlight: true,
+                        },
+                        {
+                            element: "#menuMeusHorariosBarbeiro",
+                            text: "Aqui você pode gerenciar seus horários disponíveis.",
+                            sidebarHighlight: true,
+                        },
+                        {
+                            element: "#menuMeusDadosBarbeiro",
+                            text: "Nesta seção, você pode atualizar suas informações pessoais.",
+                            sidebarHighlight: true,
+                        },
+                        {
+                            element: "#menuMinhasAvaliacoesBarbeiro",
+                            text: "Aqui você pode visualizar as avaliações que recebeu.",
+                            sidebarHighlight: true,
+                        },
+                        {
+                            element: "#headerContainer",
+                            text: "Bem-vindo ao painel principal! Aqui você encontra informações gerais sobre o sistema.",
+                        },
+                        {
+                            element: "#agendamentosSemanaChartCard",
+                            text: "Este gráfico mostra os agendamentos realizados durante a semana.",
+                        },
+                        {
+                            element: "#servicosMaisSolicitadosChartCard",
+                            text: "Aqui você pode visualizar os serviços mais solicitados pelos clientes.",
+                        },
+                        {
+                            element: "#lucroPorBarbeiroChartCard",
+                            text: "Este gráfico exibe o lucro gerado por você.",
+                        },
+                        {
+                            element: "#atendimentosPorBarbeiroChartCard",
+                            text: "Aqui estão os atendimentos que você realizou.",
+                        },
+                    ];
+                }
+
+                return [];
+            }
+        });
+
+
+
     }
 
 
@@ -2338,6 +2705,110 @@
                 }
             });
         });
+
+        // Verifica se o onboarding deve ser iniciado
+        const onboardingIncompleto = $('#ShowOnboarding').val().toLowerCase() === "true";
+        if (onboardingIncompleto) {
+            console.log("Iniciando o onboarding para a lista de serviços.");
+            iniciarOnboarding();
+        } else {
+            console.log("Onboarding para a lista de serviços já foi concluído.");
+        }
+
+        // Função de Onboarding para a página de serviços
+        function iniciarOnboarding() {
+            let steps = [
+                {
+                    element: "h2.text-center",
+                    text: "Bem-vindo à tela de serviços. Aqui você pode gerenciar todos os serviços oferecidos pela barbearia.",
+                },
+                {
+                    element: "#btnAdicionarServico",
+                    text: "Clique aqui para adicionar um novo serviço à sua barbearia.",
+                },
+                {
+                    element: "#tabelaServicosDiv",
+                    text: "Esta tabela exibe todos os serviços cadastrados. Vamos explorar as ações disponíveis.",
+                },
+                {
+                    element: ".btnEditar:first",
+                    text: "Clique neste botão para editar os detalhes de um serviço. Você pode alterar nome, preço e duração.",
+                },
+                {
+                    element: ".btnExcluir:first",
+                    text: "Este botão permite excluir um serviço. Use com cuidado, pois esta ação não pode ser desfeita.",
+                }
+            ];
+
+            let currentStep = 0;
+
+            function showStep(stepIndex) {
+                if (stepIndex >= steps.length) {
+                    finalizarOnboarding();
+                    return;
+                }
+
+                const step = steps[stepIndex];
+                const el = $(step.element);
+
+                // Remove destaques e tooltips anteriores
+                $(".highlight").removeClass("highlight");
+                $(".tooltip").remove();
+                $(".onboarding-overlay").remove();
+
+                // Adiciona uma camada de fundo para destaque
+                const overlay = $('<div class="onboarding-overlay"></div>');
+                $("body").append(overlay);
+
+                if (el.length) {
+                    el[0].scrollIntoView({ behavior: "smooth", block: "center" });
+                    el.addClass("highlight");
+
+                    // Cria a tooltip
+                    const tooltip = $(`<div class="onboarding-modal">
+                <div>${step.text}</div>
+                <button class="btn-next btn btn-primary mt-2">Próximo</button>
+            </div>`);
+                    $("body").append(tooltip);
+
+                    // Calcula a posição da tooltip
+                    const offset = el.offset();
+                    const tooltipWidth = tooltip.outerWidth();
+                    const tooltipHeight = tooltip.outerHeight();
+                    const windowWidth = $(window).width();
+
+                    let top = offset.top + el.outerHeight() / 2 - tooltipHeight / 2;
+                    let left = offset.left + el.outerWidth() + 20;
+
+                    if (left + tooltipWidth > windowWidth) {
+                        left = offset.left - tooltipWidth - 20;
+                    }
+
+                    tooltip.css({ top, left });
+
+                    $(".btn-next").on("click", function () {
+                        tooltip.remove();
+                        overlay.remove();
+                        el.removeClass("highlight");
+                        showStep(stepIndex + 1);
+                    });
+                } else {
+                    showStep(stepIndex + 1);
+                }
+            }
+
+            function finalizarOnboarding() {
+                console.log("Finalizando o onboarding.");
+                $.post("/Usuario/CompletarOnboarding", { tela: "Servicos" }, function () {
+                    location.reload();
+                }).fail(function () {
+                    alert("Erro ao finalizar o onboarding.");
+                });
+            }
+
+            showStep(currentStep);
+        }
+
     }
 
 
@@ -2507,6 +2978,105 @@
             $('#btnConfirmarExcluir').data('id', pagamentoId);
             $('#excluirModal').modal('show');
         });
+
+        // Inicia o onboarding se necessário
+        const showOnboarding = $('#ShowOnboarding').val().toLowerCase() === "true";
+
+        if (showOnboarding) {
+            console.log("Iniciando o onboarding para a tela de pagamentos.");
+            iniciarOnboarding();
+        } else {
+            console.log("Onboarding para a tela de pagamentos já foi concluído.");
+        }
+        // Função de Onboarding para a página de pagamentos
+        function iniciarOnboarding() {
+            let steps = [
+                {
+                    element: "h2.text-center",
+                    text: "Bem-vindo à tela de pagamentos. Aqui você pode gerenciar os pagamentos realizados.",
+                },
+                {
+                    element: ".btnAdicionarCustom",
+                    text: "Clique aqui para adicionar um novo pagamento manualmente.",
+                },
+                {
+                    element: "#tabelaPagamentosDiv",
+                    text: "Esta tabela exibe todos os pagamentos realizados. Você pode visualizar detalhes ou realizar ações específicas.",
+                },
+                {
+                    element: ".btnDetalhes",
+                    text: "Este botão exibe os detalhes do pagamento selecionado, incluindo informações do cliente e do status.",
+                },
+                {
+                    element: ".btnReembolso",
+                    text: "Se o pagamento estiver aprovado, este botão permitirá solicitar o reembolso diretamente.",
+                }
+            ];
+
+            let currentStep = 0;
+
+            function showStep(stepIndex) {
+                if (stepIndex >= steps.length) {
+                    finalizarOnboarding();
+                    return;
+                }
+
+                const step = steps[stepIndex];
+                const el = $(step.element);
+
+                $(".highlight").removeClass("highlight");
+                $(".tooltip").remove();
+                $(".onboarding-overlay").remove();
+
+                const overlay = $('<div class="onboarding-overlay"></div>');
+                $("body").append(overlay);
+
+                if (el.length) {
+                    el[0].scrollIntoView({ behavior: "smooth", block: "center" });
+                    el.addClass("highlight");
+
+                    const tooltip = $(`<div class="onboarding-modal">
+                    <div>${step.text}</div>
+                    <button class="btn-next btn btn-primary mt-2">Próximo</button>
+                </div>`);
+                    $("body").append(tooltip);
+
+                    const offset = el.offset();
+                    const tooltipWidth = tooltip.outerWidth();
+                    const tooltipHeight = tooltip.outerHeight();
+                    const windowWidth = $(window).width();
+
+                    let top = offset.top + el.outerHeight() / 2 - tooltipHeight / 2;
+                    let left = offset.left + el.outerWidth() + 20;
+
+                    if (left + tooltipWidth > windowWidth) {
+                        left = offset.left - tooltipWidth - 20;
+                    }
+
+                    tooltip.css({ top, left });
+
+                    $(".btn-next").on("click", function () {
+                        tooltip.remove();
+                        overlay.remove();
+                        el.removeClass("highlight");
+                        showStep(stepIndex + 1);
+                    });
+                } else {
+                    showStep(stepIndex + 1);
+                }
+            }
+
+            function finalizarOnboarding() {
+                console.log("Finalizando o onboarding.");
+                $.post("/Usuario/CompletarOnboarding", { tela: "Pagamentos" }, function () {
+                    location.reload();
+                }).fail(function () {
+                    alert("Erro ao finalizar o onboarding.");
+                });
+            }
+
+            showStep(currentStep);
+        }
     }
 
 

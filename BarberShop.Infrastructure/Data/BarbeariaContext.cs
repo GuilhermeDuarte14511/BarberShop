@@ -41,6 +41,7 @@ namespace BarberShop.Infrastructure.Data
         public DbSet<IndisponibilidadeBarbeiro> IndisponibilidadesBarbeiros { get; set; }
         public DbSet<BarbeiroServico> BarbeiroServicos { get; set; } // Adicionado
         public DbSet<PushSubscription> PushSubscriptions { get; set; }
+        public DbSet<OnboardingProgresso> OnboardingProgresso { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -228,6 +229,42 @@ namespace BarberShop.Infrastructure.Data
                       .OnDelete(DeleteBehavior.Cascade);
             });
 
+            // Configuração da tabela OnboardingProgresso
+            modelBuilder.Entity<OnboardingProgresso>(entity =>
+            {
+                entity.HasKey(o => o.Id);
+
+                entity.Property(o => o.Tela)
+                    .IsRequired()
+                    .HasMaxLength(100);
+
+                entity.Property(o => o.Concluido)
+                    .IsRequired()
+                    .HasDefaultValue(false);
+
+                entity.HasOne(o => o.Usuario)
+                    .WithMany(u => u.OnboardingProgresso)
+                    .HasForeignKey(o => o.UsuarioId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<OnboardingProgresso>(entity =>
+            {
+                entity.HasKey(op => op.Id);
+
+                entity.Property(op => op.Tela)
+                      .IsRequired()
+                      .HasMaxLength(255);
+
+                entity.Property(op => op.Concluido)
+                      .IsRequired()
+                      .HasDefaultValue(false);
+
+                entity.HasOne(op => op.Usuario)
+                      .WithMany(u => u.OnboardingProgresso)
+                      .HasForeignKey(op => op.UsuarioId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
         }
     }
 }

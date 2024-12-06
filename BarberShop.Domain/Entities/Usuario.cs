@@ -23,8 +23,11 @@ namespace BarberShop.Domain.Entities
         public int BarbeariaId { get; set; }
         public int? BarbeiroId { get; set; }
         public Barbearia Barbearia { get; set; }
+        public bool? OnboardingCompleto { get; set; } = false;
 
         public ICollection<RelatorioPersonalizado> RelatoriosPersonalizados { get; set; } = new List<RelatorioPersonalizado>();
+        public ICollection<OnboardingProgresso> OnboardingProgresso { get; set; } = new List<OnboardingProgresso>();
+
     }
 
 }

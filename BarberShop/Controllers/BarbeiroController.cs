@@ -21,6 +21,8 @@ namespace BarberShopMVC.Controllers
         private readonly IAgendamentoService _agendamentoService;
         private readonly IServicoService _servicoService;
         private readonly IAvaliacaoService _avaliacaoService;
+        private readonly IUsuarioService _usuarioService;
+        private readonly IOnboardingService _onboardingService;
 
         public BarbeiroController(
             IBarbeiroRepository barbeiroRepository,
@@ -30,6 +32,8 @@ namespace BarberShopMVC.Controllers
             IAgendamentoService agendamentoService,
             IServicoService servicoService,
             IAvaliacaoService avaliacaoService,
+            IUsuarioService usuarioService,
+            IOnboardingService onboardingService,
             ILogService logService)
             : base(logService)
         {
@@ -40,6 +44,8 @@ namespace BarberShopMVC.Controllers
             _agendamentoService = agendamentoService;
             _servicoService = servicoService;
             _avaliacaoService = avaliacaoService;
+            _usuarioService = usuarioService;
+            _onboardingService = onboardingService;
         }
 
         public async Task<IActionResult> Index()
@@ -52,7 +58,16 @@ namespace BarberShopMVC.Controllers
                     return RedirectToAction("BarbeariaNaoEncontrada", "Erro");
                 }
 
+                // Obter a lista de barbeiros
                 var barbeiros = await _barbeiroService.ObterBarbeirosPorBarbeariaIdAsync(barbeariaId.Value);
+
+                // Verificar progresso de onboarding para a tela de barbeiros
+                var usuarioId = ObterUsuarioIdLogado();
+                bool isOnboardingComplete = await _onboardingService.VerificarProgressoAsync(usuarioId, "Barbeiros");
+
+                // Ajusta a lógica para que "True" indique que o onboarding não foi feito
+                ViewData["ShowOnboarding"] = !isOnboardingComplete ? "True" : "False";
+
                 return View(barbeiros);
             }
             catch (Exception ex)
@@ -61,6 +76,8 @@ namespace BarberShopMVC.Controllers
                 return StatusCode(500, "Erro ao carregar a lista de barbeiros.");
             }
         }
+
+
 
         public async Task<IActionResult> Details(int id)
         {

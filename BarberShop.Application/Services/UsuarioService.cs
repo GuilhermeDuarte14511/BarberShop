@@ -78,5 +78,11 @@ namespace BarberShop.Application.Services
         {
             return await _usuarioRepository.ObterPorEmailOuTelefoneAsync(email, telefone);
         }
+
+        public async Task<bool> MarcarOnboardingComoCompletoAsync(int usuarioId, string tela)
+        {
+            return await _usuarioRepository.MarcarOnboardingComoCompletoAsync(usuarioId, tela);
+        }
+
     }
 }

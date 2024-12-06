@@ -16,14 +16,17 @@ namespace BarberShopMVC.Controllers
     {
         private readonly IDashboardRepository _dashboardRepository;
         private readonly IRelatorioPersonalizadoRepository _relatorioPersonalizadoRepository;
+        private readonly IUsuarioService _usuarioService;
 
         public DashboardController(
             IDashboardRepository dashboardRepository,
             IRelatorioPersonalizadoRepository relatorioPersonalizadoRepository,
+            IUsuarioService usuarioService,
             ILogService logService) : base(logService)
         {
             _dashboardRepository = dashboardRepository;
             _relatorioPersonalizadoRepository = relatorioPersonalizadoRepository;
+            _usuarioService = usuarioService;
         }
 
         public async Task<IActionResult> Index()
