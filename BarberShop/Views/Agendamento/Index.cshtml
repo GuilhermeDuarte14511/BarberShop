@@ -6,15 +6,19 @@
     var currentPage = (int)ViewData["CurrentPage"];
     var totalPages = (int)ViewData["TotalPages"];
     var pageSize = (int)ViewData["PageSize"];
+    var showOnboarding = (bool)ViewData["ShowOnboarding"];
     ViewData["Title"] = "Gerenciar Agendamentos - Admin";
 }
 
 <div id="agendamentoPage" class="container-fluid">
+    <input type="hidden" id="ShowOnboarding" value="@(showOnboarding ? "True" : "False")" />
+    <input type="hidden" id="UserRole" value="Admin" />
+    <input type="hidden" id="CurrentScreen" value="Agendamentos" />
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2>Gerenciar Agendamentos</h2>
-        <button id="btnToggleView" class="btn btn-outline-primary">
+        @* <button id="btnToggleView" class="btn btn-outline-primary">
             <span id="btnIcon">📅</span> <span id="btnText">Exibir como Calendário</span>
-        </button>
+        </button> *@
     </div>
 
     <form id="filtroAgendamentosForm">
@@ -83,7 +87,7 @@
 
 
     <!-- Tabela exibida em telas maiores -->
-    <div class="table-responsive d-none d-md-block mt-4">
+    <div class="table-responsive d-none d-md-block mt-4" id="tabelaAgendamentosDiv">
         <table class="table table-dark table-striped" id="tabelaAgendamentos">
             <thead>
                 <tr>

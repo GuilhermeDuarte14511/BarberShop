@@ -2,10 +2,15 @@
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = "Indisponibilidade";
-
+    var showOnboarding = ViewData["ShowOnboarding"]?.ToString().ToLower() == "true";
 }
 
 <div id="indisponibilidadePage" class="container mt-5">
+    <!-- Input oculto para indicar se o onboarding deve ser mostrado -->
+    <input type="hidden" id="ShowOnboarding" value="@(showOnboarding ? "True" : "False")" />
+    <input type="hidden" id="UserRole" value="Admin" />
+    <input type="hidden" id="CurrentScreen" value="Indisponibilidades" />
+
     <h2 class="text-center mb-4">Gerenciar Indisponibilidades</h2>
     <button class="btn btnAdicionarCustom mb-3"
             id="btnAdicionarIndisponibilidade"

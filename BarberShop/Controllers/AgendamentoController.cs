@@ -27,6 +27,7 @@ namespace BarberShopMVC.Controllers
         private readonly IEmailService _emailService;
         private readonly IPaymentService _paymentService;
         private readonly IPagamentoRepository _pagamentoRepository;
+        private readonly IOnboardingService _onboardingService;
         private readonly IConfiguration _configuration;
 
         public AgendamentoController(
@@ -41,6 +42,7 @@ namespace BarberShopMVC.Controllers
                 IEmailService emailService,
                 IPaymentService paymentService,
                 IPagamentoRepository pagamentoRepository,
+                IOnboardingService onboardingService,
                 ILogService logService,
                 IConfiguration configuration
             ) : base(logService)
@@ -56,12 +58,13 @@ namespace BarberShopMVC.Controllers
             _emailService = emailService;
             _paymentService = paymentService;
             _pagamentoRepository = pagamentoRepository;
+            _onboardingService = onboardingService;
             _configuration = configuration;
         }
 
 
         public async Task<IActionResult> Index(string clienteNome = null, string barbeiroNome = null, int? barbeiroId = null, StatusAgendamento? status = null, StatusPagamento? statusPagamento = null,
-                                       DateTime? dataInicio = null, DateTime? dataFim = null, int page = 1, int pageSize = 10, int? agendamentoId = null)
+                                               DateTime? dataInicio = null, DateTime? dataFim = null, int page = 1, int pageSize = 10, int? agendamentoId = null)
         {
             var barbeariaId = HttpContext.Session.GetInt32("BarbeariaId") ?? 0;
 
@@ -72,7 +75,10 @@ namespace BarberShopMVC.Controllers
 
             await LogAsync("INFO", nameof(Index), "Index accessed", $"Listando agendamentos da barbearia: {barbeariaId}");
 
-            // Filtrar pelo agendamentoId se fornecido
+            var usuarioId = ObterUsuarioIdLogado();
+            bool isOnboardingComplete = await _onboardingService.VerificarProgressoAsync(usuarioId, "Agendamentos");
+            ViewData["ShowOnboarding"] = !isOnboardingComplete;
+
             var agendamentos = agendamentoId.HasValue
                 ? await _agendamentoService.FiltrarAgendamentosAsync(
                     agendamentoId: agendamentoId.Value,

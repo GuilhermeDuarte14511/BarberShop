@@ -47,9 +47,19 @@ namespace BarberShop.Application.Controllers
             try
             {
                 int barbeariaId = HttpContext.Session.GetInt32("BarbeariaId").Value;
+                int usuarioId = ObterUsuarioIdLogado(); // Método para obter o ID do usuário logado
+
+                // Verificar o status do onboarding
+                bool onboardingConcluido = await _onboardingService.VerificarProgressoAsync(usuarioId, "Usuarios");
+                ViewData["ShowOnboarding"] = !onboardingConcluido;
+
+                // Listar usuários vinculados à barbearia
                 var usuarios = await _usuarioService.ListarUsuariosPorBarbeariaAsync(barbeariaId);
                 ViewData["BarbeariaId"] = barbeariaId;
+
+                // Log de acesso à página de usuários
                 await LogAsync("Information", nameof(UsuarioController), "Listagem de usuários realizada", $"BarbeariaId: {barbeariaId}");
+
                 return View(usuarios);
             }
             catch (Exception ex)
@@ -58,6 +68,7 @@ namespace BarberShop.Application.Controllers
                 return RedirectToAction("Error", "Home");
             }
         }
+
 
         [HttpGet]
         public async Task<IActionResult> ObterUsuario(int id)

@@ -1673,12 +1673,18 @@
         // Verifica se o onboarding deve ser iniciado
         const showOnboarding = $('#ShowOnboarding').val().toLowerCase() === "true";
 
-        if (showOnboarding) {
-            console.log("Iniciando o onboarding para a lista de barbeiros.");
+        // Verifica se está em um dispositivo móvel (largura menor que 768px)
+        const isMobile = window.innerWidth < 768;
+
+        if (showOnboarding && !isMobile) {
+            console.log("Iniciando o onboarding para a tela de avaliações.");
             iniciarOnboarding();
+        } else if (isMobile) {
+            console.log("Onboarding não será iniciado em dispositivos móveis.");
         } else {
-            console.log("Onboarding para a lista de barbeiros já foi concluído.");
+            console.log("Onboarding para a tela de avaliações já foi concluído.");
         }
+
 
         function iniciarOnboarding() {
             let steps = [
@@ -2295,14 +2301,20 @@
             const userRole = $('#UserRole').val();
             const currentScreen = $('#CurrentScreen').val(); // Tela atual
 
+            // Verifica se está em um dispositivo móvel
+            const isMobile = window.innerWidth < 768;
+
             console.log("Onboarding Incompleto:", onboardingIncompleto);
             console.log("Role do Usuário:", userRole);
             console.log("Tela Atual:", currentScreen);
+            console.log("Dispositivo móvel:", isMobile);
 
-            // Se o onboarding não foi concluído, inicia o processo
-            if (onboardingIncompleto) {
+            // Se o onboarding não foi concluído e não está em um dispositivo móvel, inicia o processo
+            if (onboardingIncompleto && !isMobile) {
                 console.log("Iniciando o processo de onboarding...");
                 iniciarOnboarding(userRole, currentScreen);
+            } else if (isMobile) {
+                console.log("Onboarding não será iniciado em dispositivos móveis.");
             } else {
                 console.log("Onboarding já concluído para a tela:", currentScreen);
             }
@@ -3192,6 +3204,110 @@
                 );
             }
         });
+
+        // Verifica se o onboarding deve ser iniciado
+        const showOnboarding = $('#ShowOnboarding').val().toLowerCase() === "true";
+
+        // Verifica se está em um dispositivo móvel (largura menor que 768px)
+        const isMobile = window.innerWidth < 768;
+
+        if (showOnboarding && !isMobile) {
+            console.log("Iniciando o onboarding para a tela de avaliações.");
+            iniciarOnboarding();
+        } else if (isMobile) {
+            console.log("Onboarding não será iniciado em dispositivos móveis.");
+        } else {
+            console.log("Onboarding para a tela de avaliações já foi concluído.");
+        }
+
+
+        function iniciarOnboarding() {
+            let steps = [
+                {
+                    element: ".avaliacao-details",
+                    text: "Aqui estão os detalhes do seu agendamento. Revise as informações antes de continuar."
+                },
+                {
+                    element: "#avaliacaoServicos",
+                    text: "Clique nas estrelas para avaliar o serviço realizado."
+                },
+                {
+                    element: "#avaliacaoBarbeiro",
+                    text: "Agora, clique nas estrelas para avaliar o barbeiro."
+                },
+                {
+                    element: "#avaliacaoObservacaoContainer",
+                    text: "Deixe um comentário opcional sobre o atendimento."
+                },
+                {
+                    element: "#avaliacaoEnviarBtn",
+                    text: "Após preencher tudo, clique aqui para enviar sua avaliação."
+                }
+            ];
+
+            let currentStep = 0;
+
+            function showStep(stepIndex) {
+                if (stepIndex >= steps.length) {
+                    finalizarOnboarding();
+                    return;
+                }
+
+                const step = steps[stepIndex];
+                const el = $(step.element);
+
+                $(".highlight").removeClass("highlight");
+                $(".tooltip").remove();
+                $(".onboarding-overlay").remove();
+
+                const overlay = $('<div class="onboarding-overlay"></div>');
+                $("body").append(overlay);
+
+                if (el.length) {
+                    el[0].scrollIntoView({ behavior: "smooth", block: "center" });
+                    el.addClass("highlight");
+
+                    const tooltip = $(`<div class="onboarding-modal">
+                    <div>${step.text}</div>
+                    <button class="btn-next btn btn-primary mt-2">Próximo</button>
+                </div>`);
+                    $("body").append(tooltip);
+
+                    const offset = el.offset();
+                    const tooltipWidth = tooltip.outerWidth();
+                    const tooltipHeight = tooltip.outerHeight();
+                    const windowWidth = $(window).width();
+
+                    let top = offset.top + el.outerHeight() / 2 - tooltipHeight / 2;
+                    let left = offset.left + el.outerWidth() + 20;
+
+                    if (left + tooltipWidth > windowWidth) {
+                        left = offset.left - tooltipWidth - 20;
+                    }
+
+                    tooltip.css({ top, left });
+
+                    $(".btn-next").on("click", function () {
+                        tooltip.remove();
+                        overlay.remove();
+                        el.removeClass("highlight");
+                        showStep(stepIndex + 1);
+                    });
+                } else {
+                    showStep(stepIndex + 1);
+                }
+            }
+
+            function finalizarOnboarding() {
+                $.post("/Usuario/CompletarOnboarding", { tela: "Avaliacao" }, function () {
+                    console.log("Onboarding concluído.");
+                }).fail(function () {
+                    alert("Erro ao finalizar o onboarding.");
+                });
+            }
+
+            showStep(currentStep);
+        }
     }
 
 
@@ -3661,35 +3777,35 @@
         // Seleção dos elementos
         const tabelaAgendamentos = document.getElementById("tabelaAgendamentos");
         const calendarioContainer = document.getElementById("calendarContainer");
-        const btnToggleView = document.getElementById("btnToggleView");
+        //const btnToggleView = document.getElementById("btnToggleView");
         const btnText = document.getElementById("btnText");
         const btnIcon = document.getElementById("btnIcon");
 
         let currentDate = new Date();
         let calendarioInicializado = false; // Flag para inicialização do calendário
 
-        // Função para alternar entre tabela e calendário
-        btnToggleView.addEventListener("click", function () {
-            if (tabelaAgendamentos.style.display !== "none") {
-                // Esconde a tabela e exibe o calendário
-                tabelaAgendamentos.style.display = "none";
-                calendarioContainer.style.display = "block";
-                btnText.textContent = "Exibir como Tabela";
-                btnIcon.textContent = "🗂️";
+        //// Função para alternar entre tabela e calendário
+        //btnToggleView.addEventListener("click", function () {
+        //    if (tabelaAgendamentos.style.display !== "none") {
+        //        // Esconde a tabela e exibe o calendário
+        //        tabelaAgendamentos.style.display = "none";
+        //        calendarioContainer.style.display = "block";
+        //        btnText.textContent = "Exibir como Tabela";
+        //        btnIcon.textContent = "🗂️";
 
-                // Inicializa o calendário apenas na primeira vez
-                if (!calendarioInicializado) {
-                    renderCalendar(currentDate);
-                    calendarioInicializado = true;
-                }
-            } else {
-                // Exibe a tabela e esconde o calendário
-                tabelaAgendamentos.style.display = "block";
-                calendarioContainer.style.display = "none";
-                btnText.textContent = "Exibir como Calendário";
-                btnIcon.textContent = "📅";
-            }
-        });
+        //        // Inicializa o calendário apenas na primeira vez
+        //        if (!calendarioInicializado) {
+        //            renderCalendar(currentDate);
+        //            calendarioInicializado = true;
+        //        }
+        //    } else {
+        //        // Exibe a tabela e esconde o calendário
+        //        tabelaAgendamentos.style.display = "block";
+        //        calendarioContainer.style.display = "none";
+        //        btnText.textContent = "Exibir como Calendário";
+        //        btnIcon.textContent = "📅";
+        //    }
+        //});
 
         // Função para carregar eventos do servidor
         async function fetchEvents(start, end) {
@@ -3777,6 +3893,115 @@
             currentDate.setMonth(currentDate.getMonth() + 1);
             renderCalendar(currentDate);
         });
+
+        // Verifica se o onboarding deve ser iniciado
+        const showOnboarding = $('#ShowOnboarding').val().toLowerCase() === "true";
+
+        // Verifica se está em um dispositivo móvel (largura menor que 768px)
+        const isMobile = window.innerWidth < 768;
+
+        if (showOnboarding && !isMobile) {
+            console.log("Iniciando o onboarding para a tela de avaliações.");
+            iniciarOnboarding();
+        } else if (isMobile) {
+            console.log("Onboarding não será iniciado em dispositivos móveis.");
+        } else {
+            console.log("Onboarding para a tela de avaliações já foi concluído.");
+        }
+
+
+        function iniciarOnboarding() {
+            let steps = [
+                {
+                    element: "h2",
+                    text: "Bem-vindo à tela de gerenciamento de agendamentos! Aqui você pode visualizar, editar e filtrar os agendamentos.",
+                },
+                {
+                    element: "#filtroAgendamentosForm",
+                    text: "Aqui você pode filtrar os agendamentos por cliente, barbeiro, datas e status.",
+                },
+                {
+                    element: "#limparFiltroBtn",
+                    text: "Use este botão para limpar os filtros aplicados.",
+                },
+                {
+                    element: "#tabelaAgendamentosDiv",
+                    text: "Esta tabela exibe os agendamentos. Você pode clicar no botão 'Editar' para modificar um agendamento.",
+                },
+                {
+                    element: ".pagination",
+                    text: "Use esta barra de navegação para alternar entre as páginas de agendamentos.",
+                },
+            ];
+
+            let currentStep = 0;
+
+            function showStep(stepIndex) {
+                if (stepIndex >= steps.length) {
+                    finalizarOnboarding();
+                    return;
+                }
+
+                const step = steps[stepIndex];
+                const el = $(step.element);
+
+                // Remove destaques e tooltips de passos anteriores
+                $(".highlight").removeClass("highlight");
+                $(".tooltip").remove();
+                $(".onboarding-overlay").remove();
+
+                // Cria uma sobreposição escura para destacar o elemento
+                const overlay = $('<div class="onboarding-overlay"></div>');
+                $("body").append(overlay);
+
+                if (el.length) {
+                    el[0].scrollIntoView({ behavior: "smooth", block: "center" });
+                    el.addClass("highlight");
+
+                    const tooltip = $(`<div class="onboarding-modal">
+            <div>${step.text}</div>
+            <button class="btn-next btn btn-primary mt-2">Próximo</button>
+        </div>`);
+                    $("body").append(tooltip);
+                     
+                    const offset = el.offset();
+                    const tooltipWidth = tooltip.outerWidth();
+                    const tooltipHeight = tooltip.outerHeight();
+                    const windowWidth = $(window).width();
+
+                    let top = offset.top + el.outerHeight() / 2 - tooltipHeight / 2;
+                    let left = offset.left + el.outerWidth() + 20;
+
+                    if (left + tooltipWidth > windowWidth) {
+                        left = offset.left - tooltipWidth - 20;
+                    }
+
+                    tooltip.css({ top, left });
+
+                    // Botão de próximo passo
+                    $(".btn-next").on("click", function () {
+                        tooltip.remove();
+                        overlay.remove();
+                        el.removeClass("highlight");
+                        showStep(stepIndex + 1);
+                    });
+                } else {
+                    // Se o elemento não for encontrado, pula para o próximo passo
+                    showStep(stepIndex + 1);
+                }
+            }
+
+            function finalizarOnboarding() {
+                console.log("Finalizando o onboarding.");
+                $.post("/Usuario/CompletarOnboarding", { tela: "Agendamentos" }, function () {
+                    location.reload();
+                }).fail(function () {
+                    alert("Erro ao finalizar o onboarding.");
+                });
+            }
+
+            showStep(currentStep);
+        }
 
 
     }
@@ -3910,6 +4135,124 @@
                 }, 200);
             }
         });
+
+        // Verifica se o onboarding deve ser iniciado
+        const showOnboarding = $('#ShowOnboarding').val().toLowerCase() === "true";
+
+        // Verifica se está em um dispositivo móvel (largura menor que 768px)
+        const isMobile = window.innerWidth < 768;
+
+        if (showOnboarding && !isMobile) {
+            console.log("Iniciando o onboarding para a tela de avaliações.");
+            iniciarOnboarding();
+        } else if (isMobile) {
+            console.log("Onboarding não será iniciado em dispositivos móveis.");
+        } else {
+            console.log("Onboarding para a tela de avaliações já foi concluído.");
+        }
+
+
+        function iniciarOnboardingMeusDados() {
+            const steps = [
+                {
+                    element: ".barbearia-logo-img",
+                    text: "Essa é a logo da sua barbearia. Clique no ícone de câmera para alterá-la.",
+                },
+                {
+                    element: "#endereco",
+                    text: "Aqui você pode editar o endereço da sua barbearia, incluindo rua e número.",
+                },
+                {
+                    element: "#cep",
+                    text: "Preencha o CEP da sua barbearia para garantir que os clientes a encontrem.",
+                },
+                {
+                    element: "#telefone",
+                    text: "Informe o telefone de contato para que os clientes possam ligar.",
+                },
+                {
+                    element: "textarea[name='HorarioFuncionamento']",
+                    text: "Edite o horário de funcionamento da sua barbearia. Isso será exibido para os clientes.",
+                },
+                {
+                    element: "#statusCheckbox",
+                    text: "Ative ou desative a barbearia com esta opção.",
+                },
+                {
+                    element: "button[type='submit']",
+                    text: "Clique aqui para salvar todas as alterações feitas nesta página.",
+                },
+            ];
+
+            let currentStep = 0;
+
+            function showStep(stepIndex) {
+                if (stepIndex >= steps.length) {
+                    finalizarOnboarding();
+                    return;
+                }
+
+                const step = steps[stepIndex];
+                const el = $(step.element);
+
+                // Remove destaques e tooltips de passos anteriores
+                $(".highlight").removeClass("highlight");
+                $(".tooltip").remove();
+                $(".onboarding-overlay").remove();
+
+                // Cria uma sobreposição escura para destacar o elemento
+                const overlay = $('<div class="onboarding-overlay"></div>');
+                $("body").append(overlay);
+
+                if (el.length) {
+                    el[0].scrollIntoView({ behavior: "smooth", block: "center" });
+                    el.addClass("highlight");
+
+                    const tooltip = $(`<div class="onboarding-modal">
+                <div>${step.text}</div>
+                <button class="btn-next btn btn-primary mt-2">Próximo</button>
+            </div>`);
+                    $("body").append(tooltip);
+
+                    const offset = el.offset();
+                    const tooltipWidth = tooltip.outerWidth();
+                    const tooltipHeight = tooltip.outerHeight();
+                    const windowWidth = $(window).width();
+
+                    let top = offset.top + el.outerHeight() / 2 - tooltipHeight / 2;
+                    let left = offset.left + el.outerWidth() + 20;
+
+                    if (left + tooltipWidth > windowWidth) {
+                        left = offset.left - tooltipWidth - 20;
+                    }
+
+                    tooltip.css({ top, left });
+
+                    // Botão de próximo passo
+                    $(".btn-next").on("click", function () {
+                        tooltip.remove();
+                        overlay.remove();
+                        el.removeClass("highlight");
+                        showStep(stepIndex + 1);
+                    });
+                } else {
+                    // Se o elemento não for encontrado, pula para o próximo passo
+                    showStep(stepIndex + 1);
+                }
+            }
+
+            function finalizarOnboarding() {
+                console.log("Finalizando o onboarding para Meus Dados.");
+                $.post("/Usuario/CompletarOnboarding", { tela: "MeusDados" }, function () {
+                    location.reload();
+                }).fail(function () {
+                    alert("Erro ao finalizar o onboarding.");
+                });
+            }
+
+            showStep(currentStep);
+        }
+
     }
 
 
@@ -4065,6 +4408,112 @@
                 $(this).toggle(shouldShow);
             });
         });
+
+        // Verifica se o onboarding deve ser iniciado
+        const showOnboarding = $('#ShowOnboarding').val().toLowerCase() === "true";
+
+        // Verifica se está em um dispositivo móvel (largura menor que 768px)
+        const isMobile = window.innerWidth < 768;
+
+        if (showOnboarding && !isMobile) {
+            console.log("Iniciando o onboarding para a tela de avaliações.");
+            iniciarOnboarding();
+        } else if (isMobile) {
+            console.log("Onboarding não será iniciado em dispositivos móveis.");
+        } else {
+            console.log("Onboarding para a tela de avaliações já foi concluído.");
+        }
+
+
+        function iniciarOnboarding() {
+            const steps = [
+                {
+                    element: "h2.text-center",
+                    text: "Bem-vindo à página de Feriados! Aqui você pode gerenciar os feriados da barbearia.",
+                },
+                {
+                    element: "#btnAdicionarFeriado",
+                    text: "Clique aqui para adicionar um novo feriado personalizado.",
+                },
+                {
+                    element: "#searchFeriado",
+                    text: "Use este campo para pesquisar feriados na lista.",
+                },
+                {
+                    element: "#filterRecorrente",
+                    text: "Filtre os feriados por recorrência.",
+                },
+                {
+                    element: ".feriadoCard:first",
+                    text: "Este é um cartão de feriado. Aqui você pode visualizar as informações de cada feriado.",
+                },
+            ];
+
+            let currentStep = 0;
+
+            function showStep(stepIndex) {
+                if (stepIndex >= steps.length) {
+                    finalizarOnboarding();
+                    return;
+                }
+
+                const step = steps[stepIndex];
+                const el = $(step.element);
+
+                $(".highlight").removeClass("highlight");
+                $(".tooltip").remove();
+                $(".onboarding-overlay").remove();
+
+                const overlay = $('<div class="onboarding-overlay"></div>');
+                $("body").append(overlay);
+
+                if (el.length) {
+                    el[0].scrollIntoView({ behavior: "smooth", block: "center" });
+                    el.addClass("highlight");
+
+                    const tooltip = $(`
+                    <div class="onboarding-modal">
+                        <div>${step.text}</div>
+                        <button class="btn-next btn btn-primary mt-2">Próximo</button>
+                    </div>
+                `);
+                    $("body").append(tooltip);
+
+                    const offset = el.offset();
+                    const tooltipWidth = tooltip.outerWidth();
+                    const tooltipHeight = tooltip.outerHeight();
+                    const windowWidth = $(window).width();
+
+                    let top = offset.top + el.outerHeight() / 2 - tooltipHeight / 2;
+                    let left = offset.left + el.outerWidth() + 20;
+
+                    if (left + tooltipWidth > windowWidth) {
+                        left = offset.left - tooltipWidth - 20;
+                    }
+
+                    tooltip.css({ top, left });
+
+                    $(".btn-next").on("click", function () {
+                        tooltip.remove();
+                        overlay.remove();
+                        el.removeClass("highlight");
+                        showStep(stepIndex + 1);
+                    });
+                } else {
+                    showStep(stepIndex + 1);
+                }
+            }
+
+            function finalizarOnboarding() {
+                $.post("/Usuario/CompletarOnboarding", { tela: "Feriados" }, function () {
+                    location.reload();
+                }).fail(function () {
+                    alert("Erro ao finalizar o onboarding.");
+                });
+            }
+
+            showStep(currentStep);
+        }
     }
 
 
@@ -4198,6 +4647,115 @@
                     }
                 });
             });
+        }
+
+        // Verifica se o onboarding deve ser iniciado
+        const showOnboarding = $('#ShowOnboarding').val().toLowerCase() === "true";
+
+        // Verifica se está em um dispositivo móvel (largura menor que 768px)
+        const isMobile = window.innerWidth < 768;
+
+        if (showOnboarding && !isMobile) {
+            console.log("Iniciando o onboarding para a tela de avaliações.");
+            iniciarOnboarding();
+        } else if (isMobile) {
+            console.log("Onboarding não será iniciado em dispositivos móveis.");
+        } else {
+            console.log("Onboarding para a tela de avaliações já foi concluído.");
+        }
+
+
+        function iniciarOnboarding() {
+            let steps = [
+                {
+                    element: "h2.text-center",
+                    text: "Bem-vindo à tela de Gerenciamento de Indisponibilidades! Aqui você pode adicionar, editar e excluir indisponibilidades dos barbeiros.",
+                },
+                {
+                    element: "#btnAdicionarIndisponibilidade",
+                    text: "Clique neste botão para adicionar uma nova indisponibilidade para um barbeiro.",
+                },
+                {
+                    element: ".indisponibilidadeCard:first",
+                    text: "Este é um cartão de indisponibilidade. Ele exibe as informações de um período em que o barbeiro estará indisponível.",
+                },
+                {
+                    element: ".indisponibilidadeCard:first .btnEditarIndisponibilidade",
+                    text: "Use este botão para editar as informações de uma indisponibilidade existente.",
+                },
+                {
+                    element: ".indisponibilidadeCard:first .btnExcluirIndisponibilidade",
+                    text: "Clique aqui para excluir esta indisponibilidade do sistema.",
+                },
+            ];
+
+            let currentStep = 0;
+
+            function showStep(stepIndex) {
+                if (stepIndex >= steps.length) {
+                    finalizarOnboarding();
+                    return;
+                }
+
+                const step = steps[stepIndex];
+                const el = $(step.element);
+
+                // Remove destaques e tooltips de passos anteriores
+                $(".highlight").removeClass("highlight");
+                $(".tooltip").remove();
+                $(".onboarding-overlay").remove();
+
+                // Cria uma sobreposição escura para destacar o elemento
+                const overlay = $('<div class="onboarding-overlay"></div>');
+                $("body").append(overlay);
+
+                if (el.length) {
+                    el[0].scrollIntoView({ behavior: "smooth", block: "center" });
+                    el.addClass("highlight");
+
+                    const tooltip = $(`<div class="onboarding-modal">
+                    <div>${step.text}</div>
+                    <button class="btn-next btn btn-primary mt-2">Próximo</button>
+                </div>`);
+                    $("body").append(tooltip);
+
+                    const offset = el.offset();
+                    const tooltipWidth = tooltip.outerWidth();
+                    const tooltipHeight = tooltip.outerHeight();
+                    const windowWidth = $(window).width();
+
+                    let top = offset.top + el.outerHeight() / 2 - tooltipHeight / 2;
+                    let left = offset.left + el.outerWidth() + 20;
+
+                    if (left + tooltipWidth > windowWidth) {
+                        left = offset.left - tooltipWidth - 20;
+                    }
+
+                    tooltip.css({ top, left });
+
+                    // Botão de próximo passo
+                    $(".btn-next").on("click", function () {
+                        tooltip.remove();
+                        overlay.remove();
+                        el.removeClass("highlight");
+                        showStep(stepIndex + 1);
+                    });
+                } else {
+                    // Se o elemento não for encontrado, pula para o próximo passo
+                    showStep(stepIndex + 1);
+                }
+            }
+
+            function finalizarOnboarding() {
+                console.log("Finalizando o onboarding.");
+                $.post("/Usuario/CompletarOnboarding", { tela: "Indisponibilidades" }, function () {
+                    location.reload();
+                }).fail(function () {
+                    alert("Erro ao finalizar o onboarding.");
+                });
+            }
+
+            showStep(currentStep);
         }
     }
 
@@ -4358,6 +4916,115 @@
                 }
             });
         });
+
+        // Verifica se o onboarding deve ser iniciado
+        const showOnboarding = $('#ShowOnboarding').val().toLowerCase() === "true";
+
+        // Verifica se está em um dispositivo móvel (largura menor que 768px)
+        const isMobile = window.innerWidth < 768;
+
+        if (showOnboarding && !isMobile) {
+            console.log("Iniciando o onboarding para a tela de avaliações.");
+            iniciarOnboarding();
+        } else if (isMobile) {
+            console.log("Onboarding não será iniciado em dispositivos móveis.");
+        } else {
+            console.log("Onboarding para a tela de avaliações já foi concluído.");
+        }
+
+
+        function iniciarOnboarding() {
+            let steps = [
+                {
+                    element: "h2.text-center",
+                    text: "Bem-vindo à tela de gerenciamento de usuários! Aqui você pode visualizar, editar e adicionar novos usuários ao sistema.",
+                },
+                {
+                    element: "#btnAdicionarUsuario",
+                    text: "Clique neste botão para adicionar um novo usuário, como um administrador ou barbeiro.",
+                },
+                {
+                    element: "table#tabelaUsuarios",
+                    text: "Esta é a tabela onde você pode visualizar todos os usuários cadastrados, incluindo informações como nome, email e função.",
+                },
+                {
+                    element: ".btnEditarUsuario:first",
+                    text: "Clique neste botão para editar as informações de um usuário existente.",
+                },
+                {
+                    element: ".btnExcluirUsuario:first",
+                    text: "Clique neste botão para excluir um usuário do sistema.",
+                },
+            ];
+
+            let currentStep = 0;
+
+            function showStep(stepIndex) {
+                if (stepIndex >= steps.length) {
+                    finalizarOnboarding();
+                    return;
+                }
+
+                const step = steps[stepIndex];
+                const el = $(step.element);
+
+                // Remove destaques e tooltips de passos anteriores
+                $(".highlight").removeClass("highlight");
+                $(".tooltip").remove();
+                $(".onboarding-overlay").remove();
+
+                // Cria uma sobreposição escura para destacar o elemento
+                const overlay = $('<div class="onboarding-overlay"></div>');
+                $("body").append(overlay);
+
+                if (el.length) {
+                    el[0].scrollIntoView({ behavior: "smooth", block: "center" });
+                    el.addClass("highlight");
+
+                    const tooltip = $(`<div class="onboarding-modal">
+                <div>${step.text}</div>
+                <button class="btn-next btn btn-primary mt-2">Próximo</button>
+            </div>`);
+                    $("body").append(tooltip);
+
+                    const offset = el.offset();
+                    const tooltipWidth = tooltip.outerWidth();
+                    const tooltipHeight = tooltip.outerHeight();
+                    const windowWidth = $(window).width();
+
+                    let top = offset.top + el.outerHeight() / 2 - tooltipHeight / 2;
+                    let left = offset.left + el.outerWidth() + 20;
+
+                    if (left + tooltipWidth > windowWidth) {
+                        left = offset.left - tooltipWidth - 20;
+                    }
+
+                    tooltip.css({ top, left });
+
+                    // Botão de próximo passo
+                    $(".btn-next").on("click", function () {
+                        tooltip.remove();
+                        overlay.remove();
+                        el.removeClass("highlight");
+                        showStep(stepIndex + 1);
+                    });
+                } else {
+                    // Se o elemento não for encontrado, pula para o próximo passo
+                    showStep(stepIndex + 1);
+                }
+            }
+
+            function finalizarOnboarding() {
+                console.log("Finalizando o onboarding.");
+                $.post("/Usuario/CompletarOnboarding", { tela: "Usuarios" }, function () {
+                    location.reload();
+                }).fail(function () {
+                    alert("Erro ao finalizar o onboarding.");
+                });
+            }
+
+            showStep(currentStep);
+        }
     }
 
 
@@ -5500,16 +6167,17 @@
 
                 avaliacoes.forEach(avaliacao => {
                     var linha = `
-                <tr>
-                    <td>${avaliacao.avaliacaoId}</td>
-                    <td>${avaliacao.barbeiroNome || 'Sem barbeiro'}</td>
-                    <td>${avaliacao.agendamentoId}</td>
-                    <td>${renderEstrelas(avaliacao.notaServico)}</td>
-                    <td>${renderEstrelas(avaliacao.notaBarbeiro)}</td>
-                    <td>${avaliacao.observacao || 'Sem observação'}</td>
-                    <td>${new Date(avaliacao.dataAvaliado).toLocaleString('pt-BR')}</td>
-                </tr>
-                `;
+            <tr>
+                <td>${avaliacao.avaliacaoId}</td>
+                <td>${avaliacao.clienteNome || 'Não informado'}</td>
+                <td>${avaliacao.barbeiroNome || 'Sem barbeiro'}</td>
+                <td>${avaliacao.agendamentoId}</td>
+                <td>${renderEstrelas(avaliacao.notaServico)}</td>
+                <td>${renderEstrelas(avaliacao.notaBarbeiro)}</td>
+                <td>${avaliacao.observacao || 'Sem observação'}</td>
+                <td>${new Date(avaliacao.dataAvaliado).toLocaleString('pt-BR')}</td>
+            </tr>
+            `;
                     tabelaCorpo.innerHTML += linha;
                 });
             }
@@ -5583,6 +6251,124 @@
             }
             return estrelas;
         }
+
+        // Verifica se o onboarding deve ser iniciado
+        const showOnboarding = $('#ShowOnboarding').val().toLowerCase() === "true";
+
+        // Verifica se está em um dispositivo móvel (largura menor que 768px)
+        const isMobile = window.innerWidth < 768;
+
+        if (showOnboarding && !isMobile) {
+            console.log("Iniciando o onboarding para a tela de avaliações.");
+            iniciarOnboarding();
+        } else if (isMobile) {
+            console.log("Onboarding não será iniciado em dispositivos móveis.");
+        } else {
+            console.log("Onboarding para a tela de avaliações já foi concluído.");
+        }
+
+        function iniciarOnboarding() {
+            let steps = [
+                {
+                    element: "h2.text-center",
+                    text: "Bem-vindo à tela de gerenciamento de avaliações! Aqui você pode visualizar e filtrar as avaliações realizadas pelos clientes.",
+                },
+                {
+                    element: "#barbeiroIdSelect",
+                    text: "Use este campo para filtrar as avaliações por barbeiro específico.",
+                },
+                {
+                    element: "#dataInicioInput",
+                    text: "Aqui você pode definir a data inicial para o filtro das avaliações.",
+                },
+                {
+                    element: "#notaServicoSelect",
+                    text: "Este campo permite filtrar as avaliações pela nota atribuída ao serviço.",
+                },
+                {
+                    element: "#filtroAvaliacoesBarbeariaForm button[type='submit']",
+                    text: "Clique aqui para aplicar os filtros selecionados.",
+                },
+                {
+                    element: ".table-responsive",
+                    text: "Esta tabela exibe as avaliações detalhadas. Você pode visualizar informações como nota, comentário e data.",
+                },
+                {
+                    element: ".pagination",
+                    text: "Use esta barra para navegar entre as páginas de avaliações.",
+                },
+            ];
+
+            let currentStep = 0;
+
+            function showStep(stepIndex) {
+                if (stepIndex >= steps.length) {
+                    finalizarOnboarding();
+                    return;
+                }
+
+                const step = steps[stepIndex];
+                const el = $(step.element);
+
+                // Remove destaques e tooltips de passos anteriores
+                $(".highlight").removeClass("highlight");
+                $(".tooltip").remove();
+                $(".onboarding-overlay").remove();
+
+                // Cria uma sobreposição escura para destacar o elemento
+                const overlay = $('<div class="onboarding-overlay"></div>');
+                $("body").append(overlay);
+
+                if (el.length) {
+                    el[0].scrollIntoView({ behavior: "smooth", block: "center" });
+                    el.addClass("highlight");
+
+                    const tooltip = $(`<div class="onboarding-modal">
+                <div>${step.text}</div>
+                <button class="btn-next btn btn-primary mt-2">Próximo</button>
+            </div>`);
+                    $("body").append(tooltip);
+
+                    const offset = el.offset();
+                    const tooltipWidth = tooltip.outerWidth();
+                    const tooltipHeight = tooltip.outerHeight();
+                    const windowWidth = $(window).width();
+
+                    let top = offset.top + el.outerHeight() / 2 - tooltipHeight / 2;
+                    let left = offset.left + el.outerWidth() + 20;
+
+                    if (left + tooltipWidth > windowWidth) {
+                        left = offset.left - tooltipWidth - 20;
+                    }
+
+                    tooltip.css({ top, left });
+
+                    // Botão de próximo passo
+                    $(".btn-next").on("click", function () {
+                        tooltip.remove();
+                        overlay.remove();
+                        el.removeClass("highlight");
+                        showStep(stepIndex + 1);
+                    });
+                } else {
+                    // Se o elemento não for encontrado, pula para o próximo passo
+                    showStep(stepIndex + 1);
+                }
+            }
+
+            function finalizarOnboarding() {
+                console.log("Finalizando o onboarding.");
+                $.post("/Usuario/CompletarOnboarding", { tela: "AvaliacoesBarbeariaAdmin" }, function () {
+                    location.reload();
+                }).fail(function () {
+                    alert("Erro ao finalizar o onboarding.");
+                });
+            }
+
+            showStep(currentStep);
+        }
+
+        
     }
 
     // Obtém os elementos necessários

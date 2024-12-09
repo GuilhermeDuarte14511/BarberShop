@@ -2,9 +2,13 @@
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = "Usuários - Barber Shop";
+    var showOnboarding = ViewData["ShowOnboarding"]?.ToString()?.ToLower() == "true";
 }
 
 <div id="usuarioPage" class="container-fluid">
+    <!-- Input para controle de onboarding -->
+    <input type="hidden" id="ShowOnboarding" value="@(showOnboarding ? "True" : "False")" />
+    <input type="hidden" id="CurrentScreen" value="Usuarios" />
     <h2 class="text-center">Gerenciar Usuários</h2>
 
     <!-- Botão de Adicionar Usuário -->

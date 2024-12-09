@@ -1,9 +1,10 @@
 ﻿@model BarberShop.Domain.Entities.Agendamento
 @{
     ViewData["Title"] = "Faça sua avaliação";
-
+    var showOnboarding = ViewData["ShowOnboarding"]?.ToString()?.ToLower() == "true";
 }
 <div id="avaliacaoPage" class="avaliacao-container">
+    <input type="hidden" id="ShowOnboarding" value="@(showOnboarding ? "true" : "false")" />
     <h2>Avaliação do Atendimento</h2>
     <input type="hidden" id="agendamentoId" value="@Model.AgendamentoId" />
 

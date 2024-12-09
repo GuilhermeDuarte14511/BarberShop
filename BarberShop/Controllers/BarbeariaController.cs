@@ -1,4 +1,5 @@
-﻿using BarberShop.Application.Services;
+﻿using BarberShop.Application.Interfaces;
+using BarberShop.Application.Services;
 using BarberShop.Domain.Entities;
 using BarberShop.Domain.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -10,17 +11,19 @@ namespace BarberShopMVC.Controllers
     public class BarbeariaController : BaseController
     {
         private readonly IBarbeariaRepository _barbeariaRepository;
+        private readonly IOnboardingService _onboardingService;
 
-        public BarbeariaController(ILogService logService, IBarbeariaRepository barbeariaRepository) : base(logService)
+        public BarbeariaController(ILogService logService, IBarbeariaRepository barbeariaRepository, IOnboardingService onboardingService) : base(logService)
         {
             _barbeariaRepository = barbeariaRepository;
+            _onboardingService = onboardingService;
         }
 
         public async Task<IActionResult> Index()
         {
             try
             {
-                // Recupera o ID da barbearia da sessão
+                int usuarioId = ObterUsuarioIdLogado();
                 var barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
                 if (barbeariaId == null)
                 {
@@ -35,6 +38,10 @@ namespace BarberShopMVC.Controllers
                     await LogAsync("WARNING", nameof(BarbeariaController), "Barbearia não encontrada", $"BarbeariaId: {barbeariaId}");
                     return NotFound("Barbearia não encontrada.");
                 }
+
+                // Verifica o status do onboarding
+                bool onboardingConcluido = await _onboardingService.VerificarProgressoAsync(usuarioId, "MeusDados");
+                ViewData["ShowOnboarding"] = onboardingConcluido ? "false" : "true";
 
                 // Converte a logo para Base64, caso exista
                 if (barbearia.Logo != null)
@@ -54,6 +61,7 @@ namespace BarberShopMVC.Controllers
                 return RedirectToAction("Erro", "Home"); // Redireciona para uma página de erro
             }
         }
+
 
         [HttpPost]
         public async Task<IActionResult> UploadLogo(IFormFile Logo)

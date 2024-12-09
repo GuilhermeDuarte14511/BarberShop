@@ -100,6 +100,9 @@ namespace BarberShopMVC.Controllers
             try
             {
                 var barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
+                var usuarioId = ObterUsuarioIdLogado();
+                var onboardingConcluido = await _onboardingService.VerificarProgressoAsync(usuarioId, "AvaliacoesBarbeariaAdmin");
+                ViewData["ShowOnboarding"] = onboardingConcluido ? "false" : "true";
                 if (!barbeariaId.HasValue)
                 {
                     await LogAsync("WARN", nameof(AvaliacoesBarbearia), "Barbearia não identificada na sessão", null);

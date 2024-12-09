@@ -15,15 +15,18 @@ namespace BarberShopMVC.Controllers
     {
         private readonly IFeriadoBarbeariaRepository _feriadoBarbeariaRepository;
         private readonly IFeriadoBarbeariaService _feriadoBarbeariaService;
+        private readonly IOnboardingService _onboardingService;
 
         public FeriadoController(
             IFeriadoBarbeariaRepository feriadoBarbeariaRepository,
             IFeriadoBarbeariaService feriadoBarbeariaService,
+            IOnboardingService onboardingService,
             ILogService logService)
             : base(logService)
         {
             _feriadoBarbeariaRepository = feriadoBarbeariaRepository;
             _feriadoBarbeariaService = feriadoBarbeariaService;
+            _onboardingService = onboardingService;
         }
 
         public async Task<IActionResult> Index()
@@ -35,6 +38,11 @@ namespace BarberShopMVC.Controllers
                 {
                     return RedirectToAction("BarbeariaNaoEncontrada", "Erro");
                 }
+
+                // Verifica o status do onboarding
+                int usuarioId = ObterUsuarioIdLogado();
+                bool onboardingConcluido = await _onboardingService.VerificarProgressoAsync(usuarioId, "Feriados");
+                ViewData["ShowOnboarding"] = onboardingConcluido ? "false" : "true";
 
                 // Feriados nacionais (fixos)
                 var feriadosNacionais = await _feriadoBarbeariaService.ObterFeriadosNacionaisAsync();

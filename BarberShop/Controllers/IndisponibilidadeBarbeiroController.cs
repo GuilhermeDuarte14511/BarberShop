@@ -11,13 +11,16 @@ namespace BarberShopMVC.Controllers
     public class IndisponibilidadeBarbeiroController : BaseController
     {
         private readonly IIndisponibilidadeService _indisponibilidadeService;
+        private readonly IOnboardingService _onboardingService; // Serviço de onboarding
 
         public IndisponibilidadeBarbeiroController(
             IIndisponibilidadeService indisponibilidadeService,
+            IOnboardingService onboardingService,
             ILogService logService
         ) : base(logService)
         {
             _indisponibilidadeService = indisponibilidadeService;
+            _onboardingService = onboardingService;
         }
 
         public async Task<IActionResult> Index()
@@ -30,12 +33,29 @@ namespace BarberShopMVC.Controllers
                     return RedirectToAction("BarbeariaNaoEncontrada", "Erro");
                 }
 
+                int usuarioId = ObterUsuarioIdLogado(); // Método para obter o ID do usuário logado
+
+                // Verifica o status do onboarding
+                bool onboardingConcluido = await _onboardingService.VerificarProgressoAsync(usuarioId, "Indisponibilidades");
+                ViewData["ShowOnboarding"] = onboardingConcluido ? "false" : "true";
+
+                // Obtém as indisponibilidades da barbearia
                 var indisponibilidades = await _indisponibilidadeService.ObterIndisponibilidadesPorBarbeariaAsync(barbeariaId.Value);
+
+                // Log de acesso
+                await LogAsync(
+                    "INFO",
+                    nameof(IndisponibilidadeBarbeiroController),
+                    "Acesso à página de Indisponibilidades",
+                    $"BarbeariaId: {barbeariaId.Value}, UsuarioId: {usuarioId}"
+                );
+
                 return View(indisponibilidades);
             }
             catch (Exception ex)
             {
-                await LogAsync("Error", "IndisponibilidadeBarbeiroController.Index", ex.Message, ex.ToString());
+                // Log de erro
+                await LogAsync("ERROR", nameof(IndisponibilidadeBarbeiroController), ex.Message, ex.ToString());
                 return StatusCode(500, "Erro ao carregar a lista de indisponibilidades.");
             }
         }

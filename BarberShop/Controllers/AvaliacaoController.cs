@@ -1,4 +1,5 @@
 ﻿using BarberShop.Application.DTOs;
+using BarberShop.Application.Interfaces;
 using BarberShop.Application.Services;
 using BarberShop.Domain.Entities;
 using BarberShop.Domain.Interfaces;
@@ -10,12 +11,18 @@ public class AvaliacaoController : BaseController
 {
     private readonly IAvaliacaoService _avaliacaoService;
     private readonly IBarbeiroService _barbeiroService;
+    private readonly IOnboardingService _onboardingService;
 
-    public AvaliacaoController(IAvaliacaoService avaliacaoService, IBarbeiroService barbeiroService, ILogService logService)
+    public AvaliacaoController(
+        IAvaliacaoService avaliacaoService,
+        IBarbeiroService barbeiroService,
+        IOnboardingService onboardingService,
+        ILogService logService)
         : base(logService) // Passa o logService para a BaseController
     {
         _avaliacaoService = avaliacaoService;
         _barbeiroService = barbeiroService;
+        _onboardingService = onboardingService;
     }
 
     /// <summary>
@@ -27,6 +34,13 @@ public class AvaliacaoController : BaseController
     {
         try
         {
+            // Recupera o ID do usuário logado
+            var usuarioId = ObterUsuarioIdLogado();
+
+            // Verifica se o onboarding foi concluído
+            var onboardingConcluido = await _onboardingService.VerificarProgressoAsync(usuarioId, "Avaliacao");
+            ViewData["ShowOnboarding"] = onboardingConcluido ? "false" : "true";
+
             // Verifica se já existe uma avaliação para o agendamento
             var avaliacaoExistente = await _avaliacaoService.ObterAvaliacaoPorAgendamentoIdAsync(agendamentoId);
 
@@ -56,6 +70,7 @@ public class AvaliacaoController : BaseController
             return StatusCode(500, "Erro interno do servidor.");
         }
     }
+
 
     /// <summary>
     /// Salva uma nova avaliação.
@@ -88,6 +103,10 @@ public class AvaliacaoController : BaseController
         try
         {
             var barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
+            var usuarioId = ObterUsuarioIdLogado();
+            var onboardingConcluido = await _onboardingService.VerificarProgressoAsync(usuarioId, "Avaliacao");
+            ViewData["ShowOnboarding"] = onboardingConcluido ? "false" : "true";
+
 
             if (!barbeariaId.HasValue)
             {
@@ -143,7 +162,7 @@ public class AvaliacaoController : BaseController
     }
 
     [HttpGet]
-    public async Task<IActionResult> FiltrarAvaliacoesBarbearia(int page = 1,int pageSize = 10,int? barbeiroId = null,string? dataInicio = null,string? dataFim = null,int? notaServico = null,int? notaBarbeiro = null,string? observacao = null)
+    public async Task<IActionResult> FiltrarAvaliacoesBarbearia(int page = 1, int pageSize = 10, int? barbeiroId = null, string? dataInicio = null, string? dataFim = null, int? notaServico = null, int? notaBarbeiro = null, string? observacao = null)
     {
         try
         {

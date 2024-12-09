@@ -4,10 +4,13 @@
 @{
     ViewData["Title"] = "Meus Dados";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var showOnboarding = ViewData["ShowOnboarding"].ToString();
 }
 
 <div id="meusdadosPage" class="container my-5 p-4 barbearia-dados-container">
-    <!-- Foto da Barbearia e Upload -->
+    <input type="hidden" id="ShowOnboarding" value="@showOnboarding" />
+    <input type="hidden" id="UserRole" value="Admin" />
+    <input type="hidden" id="CurrentScreen" value="MeusDados" />
     <div class="text-center mb-4">
         <div class="position-relative d-inline-block">
             <img src="@(ViewData["BarbeariaLogo"] ?? "~/images/default-logo.png")"
