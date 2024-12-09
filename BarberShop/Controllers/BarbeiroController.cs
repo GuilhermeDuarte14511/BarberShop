@@ -489,6 +489,11 @@ namespace BarberShopMVC.Controllers
 
                 ViewData["UrlSlug"] = urlSlug;
 
+                // Verifica o progresso do onboarding para o barbeiro
+                var usuarioId = ObterUsuarioIdLogado(); // Método para obter o ID do usuário logado
+                var onboardingConcluido = await _onboardingService.VerificarProgressoAsync(usuarioId, "MeusAgendamentos");
+                ViewData["ShowOnboarding"] = onboardingConcluido ? "false" : "true";
+
                 // Busca agendamentos com base no barbeiro, barbearia e opcionalmente no agendamentoId
                 var agendamentos = await _agendamentoService.ObterAgendamentosPorBarbeiroEBarbeariaAsync(barbeiroId, barbeariaId, agendamentoId);
                 var totalCount = agendamentos.Count();
@@ -512,6 +517,7 @@ namespace BarberShopMVC.Controllers
                 return StatusCode(500, "Erro ao carregar os agendamentos.");
             }
         }
+
 
 
         [HttpGet]
@@ -592,6 +598,11 @@ namespace BarberShopMVC.Controllers
             int barbeiroId = int.Parse(barbeiroIdClaim);
             int barbeariaId = int.Parse(barbeariaIdClaim);
 
+            // Verifica o progresso do onboarding
+            var usuarioId = ObterUsuarioIdLogado(); // Método para obter o ID do usuário logado
+            var onboardingConcluido = await _onboardingService.VerificarProgressoAsync(usuarioId, "MeusServicos");
+            ViewData["ShowOnboarding"] = onboardingConcluido ? "false" : "true";
+
             var servicosVinculados = await _barbeiroServicoService.ObterServicosPorBarbeiroIdAsync(barbeiroId);
             var servicosNaoVinculados = await _barbeiroServicoService.ObterServicosNaoVinculadosAsync(barbeiroId);
 
@@ -617,6 +628,7 @@ namespace BarberShopMVC.Controllers
 
             return View(model);
         }
+
 
         [HttpPost]
         public async Task<IActionResult> VincularServicoMeuBarbeiro([FromBody] int servicoId)
@@ -673,8 +685,9 @@ namespace BarberShopMVC.Controllers
         {
             try
             {
-
                 var barbeiroId = ObterBarbeiroIdLogado();
+                var usuarioId = ObterUsuarioIdLogado();
+
                 if (barbeiroId <= 0)
                 {
                     await LogAsync("WARNING", nameof(BarbeiroController), "Tentativa de acesso sem barbeiro logado", "BarbeiroId nulo ou inválido");
@@ -688,10 +701,15 @@ namespace BarberShopMVC.Controllers
                     return NotFound("Barbeiro não encontrado.");
                 }
 
+                // Adiciona a foto ao ViewData
                 if (barbeiro.Foto != null)
                 {
                     ViewData["FotoBarbeiro"] = "data:image/png;base64," + Convert.ToBase64String(barbeiro.Foto);
                 }
+
+                // Verifica se o onboarding foi concluído para esta tela
+                var onboardingConcluido = await _onboardingService.VerificarProgressoAsync(usuarioId, "MeusDadosBarbeiro");
+                ViewData["ShowOnboarding"] = onboardingConcluido ? "false" : "true";
 
                 await LogAsync("INFO", nameof(BarbeiroController), "Acesso à página Meus Dados", $"BarbeiroId: {barbeiroId}");
 
@@ -704,6 +722,7 @@ namespace BarberShopMVC.Controllers
                 return RedirectToAction("Erro", "Home"); // Redireciona para uma página de erro
             }
         }
+
 
         [HttpPost]
         public async Task<IActionResult> UploadFotoMeusDadosBarbeiro(IFormFile Foto)
@@ -788,12 +807,18 @@ namespace BarberShopMVC.Controllers
             try
             {
                 int barbeiroId = ObterBarbeiroIdLogado();
+                int usuarioId = ObterUsuarioIdLogado();
                 if (barbeiroId <= 0)
                 {
                     return RedirectToAction("Login", "Login");
                 }
 
                 var indisponibilidades = await _indisponibilidadeService.ObterIndisponibilidadesPorBarbeiroAsync(barbeiroId);
+
+                // Verifica se o onboarding já foi concluído para esta tela
+                var onboardingConcluido = await _onboardingService.VerificarProgressoAsync(usuarioId, "MeusHorarios");
+                ViewData["ShowOnboarding"] = onboardingConcluido ? "false" : "true";
+
                 return View("MeusHorarios", indisponibilidades);
             }
             catch (Exception ex)
@@ -802,6 +827,7 @@ namespace BarberShopMVC.Controllers
                 return StatusCode(500, "Erro ao carregar os horários.");
             }
         }
+
 
         [HttpPost]
         public async Task<IActionResult> AdicionarHorario([FromBody] IndisponibilidadeBarbeiro indisponibilidade)
@@ -908,6 +934,12 @@ namespace BarberShopMVC.Controllers
                 {
                     return RedirectToAction("Login", "Login");
                 }
+
+
+                // Verifica o progresso do onboarding
+                var usuarioId = ObterUsuarioIdLogado(); // Método para obter o ID do usuário logado
+                var onboardingConcluido = await _onboardingService.VerificarProgressoAsync(usuarioId, "MinhasAvaliacoes");
+                ViewData["ShowOnboarding"] = onboardingConcluido ? "false" : "true";
 
                 // Busca avaliações com filtros aplicados
                 var avaliacoes = await _avaliacaoService.ObterAvaliacoesFiltradasAsync(

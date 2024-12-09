@@ -151,18 +151,32 @@ namespace BarberShop.Application.Controllers
                 {
                     telasOnboarding = new List<string>
                     {
-                        "Dashboard", "Barbeiros", "Servicos", "Pagamentos", "Agendamentos",
-                        "Meus Dados", "Horarios", "Feriados", "Indisponibilidade", "Usuarios", "Avaliacoes"
-                    };
-                        }
-                        else if (request.TipoUsuario == "Barbeiro")
-                        {
-                            telasOnboarding = new List<string>
-                    {
-                        "Dashboard", "Meus Agendamentos", "Meus Servicos", "Minhas Datas",
-                        "Meus Dados", "Minhas Avaliacoes"
+                        "Dashboard",
+                        "Pagamentos",
+                        "Servicos",
+                        "Agendamentos",
+                        "Avaliacoes",
+                        "Barbeiros",
+                        "MeusDados",
+                        "Feriados",
+                        "Indisponibilidades",
+                        "Usuarios",
+                        "AvaliacoesBarbeariaAdmin"
                     };
                 }
+                else if (request.TipoUsuario == "Barbeiro")
+                {
+                    telasOnboarding = new List<string>
+                    {
+                        "Dashboard",
+                        "MeusAgendamentos",
+                        "MeusServicos",
+                        "MinhasAvaliacoes",
+                        "MeusHorarios",
+                        "MeusDadosBarbeiro"
+                    };
+                }
+
 
                 // Registra os passos iniciais do onboarding
                 await _onboardingService.RegistrarPassosIniciaisAsync(usuarioCriado.UsuarioId, telasOnboarding);
@@ -199,7 +213,7 @@ namespace BarberShop.Application.Controllers
         public async Task<IActionResult> Deletar(int id)
         {
             try
-            { 
+            {
 
                 var baseUrl = $"{Request.Scheme}://{Request.Host.Value}";
                 // Obter o usuário pelo ID
