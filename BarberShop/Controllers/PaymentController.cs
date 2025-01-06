@@ -223,5 +223,12 @@ namespace BarberShop.API.Controllers
                 return BadRequest(new { error = "Não foi possível salvar os detalhes do pagamento." });
             }
         }
+
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public IActionResult ObterBarbeiroIdLogado()
+        {
+            return Ok();
+        }
+
     }
 }

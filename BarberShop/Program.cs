@@ -180,7 +180,14 @@ builder.Services.AddControllersWithViews()
         options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
     });
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "BarberShop API",
+        Version = "v1"
+    });
+});
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
@@ -195,16 +202,21 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = "swagger";
 });
 
+
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 app.UseSession();
 app.UseAuthentication();
 app.UseMiddleware<AuthenticationMiddleware>();
-app.UseAuthorization(); 
+app.UseAuthorization();
 
-app.UseStatusCodePagesWithReExecute("/Erro/BarbeariaNaoEncontrada");
-
+app.UseWhen(
+    context => !context.Request.Path.StartsWithSegments("/swagger"),
+    appBuilder =>
+    {
+        appBuilder.UseStatusCodePagesWithReExecute("/Erro/BarbeariaNaoEncontrada");
+    });
 // Configuração de rotas
 app.MapControllerRoute(
     name: "default",
@@ -219,4 +231,8 @@ app.MapControllerRoute(
     name: "home",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
+app.MapControllerRoute(
+    name: "swagger",
+    pattern: "swagger/{*path}",
+    defaults: new { controller = "Home", action = "Index" });
 app.Run();
