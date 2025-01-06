@@ -16,7 +16,7 @@ using System.Security.Claims;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<BarbeariaContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("EspacoBarberShopOficial")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("BarberShopDb")));
 
 // Carregar secrets somente em Development
 if (builder.Environment.IsDevelopment())
@@ -173,7 +173,12 @@ builder.Services.AddQuartzHostedService(options =>
     options.WaitForJobsToComplete = true;
 });
 
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+        options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+    });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHttpContextAccessor();

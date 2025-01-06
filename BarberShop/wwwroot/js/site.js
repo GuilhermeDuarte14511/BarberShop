@@ -886,6 +886,8 @@
 
         // Carregar a localização em português para o Flatpickr
         flatpickr.localize(flatpickr.l10ns.pt);
+
+        // Variáveis globais
         var selectedBarbeiroId = null;
         var selectedDuracaoTotal = $('#escolherBarbeiroPage').data('duracao-total');
         var selectedServicoIds = $('#escolherBarbeiroPage').data('servico-ids');
@@ -916,7 +918,13 @@
                     duracaoTotal: selectedDuracaoTotal
                 },
                 success: function (response) {
-                    const horarios = response.horariosDisponiveis;
+                    let horarios = response.horariosDisponiveis;
+
+                    // Extração do array, caso venha encapsulado em $values
+                    if (horarios && horarios.$values) {
+                        horarios = horarios.$values;
+                    }
+
                     const horarioFuncionamento = response.horarioFuncionamento;
 
                     console.log("Horários disponíveis recebidos:", horarios);
@@ -932,48 +940,52 @@
                         "domingo": "Sunday"
                     };
 
-                    horariosPorDia = {};
+                    horariosPorDia = {}; // Limpa a variável global antes de popular
 
-                    horarios.forEach(function (horario) {
-                        const dataHora = dayjs(horario); // Removido ajuste de UTC+3
-                        const dia = dataHora.format('YYYY-MM-DD');
-                        const horarioInicio = dataHora.format('HH:mm');
-                        const horarioFim = dataHora.add(selectedDuracaoTotal, 'minute').format('HH:mm');
+                    if (Array.isArray(horarios)) {
+                        horarios.forEach(function (horario) {
+                            const dataHora = dayjs(horario);
+                            const dia = dataHora.format('YYYY-MM-DD');
+                            const horarioInicio = dataHora.format('HH:mm');
+                            const horarioFim = dataHora.add(selectedDuracaoTotal, 'minute').format('HH:mm');
 
-                        const diaSemana = dataHora.format('dddd');
-                        const diaSemanaEmIngles = diaSemanaMap[diaSemana]; // Mapeia para o inglês
+                            const diaSemana = dataHora.format('dddd');
+                            const diaSemanaEmIngles = diaSemanaMap[diaSemana]; // Mapeia para o inglês
 
-                        if (!diaSemanaEmIngles) {
-                            console.warn(`Dia da semana inválido: ${diaSemana}`);
-                            return;
-                        }
+                            if (!diaSemanaEmIngles) {
+                                console.warn(`Dia da semana inválido: ${diaSemana}`);
+                                return;
+                            }
 
-                        const horarioDia = horarioFuncionamento[diaSemanaEmIngles];
+                            const horarioDia = horarioFuncionamento[diaSemanaEmIngles];
 
-                        if (!horarioDia || !horarioDia.abertura || !horarioDia.fechamento) {
-                            console.warn(`Horário de funcionamento não encontrado para ${diaSemana}`);
-                            return;
-                        }
+                            if (!horarioDia || !horarioDia.abertura || !horarioDia.fechamento) {
+                                console.warn(`Horário de funcionamento não encontrado para ${diaSemana}`);
+                                return;
+                            }
 
-                        const abertura = dayjs(`${dia} ${horarioDia.abertura}`, 'YYYY-MM-DD HH:mm');
-                        const fechamento = dayjs(`${dia} ${horarioDia.fechamento}`, 'YYYY-MM-DD HH:mm');
+                            const abertura = dayjs(`${dia} ${horarioDia.abertura}`, 'YYYY-MM-DD HH:mm');
+                            const fechamento = dayjs(`${dia} ${horarioDia.fechamento}`, 'YYYY-MM-DD HH:mm');
 
-                        if (!abertura.isValid() || !fechamento.isValid()) {
-                            console.error(`Horário inválido detectado para ${diaSemana}:`, horarioDia);
-                            return;
-                        }
+                            if (!abertura.isValid() || !fechamento.isValid()) {
+                                console.error(`Horário inválido detectado para ${diaSemana}:`, horarioDia);
+                                return;
+                            }
 
-                        if (dataHora.isBefore(abertura) || dataHora.add(selectedDuracaoTotal, 'minute').isAfter(fechamento)) {
-                            console.warn(`Horário fora do intervalo: ${horarioInicio} - ${horarioFim}`);
-                            return;
-                        }
+                            if (dataHora.isBefore(abertura) || dataHora.add(selectedDuracaoTotal, 'minute').isAfter(fechamento)) {
+                                console.warn(`Horário fora do intervalo: ${horarioInicio} - ${horarioFim}`);
+                                return;
+                            }
 
-                        if (!horariosPorDia[dia]) {
-                            horariosPorDia[dia] = [];
-                        }
-                        horariosPorDia[dia].push(`${horarioInicio} - ${horarioFim}`);
-                        console.log(`Horário válido: ${horarioInicio} - ${horarioFim}`);
-                    });
+                            if (!horariosPorDia[dia]) {
+                                horariosPorDia[dia] = [];
+                            }
+                            horariosPorDia[dia].push(`${horarioInicio} - ${horarioFim}`);
+                            console.log(`Horário válido: ${horarioInicio} - ${horarioFim}`);
+                        });
+                    } else {
+                        console.error("Horários não estão em um formato de array:", horarios);
+                    }
 
                     console.log("Horários organizados por dia:", horariosPorDia);
 
@@ -985,8 +997,6 @@
             });
         }
 
-
-
         function configurarCalendario(diasDisponiveis) {
             console.log("Dias disponíveis para o calendário:", diasDisponiveis);
 
@@ -997,16 +1007,18 @@
                 enable: diasDisponiveis, // Somente dias disponíveis são habilitados
                 disableMobile: true, // Garante que o Flatpickr customizado apareça em dispositivos móveis
                 onChange: function (selectedDates, dateStr, instance) {
-                    selectedDate = dateStr;
+                    selectedDate = dayjs(dateStr).format("YYYY-MM-DD"); // Formata a data para corresponder às chaves de horariosPorDia
+                    console.log("Data selecionada:", selectedDate);
+
                     $('#calendarioModal').modal('hide'); // Fecha o modal do calendário
                     mostrarHorariosParaDia(selectedDate); // Mostra os horários para o dia selecionado
                 },
                 onDayCreate: function (dObj, dStr, fp, dayElem) {
-                    // Verifica se o dia está disponível
-                    const isAvailable = diasDisponiveis.includes(dayElem.dateObj.toISOString().split("T")[0]);
-                    console.log(`Dia criado: ${dayElem.dateObj.toISOString().split("T")[0]}, Disponível: ${isAvailable}`);
+                    const dayISO = dayElem.dateObj.toISOString().split("T")[0]; // Normaliza a data para formato ISO
+                    const isAvailable = diasDisponiveis.includes(dayISO);
+                    console.log(`Dia criado: ${dayISO}, Disponível: ${isAvailable}`);
+
                     if (!isAvailable) {
-                        // Se o dia não estiver disponível, adiciona evento de clique para mostrar o toast
                         dayElem.classList.add("disabled");
                         dayElem.addEventListener("click", function (e) {
                             e.preventDefault();
@@ -1017,8 +1029,8 @@
             });
         }
 
-        // Função para exibir os horários disponíveis para o dia selecionado
         function mostrarHorariosParaDia(diaSelecionado) {
+            console.log("Exibindo horários para:", diaSelecionado);
             const dataFormatada = dayjs(diaSelecionado).format('DD [de] MMMM [de] YYYY');
             $('#horariosModalLabel').text(`Horários disponíveis em ${dataFormatada}`);
 
@@ -1030,11 +1042,15 @@
                     $('#horariosContainer').append(horarioBtn);
                 });
             } else {
+                console.warn(`Nenhum horário encontrado para: ${diaSelecionado}`);
                 $('#horariosContainer').append('<p class="text-light">Nenhum horário disponível para este dia.</p>');
             }
 
             $('#horariosModal').modal('show'); // Abre o modal de horários
         }
+
+
+
 
 
         // Evento de clique para cada horário disponível
@@ -4144,7 +4160,7 @@
 
         if (showOnboarding && !isMobile) {
             console.log("Iniciando o onboarding para a tela de avaliações.");
-            iniciarOnboarding();
+            iniciarOnboardingMeusDados();
         } else if (isMobile) {
             console.log("Onboarding não será iniciado em dispositivos móveis.");
         } else {

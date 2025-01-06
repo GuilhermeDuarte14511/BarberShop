@@ -47,6 +47,13 @@ namespace BarberShop.Infrastructure.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            // Define o comportamento padrão para DELETE como Restrict
+            foreach (var foreignKey in modelBuilder.Model.GetEntityTypes()
+                .SelectMany(e => e.GetForeignKeys()))
+            {
+                foreignKey.DeleteBehavior = DeleteBehavior.Restrict;
+            }
+
             // Configuração da tabela BarbeiroServico (Relacionamento N para N)
             modelBuilder.Entity<BarbeiroServico>()
                 .HasKey(bs => new { bs.BarbeiroId, bs.ServicoId }); // Chave composta

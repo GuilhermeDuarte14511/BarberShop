@@ -8,6 +8,10 @@
       "type": "mssql",
       "connectionId": "EspacoBarberShopOficial",
       "dynamicId": null
+    },
+    "mssql2": {
+      "type": "mssql",
+      "connectionId": "BarberShopDb"
     }
   }
 }
