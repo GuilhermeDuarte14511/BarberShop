@@ -29,7 +29,7 @@ namespace BarberShop.Application.Services
                 await _logService.SaveLogAsync("EmailService", $"Iniciando envio de email de agendamento para {destinatarioEmail}", "INFO", _sendGridApiKey);
 
                 var client = new SendGridClient(_sendGridApiKey);
-                var from = new EmailAddress("barbershoperbrasil@outlook.com", nomeBarbearia);
+                var from = new EmailAddress("barbershopperbrasil@outlook.com", nomeBarbearia);
                 var to = new EmailAddress(destinatarioEmail, destinatarioNome);
 
                 string htmlContent = $@"
@@ -146,7 +146,7 @@ namespace BarberShop.Application.Services
                 await _logService.SaveLogAsync("EmailService", $"Iniciando envio de email de notificação para {barbeiroEmail}", "INFO", _sendGridApiKey);
 
                 var client = new SendGridClient(_sendGridApiKey);
-                var from = new EmailAddress("barbershoperbrasil@outlook.com", nomeBarbearia);
+                var from = new EmailAddress("barbershopperbrasil@outlook.com", nomeBarbearia);
                 var to = new EmailAddress(barbeiroEmail, barbeiroNome);
 
                 string htmlContent = $@"
@@ -252,7 +252,7 @@ namespace BarberShop.Application.Services
                 await _logService.SaveLogAsync("EmailService", $"Iniciando envio de email de verificação para {destinatarioEmail}", "INFO", _sendGridApiKey);
 
                 var client = new SendGridClient(_sendGridApiKey);
-                var from = new EmailAddress("barbershoperbrasil@outlook.com", nomeBarbearia);
+                var from = new EmailAddress("barbershopperbrasil@outlook.com", nomeBarbearia);
                 var to = new EmailAddress(destinatarioEmail, destinatarioNome);
                 var assunto = "Seu Código de Verificação";
                 var conteudo = $"Olá, {destinatarioNome}!\n\nSeu código de verificação é: {codigoVerificacao}\n\nEste código expira em 5 minutos.";
@@ -358,7 +358,7 @@ namespace BarberShop.Application.Services
                 await _logService.SaveLogAsync("EmailService", $"Iniciando envio de e-mail de falha de cadastro para {destinatarioEmail}", "INFO", _sendGridApiKey);
 
                 var client = new SendGridClient(_sendGridApiKey);
-                var from = new EmailAddress("barbershoperbrasil@outlook.com", nomeBarbearia);
+                var from = new EmailAddress("barbershopperbrasil@outlook.com", nomeBarbearia);
                 var to = new EmailAddress(destinatarioEmail, destinatarioNome);
                 var assunto = "Falha no Cadastro - Assistência Necessária";
                 var conteudo = $"Olá, {destinatarioNome}!\n\nOcorreu um problema ao concluir o seu cadastro, mas não se preocupe! Nossa equipe está pronta para ajudar você.";
@@ -518,7 +518,7 @@ namespace BarberShop.Application.Services
                 </body>
                 </html>";
 
-            var from = new EmailAddress("barbershoperbrasil@outlook.com", "BarberShop");
+            var from = new EmailAddress("barbershopperbrasil@outlook.com", "BarberShop");
             var to = new EmailAddress(destinatarioEmail, destinatarioNome);
             var msg = MailHelper.CreateSingleEmail(from, to, assunto, conteudo, htmlContent);
 
@@ -541,7 +541,7 @@ namespace BarberShop.Application.Services
                 await _logService.SaveLogAsync("EmailService", $"Iniciando envio de email de avaliação para {destinatarioEmail}", "INFO", _sendGridApiKey);
 
                 var client = new SendGridClient(_sendGridApiKey);
-                var from = new EmailAddress("barbershoperbrasil@outlook.com", nomeBarbearia);
+                var from = new EmailAddress("barbershopperbrasil@outlook.com", nomeBarbearia);
                 var to = new EmailAddress(destinatarioEmail, destinatarioNome);
                 var assunto = "Nos avalie - Sua opinião é muito importante!";
 
@@ -646,7 +646,7 @@ namespace BarberShop.Application.Services
                 await _logService.SaveLogAsync("EmailService", $"Iniciando envio de email de boas-vindas para {destinatarioEmail}", "INFO", _sendGridApiKey);
 
                 var client = new SendGridClient(_sendGridApiKey);
-                var from = new EmailAddress("barbershoperbrasil@outlook.com", nomeBarbearia ?? "BarberShop System");
+                var from = new EmailAddress("barbershopperbrasil@outlook.com", nomeBarbearia ?? "BarberShop System");
                 var to = new EmailAddress(destinatarioEmail, destinatarioNome);
                 var assunto = "Bem-vindo(a) ao Sistema BarberShop!";
 
@@ -785,7 +785,7 @@ namespace BarberShop.Application.Services
                 await _logService.SaveLogAsync("EmailService", $"Iniciando envio de email de cancelamento para {destinatarioEmail}", "INFO", _sendGridApiKey);
 
                 var client = new SendGridClient(_sendGridApiKey);
-                var from = new EmailAddress("barbershoperbrasil@outlook.com", nomeBarbearia ?? "BarberShop System");
+                var from = new EmailAddress("barbershopperbrasil@outlook.com", nomeBarbearia ?? "BarberShop System");
                 var to = new EmailAddress(destinatarioEmail, destinatarioNome);
                 var assunto = "Agendamento Cancelado - Informações Importantes";
 
