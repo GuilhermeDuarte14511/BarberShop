@@ -1,14 +1,15 @@
-﻿using BarberShop.Application.Interfaces;
+﻿using System;
+using System.Threading.Tasks;
+using BarberShop.Application.Dtos;
+using BarberShop.Application.DTOs;
+using BarberShop.Application.Interfaces;
 using BarberShop.Application.Services;
 using BarberShop.Domain.Entities;
 using BarberShop.Domain.Interfaces;
-using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using BarberShop.Application.DTOs;
-using BarberShop.Application.Dtos;
+using BarberShop.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 
 namespace BarberShopMVC.Controllers
 {
@@ -21,14 +22,18 @@ namespace BarberShopMVC.Controllers
         private readonly IAgendamentoService _agendamentoService;
         private readonly IServicoService _servicoService;
         private readonly IAvaliacaoService _avaliacaoService;
+        private readonly IBarbeariaRepository _barbeariaRepository;
+        private readonly IEmailService _emailService;
 
         public BarbeiroController(
             IBarbeiroRepository barbeiroRepository,
             IBarbeiroService barbeiroService,
             IBarbeiroServicoService barbeiroServicoService,
             IIndisponibilidadeService indisponibilidadeService,
+            IBarbeariaRepository barbeariaRepository,
             IAgendamentoService agendamentoService,
             IServicoService servicoService,
+            IEmailService emailService,
             IAvaliacaoService avaliacaoService,
             ILogService logService)
             : base(logService)
@@ -38,7 +43,9 @@ namespace BarberShopMVC.Controllers
             _barbeiroServicoService = barbeiroServicoService;
             _indisponibilidadeService = indisponibilidadeService;
             _agendamentoService = agendamentoService;
+            _barbeariaRepository = barbeariaRepository;
             _servicoService = servicoService;
+            _emailService = emailService;
             _avaliacaoService = avaliacaoService;
         }
 
@@ -102,46 +109,85 @@ namespace BarberShopMVC.Controllers
         {
             try
             {
+                // 1) Obter barbearia da sessão
                 int? barbeariaId = HttpContext.Session.GetInt32("BarbeariaId");
                 if (!barbeariaId.HasValue)
-                {
                     return BadRequest(new { success = false, message = "ID da barbearia não encontrado" });
-                }
 
-                // Associa o barbeiro à barbearia
+                // 2) Associar barbeiro à barbearia
                 barbeiro.BarbeariaId = barbeariaId.Value;
 
+                // 3) Foto opcional
                 if (Foto != null && Foto.Length > 0)
                 {
-                    using (var ms = new MemoryStream())
-                    {
-                        await Foto.CopyToAsync(ms);
-                        barbeiro.Foto = ms.ToArray();
-                    }
+                    using var ms = new MemoryStream();
+                    await Foto.CopyToAsync(ms);
+                    barbeiro.Foto = ms.ToArray();
                 }
 
-                var barbeiroExistente = await _barbeiroRepository.GetByEmailOrPhoneAsync(barbeiro.Email, barbeiro.Telefone);
-                if (barbeiroExistente != null)
+                // 4) Verificar duplicidade (e-mail/telefone)
+                var existente = await _barbeiroRepository.GetByEmailOrPhoneAsync(barbeiro.Email, barbeiro.Telefone);
+                if (existente != null)
                 {
                     string mensagemErro = "Já existe um cadastro com ";
-                    if (barbeiroExistente.Email == barbeiro.Email)
-                        mensagemErro += "esse e-mail";
-                    if (barbeiroExistente.Telefone == barbeiro.Telefone)
+                    if (existente.Email == barbeiro.Email) mensagemErro += "esse e-mail";
+                    if (existente.Telefone == barbeiro.Telefone)
                         mensagemErro += mensagemErro.Contains("e-mail") ? " e telefone" : " esse telefone";
 
                     return Json(new { success = false, message = mensagemErro });
                 }
 
+                // 5) Persistir barbeiro
                 await _barbeiroRepository.AddAsync(barbeiro);
 
-                return Json(new { success = true, message = "Barbeiro adicionado com sucesso" });
+                // 6) Buscar dados da barbearia para personalizar o e-mail
+                var barbearia = await _barbeariaRepository.GetByIdAsync(barbeariaId.Value);
+                var nomeBarbearia = barbearia?.Nome ?? "BarberShop";
+                var urlSlug = barbearia?.UrlSlug ?? "home";
+
+                // (Opcional) se quiser enviar uma senha provisória, gere aqui e crie/relacione um 'Usuario'
+                string? senhaProvisoria = GerarSenhaAleatoria();
+
+                // 7) Enviar e-mail de boas-vindas (não falha a criação se o e-mail der erro)
+                try
+                {
+                    await _emailService.EnviarEmailBoasVindasBarbeiroAsync(
+                        barbeiroEmail: barbeiro.Email,
+                        barbeiroNome: barbeiro.Nome,
+                        nomeBarbearia: nomeBarbearia,
+                        urlSlug: urlSlug,
+                        senhaProvisoria: senhaProvisoria
+                    );
+                }
+                catch (System.Exception exEmail)
+                {
+                    await _logService.SaveLogAsync("EmailService",
+                        "Falha ao enviar boas-vindas para barbeiro",
+                        $"BarbeiroId={barbeiro.BarbeiroId}; Email={barbeiro.Email}; Erro={exEmail.Message}",
+                        null);
+
+                    // Retorna sucesso da criação com aviso sobre o e-mail
+                    return Json(new
+                    {
+                        success = true,
+                        message = "Barbeiro adicionado com sucesso, porém houve uma falha ao enviar o e-mail de boas-vindas.",
+                        data = new { barbeiroId = barbeiro.BarbeiroId }
+                    });
+                }
+
+                // 8) Sucesso total
+                return Json(new
+                {
+                    success = true,
+                    message = "Barbeiro adicionado com sucesso. E-mail de boas-vindas enviado.",
+                    data = new { barbeiroId = barbeiro.BarbeiroId }
+                });
             }
-            catch (Exception ex)
+            catch
             {
                 return StatusCode(500, new { success = false, message = "Erro ao adicionar o barbeiro" });
             }
         }
-
 
         [HttpPost]
         public async Task<IActionResult> Edit(int id, Barbeiro barbeiro)
@@ -937,7 +983,7 @@ namespace BarberShopMVC.Controllers
 
 
         [HttpGet]
-        public async Task<IActionResult> FiltrarAvaliacoes(int page = 1,int pageSize = 10,int? avaliacaoId = null, string? dataInicio = null,string? dataFim = null,int? notaServico = null,int? notaBarbeiro = null,string? observacao = null)
+        public async Task<IActionResult> FiltrarAvaliacoes(int page = 1, int pageSize = 10, int? avaliacaoId = null, string? dataInicio = null, string? dataFim = null, int? notaServico = null, int? notaBarbeiro = null, string? observacao = null)
         {
             try
             {

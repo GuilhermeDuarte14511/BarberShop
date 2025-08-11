@@ -6,34 +6,36 @@ using BarberShop.Domain.Entities;
 using BarberShop.Domain.Interfaces;
 using BarberShop.Infrastructure.Data;
 using BarberShop.Infrastructure.Repositories;
-using BarberShop.Middlewares; // Adicione o namespace para acessar o middleware
+using BarberShop.Middlewares;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Quartz;
 using Stripe;
-using System.Security.Claims;
 
+// Configuração inicial do builder
 var builder = WebApplication.CreateBuilder(args);
 
+// Configuração do banco de dados (PostgreSQL local)
 builder.Services.AddDbContext<BarbeariaContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("EspacoBarberShopOficial")));
+{
+    options.UseNpgsql(builder.Configuration.GetConnectionString("Default"));
+    options.UseSnakeCaseNamingConvention();
+});
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
-// Carregar secrets somente em Development
+// Carregar secrets somente em Development (opcional)
 if (builder.Environment.IsDevelopment())
 {
     builder.Configuration.AddUserSecrets<Program>();
 }
 
-// Configurar o Stripe
+// Configuração do Stripe
 builder.Services.Configure<StripeSettings>(builder.Configuration.GetSection("Stripe"));
 StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 
-// Registrar o serviço de pagamento com Stripe
+// Registrar serviços e repositórios
 builder.Services.AddScoped<IPaymentService, PaymentService>();
-
-// Registrar o serviço de logging customizado
 builder.Services.AddScoped<ILogService, LogService>();
-
 // Registrar o PagamentoRepository
 builder.Services.AddScoped<IPagamentoRepository, PagamentoRepository>();
 
@@ -41,31 +43,9 @@ builder.Services.AddScoped<IPagamentoRepository, PagamentoRepository>();
 builder.Services.AddScoped<IPlanoAssinaturaService, PlanoAssinaturaService>();
 builder.Services.AddScoped<IPlanoAssinaturaRepository, PlanoAssinaturaRepository>();
 
-// Obter a chave SendGridApiKey dinamicamente com base no ambiente
 string sendGridApiKey = builder.Environment.IsDevelopment()
     ? builder.Configuration["SendGridApiKey"]
     : Environment.GetEnvironmentVariable("SendGridApiKey");
-
-// Configurar o serviço de Email com SendGrid usando a chave configurada
-builder.Services.AddScoped<IEmailService, EmailService>(provider =>
-{
-    var logService = provider.GetRequiredService<ILogService>();
-    var configuration = provider.GetRequiredService<IConfiguration>(); // Obtém o IConfiguration
-    var sendGridApiKey = configuration["SendGridApiKey"]; // Obtém a chave da configuração
-
-    return new EmailService(sendGridApiKey, logService, configuration);
-});
-
-// Obter a PublishableKey do Stripe e definir para a ViewData na aplicação
-builder.Services.AddSingleton(provider =>
-{
-    var configuration = provider.GetRequiredService<IConfiguration>();
-    return configuration["Stripe:PublishableKey"];
-});
-
-builder.Services.AddHttpContextAccessor();
-
-// Registrar repositórios
 builder.Services.AddScoped<IClienteRepository, ClienteRepository>();
 builder.Services.AddScoped<IBarbeiroRepository, BarbeiroRepository>();
 builder.Services.AddScoped<IServicoRepository, ServicoRepository>();
@@ -82,16 +62,13 @@ builder.Services.AddScoped<IFeriadoNacionalRepository, FeriadoNacionalRepository
 builder.Services.AddScoped<IFeriadoBarbeariaRepository, FeriadoBarbeariaRepository>();
 builder.Services.AddScoped<IIndisponibilidadeRepository, IndisponibilidadeRepository>();
 builder.Services.AddScoped<IBarbeiroServicoRepository, BarbeiroServicoRepository>();
-builder.Services.AddScoped<IPagamentoRepository, PagamentoRepository>();
 builder.Services.AddScoped<INotificacaoRepository, NotificacaoRepository>();
 
-// Registrar serviços da camada de aplicação
 builder.Services.AddScoped<IClienteService, ClienteService>();
 builder.Services.AddScoped<IAgendamentoService, AgendamentoService>();
 builder.Services.AddScoped<IBarbeiroService, BarbeiroService>();
 builder.Services.AddScoped<IServicoService, ServicoService>();
 builder.Services.AddScoped<IAutenticacaoService, AutenticacaoService>();
-builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IFeriadoBarbeariaService, FeriadoBarbeariaService>();
 builder.Services.AddScoped<IIndisponibilidadeService, IndisponibilidadeService>();
 builder.Services.AddScoped<IAvaliacaoService, AvaliacaoService>();
@@ -102,7 +79,25 @@ builder.Services.AddScoped<IPagamentoService, PagamentoService>();
 builder.Services.AddScoped<INotificacaoService, NotificacaoService>();
 builder.Services.AddScoped<IPushSubscriptionService, PushSubscriptionService>();
 
-// Configurar autenticação com cookies (apenas uma vez)
+// Configuração de Email (SendGrid)
+builder.Services.AddScoped<IEmailService, EmailService>(provider =>
+{
+    var logService = provider.GetRequiredService<ILogService>();
+    var configuration = provider.GetRequiredService<IConfiguration>();
+    var sendGridApiKey = configuration["SendGridApiKey"];
+    return new EmailService(sendGridApiKey, logService, configuration);
+});
+
+// Chave pública do Stripe para uso nas Views
+builder.Services.AddSingleton(provider =>
+{
+    var configuration = provider.GetRequiredService<IConfiguration>();
+    return configuration["Stripe:PublishableKey"];
+});
+
+builder.Services.AddHttpContextAccessor();
+
+// Configuração de autenticação por cookies
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
@@ -114,11 +109,19 @@ builder.Services.AddAuthentication(options =>
     options.SlidingExpiration = true;
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-    options.Cookie.SameSite = SameSiteMode.Strict;
+    if (builder.Environment.IsDevelopment())
+    {
+        options.Cookie.SecurePolicy = CookieSecurePolicy.None;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+    }
+    else
+    {
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Cookie.SameSite = SameSiteMode.Strict;
+    }
 });
 
-// Configurar sessões
+// Configuração de sessões
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(30);
@@ -126,46 +129,26 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-// Configura o Quartz.NET
+// Configuração do Quartz.NET
 builder.Services.AddQuartz(config =>
 {
     var jobKeyAvaliacao = new JobKey("EnviarEmailAvaliacaoJob");
+    config.AddJob<EnviarEmailAvaliacaoJob>(opts => opts.WithIdentity(jobKeyAvaliacao));
+    config.AddTrigger(opts => opts.ForJob(jobKeyAvaliacao)
+        .WithIdentity("EnviarEmailAvaliacaoTrigger")
+        .StartNow()
+        .WithSimpleSchedule(schedule =>
+            schedule.WithIntervalInMinutes(10).RepeatForever()));
 
-    config.AddJob<EnviarEmailAvaliacaoJob>(opts =>
-    {
-        opts.WithIdentity(jobKeyAvaliacao);
-    });
-
-    config.AddTrigger(opts =>
-    {
-        opts.ForJob(jobKeyAvaliacao)
-            .WithIdentity("EnviarEmailAvaliacaoTrigger")
-            .StartNow()
-            .WithSimpleSchedule(schedule =>
-                schedule.WithIntervalInMinutes(10)
-                        .RepeatForever());
-    });
-
-    // Configuração do Job para Gerar Notificações de Agendamentos Próximos
     var jobKeyNotificacoes = new JobKey("GerarNotificacoesAgendamentosJob");
-
-    config.AddJob<GerarNotificacoesAgendamentosJob>(opts =>
-    {
-        opts.WithIdentity(jobKeyNotificacoes);
-    });
-
-    config.AddTrigger(opts =>
-    {
-        opts.ForJob(jobKeyNotificacoes)
-            .WithIdentity("GerarNotificacoesTrigger")
-            .StartNow()
-            .WithSimpleSchedule(schedule =>
-                schedule.WithIntervalInMinutes(30)
-                        .RepeatForever());
-    });
+    config.AddJob<GerarNotificacoesAgendamentosJob>(opts => opts.WithIdentity(jobKeyNotificacoes));
+    config.AddTrigger(opts => opts.ForJob(jobKeyNotificacoes)
+        .WithIdentity("GerarNotificacoesTrigger")
+        .StartNow()
+        .WithSimpleSchedule(schedule =>
+            schedule.WithIntervalInMinutes(30).RepeatForever()));
 });
 
-// Adiciona o Quartz Hosted Service
 builder.Services.AddQuartzHostedService(options =>
 {
     options.WaitForJobsToComplete = true;
@@ -174,12 +157,19 @@ builder.Services.AddQuartzHostedService(options =>
 builder.Services.AddControllersWithViews();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddHttpContextAccessor();
 
+// Montagem do pipeline
 var app = builder.Build();
 
-app.UseExceptionHandler("/Home/Error");
-app.UseHsts();
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
+else
+{
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
+}
 
 app.UseSwagger();
 app.UseSwaggerUI(c =>
@@ -188,17 +178,20 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = "swagger";
 });
 
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
 app.UseStaticFiles();
 app.UseRouting();
 app.UseSession();
 app.UseAuthentication();
 app.UseMiddleware<AuthenticationMiddleware>();
-app.UseAuthorization(); 
-
+app.UseAuthorization();
 app.UseStatusCodePagesWithReExecute("/Erro/BarbeariaNaoEncontrada");
 
-// Configuração de rotas
+// Rotas
 app.MapControllerRoute(
     name: "default",
     pattern: "{barbeariaUrl}/{controller=Login}/{action=Login}/{id?}");

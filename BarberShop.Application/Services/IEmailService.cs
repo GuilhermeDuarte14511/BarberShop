@@ -53,6 +53,6 @@
         Task EnviaEmailAvaliacao(int agendamentoId, string destinatarioEmail, string destinatarioNome, string nomeBarbearia, string urlBase);
         Task EnviarEmailBoasVindasAsync(string destinatarioEmail, string destinatarioNome, string senha, string tipoUsuario, string nomeBarbearia = null, string urlSlug = null);
         Task EnviarEmailCancelamentoAgendamentoAsync( string destinatarioEmail, string destinatarioNome, string nomeBarbearia, DateTime dataHora, string barbeiroNome, string baseUrl);
-
+        Task EnviarEmailBoasVindasBarbeiroAsync(string barbeiroEmail,string barbeiroNome,string nomeBarbearia,string urlSlug,string? senhaProvisoria = null);
     }
 }
